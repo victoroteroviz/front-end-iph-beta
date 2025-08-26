@@ -49,7 +49,7 @@ export const createCargo = async (nombre: string): Promise<ICargosAllData> => {
 
 export const updateCargo = async (id: string, nombre: string): Promise<ICargosAllData> => {
   try {
-    const response = await http.put<ICargosAllData>(`${url}/${id}`, { nombre });
+    const response = await http.patch<ICargosAllData>(`${url}/${id}`, { nombre });
     const cargoActualizado: ICargosAllData = response.data as ICargosAllData;
     return cargoActualizado;
   } catch (error) {
