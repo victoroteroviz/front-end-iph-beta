@@ -49,7 +49,7 @@ export const createGrado = async (nombre: string): Promise<IGradosAllData> => {
 
 export const updateGrado = async (id: string, nombre: string): Promise<IGradosAllData> => {
   try {
-    const response = await http.put<IGradosAllData>(`/api/grados-web/${id}`, {nombre});
+    const response = await http.patch<IGradosAllData>(`/api/grados-web/${id}`, {nombre});
     const gradoActualizado: IGradosAllData = response.data as IGradosAllData;
     return gradoActualizado;
   } catch (error) {

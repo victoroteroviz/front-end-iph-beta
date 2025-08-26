@@ -1,0 +1,284 @@
+/**
+ * Interfaces para el componente Usuarios
+ * Define todos los tipos necesarios para la gestión de lista de usuarios
+ */
+
+import type { IPaginatedUsers } from '../user/crud/get-paginated.users.interface';
+
+// =====================================================
+// INTERFACES DE FILTROS Y BÚSQUEDA
+// =====================================================
+
+export interface IUsuariosFilters {
+  search: string;
+  searchBy: 'nombre' | 'cuip' | 'grado' | 'cargo';
+  orderBy: 'nombre' | 'cuip' | 'gradoId' | 'cargoId';
+  order: 'ASC' | 'DESC';
+  page: number;
+}
+
+export interface IUsuariosParams {
+  page?: number;
+  orderBy?: string;
+  order?: 'ASC' | 'DESC';
+  search?: string;
+  searchBy?: string;
+}
+
+// =====================================================
+// INTERFACES DE ESTADÍSTICAS (DUMMY)
+// =====================================================
+
+export interface IUsuarioEstadistica {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  imagen: string;
+  color: 'green' | 'red' | 'blue' | 'yellow';
+}
+
+export interface IEstadisticasUsuarios {
+  masIph: IUsuarioEstadistica;
+  mejorTiempo: IUsuarioEstadistica;
+  peorRendimiento: IUsuarioEstadistica;
+}
+
+export interface IUsuarioMetricas {
+  totalIph: number;
+  iphCompletados: number;
+  iphPendientes: number;
+  tiempoPromedio: string;
+  efectividad: string;
+  ranking: number;
+  tendencia: 'up' | 'down' | 'stable';
+}
+
+// =====================================================
+// INTERFACES DE ESTADO
+// =====================================================
+
+export interface IUsuariosState {
+  // Datos principales
+  usuarios: IPaginatedUsers[];
+  estadisticas: IEstadisticasUsuarios | null;
+  
+  // Estados de carga
+  isLoading: boolean;
+  isDeleting: string | null; // ID del usuario siendo eliminado
+  isLoadingStats: boolean;
+  
+  // Estados de error
+  error: string | null;
+  deleteError: string | null;
+  
+  // Filtros y búsqueda
+  filters: IUsuariosFilters;
+  
+  // Paginación
+  totalPages: number;
+  totalUsers: number;
+  
+  // Control de acceso
+  canCreateUsers: boolean;
+  canEditUsers: boolean;
+  canDeleteUsers: boolean;
+  canViewAllUsers: boolean;
+  
+  // Modal de estadísticas
+  selectedUserForStats: IPaginatedUsers | null;
+  showStatsModal: boolean;
+  userMetricas: IUsuarioMetricas | null;
+}
+
+// =====================================================
+// INTERFACES DE PROPS
+// =====================================================
+
+export interface IUsuariosProps {
+  className?: string;
+  showStatistics?: boolean;
+  compactView?: boolean;
+}
+
+export interface IUsuariosTableProps {
+  usuarios: IPaginatedUsers[];
+  loading: boolean;
+  filters: IUsuariosFilters;
+  canEdit: boolean;
+  canDelete: boolean;
+  onSort: (column: string) => void;
+  onEdit: (usuario: IPaginatedUsers) => void;
+  onDelete: (usuario: IPaginatedUsers) => void;
+  onViewStats: (usuario: IPaginatedUsers) => void;
+  className?: string;
+}
+
+export interface IUsuariosFiltersProps {
+  filters: IUsuariosFilters;
+  loading: boolean;
+  canCreate: boolean;
+  onFiltersChange: (filters: Partial<IUsuariosFilters>) => void;
+  onSearch: () => void;
+  onClear: () => void;
+  onCreate: () => void;
+  className?: string;
+}
+
+export interface IEstadisticasCardsProps {
+  estadisticas: IEstadisticasUsuarios | null;
+  loading: boolean;
+  className?: string;
+}
+
+export interface IUsuarioStatsModalProps {
+  usuario: IPaginatedUsers | null;
+  metricas: IUsuarioMetricas | null;
+  isOpen: boolean;
+  loading: boolean;
+  onClose: () => void;
+}
+
+export interface IPaginationProps {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  onPageChange: (page: number) => void;
+  loading?: boolean;
+  className?: string;
+}
+
+// =====================================================
+// INTERFACES DE RESPUESTA API
+// =====================================================
+
+export interface IUsuariosResponse {
+  data: IPaginatedUsers[];
+  totalPages: number;
+  totalUsers: number;
+  currentPage: number;
+}
+
+export interface IEstadisticasResponse {
+  success: boolean;
+  data: IEstadisticasUsuarios;
+  message?: string;
+}
+
+export interface IUsuarioMetricasResponse {
+  success: boolean;
+  data: IUsuarioMetricas;
+  message?: string;
+}
+
+// =====================================================
+// INTERFACES DEL HOOK
+// =====================================================
+
+export interface IUseUsuariosReturn {
+  // Estado
+  state: IUsuariosState;
+  
+  // Funciones de filtros
+  updateFilters: (filters: Partial<IUsuariosFilters>) => void;
+  handleSearch: () => void;
+  handleClearFilters: () => void;
+  handleSort: (column: string) => void;
+  
+  // Funciones de paginación
+  handlePageChange: (page: number) => void;
+  
+  // Funciones de acciones
+  handleCreateUser: () => void;
+  handleEditUser: (usuario: IPaginatedUsers) => void;
+  handleDeleteUser: (usuario: IPaginatedUsers) => void;
+  handleViewStats: (usuario: IPaginatedUsers) => void;
+  
+  // Funciones de datos
+  loadUsuarios: () => Promise<void>;
+  loadEstadisticas: () => Promise<void>;
+  loadUserMetricas: (userId: string) => Promise<void>;
+  
+  // Funciones de modal
+  closeStatsModal: () => void;
+  
+  // Utilidades
+  refreshData: () => Promise<void>;
+  canPerformAction: (action: string) => boolean;
+}
+
+// =====================================================
+// INTERFACES DE VALIDACIÓN
+// =====================================================
+
+export interface IUsuariosValidation {
+  isValidSearchTerm: (term: string) => boolean;
+  isValidOrderBy: (orderBy: string) => boolean;
+  isValidPage: (page: number, totalPages: number) => boolean;
+}
+
+// =====================================================
+// ENUMS Y CONSTANTES
+// =====================================================
+
+export enum UsuariosAction {
+  CREATE = 'create',
+  EDIT = 'edit',
+  DELETE = 'delete',
+  VIEW_STATS = 'view_stats',
+  EXPORT = 'export'
+}
+
+export enum UsuariosPermission {
+  MANAGE_ALL_USERS = 'manage_all_users',
+  MANAGE_TEAM_USERS = 'manage_team_users',
+  VIEW_ALL_USERS = 'view_all_users',
+  VIEW_TEAM_USERS = 'view_team_users',
+  CREATE_USERS = 'create_users',
+  EDIT_USERS = 'edit_users',
+  DELETE_USERS = 'delete_users',
+  VIEW_USER_STATS = 'view_user_stats'
+}
+
+export const USUARIOS_SEARCH_OPTIONS = [
+  { value: 'nombre', label: 'Nombre' },
+  { value: 'cuip', label: 'CUIP' },
+  { value: 'grado', label: 'Grado' },
+  { value: 'cargo', label: 'Cargo' }
+] as const;
+
+export const USUARIOS_ORDER_OPTIONS = [
+  { value: 'nombre', label: 'Nombre' },
+  { value: 'cuip', label: 'CUIP' },
+  { value: 'gradoId', label: 'Grado' },
+  { value: 'cargoId', label: 'Cargo' }
+] as const;
+
+export const DEFAULT_USUARIOS_FILTERS: IUsuariosFilters = {
+  search: '',
+  searchBy: 'nombre',
+  orderBy: 'nombre',
+  order: 'ASC',
+  page: 1
+};
+
+// =====================================================
+// INTERFACES DE CONFIGURACIÓN
+// =====================================================
+
+export interface IUsuariosConfig {
+  pageSize: number;
+  maxSearchLength: number;
+  debounceDelay: number;
+  enableVirtualization: boolean;
+  virtualItemHeight: number;
+  showStatistics: boolean;
+}
+
+export const DEFAULT_USUARIOS_CONFIG: IUsuariosConfig = {
+  pageSize: 20,
+  maxSearchLength: 100,
+  debounceDelay: 500,
+  enableVirtualization: true,
+  virtualItemHeight: 60,
+  showStatistics: true
+};

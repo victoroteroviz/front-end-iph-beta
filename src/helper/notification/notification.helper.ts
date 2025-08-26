@@ -283,6 +283,25 @@ export const alertWarning = (message: string): void => {
   showWarning(message, 'Advertencia');
 };
 
+/**
+ * Muestra un diálogo de confirmación
+ * Implementación simple usando confirm() nativo del navegador
+ * TODO: Implementar modal personalizado más adelante
+ */
+export const showConfirmation = async (title: string, message: string): Promise<boolean> => {
+  const confirmMessage = `${title}\n\n${message}`;
+  const result = window.confirm(confirmMessage);
+  
+  if (notificationHelper.getConfig().enableLogging) {
+    logInfo('NotificationHelper', `Confirmation dialog: ${result ? 'confirmed' : 'cancelled'}`, {
+      title,
+      message
+    });
+  }
+  
+  return result;
+};
+
 // Exportaciones
 export { NotificationHelper, notificationHelper };
 export default notificationHelper;

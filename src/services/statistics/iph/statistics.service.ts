@@ -6,7 +6,8 @@ import type {
    IVariacionResumen,
    IResumenPorTipo,
    IResumenPorSemana,
-   IResumenPorMes
+   IResumenPorMes,
+   IUsuarioIphCountResponse
  } from "../../../interfaces/statistics/statistics.interface";
 const http = HttpHelper.getInstance({
   baseURL: API_BASE_URL,
@@ -84,4 +85,32 @@ export const getResumenPorMes = async(year: number = new Date().getFullYear())=>
 } catch (error) {
    throw new Error((error as Error).message || 'Error desconocido, habla con soporte');
  }
+}
+
+/**
+ * @description Obtiene el conteo de IPHs por usuario con parámetros configurables
+ * @param mes - Mes a consultar (por defecto: mes actual)
+ * @param anio - Año a consultar (por defecto: año actual) 
+ * @param page - Número de página para paginación (por defecto: 1)
+ * @param limit - Límite de registros por página (por defecto: 10)
+ * @returns Promise<IUsuarioIphCountResponse>
+ */
+export const getIphCountByUsers = async (
+  mes: number = new Date().getMonth() + 1, // getMonth() devuelve 0-11, necesitamos 1-12
+  anio: number = new Date().getFullYear(),
+  page: number = 1,
+  limit: number = 10
+): Promise<IUsuarioIphCountResponse> => {
+  const url: string = `${API_BASE_URL}/${API_BASE_ROUTES.ESTADISTICAS}/getIphCountByUsers?mes=${mes}&anio=${anio}&page=${page}&limit=${limit}`;
+  
+  try {
+    const response = await http.get<IUsuarioIphCountResponse>(url);
+    const usuariosIphCount: IUsuarioIphCountResponse = response.data;
+    if (!usuariosIphCount || !usuariosIphCount.data) {
+      throw new Error('No se encontraron datos de IPH por usuario');
+    }
+    return usuariosIphCount;
+  } catch (error) {
+    throw new Error((error as Error).message || 'Error desconocido, habla con soporte');
+  }
 }

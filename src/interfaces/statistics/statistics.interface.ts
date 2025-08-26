@@ -39,5 +39,17 @@ export interface IResumenPorMes{
     data: number[];
     backgroundColor: string;
   }[];
+}
 
+export interface IUsuarioIphCount {
+  nombre_completo: string;
+  total_iphs: number;
+  photo: string;
+}
+
+export interface IUsuarioIphCountResponse {
+  data: IUsuarioIphCount[];
+  total?: number;
+  page?: number;
+  limit?: number;
 }

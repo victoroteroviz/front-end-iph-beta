@@ -313,3 +313,7 @@ export const logInfo = (module: string, message: string, data?: unknown) => {
 export const logDebug = (module: string, message: string, data?: unknown) => {
   logger.debug(module, message, data);
 };
+
+export const logWarning = (module: string, message: string, data?: unknown) => {
+  logger.warn(module, message, data);
+};
