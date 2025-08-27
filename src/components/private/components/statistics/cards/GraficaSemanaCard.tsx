@@ -23,13 +23,19 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
       <h3 className="font-semibold">{titulo}</h3>
       <div className="flex items-center gap-2">
         <button 
-          onClick={() => setSemanaOffset((prev) => prev - 1)} 
+          type="button"
+          onClick={() => {
+            setSemanaOffset((prev) => prev - 1);
+          }} 
           className="text-sm px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
         >
           ← Atrás
         </button>
         <button 
-          onClick={() => setSemanaOffset((prev) => prev + 1)} 
+          type="button"
+          onClick={() => {
+            setSemanaOffset((prev) => prev + 1);
+          }} 
           className="text-sm px-2 py-1 bg-gray-200 rounded hover:bg-gray-300" 
           disabled={semanaOffset >= 0}
         >

@@ -24,7 +24,9 @@ const GraficaCard: React.FC<GraficaCardProps> = ({
       <select 
         className="text-sm border rounded px-2 py-1 bg-white shadow" 
         value={anioSeleccionado} 
-        onChange={(e) => setAnioSeleccionado(parseInt(e.target.value))}
+        onChange={(e) => {
+          setAnioSeleccionado(parseInt(e.target.value));
+        }}
       >
         <option value={2023}>2023</option>
         <option value={2024}>2024</option>
