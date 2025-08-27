@@ -143,7 +143,7 @@ const useInicioDashboard = () => {
 
   // Carga optimizada de datos con Promise.allSettled
   const cargarDatos = useCallback(async () => {
-    if (!state.autorizado) return;
+    if (state.autorizado === false) return; // Solo retornar si explícitamente no autorizado
     
     setState(prev => ({ ...prev, loading: true }));
     
@@ -223,8 +223,10 @@ const useInicioDashboard = () => {
   }, [verificarAutorizacion]);
 
   useEffect(() => {
-    cargarDatos();
-  }, [cargarDatos]);
+    if (state.autorizado === true) {
+      cargarDatos();
+    }
+  }, [state.autorizado, cargarDatos]);
 
   return {
     // Estados

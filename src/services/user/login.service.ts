@@ -10,6 +10,7 @@ import { ALLOWED_ROLES, API_BASE_URL } from "../../config/env.config";
 import {HttpHelper} from "../../helper/http/http.helper";
 
 import {logger} from '../../helper/log/logger.helper';
+import type { IRole } from "../../interfaces/role/role.interface";
 
 //* Con esto configuramos el helper para las peticiones.
 const http : HttpHelper = HttpHelper.getInstance(
@@ -34,7 +35,7 @@ export const login = async (loginRequest : LoginRequest)
 {
   logger.info(login.name,'Inicio del proceso de login');
   try {
-    const response= await http.post<LoginResponse>('/api/auth-web/login', loginRequest);
+    const response= await http.post<LoginResponse>(API_BASE_URL+'/api/auth-web/login', loginRequest);
 
     const loginResponse: LoginResponse = response.data;
     const token : Token = jwtDecode(loginResponse.token) as Token;
@@ -43,18 +44,25 @@ export const login = async (loginRequest : LoginRequest)
       throw new Error('El usuario no tiene roles asignados, hable con soporte');
     if(!response.ok) throw new Error(response.statusText  || 'Error desconocido habla con soporte');
 
-    const rolesUsuario: UserRole[] = token.data.user_roles.map((role: UserRole) => {
-      const rol: UserRole = {
+
+    const rolesUsuario: IRole[] = token.data.user_roles.map((role: UserRole) => {
+      return role.privilegio;
+    });
+
+
+    const allowedRoles: IRole[] = ALLOWED_ROLES.map((role: IRole) => {
+      const rol: IRole = {
+ 
         id: role.id,
-        privilegio: role.privilegio,
-        fecha_registro: role.fecha_registro
+        nombre: role.nombre
       };
       return rol;
     });
 
-
-    const rolesFiltrados: UserRole[]  = rolesUsuario.filter((role) =>
-      ALLOWED_ROLES.some((allowedRole) => allowedRole.id === role.id)
+    const rolesFiltrados: IRole[] = rolesUsuario.filter((userRole: IRole) =>
+      allowedRoles.some((allowedRole: IRole) =>
+        allowedRole.id === userRole.id && allowedRole.nombre === userRole.nombre
+      )
     );
 
     if(rolesFiltrados.length <= 0) throw new Error('Roles no validos');
