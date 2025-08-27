@@ -9,7 +9,7 @@
  */
 
 import { logInfo, logError } from '../log/logger.helper';
-import type { Token, UserRole } from '../../interfaces/token/token.interface';
+import type { Token } from '../../interfaces/token/token.interface';
 import { ALLOWED_ROLES } from '../../config/env.config';
 
 // Tipos para el helper de navegación
@@ -19,10 +19,12 @@ export interface NavigationConfig {
   enableNavigationLogging: boolean;
 }
 
+import type { IRole } from '../../interfaces/role/role.interface';
+
 export interface UserData {
   id: string;
   nombre: string;
-  roles: UserRole[];
+  roles: IRole[];
 }
 
 // Configuración por defecto
@@ -84,7 +86,7 @@ class NavigationHelper {
    * Valida si un usuario tiene acceso a una ruta específica
    * Funcionalidad básica, puede expandirse en el futuro
    */
-  public hasAccessToRoute(userRoles: UserRole[], targetRoute: string): boolean {
+  public hasAccessToRoute(userRoles: IRole[], targetRoute: string): boolean {
     try {
       // Por ahora validación básica - si tiene roles válidos, puede acceder
       const hasValidRole = userRoles.some(userRole => 
@@ -202,7 +204,7 @@ const navigationHelper = NavigationHelper.getInstance();
 export const getRouteForUser = (userData: UserData | Token): string => 
   navigationHelper.getRouteForUser(userData);
 
-export const hasAccessToRoute = (userRoles: UserRole[], targetRoute: string): boolean => 
+export const hasAccessToRoute = (userRoles: IRole[], targetRoute: string): boolean => 
   navigationHelper.hasAccessToRoute(userRoles, targetRoute);
 
 export const getUserFromStorage = (): UserData | null => 

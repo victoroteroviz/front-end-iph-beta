@@ -80,7 +80,7 @@ const loginValidationSchema = z.object({
   email: z
     .string()
     .min(1, 'El correo electrónico es requerido')
-    .email({ message: 'Formato de correo electrónico inválido' })
+    .email('Formato de correo electrónico inválido')
     .max(254, 'Correo electrónico muy largo'),
   
   password: z
@@ -101,16 +101,16 @@ const loginValidationSchema = z.object({
  * Mensajes de error por tipo
  */
 const ERROR_MESSAGES: Record<LoginErrorType, string> = {
-  INVALID_CREDENTIALS: 'Correo o contraseña incorrectos. Verifica tus datos.',
-  NETWORK_ERROR: 'Error de conexión. Verifica tu internet.',
-  SERVER_ERROR: 'Error del servidor. Intenta más tarde.',
-  EMAIL_VALIDATION_ERROR: 'El correo electrónico no es válido.',
-  PASSWORD_VALIDATION_ERROR: 'La contraseña no cumple los requisitos.',
-  TERMS_NOT_ACCEPTED: 'Debes aceptar los Términos y Condiciones.',
-  ACCOUNT_LOCKED: 'Cuenta bloqueada temporalmente por intentos fallidos.',
-  RATE_LIMITED: 'Demasiados intentos. Espera antes de volver a intentar.',
-  CSRF_ERROR: 'Error de seguridad. Recarga la página.',
-  UNKNOWN_ERROR: 'Error inesperado. Intenta más tarde.'
+  INVALID_CREDENTIALS: 'Correo electrónico o contraseña incorrectos. Verifica tus datos.',
+  NETWORK_ERROR: 'Error de conexión a internet. Verifica tu conectividad.',
+  SERVER_ERROR: 'Error del servidor. Por favor, intenta más tarde.',
+  EMAIL_VALIDATION_ERROR: 'El formato del correo electrónico no es válido.',
+  PASSWORD_VALIDATION_ERROR: 'La contraseña no cumple con los requisitos de seguridad.',
+  TERMS_NOT_ACCEPTED: 'Debes aceptar los Términos y Condiciones para continuar.',
+  ACCOUNT_LOCKED: 'Cuenta bloqueada temporalmente por múltiples intentos fallidos.',
+  RATE_LIMITED: 'Demasiados intentos de inicio de sesión. Espera unos minutos.',
+  CSRF_ERROR: 'Error de seguridad detectado. Por favor, recarga la página.',
+  UNKNOWN_ERROR: 'Ha ocurrido un error inesperado. Intenta nuevamente más tarde.'
 };
 
 // =====================================================
@@ -260,7 +260,7 @@ const useLoginLogic = () => {
     // Verificar si está bloqueada la cuenta
     if (isAccountLocked(emailForTracking)) {
       const remainingTime = getLockoutTimeRemaining(emailForTracking);
-      showError(`Cuenta bloqueada. Espera ${remainingTime} minutos.`, 'Acceso Restringido');
+      showError(`Cuenta bloqueada temporalmente. Espera ${remainingTime} minutos antes de intentar nuevamente.`, 'Acceso Restringido');
       return;
     }
 
@@ -304,7 +304,7 @@ const useLoginLogic = () => {
 
       // Realizar login con servicio existente
       await login({
-        correo: state.formData.email,
+        correo_electronico: state.formData.email,
         password: state.formData.password
       });
 
@@ -314,7 +314,7 @@ const useLoginLogic = () => {
       // Limpiar intentos fallidos
       clearFailedAttempts(emailForTracking);
       
-      showSuccess('¡Bienvenido! Sesión iniciada correctamente.');
+      showSuccess('¡Bienvenido! Has iniciado sesión correctamente.');
 
       // Navegación simplificada - todos van a inicio
       setState(prev => ({ ...prev, isRedirecting: true }));
@@ -333,8 +333,8 @@ const useLoginLogic = () => {
         ...prev, 
         isLoading: false,
         fieldErrors: {
-          email: 'Credenciales incorrectas',
-          password: 'Credenciales incorrectas'
+          email: 'Correo electrónico o contraseña incorrectos',
+          password: 'Correo electrónico o contraseña incorrectos'
         }
       }));
 
@@ -353,7 +353,7 @@ const useLoginLogic = () => {
   const checkAuthentication = useCallback(() => {
     if (isLoggedIn() && isUserAuthenticated()) {
       logInfo('LoginComponent', 'Usuario ya autenticado, redirigiendo');
-      showWarning('Ya tienes una sesión activa. Redirigiendo...');
+      showWarning('Ya tienes una sesión activa. Te estamos redirigiendo...');
       navigate('/inicio');
     }
   }, [navigate]);
@@ -481,7 +481,7 @@ const Login: React.FC = () => {
 
           {/* Términos y Condiciones */}
           <div className={`flex items-start gap-2 text-sm transition-transform duration-200 ${
-            isShaking ? 'animate-pulse' : ''
+            isShaking ? 'shake-animation' : ''
           }`}>
             <input 
               type="checkbox" 

@@ -204,8 +204,8 @@ class NotificationHelper {
    * Muestra notificación de error
    */
   public error(message: string, title?: string, options: Omit<NotificationOptions, 'title'> = {}): string {
-    // Errores no se auto-cierran por defecto para que el usuario los vea
-    const errorOptions = { autoClose: false, ...options, title };
+    // Errores se auto-cierran después de la duración configurada
+    const errorOptions = { autoClose: true, ...options, title };
     const id = this.addNotification('error', message, errorOptions);
     
     // Log adicional para errores

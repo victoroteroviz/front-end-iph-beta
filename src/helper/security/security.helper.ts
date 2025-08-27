@@ -21,7 +21,9 @@ export interface SecurityConfig {
 // Configuración por defecto
 const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
   maxLoginAttempts: 3,
-  lockoutDurationMs: 15 * 60 * 1000, // 15 minutos
+  lockoutDurationMs: 0 * 0 * 0, // 0 minutos
+  // lockoutDurationMs: 15 * 60 * 1000, // 15 minutos
+
   passwordMinLength: 8,
   passwordMaxLength: 128
 };

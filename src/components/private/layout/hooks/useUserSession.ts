@@ -70,7 +70,7 @@ const useUserSession = (): UserSessionState => {
       }
 
       // Determinar el rol principal (el de mayor jerarquía)
-      const roleNames = userData.roles.map(role => role.privilegio?.nombre || '').filter(Boolean);
+      const roleNames = userData.roles.map(role => role.nombre || '').filter(Boolean);
       const primaryRole = getPrimaryRole(roleNames);
 
       if (!primaryRole) {
@@ -88,9 +88,9 @@ const useUserSession = (): UserSessionState => {
       const formattedUserData: UserData = {
         id: userData.id,
         nombre: userData.nombre || '',
-        primer_apellido: userData.primer_apellido || '',
-        segundo_apellido: userData.segundo_apellido || '',
-        foto: userData.photo || undefined,
+        primer_apellido: (userData as any).primer_apellido || '',
+        segundo_apellido: (userData as any).segundo_apellido || '',
+        foto: (userData as any).foto || undefined,
         rol: primaryRole
       };
 
