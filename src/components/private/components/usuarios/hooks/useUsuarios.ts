@@ -66,8 +66,11 @@ const useUsuarios = (): IUseUsuariosReturn => {
   // =====================================================
 
   const checkPermissions = useCallback(() => {
-    const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
-    const userRoles = userData?.roles || [];
+    // Leer datos del sessionStorage con las keys correctas
+    const userData = JSON.parse(sessionStorage.getItem('user_data') || '{}');
+    const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
+    
+    logInfo('UsuariosHook', 'Datos de sessionStorage', { userData, userRoles });
     
     // Determinar permisos basado en roles
     const isSuperAdmin = userRoles.some((role: any) => role.nombre === 'SuperAdmin');
@@ -86,6 +89,8 @@ const useUsuarios = (): IUseUsuariosReturn => {
     }));
 
     logInfo('UsuariosHook', 'Permisos calculados', {
+      userRolesCount: userRoles.length,
+      roles: userRoles.map((r: any) => r.nombre),
       isSuperAdmin,
       isAdmin,
       isSuperior,
@@ -125,9 +130,9 @@ const useUsuarios = (): IUseUsuariosReturn => {
       
       setState(prev => ({
         ...prev,
-        usuarios: Array.isArray(response.data) ? response.data : response,
+        usuarios: Array.isArray(response.data) ? response.data : (Array.isArray(response) ? response : []),
         totalPages: response.totalPages || 1,
-        totalUsers: response.totalUsers || response.length || 0,
+        totalUsers: response.totalUsers || (Array.isArray(response) ? response.length : 0) || 0,
         isLoading: false
       }));
 

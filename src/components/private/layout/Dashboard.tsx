@@ -22,6 +22,9 @@ import Topbar from './topbar/Topbar';
 // Hooks
 import useUserSession from './hooks/useUserSession';
 
+// Context
+import { ScrollProvider, useScrollContext } from '../../../contexts/ScrollContext';
+
 // Helpers
 import { logInfo } from '../../../helper/log/logger.helper';
 
@@ -29,15 +32,13 @@ import { logInfo } from '../../../helper/log/logger.helper';
 import type { DashboardProps } from '../../../interfaces/components/dashboard.interface';
 
 /**
- * Componente principal del Dashboard
- * 
- * @param props - Props del dashboard
- * @returns JSX.Element del dashboard completo
+ * Componente interno que usa el scroll context
  */
-const Dashboard: React.FC<DashboardProps> = ({ 
+const DashboardContent: React.FC<DashboardProps> = ({ 
   children,
   className = ''
 }) => {
+  const { scrollContainerRef } = useScrollContext();
   const { 
     userRole, 
     userData, 
@@ -104,7 +105,10 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Content Area con scroll */}
-        <div className="flex-1 px-6 pb-6 overflow-y-auto">
+        <div 
+          ref={scrollContainerRef}
+          className="flex-1 px-6 pb-6 overflow-y-auto"
+        >
           <div className="h-full">
             {/* Renderizar children o Outlet */}
             {children || <Outlet />}
@@ -112,6 +116,17 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </main>
     </div>
+  );
+};
+
+/**
+ * Componente principal del Dashboard con ScrollProvider
+ */
+const Dashboard: React.FC<DashboardProps> = (props) => {
+  return (
+    <ScrollProvider>
+      <DashboardContent {...props} />
+    </ScrollProvider>
   );
 };
 

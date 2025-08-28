@@ -59,11 +59,11 @@ const FormField: React.FC<FormFieldProps> = ({
           <option value="">
             {placeholder || `Selecciona ${label.toLowerCase()}`}
           </option>
-          {options.map((option) => (
+          {options && Array.isArray(options) ? options.map((option) => (
             <option key={option.id} value={option.id}>
               {option.nombre}
             </option>
-          ))}
+          )) : null}
         </select>
       );
     }

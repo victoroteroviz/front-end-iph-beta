@@ -163,7 +163,7 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
 
           {/* Body de tabla */}
           <tbody className="bg-white divide-y divide-gray-200">
-            {usuarios.map((usuario) => (
+            {Array.isArray(usuarios) && usuarios.map((usuario) => (
               <tr 
                 key={usuario.id}
                 className="hover:bg-gray-50 transition-colors duration-150"
@@ -285,7 +285,7 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
       <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
         <div className="flex items-center justify-between text-sm text-gray-600 font-poppins">
           <div>
-            Mostrando {usuarios.length} usuario{usuarios.length !== 1 ? 's' : ''}
+            Mostrando {Array.isArray(usuarios) ? usuarios.length : 0} usuario{(Array.isArray(usuarios) ? usuarios.length : 0) !== 1 ? 's' : ''}
           </div>
           <div className="flex items-center gap-4">
             {filters.search && (

@@ -83,15 +83,17 @@ export const useIphOficial = (): UseIphOficialReturn => {
    * Verifica si el usuario tiene permisos para ver IPH oficial
    */
   const hasAccess = useMemo(() => {
-    const userDataStr = sessionStorage.getItem('userData');
-    if (!userDataStr) {
+    const userDataStr = sessionStorage.getItem('user_data');
+    const rolesStr = sessionStorage.getItem('roles');
+    
+    if (!userDataStr || !rolesStr) {
       logWarning('useIphOficial', 'No hay datos de usuario en sessionStorage');
       return false;
     }
 
     try {
       const userData = JSON.parse(userDataStr);
-      const userRoles = userData.roles || [];
+      const userRoles = JSON.parse(rolesStr) || [];
       
       // Todos excepto Elemento pueden acceder
       const allowedRoleNames = ['SuperAdmin', 'Administrador', 'Superior'];
