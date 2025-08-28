@@ -129,7 +129,7 @@ const canUserViewAll = (userRoles: any[]): boolean => {
  */
 const getCurrentUserId = (): string | null => {
   try {
-    const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+    const userData = JSON.parse(sessionStorage.getItem('user_data') || '{}');
     return userData?.id?.toString() || null;
   } catch {
     return null;
@@ -142,8 +142,8 @@ const getCurrentUserId = (): string | null => {
  */
 const getCurrentUserRoles = (): any[] => {
   try {
-    const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
-    return userData?.roles || [];
+    const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
+    return userRoles || [];
   } catch {
     return [];
   }

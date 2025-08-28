@@ -26,10 +26,10 @@ const RolesSelector: React.FC<RolesSelectorProps> = ({
   canEditRoles = true
 }) => {
   // Convertir roles disponibles a opciones de react-select
-  const options: IRolOption[] = rolesDisponibles.map(rol => ({
+  const options: IRolOption[] = Array.isArray(rolesDisponibles) ? rolesDisponibles.map(rol => ({
     value: rol.id,
     label: rol.nombre
-  }));
+  })) : [];
 
   // Estilos personalizados para react-select
   const customStyles = {

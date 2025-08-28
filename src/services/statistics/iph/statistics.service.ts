@@ -9,6 +9,12 @@ import type {
    IResumenPorMes,
    IUsuarioIphCountResponse
  } from "../../../interfaces/statistics/statistics.interface";
+// +mocks
+import { getMockIphCountByUsers } from "../../../mock/statistics";
+
+// Flag para alternar entre mock y API real
+const USE_MOCK_DATA = true;
+
 const http = HttpHelper.getInstance({
   baseURL: API_BASE_URL,
   timeout: 10000,
@@ -94,6 +100,7 @@ export const getResumenPorMes = async(year: number = new Date().getFullYear())=>
  * @param page - Número de página para paginación (por defecto: 1)
  * @param limit - Límite de registros por página (por defecto: 10)
  * @returns Promise<IUsuarioIphCountResponse>
+ * @todo Cambiar USE_MOCK_DATA a false cuando la API esté disponible
  */
 export const getIphCountByUsers = async (
   mes: number = new Date().getMonth() + 1, // getMonth() devuelve 0-11, necesitamos 1-12
@@ -101,6 +108,13 @@ export const getIphCountByUsers = async (
   page: number = 1,
   limit: number = 10
 ): Promise<IUsuarioIphCountResponse> => {
+  
+  if (USE_MOCK_DATA) {
+    // Usar datos mock
+    return await getMockIphCountByUsers(mes, anio, page, limit);
+  }
+  
+  // Usar API real
   const url: string = `${API_BASE_URL}/${API_BASE_ROUTES.ESTADISTICAS}/getIphCountByUsers?mes=${mes}&anio=${anio}&page=${page}&limit=${limit}`;
   
   try {

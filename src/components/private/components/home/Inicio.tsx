@@ -100,36 +100,14 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
   // Estado para quick access colapsable
   const [quickAccessCollapsed, setQuickAccessCollapsed] = useState(false);
 
-  // Ref para mantener posición de scroll
-  const scrollPositionRef = useRef(0);
+  // Scroll management ahora se maneja en useInicioDashboard
 
   // Construir nombre completo
   const fullName = userData 
     ? `${userData.nombre} ${userData.primer_apellido} ${userData.segundo_apellido}`.trim()
     : 'Usuario';
 
-  // Guardar posición de scroll antes de cambios de estado
-  useEffect(() => {
-    const saveScrollPosition = () => {
-      scrollPositionRef.current = window.scrollY;
-    };
-
-    // Guardar posición antes de que el componente se actualice
-    saveScrollPosition();
-  }, [anioSeleccionado, semanaOffset]);
-
-  // Restaurar posición de scroll después de cambios
-  useEffect(() => {
-    const restoreScrollPosition = () => {
-      if (scrollPositionRef.current > 0) {
-        window.scrollTo(0, scrollPositionRef.current);
-      }
-    };
-
-    // Pequeño delay para asegurar que el DOM se ha actualizado
-    const timeoutId = setTimeout(restoreScrollPosition, 10);
-    return () => clearTimeout(timeoutId);
-  }, [datosPorMes, datosPorSemana]); // Se ejecuta cuando los datos cambian
+  // SCROLL MANAGEMENT REMOVIDO - Ahora se maneja en useInicioDashboard
 
   // Estados de carga y autorización
   if (autorizado === null || loading || userLoading) {
@@ -293,7 +271,7 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
               {QUICK_ACCESS_CARDS.map((card) => (
                 <Link key={card.id} to={card.route} className="group">
-                  <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6 hover:shadow-md hover:border-[#c2b186] transition-all group-hover:bg-[#fdf7f1]">
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6 hover:shadow-md hover:border-[#c2b186] transition-all group-hover:bg-[#fdf7f1] h-40 flex flex-col">
                     <div className="flex items-center mb-4">
                       <div 
                         className="p-3 rounded-full mr-4 flex-shrink-0"
@@ -303,11 +281,11 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={card.icon} />
                         </svg>
                       </div>
-                      <h3 className="text-lg lg:text-xl font-bold text-[#4d4725] group-hover:text-[#6b6b47] transition-colors">
+                      <h3 className="text-lg lg:text-xl font-bold text-[#4d4725] group-hover:text-[#6b6b47] transition-colors leading-tight">
                         {card.title}
                       </h3>
                     </div>
-                    <p className="text-[#6b6b47] text-sm lg:text-base">
+                    <p className="text-[#6b6b47] text-sm lg:text-base flex-1 leading-relaxed">
                       {card.description}
                     </p>
                   </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from "chart.js";
 import type { IResumenPorMes } from '../../../../../interfaces/statistics/statistics.interface';
@@ -45,4 +45,4 @@ const GraficaCard: React.FC<GraficaCardProps> = ({
   </div>
 );
 
-export default GraficaCard;
+export default memo(GraficaCard);

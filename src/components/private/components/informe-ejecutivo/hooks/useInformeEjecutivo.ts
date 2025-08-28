@@ -57,8 +57,8 @@ const useInformeEjecutivo = (informeIdProp?: string): IUseInformeEjecutivoReturn
   // =====================================================
 
   const checkAccess = useCallback(() => {
-    const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
-    const userRoles = userData?.roles || [];
+    const userData = JSON.parse(sessionStorage.getItem('user_data') || '{}');
+    const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
     
     // Verificar que el usuario tenga roles válidos para ver informes ejecutivos
     const hasValidRole = userRoles.some((role: any) => 

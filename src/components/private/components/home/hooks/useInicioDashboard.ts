@@ -19,6 +19,9 @@ import { ALLOWED_ROLES } from '../../../../../config/env.config';
 import { showError } from '../../../../../helper/notification/notification.helper';
 import { logError } from '../../../../../helper/log/logger.helper';
 
+// Context
+import { useScrollContext } from '../../../../../contexts/ScrollContext';
+
 // Interfaces
 import type { 
   IResumenPorTipo,
@@ -49,6 +52,7 @@ interface DashboardControls {
 
 const useInicioDashboard = () => {
   const navigate = useNavigate();
+  const { preserveScrollPosition, restoreScrollPosition } = useScrollContext();
   
   // Estados principales
   const [state, setState] = useState<DashboardState>({
@@ -68,23 +72,33 @@ const useInicioDashboard = () => {
     // datosUsuarios: null,
   });
   
-  // Estados de controles
-  const [controls, setControls] = useState<DashboardControls>({
-    semanaOffset: 0,
-    anioSeleccionado: new Date().getFullYear(),
-    setSemanaOffset: (offset) => {
-      setControls(prev => ({
-        ...prev,
-        semanaOffset: typeof offset === 'function' ? offset(prev.semanaOffset) : offset
-      }));
-    },
-    setAnioSeleccionado: (anio) => {
-      setControls(prev => ({
-        ...prev,
-        anioSeleccionado: anio
-      }));
-    }
-  });
+  // Estados de controles - SEPARADOS para evitar recreación
+  const [semanaOffset, setSemanaOffsetState] = useState(0);
+  const [anioSeleccionado, setAnioSeleccionadoState] = useState(new Date().getFullYear());
+
+  // Funciones memoizadas estables con scroll del container correcto
+  const setSemanaOffset = useCallback((offset: number | ((prev: number) => number)) => {
+    // Preservar scroll antes del cambio
+    preserveScrollPosition();
+    
+    setSemanaOffsetState(typeof offset === 'function' ? 
+      (prev) => offset(prev) : 
+      offset
+    );
+    
+    // Restaurar scroll después del re-render
+    setTimeout(restoreScrollPosition, 100);
+  }, [preserveScrollPosition, restoreScrollPosition]);
+
+  const setAnioSeleccionado = useCallback((anio: number) => {
+    // Preservar scroll antes del cambio
+    preserveScrollPosition();
+    
+    setAnioSeleccionadoState(anio);
+    
+    // Restaurar scroll después del re-render  
+    setTimeout(restoreScrollPosition, 100);
+  }, [preserveScrollPosition, restoreScrollPosition]);
 
   // Verificación de autorización
   const verificarAutorizacion = useCallback(() => {
@@ -148,14 +162,14 @@ const useInicioDashboard = () => {
     setState(prev => ({ ...prev, loading: true }));
     
     try {
-      const añoActual = controls.anioSeleccionado;
+      const añoActual = anioSeleccionado;
       const añoAnterior = añoActual - 1;
 
       // Cargar todos los datos en paralelo
       const resultados = await Promise.allSettled([
         getResumenEstadisticas(añoActual),
         getVariacionResumen(añoActual, añoAnterior),
-        getResumenPorSemana(controls.semanaOffset),
+        getResumenPorSemana(semanaOffset),
         getResumenPorMes(añoActual)
       ]);
 
@@ -215,7 +229,7 @@ const useInicioDashboard = () => {
       logError('useInicioDashboard', error, 'Error general dashboard');
       setState(prev => ({ ...prev, loading: false }));
     }
-  }, [state.autorizado, controls.anioSeleccionado, controls.semanaOffset]);
+  }, [state.autorizado, anioSeleccionado, semanaOffset]);
 
   // Effects
   useEffect(() => {
@@ -240,10 +254,10 @@ const useInicioDashboard = () => {
     // datosUsuarios: state.datosUsuarios,
     
     // Controles
-    semanaOffset: controls.semanaOffset,
-    anioSeleccionado: controls.anioSeleccionado,
-    setSemanaOffset: controls.setSemanaOffset,
-    setAnioSeleccionado: controls.setAnioSeleccionado,
+    semanaOffset,
+    anioSeleccionado,
+    setSemanaOffset,
+    setAnioSeleccionado,
     
     // Funciones
     recargarDatos: cargarDatos

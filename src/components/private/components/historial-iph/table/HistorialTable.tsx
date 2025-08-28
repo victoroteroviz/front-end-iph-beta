@@ -42,7 +42,8 @@ const HistorialTable: React.FC<HistorialTableProps> = ({
   /**
    * Formatea la fecha para mostrar
    */
-  const formatDate = (dateString: string): string => {
+  const formatDate = (dateString: string | undefined | null): string => {
+    if (!dateString) return '-';
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString('es-MX', {
@@ -51,14 +52,15 @@ const HistorialTable: React.FC<HistorialTableProps> = ({
         year: 'numeric'
       });
     } catch {
-      return dateString;
+      return dateString || '-';
     }
   };
 
   /**
    * Formatea la hora para mostrar
    */
-  const formatTime = (timeString: string): string => {
+  const formatTime = (timeString: string | undefined | null): string => {
+    if (!timeString) return '-';
     try {
       const [hours, minutes] = timeString.split(':');
       const date = new Date();
@@ -69,14 +71,15 @@ const HistorialTable: React.FC<HistorialTableProps> = ({
         hour12: true
       });
     } catch {
-      return timeString;
+      return timeString || '-';
     }
   };
 
   /**
    * Trunca texto largo
    */
-  const truncateText = (text: string, maxLength: number = 30): string => {
+  const truncateText = (text: string | undefined | null, maxLength: number = 30): string => {
+    if (!text) return '-';
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
   };
 

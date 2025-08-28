@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from "chart.js";
 import type { IResumenPorSemana } from '../../../../../interfaces/statistics/statistics.interface';
@@ -58,4 +58,4 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
   </div>
 );
 
-export default GraficaSemanaCard;
+export default memo(GraficaSemanaCard);

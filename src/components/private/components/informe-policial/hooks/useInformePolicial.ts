@@ -19,7 +19,11 @@ import type {
   IInformePolicialState,
   IUseInformePolicialReturn,
   IInformePolicialFilters,
-  IRegistroIPH,
+  IRegistroIPH
+} from '../../../../../interfaces/components/informe-policial.interface';
+
+// Constantes
+import { 
   DEFAULT_FILTERS,
   INFORME_POLICIAL_CONFIG
 } from '../../../../../interfaces/components/informe-policial.interface';
@@ -70,8 +74,8 @@ const useInformePolicial = (
   // =====================================================
 
   const checkAccess = useCallback(() => {
-    const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
-    const userRoles = userData?.roles || [];
+    const userData = JSON.parse(sessionStorage.getItem('user_data') || '{}');
+    const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
     
     // Verificar que el usuario tenga roles válidos para ver IPH
     const hasValidRole = userRoles.some((role: any) => 

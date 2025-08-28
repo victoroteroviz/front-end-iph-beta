@@ -13,8 +13,7 @@ import {
   createUsuario, 
   updateUsuario,
   getCatalogos,
-  getRolesDisponibles,
-  buildUserPayload
+  getRolesDisponibles
 } from '../../../../../services/perfil-usuario/perfil-usuario.service';
 
 // Helpers
@@ -30,9 +29,12 @@ import type {
   IPerfilUsuarioFormErrors,
   IUsePerfilUsuarioReturn,
   IFormValidationResult,
-  IRolOption,
-  PerfilUsuarioMode
+  IRolOption
 } from '../../../../../interfaces/components/perfilUsuario.interface';
+import type { 
+  ICreateUser, 
+  IUpdateUser 
+} from '../../../../../interfaces/user/crud/crud-user.interface';
 
 // =====================================================
 // ESQUEMAS DE VALIDACIÓN
@@ -141,8 +143,8 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
   // =====================================================
 
   const checkPermissions = useCallback(() => {
-    const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
-    const userRoles = userData?.roles || [];
+    const userData = JSON.parse(sessionStorage.getItem('user_data') || '{}');
+    const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
     
     // Determinar permisos basado en roles
     const isSuperAdmin = userRoles.some((role: any) => role.nombre === 'SuperAdmin');
@@ -184,7 +186,7 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
         municipios: catalogsData.municipios,
         adscripciones: catalogsData.adscripciones,
         sexos: catalogsData.sexos,
-        rolesDisponibles: rolesData.roles,
+        rolesDisponibles: Array.isArray(rolesData.roles) ? rolesData.roles : [],
         isCatalogsLoading: false
       }));
 
@@ -243,6 +245,19 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
     }
   }, [navigate, state.rolesDisponibles]);
 
+  const loadRoles = useCallback(async () => {
+    try {
+      const rolesData = await getRolesDisponibles();
+      setState(prev => ({
+        ...prev,
+        rolesDisponibles: Array.isArray(rolesData.roles) ? rolesData.roles : []
+      }));
+      logInfo('PerfilUsuarioService', 'Obteniendo roles disponibles');
+    } catch (error) {
+      logError('PerfilUsuarioHook', `Error al cargar roles: ${(error as Error).message}`);
+    }
+  }, []);
+
   // =====================================================
   // FUNCIONES DE FORMULARIO
   // =====================================================
@@ -289,7 +304,7 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
         const errors: IPerfilUsuarioFormErrors = {};
         let firstErrorField: string | undefined;
 
-        error.errors.forEach(err => {
+        error.issues.forEach((err) => {
           const field = err.path[0] as string;
           if (!firstErrorField) firstErrorField = field;
           errors[field as keyof IPerfilUsuarioFormErrors] = err.message;
@@ -333,18 +348,52 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
     setState(prev => ({ ...prev, isSubmitting: true }));
 
     try {
-      const payload = buildUserPayload(
-        state.formData,
-        state.rolesUsuarios,
-        state.isEditing
-      );
+      const rolesSeleccionados = state.formData.rolesSeleccionados.map((r) => r.value);
 
       if (state.isEditing && id) {
-        await updateUsuario(id, payload);
+        // Para actualización
+        const updatePayload: IUpdateUser = {
+          nombre: state.formData.nombre,
+          primer_apellido: state.formData.primerApellido,
+          segundo_apellido: state.formData.segundoApellido,
+          correo_electronico: state.formData.correo,
+          telefono: state.formData.telefono,
+          cuip: state.formData.cuip,
+          cup: state.formData.cup,
+          gradoId: parseInt(state.formData.gradoId),
+          cargoId: parseInt(state.formData.cargoId),
+          municipioId: parseInt(state.formData.municipioId),
+          adscripcionId: parseInt(state.formData.adscripcionId),
+          sexoId: parseInt(state.formData.sexoId),
+          is_verific: true,
+          user_roles: rolesSeleccionados.map(roleId => ({
+            id: roleId.toString(),
+            is_active: true
+          }))
+        };
+        await updateUsuario(id, updatePayload);
         showSuccess('Usuario actualizado correctamente', 'Actualización Exitosa');
         logInfo('PerfilUsuarioHook', 'Usuario actualizado', { id });
       } else {
-        await createUsuario(payload);
+        // Para creación
+        const createPayload: ICreateUser = {
+          nombre: state.formData.nombre,
+          primer_apellido: state.formData.primerApellido,
+          segundo_apellido: state.formData.segundoApellido,
+          correo_electronico: state.formData.correo,
+          telefono: state.formData.telefono,
+          cuip: state.formData.cuip,
+          cup: state.formData.cup,
+          password_hash: state.formData.password,
+          gradoId: parseInt(state.formData.gradoId),
+          cargoId: parseInt(state.formData.cargoId),
+          municipioId: parseInt(state.formData.municipioId),
+          adscripcionId: parseInt(state.formData.adscripcionId),
+          sexoId: parseInt(state.formData.sexoId),
+          is_verific: true,
+          roles: rolesSeleccionados
+        };
+        await createUsuario(createPayload);
         showSuccess('Usuario creado correctamente', 'Creación Exitosa');
         logInfo('PerfilUsuarioHook', 'Usuario creado');
       }
@@ -352,7 +401,7 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
       navigate('/usuarios');
     } catch (error) {
       const errorMessage = (error as Error).message;
-      logError('PerfilUsuarioHook', 'Error al guardar usuario', { error, isEditing: state.isEditing });
+      logError('PerfilUsuarioHook', `Error al guardar usuario: ${(error as Error).message}`);
       
       // Intentar parsear mensaje de error del backend
       try {
@@ -428,7 +477,7 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
     validateForm,
     loadUserData,
     loadCatalogs,
-    getRolesDisponibles,
+    loadRoles,
     handleSubmit,
     handleCancel,
     handleRoleChange,
