@@ -12,6 +12,39 @@ import {HttpHelper} from "../../helper/http/http.helper";
 import {logger} from '../../helper/log/logger.helper';
 import type { IRole } from "../../interfaces/role/role.interface";
 
+/**
+ * Handler para decodificar JWT con manejo seguro de excepciones y validaciones
+ * @param tokenString - Token JWT a decodificar
+ * @returns Token decodificado y validado
+ * @throws Error con mensaje específico si el token es inválido o expirado
+ */
+const decodeAndValidateToken = (tokenString: string): Token => {
+  try {
+    const token: Token = jwtDecode(tokenString) as Token;
+    
+    // Validar estructura básica del token
+    if (!token.data) {
+      throw new Error('Token no contiene datos de usuario válidos');
+    }
+    
+    if (!token.data.user_roles || !Array.isArray(token.data.user_roles)) {
+      throw new Error('Token no contiene roles de usuario válidos');
+    }
+    
+    // Validar expiración
+    if (token.exp && token.exp < Date.now() / 1000) {
+      throw new Error('Token expirado, inicie sesión nuevamente');
+    }
+    
+    return token;
+  } catch (decodeError) {
+    if (decodeError instanceof Error) {
+      throw decodeError;
+    }
+    throw new Error('Token con formato inválido recibido del servidor');
+  }
+};
+
 //* Con esto configuramos el helper para las peticiones.
 const http : HttpHelper = HttpHelper.getInstance(
   {
@@ -33,12 +66,12 @@ const http : HttpHelper = HttpHelper.getInstance(
 export const login = async (loginRequest : LoginRequest)
 : Promise<Token |false| []> => 
 {
-  logger.info(login.name,'Inicio del proceso de login');
+  logger.debug(login.name,'Inicio del proceso de login');
   try {
     const response= await http.post<LoginResponse>(API_BASE_URL+'/api/auth-web/login', loginRequest);
 
     const loginResponse: LoginResponse = response.data;
-    const token : Token = jwtDecode(loginResponse.token) as Token;
+    const token: Token = decodeAndValidateToken(loginResponse.token);
 
     if(token.data.user_roles.length <= 0)
       throw new Error('El usuario no tiene roles asignados, hable con soporte');
@@ -81,7 +114,7 @@ export const login = async (loginRequest : LoginRequest)
     sessionStorage.setItem('roles', JSON.stringify(rolesFiltrados));
     sessionStorage.setItem('token', loginResponse.token);
 
-    logger.info(login.name,'Login exitoso, se guardaron los datos del usuario y roles en sessionStorage');
+    logger.debug(login.name,'Login exitoso, se guardaron los datos del usuario y roles en sessionStorage');
 
     return token;
 
@@ -92,13 +125,13 @@ export const login = async (loginRequest : LoginRequest)
 }
 
 export const logout = async () : Promise<void> => {
-  logger.info(logout.name,'Inicio del proceso de logout');
+  logger.debug(logout.name,'Inicio del proceso de logout');
   try {
     sessionStorage.removeItem('user_data');
     sessionStorage.removeItem('roles');
     sessionStorage.removeItem('token');
 
-    logger.info(logout.name,'Logout exitoso, se eliminaron los datos del usuario y roles de sessionStorage');
+    logger.debug(logout.name,'Logout exitoso, se eliminaron los datos del usuario y roles de sessionStorage');
   } catch (error) {
     throw new Error((error as Error).message || 'Error desconocido, habla con soporte');
   }

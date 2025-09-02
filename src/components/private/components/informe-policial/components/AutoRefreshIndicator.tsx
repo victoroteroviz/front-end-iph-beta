@@ -13,26 +13,40 @@ const AutoRefreshIndicator: React.FC<IAutoRefreshIndicatorProps> = ({
   onToggle,
   className = ''
 }) => {
-  const [displayTime, setDisplayTime] = useState(nextRefreshIn);
+  const [displayTime, setDisplayTime] = useState(() => Math.max(0, nextRefreshIn || 0));
 
-  // Actualizar el tiempo cada segundo
+  // Actualizar el tiempo cada segundo y crear countdown interno
   useEffect(() => {
-    setDisplayTime(nextRefreshIn);
+    const validTime = Math.max(0, nextRefreshIn || 0);
+    setDisplayTime(validTime);
   }, [nextRefreshIn]);
 
+  // Countdown interno para actualizar cada segundo
+  useEffect(() => {
+    if (!isActive || displayTime <= 0) return;
+
+    const interval = setInterval(() => {
+      setDisplayTime(prev => Math.max(0, prev - 1));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isActive, displayTime]);
+
   const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
+    const validSeconds = Math.max(0, Math.floor(seconds));
+    const minutes = Math.floor(validSeconds / 60);
+    const remainingSeconds = validSeconds % 60;
     
     if (minutes > 0) {
-      return `${minutes}m ${remainingSeconds}s`;
+      return `${minutes}m ${remainingSeconds.toString().padStart(2, '0')}s`;
     }
     return `${remainingSeconds}s`;
   };
 
   const getProgressPercentage = (): number => {
-    const maxTime = 5 * 60; // 5 minutos en segundos
-    return Math.max(0, Math.min(100, ((maxTime - displayTime) / maxTime) * 100));
+    const maxTime = 3 * 60; // 3 minutos en segundos
+    const validTime = Math.max(0, displayTime);
+    return Math.max(0, Math.min(100, ((maxTime - validTime) / maxTime) * 100));
   };
 
   return (

@@ -4,9 +4,11 @@
  */
 
 import React, { useState } from 'react';
-import { Image, X, ChevronLeft, ChevronRight, Download, Eye } from 'lucide-react';
+import { Image, Eye } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
 import type { IAnexosGalleryProps, IAnexoFoto } from '../../../../../interfaces/components/informe-ejecutivo.interface';
+import { buildImageUrl } from '../../../../../helper/image/image-url.helper';
+import { logError, logInfo } from '../../../../../helper/log/logger.helper';
 
 const AnexosGallery: React.FC<IAnexosGalleryProps> = ({
   anexos,
@@ -24,6 +26,7 @@ const AnexosGallery: React.FC<IAnexosGalleryProps> = ({
       newSet.delete(anexoId);
       return newSet;
     });
+    logError('AnexosGallery', `Error al cargar imagen con ID: ${anexoId}`, 'handleImageError');
   };
 
   const handleImageLoad = (anexoId: string) => {
@@ -32,6 +35,7 @@ const AnexosGallery: React.FC<IAnexosGalleryProps> = ({
       newSet.delete(anexoId);
       return newSet;
     });
+    logInfo('AnexosGallery', `Imagen cargada exitosamente: ${anexoId}`, { anexoId });
   };
 
   const handleImageLoadStart = (anexoId: string) => {
@@ -39,12 +43,7 @@ const AnexosGallery: React.FC<IAnexosGalleryProps> = ({
   };
 
   const getImageUrl = (anexo: IAnexoFoto): string => {
-    // Si la ruta ya incluye el dominio completo, usarla directamente
-    if (anexo.ruta_foto.startsWith('http')) {
-      return anexo.ruta_foto;
-    }
-    // Agregar el prefijo del servidor (del código original)
-    return `https://iph-api.okip.com.mx${anexo.ruta_foto}`;
+    return buildImageUrl(anexo.ruta_foto, `anexo_${anexo.id}`);
   };
 
   const formatFileSize = (bytes?: number): string => {
@@ -96,28 +95,35 @@ const AnexosGallery: React.FC<IAnexosGalleryProps> = ({
           {anexos.map((anexo, index) => (
             <div 
               key={anexo.id}
-              className="relative group cursor-pointer bg-gray-100 rounded-lg overflow-hidden aspect-square"
+              className="relative group cursor-pointer bg-white rounded-lg overflow-hidden aspect-square border shadow-sm"
               onClick={() => onImageClick?.(anexo, index)}
             >
               
               {/* Estado de carga */}
               {imageLoading.has(anexo.id) && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
                   <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#4d4725] border-t-transparent"></div>
                 </div>
               )}
 
+              {/* Placeholder de fondo */}
+              <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+                <Image className="h-8 w-8 text-gray-400" />
+              </div>
+
               {/* Imagen o placeholder de error */}
               {!imageErrors.has(anexo.id) ? (
-                <img
-                  src={getImageUrl(anexo)}
-                  alt={anexo.descripcion || `Anexo ${index + 1}`}
-                  className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-                  onError={() => handleImageError(anexo.id)}
-                  onLoad={() => handleImageLoad(anexo.id)}
-                  onLoadStart={() => handleImageLoadStart(anexo.id)}
-                  loading="lazy"
-                />
+                <div className="w-full h-full relative z-20">
+                  <img
+                    src={getImageUrl(anexo)}
+                    alt={anexo.descripcion || `Anexo ${index + 1}`}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                    onError={() => handleImageError(anexo.id)}
+                    onLoad={() => handleImageLoad(anexo.id)}
+                    onLoadStart={() => handleImageLoadStart(anexo.id)}
+                    loading="lazy"
+                  />
+                </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
                   <div className="text-center">

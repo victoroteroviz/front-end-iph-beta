@@ -3,7 +3,7 @@
  * Barra de filtros con búsqueda, ordenamiento y acciones
  */
 
-import React from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Search, X, RefreshCw, Filter, SortAsc, SortDesc } from 'lucide-react';
 import type { IIPHFiltersProps } from '../../../../../interfaces/components/informe-policial.interface';
 import { SEARCH_OPTIONS, ORDER_OPTIONS } from '../../../../../interfaces/components/informe-policial.interface';
@@ -17,16 +17,65 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
   onRefresh,
   className = ''
 }) => {
+  // Estado local para el campo de búsqueda
+  const [localSearch, setLocalSearch] = useState(filters.search || '');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleSearchInputChange = (value: string) => {
-    onFiltersChange({ search: value });
-  };
+  /**
+   * Hook de debounce para búsqueda con corrección para campos vacíos
+   */
+  const debouncedSearch = useCallback((searchTerm: string) => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    
+    // Normalizar el término de búsqueda
+    const normalizedTerm = searchTerm.trim();
+    
+    // Si el campo está vacío, limpiar el filtro de búsqueda
+    if (normalizedTerm === '') {
+      // Enviar cadena vacía para indicar que no hay filtro (patrón de este componente)
+      onFiltersChange({ search: '' }); // Limpiar filtro inmediatamente
+      return;
+    }
+    
+    // Para búsquedas con contenido, aplicar debounce de .5 segundos (más responsive)
+    debounceRef.current = setTimeout(() => {
+      onFiltersChange({ search: normalizedTerm });
+    }, 500);
+  }, [onFiltersChange]);
+
+  /**
+   * Maneja cambios en la búsqueda con debounce inteligente
+   */
+  const handleSearchInputChange = useCallback((value: string) => {
+    setLocalSearch(value);
+    debouncedSearch(value);
+  }, [debouncedSearch]);
+
+  /**
+   * Efecto para sincronizar estado local con filtros externos
+   */
+  useEffect(() => {
+    setLocalSearch(filters.search || '');
+  }, [filters.search]);
+
+  /**
+   * Cleanup del debounce al desmontar
+   */
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
 
   const handleSearchByChange = (searchBy: 'n_referencia' | 'n_folio_sist') => {
     onFiltersChange({ searchBy });
   };
 
-  const handleOrderByChange = (orderBy: any) => {
+  const handleOrderByChange = (orderBy: 'estatus' | 'n_referencia' | 'n_folio_sist' | 'fecha_creacion') => {
     onFiltersChange({ orderBy });
   };
 
@@ -41,7 +90,7 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
     }
   };
 
-  const hasActiveFilters = filters.search.length > 0;
+  const hasActiveFilters = filters.search && filters.search.length > 0;
 
   return (
     <div className={`bg-white rounded-lg shadow-sm p-4 mb-6 ${className}`}>
@@ -71,8 +120,8 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
           </div>
           <input
             type="text"
-            placeholder="Buscar informes..."
-            value={filters.search}
+            placeholder="Buscar por referencia o folio del sistema"
+            value={localSearch}
             onChange={(e) => handleSearchInputChange(e.target.value)}
             onKeyPress={handleKeyPress}
             className="
@@ -84,7 +133,7 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
             disabled={loading}
             maxLength={100}
           />
-          {filters.search && (
+          {localSearch && (
             <button
               onClick={() => handleSearchInputChange('')}
               className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
@@ -115,15 +164,15 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
         </select>
 
         {/* Ordenamiento */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-stretch">
           <select
             value={filters.orderBy}
-            onChange={(e) => handleOrderByChange(e.target.value)}
+            onChange={(e) => handleOrderByChange(e.target.value as 'estatus' | 'n_referencia' | 'n_folio_sist' | 'fecha_creacion')}
             className="
-              px-3 py-2 border border-gray-300 rounded-l-lg 
+              px-3 py-2 border border-gray-300 rounded-l-lg border-r-0
               focus:ring-2 focus:ring-[#b8ab84] focus:border-[#b8ab84]
               disabled:opacity-50 disabled:cursor-not-allowed
-              font-poppins text-sm
+              font-poppins text-sm min-w-[120px]
             "
             disabled={loading}
           >
@@ -137,9 +186,11 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
           <button
             onClick={handleOrderChange}
             className="
-              px-3 py-2 border border-l-0 border-gray-300 rounded-r-lg
+              px-3 py-2 border border-gray-300 rounded-r-lg
               hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed
-              transition-colors duration-200
+              transition-colors duration-200 min-w-[44px]
+              flex items-center justify-center
+              focus:ring-2 focus:ring-[#b8ab84] focus:border-[#b8ab84]
             "
             disabled={loading}
             title={`Ordenar ${filters.order === 'ASC' ? 'descendente' : 'ascendente'}`}
@@ -171,7 +222,14 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
           {/* Botón Limpiar */}
           {hasActiveFilters && (
             <button
-              onClick={onClear}
+              onClick={() => {
+                // Limpiar debounce pendiente
+                if (debounceRef.current) {
+                  clearTimeout(debounceRef.current);
+                }
+                setLocalSearch('');
+                onClear();
+              }}
               disabled={loading}
               className="
                 flex items-center gap-2 px-4 py-2 text-sm font-medium

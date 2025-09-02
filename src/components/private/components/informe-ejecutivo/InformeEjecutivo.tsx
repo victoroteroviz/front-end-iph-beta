@@ -25,6 +25,7 @@ import PDFExportButton from './components/PDFExportButton';
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';
+import { buildImageUrl } from '../../../../helper/image/image-url.helper';
 
 // Interfaces
 import type { IInformeEjecutivoProps } from '../../../../interfaces/components/informe-ejecutivo.interface';
@@ -243,7 +244,7 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
               {/* Imagen */}
               <div className="relative">
                 <img
-                  src={`https://iph-api.okip.com.mx${state.selectedImage.ruta_foto}`}
+                  src={buildImageUrl(state.selectedImage.ruta_foto, `modal_anexo_${state.selectedImage.id}`)}
                   alt={state.selectedImage.descripcion || `Anexo ${state.selectedImageIndex + 1}`}
                   className="max-w-full max-h-96 object-contain mx-auto block"
                 />

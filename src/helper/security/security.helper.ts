@@ -50,18 +50,34 @@ class SecurityHelper {
   }
 
   /**
-   * Sanitiza strings removiendo caracteres peligrosos
-   * Previene ataques XSS básicos
+   * Sanitiza strings removiendo caracteres peligrosos para formularios
+   * Previene ataques XSS manteniendo acentos y caracteres especiales comunes
    */
   public sanitizeInput(input: string): string {
     if (typeof input !== 'string') return '';
     
     return input
       .trim()
-      .replace(/[<>]/g, '') // Remover < y >
-      .replace(/javascript:/gi, '') // Remover javascript:
-      .replace(/on\w+=/gi, '') // Remover event handlers
-      .substring(0, 1000); // Limitar longitud
+      // Remover tags HTML peligrosos
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+      .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+      .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+      .replace(/<link\b[^<]*>/gi, '')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+      // Remover caracteres HTML básicos peligrosos
+      .replace(/[<>]/g, '')
+      // Remover protocolos peligrosos
+      .replace(/javascript:/gi, '')
+      .replace(/vbscript:/gi, '')
+      .replace(/data:/gi, '')
+      // Remover event handlers
+      .replace(/on\w+\s*=/gi, '')
+      // Remover atributos peligrosos
+      .replace(/src\s*=/gi, '')
+      .replace(/href\s*=/gi, '')
+      // Limitar longitud
+      .substring(0, 1000);
   }
 
   /**

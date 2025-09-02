@@ -197,36 +197,37 @@ const useInformePolicial = (
       }
     }));
 
-    // Debounce para búsquedas
-    if (filters.search !== undefined) {
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-      
-      debounceTimer.current = setTimeout(() => {
-        loadIPHs();
-      }, INFORME_POLICIAL_CONFIG.SEARCH_DEBOUNCE_DELAY);
-    }
-  }, [loadIPHs]);
+    logInfo('InformePolicial', 'Filters updated', { 
+      updatedFilters: filters,
+      newFilters: { ...state.filters, ...filters }
+    });
+
+    // La carga se maneja en el useEffect de filtros
+  }, [state.filters]);
 
   const handleSearch = useCallback(() => {
-    // Cancelar debounce si existe
+    // Cancelar debounce si existe para búsqueda inmediata
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
     
+    // Mostrar loading inmediatamente para mejor UX
     setState(prev => ({ 
       ...prev, 
+      isLoading: true,
       filters: { ...prev.filters, page: 1 } 
     }));
     
     logInfo('InformePolicial', 'Manual search triggered', {
       search: state.filters.search,
-      searchBy: state.filters.searchBy
+      searchBy: state.filters.searchBy,
+      orderBy: state.filters.orderBy,
+      order: state.filters.order
     });
     
-    loadIPHs();
-  }, [state.filters.search, state.filters.searchBy, loadIPHs]);
+    // Ejecutar búsqueda inmediatamente
+    loadIPHs(true);
+  }, [state.filters, loadIPHs]);
 
   const handleClearFilters = useCallback(() => {
     // Cancelar debounce si existe
@@ -234,15 +235,20 @@ const useInformePolicial = (
       clearTimeout(debounceTimer.current);
     }
 
+    // Mostrar loading inmediatamente
     setState(prev => ({
       ...prev,
+      isLoading: true,
       filters: { ...DEFAULT_FILTERS }
     }));
 
-    logInfo('InformePolicial', 'Filters cleared');
+    logInfo('InformePolicial', 'Filters cleared', { 
+      previousFilters: state.filters,
+      newFilters: DEFAULT_FILTERS 
+    });
     
-    // Recargar con filtros limpio se hará por el useEffect de dependencias
-  }, []);
+    // La recarga se maneja automáticamente por el useEffect de filtros
+  }, [state.filters]);
 
   // =====================================================
   // FUNCIONES DE PAGINACIÓN
@@ -330,12 +336,24 @@ const useInformePolicial = (
     loadIPHs();
   }, [checkAccess]); // Solo en mount
 
-  // Efecto de filtros (sin page para evitar double loading)
+  // Efecto de filtros - escucha TODOS los cambios de filtros
   useEffect(() => {
-    const { page, ...otherFilters } = state.filters;
-    // Solo recargar si cambian filtros que no sean page
-    loadIPHs();
-  }, [state.filters.orderBy, state.filters.order, state.filters.page]); // Dependencias específicas
+    // Cancelar debounce anterior
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    // Solo aplicar debounce para búsquedas, cargar inmediatamente para otros filtros
+    if (state.filters.search && state.filters.search.trim() !== '') {
+      // Búsqueda con debounce
+      debounceTimer.current = setTimeout(() => {
+        loadIPHs();
+      }, INFORME_POLICIAL_CONFIG.SEARCH_DEBOUNCE_DELAY);
+    } else {
+      // Sin búsqueda o filtros de ordenamiento/paginación - cargar inmediatamente
+      loadIPHs();
+    }
+  }, [state.filters.search, state.filters.searchBy, state.filters.orderBy, state.filters.order, state.filters.page, loadIPHs]);
 
   // Efecto de auto-refresh
   useEffect(() => {

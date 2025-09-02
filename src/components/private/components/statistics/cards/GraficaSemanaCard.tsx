@@ -1,9 +1,10 @@
 import React, { memo } from 'react';
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from "chart.js";
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import type { IResumenPorSemana } from '../../../../../interfaces/statistics/statistics.interface';
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ChartDataLabels);
 
 interface GraficaSemanaCardProps {
   titulo: string;
@@ -48,7 +49,17 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
       options={{ 
         responsive: true, 
         plugins: { 
-          legend: { display: false } 
+          legend: { display: false },
+          datalabels: {
+            anchor: 'center',
+            align: 'center',
+            color: 'white',
+            font: {
+              weight: 'bold',
+              size: 12
+            },
+            formatter: (value: number) => value > 0 ? value : ''
+          }
         } 
       }} 
     />

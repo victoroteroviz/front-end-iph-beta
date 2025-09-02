@@ -227,28 +227,144 @@ export const getDataFunction = async (params) => {
 
 ## SISTEMA DE ROLES Y PERMISOS
 
-### **Jerarquía de Roles:**
-1. **SuperAdmin** - Acceso completo a todo
-2. **Administrador** - Acceso completo excepto configuración
-3. **Superior** - Acceso a inicio, estadísticas, IPH
-4. **Elemento** - Acceso solo a IPH básico
+### **🎯 Arquitectura Híbrida Implementada (v3.1.0)**
 
-### **Control de Acceso por Componente:**
-- **Inicio**: SuperAdmin, Admin, Superior
-- **EstadisticasUsuario**: SuperAdmin, Admin, Superior  
-- **HistorialIPH**: SuperAdmin, Admin únicamente
-- **IphOficial**: SuperAdmin, Admin, Superior
-- **InformeEjecutivo**: Todos los roles (solo lectura con exportación PDF)
-- **PerfilUsuario**: Todos los roles (con restricciones por operación)
-- **Usuarios**: SuperAdmin, Admin, Superior (con permisos granulares CRUD)
+**Enfoque:** Hardcodeado para DX + Validación dinámica contra .env  
+**Archivo:** `/src/config/permissions.config.ts`  
+**Helper:** `/src/helper/role/role.helper.ts`
 
-### **Implementación:**
+#### **📋 Definición de Roles del Sistema:**
 ```typescript
-const userRoles = userData.roles || [];
-const allowedRoleNames = ['SuperAdmin', 'Administrador'];
-const hasPermission = userRoles.some(role => 
-  allowedRoleNames.includes(role.nombre)
-);
+export const SYSTEM_ROLES = {
+  SUPERADMIN: [{ id: 1, nombre: 'SuperAdmin' }],
+  ADMIN: [{ id: 2, nombre: 'Administrador' }], 
+  SUPERIOR: [{ id: 3, nombre: 'Superior' }],
+  ELEMENTO: [{ id: 4, nombre: 'Elemento' }]
+} as const;
+```
+
+#### **🔄 Jerarquía Automática por Orden:**
+- **SUPERADMIN (nivel 1)** → Acceso a: Admin, Superior, Elemento
+- **ADMIN (nivel 2)** → Acceso a: Superior, Elemento  
+- **SUPERIOR (nivel 3)** → Acceso a: Elemento
+- **ELEMENTO (nivel 4)** → Solo acceso propio
+
+#### **🔒 Validación Doble Segura:**
+- **ID + Nombre**: Previene manipulación de roles
+- **Contra ALLOWED_ROLES**: Solo roles válidos del .env funcionan
+- **TypeScript**: Autocompletado y validación compile-time
+
+### **🚀 APIs Disponibles:**
+
+#### **Funciones Específicas:**
+```typescript
+import { isSuperAdmin, isAdmin, isSuperior, isElemento } from '@/config/permissions.config';
+
+// Uso en componentes
+const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
+const hasAccess = isSuperAdmin(userRoles); // ← TypeScript autocomplete
+```
+
+#### **Funciones Jerárquicas:**
+```typescript
+import { canAccessAdmin, canAccessSuperior } from '@/config/permissions.config';
+
+// Acceso jerárquico automático
+const canManageUsers = canAccessAdmin(userRoles); // SuperAdmin + Admin
+const canViewStats = canAccessSuperior(userRoles); // SuperAdmin + Admin + Superior
+```
+
+#### **Funciones Genéricas:**
+```typescript
+import { hasRole, hasHierarchicalAccess, SystemRoleType } from '@/config/permissions.config';
+
+// Con autocompletado TypeScript
+const isSuper = hasRole(userRoles, 'SUPERADMIN'); // ← Valida string
+const canAccess = hasHierarchicalAccess(userRoles, 'SUPERIOR'); // ← Jerarquía
+```
+
+### **🎮 Control de Acceso por Componente:**
+
+#### **Nivel 1 - SuperAdmin:**
+- **Componentes**: Todos + Configuración del sistema
+- **Operaciones**: Gestión de roles, configuración global
+
+#### **Nivel 2 - Admin:**  
+- **Componentes**: Inicio, Estadísticas, Usuarios, IPH, Historial
+- **Operaciones**: CRUD completo, gestión de usuarios
+
+#### **Nivel 3 - Superior:**
+- **Componentes**: Inicio, Estadísticas, IPH, InformeEjecutivo
+- **Operaciones**: Supervisión, reportes, IPH avanzado
+
+#### **Nivel 4 - Elemento:**
+- **Componentes**: IPH, InformeEjecutivo (solo lectura), Perfil  
+- **Operaciones**: IPH básico, consulta propia
+
+### **📝 Patrón de Implementación en Componentes:**
+
+#### **Opción A - Función Específica:**
+```typescript
+// En useUsuarios.ts
+import { canAccessAdmin } from '@/config/permissions.config';
+
+const checkPermissions = useCallback(() => {
+  const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
+  return {
+    canManage: canAccessAdmin(userRoles), // SuperAdmin + Admin
+    canView: true // Todos pueden ver
+  };
+}, []);
+```
+
+#### **Opción B - Función Genérica:**
+```typescript
+// En useHistorialIPH.ts  
+import { hasRole } from '@/config/permissions.config';
+
+const hasAccess = useMemo(() => {
+  const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
+  return hasRole(userRoles, 'SUPERADMIN') || hasRole(userRoles, 'ADMIN');
+}, []);
+```
+
+#### **Opción C - Jerarquía Automática:**
+```typescript
+// En useInformeEjecutivo.ts
+import { canAccessElemento } from '@/config/permissions.config';
+
+const canView = useMemo(() => {
+  const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
+  return canAccessElemento(userRoles); // Todos los roles pueden acceder
+}, []);
+```
+
+### **⚙️ Variables de Entorno:**
+```bash
+VITE_SUPERADMIN_ROLE=[{"id":1,"nombre":"SuperAdmin"}]
+VITE_ADMIN_ROLE=[{"id":2,"nombre":"Administrador"}]
+VITE_SUPERIOR_ROLE=[{"id":3,"nombre":"Superior"}]  
+VITE_ELEMENTO_ROLE=[{"id":4,"nombre":"Elemento"}]
+```
+
+### **🔧 Ventajas del Sistema Híbrido:**
+- ✅ **Performance**: Sin parsing constante de .env
+- ✅ **DX**: Autocompletado TypeScript perfecto  
+- ✅ **Seguridad**: Validación doble ID + nombre
+- ✅ **Flexibilidad**: Configuración por ambiente
+- ✅ **Mantenibilidad**: Un solo lugar para cambios
+- ✅ **Testing**: Mocks simples y directos
+
+### **📊 Migración de Código Legacy:**
+```typescript
+// ANTES (patrón disperso)
+const isSuperAdmin = userRoles.some((role: any) => role.nombre === 'SuperAdmin');
+const isAdmin = userRoles.some((role: any) => role.nombre === 'Administrador');
+
+// DESPUÉS (centralizado)
+import { isSuperAdmin, isAdmin } from '@/config/permissions.config';
+const hasSuperAccess = isSuperAdmin(userRoles);
+const hasAdminAccess = isAdmin(userRoles);
 ```
 
 ## SISTEMA DE MOCKS

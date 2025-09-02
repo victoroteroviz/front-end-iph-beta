@@ -112,12 +112,13 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
   // Estados de carga y autorización
   if (autorizado === null || loading || userLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner 
-          size="large"
-          message={autorizado === null ? 'Verificando permisos...' : 'Cargando dashboard...'} 
-          color="#4d4725"
-        />
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-3 bg-white rounded-lg px-6 py-4 shadow-lg">
+          <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#4d4725] border-t-transparent"></div>
+          <span className="text-[#4d4725] font-medium">
+            {autorizado === null ? 'Verificando permisos...' : 'Cargando dashboard...'}
+          </span>
+        </div>
       </div>
     );
   }

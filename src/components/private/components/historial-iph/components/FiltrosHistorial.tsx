@@ -3,15 +3,14 @@
  * Filtros avanzados para el historial de IPH
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { 
   Filter, 
   Search, 
   Calendar, 
   User, 
   AlertTriangle,
-  X,
-  RefreshCw
+  X
 } from 'lucide-react';
 
 // Interfaces
@@ -33,6 +32,8 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
   className = ''
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [localBusqueda, setLocalBusqueda] = useState(filtros.busqueda || '');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
    * Opciones de estatus para el selector
@@ -62,7 +63,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
       thisWeek: {
         inicio: new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         fin: today.toISOString().split('T')[0],
-        label: 'Última semana'
+        label: 'Últimos 7 días'
       },
       thisMonth: {
         inicio: new Date(currentYear, currentMonth, 1).toISOString().split('T')[0],
@@ -72,46 +73,83 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
       lastMonth: {
         inicio: new Date(currentYear, currentMonth - 1, 1).toISOString().split('T')[0],
         fin: new Date(currentYear, currentMonth, 0).toISOString().split('T')[0],
-        label: 'Mes pasado'
+        label: 'Mes anterior'
       }
     };
   }, []);
 
   /**
-   * Maneja cambios en los filtros
+   * Hook de debounce para búsqueda con corrección para campos vacíos
    */
-  const handleFilterChange = (key: string, value: string) => {
+  const debouncedSearch = useCallback((searchTerm: string) => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    
+    // Normalizar el término de búsqueda (quitar espacios extra)
+    const normalizedTerm = searchTerm.trim();
+    
+    // Si el campo está vacío, remover completamente el filtro de búsqueda
+    if (normalizedTerm === '') {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { busqueda, ...filtrosSinBusqueda } = filtros;
+      onFiltrosChange(filtrosSinBusqueda);
+      return;
+    }
+    
+    // Para búsquedas con contenido, aplicar debounce de 3 segundos
+    debounceRef.current = setTimeout(() => {
+      onFiltrosChange({
+        ...filtros,
+        busqueda: normalizedTerm
+      });
+    }, 3000);
+  }, [filtros, onFiltrosChange]);
+
+  /**
+   * Maneja cambios en la búsqueda con debounce inteligente
+   * - Actualiza inmediatamente el estado local para mostrar el valor al usuario
+   * - Aplica debounce para enviar cambios al filtro (3s para contenido, inmediato para vacío)
+   */
+  const handleBusquedaChange = useCallback((value: string) => {
+    setLocalBusqueda(value);
+    debouncedSearch(value);
+  }, [debouncedSearch]);
+
+  /**
+   * Maneja cambios en otros filtros (sin debounce)
+   */
+  const handleFilterChange = useCallback((key: string, value: string) => {
     onFiltrosChange({
       ...filtros,
       [key]: value
     });
-  };
+  }, [filtros, onFiltrosChange]);
 
   /**
    * Aplica rango de fechas rápido
    */
-  const applyQuickDateRange = (range: keyof typeof quickDateRanges) => {
+  const applyQuickDateRange = useCallback((range: keyof typeof quickDateRanges) => {
     const dateRange = quickDateRanges[range];
     onFiltrosChange({
       ...filtros,
       fechaInicio: dateRange.inicio,
       fechaFin: dateRange.fin
     });
-  };
+  }, [filtros, onFiltrosChange, quickDateRanges]);
 
   /**
-   * Limpia todos los filtros
+   * Limpia todos los filtros removiendo todas las propiedades
    */
-  const clearAllFilters = () => {
-    onFiltrosChange({
-      fechaInicio: '',
-      fechaFin: '',
-      estatus: '',
-      tipoDelito: '',
-      usuario: '',
-      busqueda: ''
-    });
-  };
+  const clearAllFilters = useCallback(() => {
+    // Limpiar debounce pendiente
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    
+    setLocalBusqueda('');
+    onFiltrosChange({}); // Objeto vacío para remover todos los filtros
+  }, [onFiltrosChange]);
 
   /**
    * Verifica si hay filtros aplicados
@@ -119,6 +157,42 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
   const hasActiveFilters = useMemo(() => {
     return Object.values(filtros).some(value => value && value.trim() !== '');
   }, [filtros]);
+
+  /**
+   * Efecto para sincronizar estado local con filtros externos
+   */
+  useEffect(() => {
+    setLocalBusqueda(filtros.busqueda || '');
+  }, [filtros.busqueda]);
+
+  /**
+   * Cleanup del debounce al desmontar
+   */
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
+
+  /**
+   * Efecto para sincronizar estado local con filtros externos
+   */
+  useEffect(() => {
+    setLocalBusqueda(filtros.busqueda || '');
+  }, [filtros.busqueda]);
+
+  /**
+   * Cleanup del debounce al desmontar
+   */
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className={`bg-white rounded-lg shadow-sm border border-gray-200 ${className}`}>
@@ -175,17 +249,17 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
         {/* Búsqueda general */}
         <div className="relative">
           <label htmlFor="busqueda-general" className="block text-sm font-medium text-gray-700 mb-1">
-            Búsqueda General
+            Buscar IPH
           </label>
           <div className="relative">
             <Search size={16} className="absolute left-3 top-3 text-gray-400" aria-hidden="true" />
             <input
               id="busqueda-general"
               type="text"
-              value={filtros.busqueda || ''}
-              onChange={(e) => handleFilterChange('busqueda', e.target.value)}
+              value={localBusqueda}
+              onChange={(e) => handleBusquedaChange(e.target.value)}
               disabled={loading}
-              placeholder="Buscar por número de reporte, ubicación, tipo de delito..."
+              placeholder="Buscar por número de reporte, ubicación o tipo de delito"
               className="
                 w-full pl-10 pr-4 py-2
                 border border-gray-300 rounded-md
@@ -208,7 +282,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
           {/* Estatus */}
           <div>
             <label htmlFor="estatus-filter" className="block text-sm font-medium text-gray-700 mb-1">
-              Estatus
+              Estado
             </label>
             <select
               id="estatus-filter"
@@ -224,7 +298,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
                 transition-colors duration-200
               "
             >
-              <option value="">Todos los estatus</option>
+              <option value="">Todos los estados</option>
               {estatusOptions.map(({ value, label }) => (
                 <option key={value} value={value}>
                   {label}
@@ -252,7 +326,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
                 transition-colors duration-200
               "
             >
-              <option value="">Todos los tipos</option>
+              <option value="">Cualquier tipo de delito</option>
               {tiposDelitoOptions.map((tipo) => (
                 <option key={tipo} value={tipo}>
                   {tipo}
@@ -274,7 +348,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
                 value={filtros.usuario || ''}
                 onChange={(e) => handleFilterChange('usuario', e.target.value)}
                 disabled={loading}
-                placeholder="Nombre del usuario"
+                placeholder="Nombre completo o usuario"
                 className="
                   w-full pl-10 pr-4 py-2
                   border border-gray-300 rounded-md

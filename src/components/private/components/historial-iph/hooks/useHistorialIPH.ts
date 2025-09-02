@@ -45,7 +45,7 @@ import { getRouteForUser } from '../../../../../helper/navigation/navigation.hel
 const DEFAULT_CONFIG = {
   itemsPerPage: 10,
   maxRetries: 3,
-  debounceTime: 500,
+  debounceTime: 3000,
   autoRefreshInterval: 300000 // 5 minutos
 } as const;
 
