@@ -37,13 +37,64 @@ export const getAllIph = async (params: getIph ={
 }
 
 export const getIphById = async (id: string): Promise<I_IPHById> => {
-  const url: string = `${urlFather}/${id}`;
+  // Validación del parámetro de entrada
+  if (!id || id.trim() === '') {
+    throw new Error('El ID del IPH es requerido');
+  }
+
+  const url: string = `${urlFather}/${encodeURIComponent(id)}`;
+  
   try {
     const response = await http.get<I_IPHById>(url);
+    
+    // Validación de la respuesta
+    if (!response.data) {
+      throw new Error('No se encontraron datos para el IPH solicitado');
+    }
+
     const iphFound: I_IPHById = response.data;
+    
+    // Validaciones opcionales de estructura crítica
+    if (!iphFound.id || !iphFound.n_referencia) {
+      console.warn('Datos del IPH incompletos:', { 
+        id: iphFound.id, 
+        referencia: iphFound.n_referencia 
+      });
+    }
+
+    // Validar que las propiedades obligatorias existan
+    const requiredFields = ['id', 'n_referencia', 'fecha_creacion'];
+    const missingFields = requiredFields.filter(field => !iphFound[field as keyof I_IPHById]);
+    
+    if (missingFields.length > 0) {
+      console.warn(`Campos requeridos faltantes en IPH ${id}:`, missingFields);
+    }
+
     return iphFound;
   } catch (error) {
-    throw new Error((error as Error).message || 'Error desconocido, habla con soporte');
+    // Manejo mejorado de errores
+    if (error instanceof Error) {
+      // Si es un error HTTP específico
+      if (error.message.includes('404')) {
+        throw new Error(`IPH con ID ${id} no encontrado`);
+      }
+      if (error.message.includes('403')) {
+        throw new Error('No tienes permisos para acceder a este IPH');
+      }
+      if (error.message.includes('401')) {
+        throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente');
+      }
+      if (error.message.includes('500')) {
+        throw new Error('Error interno del servidor. Intenta nuevamente más tarde');
+      }
+      if (error.message.includes('timeout')) {
+        throw new Error('Tiempo de espera agotado. Verifica tu conexión a internet');
+      }
+      
+      throw new Error(error.message || 'Error al obtener el IPH');
+    }
+    
+    throw new Error('Error desconocido al obtener el IPH. Contacta con soporte');
   }
 }
 
