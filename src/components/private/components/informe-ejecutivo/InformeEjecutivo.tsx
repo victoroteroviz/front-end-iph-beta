@@ -5,11 +5,20 @@
  * Mantiene diseño original con colores #c2b186, #fdf7f1
  */
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { RefreshCw, FileX } from 'lucide-react';
 
 // Hook personalizado
 import useInformeEjecutivo from './hooks/useInformeEjecutivo';
+
+// Componentes
+import DatosGenerales from './components/DatosGenerales';
+import TabNavigation from './components/TabNavigation';
+import DummySection from './components/DummySection';
+import PDFExportButton from './components/PDFExportButton';
+
+// Utils
+import { getTabsForIphType, getTabsWithStatus } from './utils/tabsConfig';
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';
@@ -27,6 +36,49 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
     state,
     refreshInforme
   } = useInformeEjecutivo(informeId);
+
+  // Estado para el tab activo
+  const [activeTab, setActiveTab] = useState('datos-generales');
+
+  // Configuración de tabs basada en el tipo de IPH
+  const tabsWithStatus = useMemo(() => {
+    if (!state.responseData || !state.responseData.iph || Array.isArray(state.responseData.iph)) {
+      return [];
+    }
+
+    const tipoIphNombre = state.responseData.iph.tipoIph?.nombre || '';
+    const tabsConfig = getTabsForIphType(tipoIphNombre);
+    
+    logInfo('InformeEjecutivo', 'Tabs configuration loaded', {
+      tipoIph: tipoIphNombre,
+      tabsCount: tabsConfig.length
+    });
+
+    return getTabsWithStatus(tabsConfig, state.responseData);
+  }, [state.responseData]);
+
+  // Handler para cambio de tab
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    logInfo('InformeEjecutivo', 'Tab changed', { tabId });
+  };
+
+  // Handler para exportación PDF
+  const handlePDFExport = async (id: string) => {
+    logInfo('InformeEjecutivo', 'PDF export requested', { id });
+    // TODO: Implementar exportación real cuando se active el flag
+    alert('Funcionalidad de exportación PDF en desarrollo');
+  };
+
+  // Obtener datos de la sección activa
+  const getActiveTabData = () => {
+    if (!state.responseData || tabsWithStatus.length === 0) return null;
+    
+    const activeTabConfig = tabsWithStatus.find(tab => tab.id === activeTab);
+    if (!activeTabConfig) return null;
+
+    return state.responseData[activeTabConfig.dataKey];
+  };
 
   // Log cuando el componente se monta
   React.useEffect(() => {
@@ -115,138 +167,67 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
     <div className={`bg-[#f8f0e7] min-h-screen p-6 text-[#4d4725] font-poppins ${className}`}>
       <div className="max-w-6xl mx-auto space-y-6">
         
-        {/* Header del Informe - Datos básicos de I_IphData */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <h2 
-            className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-            style={{ backgroundColor: '#c2b186' }}
-          >
-            Datos Generales IPH
-          </h2>
-          
-          <div 
-            className="border border-gray-300 rounded-md shadow-sm p-4"
-            style={{ backgroundColor: '#fdf7f1' }}
-          >
-            {Array.isArray(iph) ? (
-              <div className="text-center text-[#4d4725] py-4">
-                <p>No se encontraron datos del informe</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[#4d4725]">
-                
-                {/* Columna izquierda */}
-                <div className="space-y-2">
-                  <p>
-                    <span className="font-semibold">ID:</span> {iph.id || 'No disponible'}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Referencia:</span> {iph.nReferencia || 'No disponible'}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Folio Sistema:</span> {iph.nFolioSist || 'No disponible'}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Estatus:</span> {iph.estatus || 'No disponible'}
-                  </p>
-                </div>
-
-                {/* Columna derecha */}
-                <div className="space-y-2">
-                  <p>
-                    <span className="font-semibold">Tipo IPH:</span> {iph.tipoIph?.nombre || 'No especificado'}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Fecha de creación:</span>{' '}
-                    {iph.fechaCreacion ? new Date(iph.fechaCreacion).toLocaleString('es-MX') : 'No disponible'}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Archivos:</span> {iph.archivos?.length || 0} archivo(s)
-                  </p>
-                  <p>
-                    <span className="font-semibold">Fotos:</span> {iph.fotos?.length || 0} foto(s)
-                  </p>
-                </div>
-              </div>
+        {/* Header con información básica y botón PDF */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-[#4d4725]">
+              Informe Ejecutivo IPH
+            </h1>
+            {!Array.isArray(iph) && iph?.nReferencia && (
+              <p className="text-gray-600 mt-1">
+                Referencia: {iph.nReferencia}
+              </p>
             )}
           </div>
+          
+          {showPDFButton && informeId && (
+            <PDFExportButton
+              informeId={informeId}
+              referencia={!Array.isArray(iph) ? iph?.nReferencia : undefined}
+              onExport={handlePDFExport}
+            />
+          )}
         </div>
 
-        {/* Sección de Hechos */}
-        {!Array.isArray(iph) && iph.hechos && (
-          <div className="bg-white rounded-lg shadow p-4 mb-6">
-            <h2 
-              className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-              style={{ backgroundColor: '#c2b186' }}
-            >
-              Hechos
-            </h2>
-            
-            <div 
-              className="border border-gray-300 rounded-md shadow-sm p-4"
-              style={{ backgroundColor: '#fdf7f1' }}
-            >
-              <p className="text-[#4d4725] whitespace-pre-wrap">
-                {iph.hechos}
-              </p>
-            </div>
-          </div>
+        {/* Sistema de navegación por tabs */}
+        {tabsWithStatus.length > 0 && (
+          <TabNavigation
+            tabs={tabsWithStatus}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
         )}
 
-        {/* Sección de Observaciones */}
-        {!Array.isArray(iph) && iph.observaciones && (
-          <div className="bg-white rounded-lg shadow p-4 mb-6">
-            <h2 
-              className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-              style={{ backgroundColor: '#c2b186' }}
-            >
-              Observaciones
-            </h2>
-            
-            <div 
-              className="border border-gray-300 rounded-md shadow-sm p-4"
-              style={{ backgroundColor: '#fdf7f1' }}
-            >
-              <p className="text-[#4d4725] whitespace-pre-wrap">
-                {iph.observaciones}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* TODO: Componente hijo para Mapa (próximo paso) */}
-        {!Array.isArray(iph) && iph.coordenadas && (
-          <div className="bg-white rounded-lg shadow p-4 mb-6">
-            <h2 
-              className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-              style={{ backgroundColor: '#c2b186' }}
-            >
-              Ubicación
-            </h2>
-            
-            <div 
-              className="border border-gray-300 rounded-md shadow-sm p-4"
-              style={{ backgroundColor: '#fdf7f1' }}
-            >
-              <div className="text-[#4d4725]">
-                <p><span className="font-semibold">Latitud:</span> {iph.coordenadas.latitud}</p>
-                <p><span className="font-semibold">Longitud:</span> {iph.coordenadas.longitud}</p>
-                <p className="text-sm text-gray-600 mt-2">
-                  * Mapa interactivo se implementará en el siguiente paso
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Contenido de la sección activa */}
+        <div className="min-h-[400px]">
+          {activeTab === 'datos-generales' ? (
+            <DatosGenerales iph={iph} />
+          ) : (
+            <DummySection
+              sectionName={tabsWithStatus.find(tab => tab.id === activeTab)?.label || 'Sección'}
+              data={getActiveTabData()}
+            />
+          )}
+        </div>
 
         {/* Información del sistema */}
-        <div className="mt-8 text-center text-sm text-gray-600">
-          <p>
-            Informe Ejecutivo IPH • Solo Lectura 
-          </p>
-          {readonly && (
-            <p className="mt-1">
-              Este informe es de solo lectura y no puede ser modificado
+        <div className="mt-8 text-center text-sm text-gray-600 border-t pt-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <p>
+              Informe Ejecutivo IPH • Solo Lectura 
+              {readonly && " • No editable"}
+            </p>
+            
+            {tabsWithStatus.length > 0 && (
+              <p className="text-xs">
+                {tabsWithStatus.filter(t => t.hasData).length} de {tabsWithStatus.length} secciones con datos
+              </p>
+            )}
+          </div>
+          
+          {!Array.isArray(iph) && iph?.tipoIph?.nombre && (
+            <p className="text-xs text-gray-500 mt-2">
+              Tipo: {iph.tipoIph.nombre}
             </p>
           )}
         </div>
