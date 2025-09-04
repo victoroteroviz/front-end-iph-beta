@@ -32,7 +32,15 @@ const USE_MOCK_PDF_EXPORT = true; // TODO: Cambiar a false cuando esté la API r
 const transformServerDataToInformeEjecutivo = (serverData: any): IInformeEjecutivo => {
   logInfo('InformeEjecutivoService', 'Transforming server data to component format', {
     hasData: !!serverData,
-    id: serverData?.id
+    id: serverData?.id,
+    hasKnowledge: !!serverData?.conocimiento_hecho,
+    hasDetentions: Array.isArray(serverData?.detencion_pertenencias) ? serverData.detencion_pertenencias.length : 0,
+    hasVehicles: Array.isArray(serverData?.cInspeccionVehiculo) ? serverData.cInspeccionVehiculo.length : 0,
+    hasWeapons: Array.isArray(serverData?.armas_objetos) ? serverData.armas_objetos.length : 0,
+    hasContinuations: Array.isArray(serverData?.continuacion) ? serverData.continuacion.length : 0,
+    hasOfficers: Array.isArray(serverData?.disposicion_ofc) ? serverData.disposicion_ofc.length : 0,
+    hasFiles: Array.isArray(serverData?.archivos) ? serverData.archivos.length : 0,
+    hasInterviews: Array.isArray(serverData?.entrevistas) ? serverData.entrevistas.length : 0
   });
 
   return {
@@ -142,6 +150,30 @@ const transformServerDataToInformeEjecutivo = (serverData: any): IInformeEjecuti
           tamaño_archivo: foto.tamaño_archivo,
           orden: foto.orden || index
         }))
+      : [],
+
+    // NUEVAS SECCIONES AGREGADAS
+    conocimiento_hecho: serverData.conocimiento_hecho || null,
+    detencion_pertenencias: Array.isArray(serverData.detencion_pertenencias) 
+      ? serverData.detencion_pertenencias 
+      : [],
+    cInspeccionVehiculo: Array.isArray(serverData.cInspeccionVehiculo) 
+      ? serverData.cInspeccionVehiculo 
+      : [],
+    armas_objetos: Array.isArray(serverData.armas_objetos) 
+      ? serverData.armas_objetos 
+      : [],
+    continuacion: Array.isArray(serverData.continuacion) 
+      ? serverData.continuacion 
+      : [],
+    disposicion_ofc: Array.isArray(serverData.disposicion_ofc) 
+      ? serverData.disposicion_ofc 
+      : [],
+    archivos: Array.isArray(serverData.archivos) 
+      ? serverData.archivos 
+      : [],
+    entrevistas: Array.isArray(serverData.entrevistas) 
+      ? serverData.entrevistas 
       : [],
     
     // Metadatos

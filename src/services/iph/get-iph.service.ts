@@ -6,7 +6,7 @@ import { API_BASE_URL } from "../../config/env.config";
 import { API_BASE_ROUTES } from "../../config/routes.config";
 //+Interfaces
 import type { getIph } from "../../interfaces/request/iph/request-iph.service";
-import type { IPaginatedIPH, I_IPHById } from "../../interfaces/iph/iph.interface";
+import type { IPaginatedIPH, ResponseIphData } from "../../interfaces/iph/iph.interface";
 
 const http: HttpHelper = HttpHelper.getInstance({
   baseURL: API_BASE_URL,
@@ -36,7 +36,7 @@ export const getAllIph = async (params: getIph ={
   }
 }
 
-export const getIphById = async (id: string): Promise<I_IPHById> => {
+export const getIphById = async (id: string): Promise<ResponseIphData> => {
   // Validación del parámetro de entrada
   if (!id || id.trim() === '') {
     throw new Error('El ID del IPH es requerido');
@@ -45,29 +45,28 @@ export const getIphById = async (id: string): Promise<I_IPHById> => {
   const url: string = `${urlFather}/${encodeURIComponent(id)}`;
   
   try {
-    const response = await http.get<I_IPHById>(url);
+    const response = await http.get<ResponseIphData>(url);
     
     // Validación de la respuesta
     if (!response.data) {
       throw new Error('No se encontraron datos para el IPH solicitado');
     }
 
-    const iphFound: I_IPHById = response.data;
+    const iphFound: ResponseIphData = response.data;
     
-    // Validaciones opcionales de estructura crítica
-    if (!iphFound.id || !iphFound.n_referencia) {
-      console.warn('Datos del IPH incompletos:', { 
-        id: iphFound.id, 
-        referencia: iphFound.n_referencia 
-      });
+    // Validaciones opcionales de estructura crítica para la nueva estructura
+    if (!iphFound.iph || (Array.isArray(iphFound.iph) && iphFound.iph.length === 0)) {
+      console.warn('Datos principales del IPH no encontrados:', { iphData: iphFound.iph });
     }
 
-    // Validar que las propiedades obligatorias existan
-    const requiredFields = ['id', 'n_referencia', 'fecha_creacion'];
-    const missingFields = requiredFields.filter(field => !iphFound[field as keyof I_IPHById]);
-    
-    if (missingFields.length > 0) {
-      console.warn(`Campos requeridos faltantes en IPH ${id}:`, missingFields);
+    // Validar estructura básica si iph no es array vacío
+    if (!Array.isArray(iphFound.iph) && iphFound.iph) {
+      if (!iphFound.iph.id || !iphFound.iph.nReferencia) {
+        console.warn('Campos críticos del IPH faltantes:', { 
+          id: iphFound.iph.id, 
+          referencia: iphFound.iph.nReferencia 
+        });
+      }
     }
 
     return iphFound;

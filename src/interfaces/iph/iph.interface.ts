@@ -22,279 +22,297 @@ export interface IPaginatedIPH{
   data: IAllIph[]
 }
 
-export interface I_IPHById {
-  id: string;
-  n_referencia: string;
-  n_folio_sist: string;
-  observaciones: string;
-  latitud: string;
-  longitud: string;
-  hechos: string;
-  fecha_creacion: string;
-  fecha_subida: string;
-  fecha_actualizacion: string;
-  primer_respondiente: PrimerRespondiente;
-  estatusId: number | null;
-  estatus: Estatus | null;
-  tipoId: number | null;
-  tipo: Tipo | null;
-  conocimiento_hecho: ConocimientoHecho;
-  lugar_intervencion: LugarIntervencion;
-  narrativaHechos: NarrativaHechos;
-  detencion_pertenencias: DetencionPertenencias[];
-  cInspeccionVehiculo: InspeccionVehiculo[];
-  armas_objetos: ArmasObjetos[];
-  uso_fuerza: UsoFuerza;
-  entrega_recepcion: EntregaRecepcion;
-  continuacion: Continuacion[];
-  ruta_fotos_lugar: RutaFotosLugar[];
-  disposicion_ofc: DisposicionOfc[];
-  archivos: Archivos[];
-  entrevistas: Entrevistas[];
+// Nueva interfaz principal que devuelve el backend
+export interface ResponseIphData  {
+  iph: I_IphData | [];
+  primerRespondiente: IPrimerRespondiente | [];
+  lugarIntervencion: ILugarIntervencion[] | ILugarIntervencion | [];
+  conocimientoHecho: IConocimientoHecho | [];
+  narrativaHecho: INarrativa | [];
+  puestaDisposicion: IPuestaDisposicion | IPuestaDisposicion[] | [];
+  detencion: IDetencion[] | IDetencion | [] | undefined;
+  usoFuerza: IUsoFuerza | IUsoFuerza[] | [] | undefined;
+  inspeccionVehiculo: I_InspeccionVehiculo | I_InspeccionVehiculo[] | [] | undefined;
+  armaObjeto: I_ArmaObjeto | I_ArmaObjeto[] | [] | undefined;
+  entrevista: IEntrevista | IEntrevista[] | [] | undefined;
+  entregaRecepcion: IEntregaRecepcion | undefined | IEntregaRecepcion[] | [];
+  continuacion: IContinuacion | [] | IContinuacion[] | undefined;
 }
 
-export interface ConocimientoHecho {
-  id: number;
-  n_conocimiento: string;
-  doc_conocimiento: string;
-  f_conocimiento: string;
-  f_arribo: string;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
+export interface I_IphData {
+  id: string | undefined;
+  nReferencia: string | undefined;
+  nFolioSist: string | undefined;
+  observaciones: string | undefined;
+  coordenadas: ICoordenadas | undefined;
+  hechos: string | undefined;
+
+  estatus: string | undefined;
+  tipoIph: ITipoIph | undefined;
+
+  archivos: IArchivo[] | undefined;
+
+  fotos: string[] | undefined;
+  fechaCreacion: string | undefined;
+  // fechaSubida: string | undefined;
+  // fechaActualizacion: string | undefined;
 }
 
-export interface LugarIntervencion {
-  id: number;
-  calle_tramo: string;
-  n_exterior: string;
-  n_interior: string;
-  referencia: string;
-  latitud: string;
-  longitud: string;
-  zoom_nivel: number;
-  croquis: string;
-  ruta_mapa: string;
-  r_inspeccion: boolean;
-  e_objeto: boolean;
-  preservo: boolean;
-  priorizo: boolean;
-  riesgo_natural: boolean;
-  riesgo_social: boolean;
-  especificacion_riesgo: string;
-  referencia1: string;
-  referencia2: string;
-  fecha_creacion: string;
+export interface IArchivo {
+  titulo: string | undefined;
+  descripcion: string | undefined;
+  archivo: string | undefined;
+  tipo: string | undefined;
+  
 }
 
-export interface NarrativaHechos {
-  id: number;
-  contenido: string;
-  fecha_creacion: string;
+export interface IPrimerRespondiente {
+  foto: string | undefined;
+  nombre: string | undefined;
+  primerApellido: string | undefined;
+  segundoApellido: string | undefined;
+  institucion: string | undefined;
+  gradoCargo: string | undefined;
+  unidadArribo: string | undefined;
+  nElementos: number | undefined;
 }
 
-export interface DetencionPertenencias {
-  id: number;
-  rnd: string;
-  fecha_hora: string;
-  primer_apellido_detenido: string;
-  segundo_apellido_detenido: string;
-  nombres_detenido: string;
-  alias_detenido: string;
-  nacionalidad: string;
-  tipo_nacionalidad: string | null;
-  sexo: string;
-  fecha_nacimiento: string;
-  edad: string;
-  identificacion: string;
-  tipo_identificacion: string | null;
-  numero_identificacion: string;
-  domicilio_detenido: string;
-  numero_exterior_detenido: string;
-  numero_interior_detenido: string;
-  referencias_detenido: string | null;
-  descripcion_detenido: string;
-  lesiones_visibles: string;
-  padecimiento: string;
-  grupo_vulnerable: string;
-  tipo_grupo_vulnerable: string | null;
-  grupo_delictivo: string;
-  primer_apellido_conocido: string;
-  segundo_apellido_conocido: string;
-  nombres_conocido: string;
-  telefono_conocido: string | null;
-  lectura_derechos: boolean;
-  firma_derechos: string | null;
-  objeto_encontrado: boolean;
-  recolecto_objeto: boolean;
-  lugar_detencion: boolean;
-  calle_detencion: string | null;
-  numero_exterior_detencion: string | null;
-  numero_interior_detencion: string | null;
-  referencias_detencion: string | null;
-  lugar_traslado: string;
-  tipo_lugar_traslado: string | null;
-  observaciones: string | null;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
+export interface ILugarIntervencion {
+  calleTramo: string | undefined;
+  nExterior: string | undefined;
+  nInterior: string | undefined;
+  referencia: string | undefined;
+  coordenadas: ICoordenadas | undefined;
+  zoomNivel: number | undefined;
+  croquis: string | undefined;
+  rutaMapa: string | undefined;
+  rInspeccion: boolean | undefined;
+  eObjeto: boolean | undefined;
+  preservo: boolean | undefined;
+  priorizo: boolean | undefined;
+  riesgoNatural: boolean| undefined;
+  riesgoSocial: boolean|undefined;
+  especificacionRiesgo: string | undefined;
+  referencia1: string | undefined;
+  referencia2: string | undefined;
+  localizacion: ILocalizacion | undefined;
 }
 
-export interface InspeccionVehiculo {
-  id: number;
-  fecha_hora_inspeccion: string;
-  tipo_vehiculo: string;
-  procedencia: string;
-  marca: string;
-  submarca: string;
-  modelo: string;
-  color: string;
-  tipo_uso: string;
-  placa: string;
-  numero_serie: string;
-  situacion: string;
-  observaciones: string;
-  destino: string;
-  objetos_encontrados: boolean;
-  fecha_creacion: string;
+export interface IConocimientoHecho {
+  nConocimiento: string | undefined;
+  docConocimiento: string | undefined;
+  fConocimiento: string | undefined;
+  fArribo: string | undefined;
+  tipoConocimiento: string | undefined; //Recordar que esto es una relacion
 }
 
-export interface ArmasObjetos {
-  id: number;
-  tipo_inventario: string;
-  aportacion_o_inspeccion: string;
-  objeto_encontrado: string;
-  tipo_de_objeto_encontrado: string | null;
-  tipo_inspeccion: string;
-  lugar_de_encuentro: string | null;
-  descripcion_de_ao: string;
-  firma: string;
-  destino_de_ao: string;
-  tipo_arma: string | null;
-  calibre_arma: string | null;
-  color_arma: string | null;
-  matricula_arma: string | null;
-  numero_serie_arma: string | null;
-  primer_apellido_asegurado: string | null;
-  segundo_apellido_asegurado: string | null;
-  nombre_asegurado: string | null;
-  firma_asegurado: string;
-  primer_respondiente: boolean;
-  fecha_creacion: string;
+export interface INarrativa {
+  contenido: string | undefined;
 }
 
-export interface UsoFuerza {
-  id: number;
-  lesionados_autoridad: string;
-  lesionados_personas: string;
-  fallecidos_autoridad: string;
-  fallecidos_personas: string;
-  tipo_grupo_delictivo: string | null;
-  tipo_padecimiento: string | null;
-  reduccion_movimiento: boolean;
-  uso_arma_no_letal: boolean;
-  uso_arma_letal: boolean;
-  conducta: string;
-  asistencia_medica: boolean;
-  explicacion: string;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
+export interface IPuestaDisposicion {
+  disposicionesOficiales: IDisposicionOficial[] | undefined | IDisposicionOficial;
 }
 
-export interface EntregaRecepcion {
-  id: number;
-  explicacion: string;
-  apoyo_solicitado: string;
-  tipo_apoyo_solicitado: string;
-  ingreso_al_lugar: string;
-  motivo_ingreso: string;
-  primer_apellido_recepcion: string;
-  segundo_apellido_recepcion: string;
-  nombre_recepcion: string;
-  adscripcion_recepcion: string;
-  cargo_recepcion: string;
-  firma_recepcion: string;
-  observaciones: string;
-  fecha_entrega_recepcion: string;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
+export interface IDetencion {
+  rnd: string | undefined;
+  fechaHora: string | undefined;
+  primerApellidoDetenido: string |undefined;
+  segundoApellidoDetenido: string | undefined;
+  nombreDetenido: string | undefined;
+  aliasDetenido: string | undefined;
+  nacionalidad: string | undefined;
+  tipoNacionalidad: string | undefined;
+  sexo: string | undefined;
+  fechaNacimiento: string | Date | undefined;
+  edad: string | undefined;
+  identificacion: string | undefined;
+  domicilioDetenido: string | undefined;
+  numeroExteriorDetenido: string | undefined;
+  numeroInteriorDetenido: string | undefined;
+  referenciaDetenido: string | undefined;
+  descripcionDetenido: string | undefined;
+  lesionVisible: string | undefined;
+  padecimiento: string | undefined;
+  grupoVulnerable: string | undefined;
+  grupoDelictivo: string | undefined;
+  primerApellidoConocido: string | undefined;
+  segundoApellidoConocido: string | undefined;
+  nombreConocido: string | undefined;
+  telefonoConocido: string | undefined;
+  lecturaDerecho: boolean | undefined;
+  objetoEncontrado: boolean | undefined;
+  recolectoObjeto: boolean | undefined;
+  lugarDetencion: boolean | undefined;
+  calleDetencion: string | undefined;
+  numeroExteriorDetencion: string | undefined;
+  numeroInteriorDetencion: string | undefined;
+  referenciaDetencion: string | undefined;
+  lugarTraslado: string | undefined;
+  tipoLugarTraslado: string | undefined;
+  observaciones: string | undefined;
+  localizacionDetenido: ILocalizacion | undefined;
+  localizacionDetencion: ILocalizacion | undefined;
+  firmaDerecho: string | undefined; //Path de la firma
+  pertenencias: IDetencionPertenencia[] | undefined;
+  disposiciones: IDisposicionOficial[] | undefined;
 }
 
-export interface Continuacion {
-  id: number;
-  tipo: boolean;
-  contenido: string;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
-  firma_continuacion: string;
+export interface IDetencionPertenencia {
+  tipo: string | undefined; //Relacion
+  descripcion: string | undefined;
+  estado: string | undefined;
+  destino: string | undefined;
 }
 
-export interface RutaFotosLugar {
-  id: number;
-  ruta_foto: string;
-  fecha_creacion: string;
+export interface IUsoFuerza {
+  lesionadosAutoridad: string | undefined;
+  lesionadosPersonas: string | undefined;
+  fallecidosAutoridad: string | undefined;
+  fallecidosPersonas: string | undefined;
+  tipoGrupoDelictivo: string | undefined;
+  reduccionMovimiento: boolean | undefined;
+  usoArmaNoLetal: boolean | undefined;
+  usoArmaLetal: boolean | undefined;
+  asistenciaMedica: boolean | undefined;
+  tipoPadecimiento: string | undefined;
+  conducta: string | undefined;
+  explicacion: string | undefined;
+  disposiciones: IDisposicionOficial[] | undefined;
 }
 
-export interface DisposicionOfc {
-  id: number;
-  primer_apellido: string;
-  segundo_apellido: string;
-  nombre: string;
-  adscripcion: string;
-  cargo_grado: string;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
+export interface I_InspeccionVehiculo{
+  tipoVehiculo: string | undefined;
+  procedencia: string | undefined;
+  marca: string | undefined;
+  submarca: string | undefined;
+  modelo: string | undefined;
+  color: string | undefined;
+  tipoUso: string | undefined;
+  placa: string | undefined;
+  numeroSerie: string | undefined;
+  observaciones: string | undefined;
+  objetoEncontrado: boolean | undefined;
+  destino: string | undefined;
+  disposiciones: IDisposicionOficial[] | undefined;
 }
 
-export interface Archivos {
-  id: number;
-  titulo: string;
-  descripcion: string;
-  archivo: string;
-  tipo: string;
-  estatus_enlinea: boolean;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
+export interface I_ArmaObjeto{
+  tipoInventario: string | undefined;
+  aportacionInspeccion: string | undefined;
+  objetoEncontrado: string | undefined;
+  tipoObjetoEncontrado: string | undefined;
+  tipoInspeccion: string | undefined;
+  lugarEncuentro: string | undefined;
+  descripcionArmObj: string | undefined;
+  firma: string | undefined;
+  destinoArmOb: string | undefined;
+  tipoArma: string | undefined;
+  calibreArma: string | undefined;
+  colorArma: string | undefined;
+  matriculaArma: string | undefined;
+  numeroSerieArma: string | undefined;
+  primerApellidoAsegurado: string | undefined;
+  segundoApellidoAsegurado: string | undefined;
+  nombreAsegurado: string | undefined;
+  firmaAsegurado: boolean | undefined;
+  primerRespondiente: boolean | undefined;
+  disposiciones: IDisposicionOficial[] | IDisposicionOficial| undefined;
+  testigos: ITestigo[] | undefined;
 }
 
-export interface Entrevistas {
-  id: number;
-  datos_reservados: boolean;
-  fecha_hora: string;
-  numero_interior: string;
-  apellido_paterno_entrevistado: string;
-  apellido_materno_entrevistado: string;
-  nombre_entrevistado: string;
-  calidad: string;
-  nacionalidad: string;
-  tipo_nacionalidad: string | null;
-  traductor: boolean;
-  sexo: string;
-  fecha_nacimiento: string;
-  edad: string;
-  identificacion: string;
-  tipo_identificacion: string;
-  numero_identificacion: string;
-  telefono: string;
-  correo: string;
-  calle: string;
-  numero_exterior: string;
-  referencias: string;
-  entrevista: string;
-  firma_entrevista: string;
-  canalizacion: string;
-  otro_lugar_canalizacion: string | null;
-  motivo_canalizacion: string | null;
-  lugar_canalizacion: string;
-  firma_lectura_derecho: string;
-  primer_apellido_responsable: string;
-  segundo_apellido_responsable: string;
-  nombre_responsable: string;
-  adscripcion_responsable: string;
-  cargo_responsable: string;
-  firma_responsable: string;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
+
+export interface ITestigo{
+  nombre: string | undefined;
+  primerApellido: string | undefined;
+  segundoApellido: string | undefined;
+  firma: string | undefined;
 }
 
+export interface IEntrevista{
+  datosReservados: boolean | undefined;
+  fechaHora: Date| undefined;
+  numeroInterior: string | undefined;
+  apellidoPaternoEntrevistado: string | undefined;
+  apellidoMaternoEntrevistado: string | undefined;
+  nombreEntrevistado: string | undefined;
+  calidad: string | undefined;
+  nacionalidad: string | undefined;
+  tipoNacionalidad: string | undefined;
+  traductor: boolean | undefined;
+  sexo: string | undefined;
+  fechaNacimiento:Date | undefined;
+  edad: string | undefined;
+  identificacion: string | undefined;
+  tipoIdentificacion: string | undefined;
+  numeroIdentificacion: string | undefined;
+  telefonoEntrevistado: string | undefined;
+  correo: string | undefined;
+  calle: string | undefined;
+  numeroExterior: string | undefined;
+  referencia: string | undefined;
+  entrevista: string | undefined; //Es el texto de la entrevista
+  firmaEntrevista: string | undefined; //Path de la firma
+  canalizacion: string | undefined;
+  otroLugarCanalizacion: string | undefined;
+  motivoCanalizacion: string | undefined;
+  lugarCanalizacion: string | undefined;
+  firmaLecturaDerecho: string | undefined; // Path de la firma
+  responsable : IDisposicionOficial | undefined; //Este responsable se encuentra dentro de la misma tabla de la entrevista
+  localizacionEntrevistado: ILocalizacion | undefined;
+  disposiciones: IDisposicionOficial[] | IDisposicionOficial| undefined;
+}
+
+
+export interface IEntregaRecepcion{
+  explicacion: string | undefined;
+  apoyoSolicitado: string | undefined;
+  tipoApoyoSolicitado: string | undefined;
+  ingresoAlLugar: string | undefined;
+  motivoIngreso: string | undefined;
+  observaciones: string | undefined;
+  fechaEntregaRecepcion: Date | undefined;
+  respondienteRecepcion: IDisposicionOficial | undefined;
+  disposiciones: IDisposicionOficial[]   | undefined;
+}
+
+export interface IContinuacion{
+  tipo: boolean | undefined;
+  contenido: string | undefined;
+  firmaContinuacion: string | undefined;
+  entrevista: boolean | undefined; // Este campo es para saber si es continuacion de entrevista
+  narrativa: boolean | undefined; // Este campo es para saber si es continuacion de narrativa
+  disposiciones: IDisposicionOficial[] | IDisposicionOficial| undefined;
+}
+
+// Interfaces comunes para los demas datos
+export interface ICoordenadas {
+  latitud: string | undefined;
+  longitud: string | undefined;
+}
+
+export interface IDisposicionOficial {
+  nombre: string | undefined;
+  primerApellido: string | undefined;
+  segundoApellido: string | undefined;
+  adscripcion: string | undefined;
+  cargoGrado: string | undefined;
+  firmas?: string[] | string | [] | undefined;
+}
+
+export interface ILocalizacion {
+  colonia: string| undefined;
+  codigoPostal: string | undefined;
+  municipio: string | undefined;
+  estado: string | undefined;
+}
+
+export interface ITipoIph {
+  nombre: string | undefined;
+  descripcion: string | undefined;
+}
+
+// Interfaces legacy para mantener compatibilidad con IPaginatedIPH
 export interface Estatus {
   id: number
   nombre: string
@@ -311,10 +329,5 @@ export interface Tipo {
   is_active: boolean;
 }
 
-export interface PrimerRespondiente {
-  id: number
-  unidad_arrivo: string
-  n_elementos: number
-  fecha_creacion: string
-  fecha_actualizacion: string
-}
+// Alias para compatibilidad con el servicio getIphById
+export type I_IPHById = ResponseIphData;
