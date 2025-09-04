@@ -153,7 +153,7 @@ export interface IDetencion {
   observaciones: string | undefined;
   localizacionDetenido: ILocalizacion | undefined;
   localizacionDetencion: ILocalizacion | undefined;
-  firmaDerecho: string | undefined; //Path de la firma
+  // firmaDerecho: string | undefined; //Path de la firma
   pertenencias: IDetencionPertenencia[] | undefined;
   disposiciones: IDisposicionOficial[] | undefined;
 }
@@ -205,7 +205,7 @@ export interface I_ArmaObjeto{
   tipoInspeccion: string | undefined;
   lugarEncuentro: string | undefined;
   descripcionArmObj: string | undefined;
-  firma: string | undefined;
+  // firma: string | undefined;
   destinoArmOb: string | undefined;
   tipoArma: string | undefined;
   calibreArma: string | undefined;
@@ -215,7 +215,7 @@ export interface I_ArmaObjeto{
   primerApellidoAsegurado: string | undefined;
   segundoApellidoAsegurado: string | undefined;
   nombreAsegurado: string | undefined;
-  firmaAsegurado: boolean | undefined;
+  // firmaAsegurado: boolean | undefined;
   primerRespondiente: boolean | undefined;
   disposiciones: IDisposicionOficial[] | IDisposicionOficial| undefined;
   testigos: ITestigo[] | undefined;
@@ -226,7 +226,7 @@ export interface ITestigo{
   nombre: string | undefined;
   primerApellido: string | undefined;
   segundoApellido: string | undefined;
-  firma: string | undefined;
+  // firma: string | undefined;
 }
 
 export interface IEntrevista{
@@ -252,12 +252,12 @@ export interface IEntrevista{
   numeroExterior: string | undefined;
   referencia: string | undefined;
   entrevista: string | undefined; //Es el texto de la entrevista
-  firmaEntrevista: string | undefined; //Path de la firma
+  // firmaEntrevista: string | undefined; //Path de la firma
   canalizacion: string | undefined;
   otroLugarCanalizacion: string | undefined;
   motivoCanalizacion: string | undefined;
   lugarCanalizacion: string | undefined;
-  firmaLecturaDerecho: string | undefined; // Path de la firma
+  // firmaLecturaDerecho: string | undefined; // Path de la firma
   responsable : IDisposicionOficial | undefined; //Este responsable se encuentra dentro de la misma tabla de la entrevista
   localizacionEntrevistado: ILocalizacion | undefined;
   disposiciones: IDisposicionOficial[] | IDisposicionOficial| undefined;
@@ -279,7 +279,7 @@ export interface IEntregaRecepcion{
 export interface IContinuacion{
   tipo: boolean | undefined;
   contenido: string | undefined;
-  firmaContinuacion: string | undefined;
+  // firmaContinuacion: string | undefined;
   entrevista: boolean | undefined; // Este campo es para saber si es continuacion de entrevista
   narrativa: boolean | undefined; // Este campo es para saber si es continuacion de narrativa
   disposiciones: IDisposicionOficial[] | IDisposicionOficial| undefined;
@@ -297,7 +297,7 @@ export interface IDisposicionOficial {
   segundoApellido: string | undefined;
   adscripcion: string | undefined;
   cargoGrado: string | undefined;
-  firmas?: string[] | string | [] | undefined;
+  // firmas?: string[] | string | [] | undefined;
 }
 
 export interface ILocalizacion {

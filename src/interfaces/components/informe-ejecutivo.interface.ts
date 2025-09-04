@@ -1,7 +1,11 @@
 /**
  * Interfaces para el componente InformeEjecutivo
  * Sistema completo de tipos para reportes ejecutivos de IPH
+ * Actualizado para trabajar con ResponseIphData del servicio getIphById
  */
+
+// Importar interfaces del servicio IPH
+import type { ResponseIphData } from '../iph/iph.interface';
 
 // =====================================================
 // INTERFACES DE DATOS BASE
@@ -237,14 +241,8 @@ export interface IUseInformeEjecutivoReturn {
   state: IInformeEjecutivoState;
   loadInforme: (id: string) => Promise<void>;
   exportToPDF: () => Promise<void>;
-  openImageModal: (anexo: IAnexoFoto, index: number) => void;
-  closeImageModal: () => void;
-  navigateToImage: (direction: 'prev' | 'next') => void;
-  onMapLoad: () => void;
   refreshInforme: () => Promise<void>;
   canExportPDF: () => boolean;
-  hasValidLocation: boolean;
-  hasAnexos: boolean;
   isAnyLoading: boolean;
 }
 
@@ -341,6 +339,33 @@ export const hasAnexos = (informe: IInformeEjecutivo): boolean => {
 };
 
 // =====================================================
+// INTERFACES PARA NUEVO COMPONENTE (con ResponseIphData)
+// =====================================================
+
+/**
+ * Props del componente InformeEjecutivo actualizado
+ */
+export interface IInformeEjecutivoProps {
+  informeId?: string;
+  className?: string;
+  readonly?: boolean;
+  showPDFButton?: boolean;
+}
+
+/**
+ * Validadores actualizados para ResponseIphData
+ */
+export const hasValidCoordinates = (responseData: ResponseIphData): boolean => {
+  if (!responseData.iph || Array.isArray(responseData.iph)) return false;
+  const coords = responseData.iph.coordenadas;
+  return !!(coords?.latitud && coords?.longitud);
+};
+
+export const hasValidIphData = (responseData: ResponseIphData): boolean => {
+  return !!(responseData.iph && !Array.isArray(responseData.iph));
+};
+
+// =====================================================
 // EXPORTS
 // =====================================================
 
@@ -349,5 +374,7 @@ export default {
   SECTION_TITLES,
   isValidLatLng,
   hasValidLocation,
-  hasAnexos
+  hasAnexos,
+  hasValidCoordinates,
+  hasValidIphData
 };
