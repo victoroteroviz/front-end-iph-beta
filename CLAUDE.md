@@ -539,3 +539,4 @@ const USE_MOCK_DATA = false;
 **Status:** ✅ **Sistema completamente funcional con arquitectura moderna**
 - Guarda la logica del servicio e interfaces de getIphById del servicio : /home/okip/Documentos/Okip/betas/front-end-iph/src/services/iph/get-iph.service.ts
 - Guarda este contexto para poder seguir en otro chat
+- Guarda el patron que estamos haciendo en el componete de informe ejectivo

@@ -12,10 +12,9 @@ import { RefreshCw, FileX } from 'lucide-react';
 import useInformeEjecutivo from './hooks/useInformeEjecutivo';
 
 // Componentes
-import DatosGenerales from './components/DatosGenerales';
 import TabNavigation from './components/TabNavigation';
-import DummySection from './components/DummySection';
 import PDFExportButton from './components/PDFExportButton';
+import SectionModal from './components/SectionModal';
 
 // Utils
 import { getTabsForIphType, getTabsWithStatus } from './utils/tabsConfig';
@@ -37,8 +36,9 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
     refreshInforme
   } = useInformeEjecutivo(informeId);
 
-  // Estado para el tab activo
+  // Estado para el tab activo y modal
   const [activeTab, setActiveTab] = useState('datos-generales');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Configuración de tabs basada en el tipo de IPH
   const tabsWithStatus = useMemo(() => {
@@ -57,10 +57,17 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
     return getTabsWithStatus(tabsConfig, state.responseData);
   }, [state.responseData]);
 
-  // Handler para cambio de tab
+  // Handler para cambio de tab y apertura de modal
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
-    logInfo('InformeEjecutivo', 'Tab changed', { tabId });
+    setIsModalOpen(true);
+    logInfo('InformeEjecutivo', 'Tab changed and modal opened', { tabId });
+  };
+
+  // Handler para cerrar modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    logInfo('InformeEjecutivo', 'Modal closed', { activeTab });
   };
 
   // Handler para exportación PDF
@@ -189,7 +196,7 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
           )}
         </div>
 
-        {/* Sistema de navegación por tabs */}
+        {/* Sistema de navegación por lista */}
         {tabsWithStatus.length > 0 && (
           <TabNavigation
             tabs={tabsWithStatus}
@@ -198,16 +205,27 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
           />
         )}
 
-        {/* Contenido de la sección activa */}
-        <div className="min-h-[400px]">
-          {activeTab === 'datos-generales' ? (
-            <DatosGenerales iph={iph} />
-          ) : (
-            <DummySection
-              sectionName={tabsWithStatus.find(tab => tab.id === activeTab)?.label || 'Sección'}
-              data={getActiveTabData()}
-            />
-          )}
+        {/* Información de ayuda */}
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <div className="max-w-2xl mx-auto">
+            <h3 className="text-lg font-semibold text-[#4d4725] font-poppins mb-3">
+              Selecciona una sección para ver su contenido
+            </h3>
+            <p className="text-gray-600 font-poppins mb-4">
+              Haz clic en cualquier elemento de la lista superior para abrir su contenido en una ventana modal.
+              Puedes navegar entre secciones usando los controles del modal.
+            </p>
+            <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span>Secciones con datos</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                <span>Secciones sin datos</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Información del sistema */}
@@ -232,6 +250,17 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
           )}
         </div>
       </div>
+
+      {/* Modal de secciones */}
+      <SectionModal
+        isOpen={isModalOpen}
+        tabs={tabsWithStatus}
+        activeTab={activeTab}
+        iph={iph}
+        onClose={handleCloseModal}
+        onTabChange={setActiveTab}
+        getActiveTabData={getActiveTabData}
+      />
     </div>
   );
 };
