@@ -5,7 +5,7 @@
  * Mantiene diseño original con colores #c2b186, #fdf7f1
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MapPin, 
   Home, 
@@ -15,11 +15,8 @@ import {
   Eye,
   CheckCircle,
   XCircle,
-  FileText,
   Image as ImageIcon,
-  X,
-  ChevronLeft,
-  ChevronRight
+  X
 } from 'lucide-react';
 import type { ILugarIntervencion } from '../../../../../interfaces/iph/iph.interface';
 
@@ -50,25 +47,58 @@ interface CroquisModalProps {
 // =====================================================
 
 const CroquisModal: React.FC<CroquisModalProps> = ({ isOpen, imageUrl, onClose }) => {
-  if (!isOpen) return null;
-
-  // Manejar teclas del teclado
-  React.useEffect(() => {
+  // Manejar teclas del teclado y prevenir scroll del body
+  useEffect(() => {
+    if (!isOpen) return;
+    
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        // Prevenir que el evento se propague a otros modales
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      }
     };
 
-    document.addEventListener('keydown', handleKeyPress);
-    return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [onClose]);
+    // Prevenir scroll del body cuando el modal está abierto
+    document.body.style.overflow = 'hidden';
+    // Reducir z-index de mapas leaflet para evitar conflictos
+    const leafletContainers = document.querySelectorAll('.leaflet-container');
+    leafletContainers.forEach(container => {
+      (container as HTMLElement).style.zIndex = '1';
+    });
+
+    // Usar capture: true para capturar el evento antes que otros modales
+    document.addEventListener('keydown', handleKeyPress, { capture: true });
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress, { capture: true });
+      // Restaurar scroll del body
+      document.body.style.overflow = 'unset';
+      // Restaurar z-index de mapas leaflet
+      const leafletContainers = document.querySelectorAll('.leaflet-container');
+      leafletContainers.forEach(container => {
+        (container as HTMLElement).style.zIndex = '';
+      });
+    };
+  }, [onClose, isOpen]);
+  
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4">
-      {/* Overlay */}
-      <div className="absolute inset-0" onClick={onClose} />
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      {/* Overlay con fondo controlado */}
+      <div 
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+        onClick={onClose} 
+        style={{ zIndex: 9998 }}
+      />
       
       {/* Modal */}
-      <div className="relative w-full max-w-6xl max-h-[95vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div 
+        className="relative w-full max-w-6xl max-h-[95vh] bg-white rounded-2xl shadow-2xl overflow-hidden"
+        style={{ zIndex: 10000 }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 bg-gradient-to-r from-[#c2b186] to-[#a89770] text-white">
           <div className="flex items-center gap-4">

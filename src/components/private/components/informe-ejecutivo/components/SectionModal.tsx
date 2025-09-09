@@ -16,7 +16,8 @@ import {
   Car,
   Package,
   MessageCircle,
-  ArrowRightLeft
+  ArrowRightLeft,
+  FolderOpen
 } from 'lucide-react';
 import type { TabWithStatus } from '../utils/tabsConfig';
 import type { I_IphData } from '../../../../../interfaces/iph/iph.interface';
@@ -28,6 +29,13 @@ import LugarIntervencion from './LugarIntervencion';
 import ConocimientoHecho from './ConocimientoHecho';
 import NarrativaHechos from './NarrativaHechos';
 import AnexoDetenciones from './AnexoDetenciones';
+import PuestaDisposicion from './PuestaDisposicion';
+import AnexoUsoFuerza from './AnexoUsoFuerza';
+import AnexoInspeccionVehiculo from './AnexoInspeccionVehiculo';
+import AnexoInventario from './AnexoInventario';
+import AnexoEntrevistas from './AnexoEntrevistas';
+import AnexoEntregaRecepcion from './AnexoEntregaRecepcion';
+import AnexoArchivos from './AnexoArchivos';
 import DummySection from './DummySection';
 
 // =====================================================
@@ -67,7 +75,8 @@ const getIconForTab = (tabId: string) => {
     'anexo-d-inventario': Package,
     'anexo-e-entrevistas': MessageCircle,
     'anexo-f-entrega-recepcion': ArrowRightLeft,
-    'anexo-b-descripcion-vehiculo': Car
+    'anexo-b-descripcion-vehiculo': Car,
+    'anexo-archivos': FolderOpen
   };
   
   return iconMap[tabId] || FileText;
@@ -113,6 +122,9 @@ const SectionModal: React.FC<SectionModalProps> = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'Escape':
+          // Solo cerrar si no hay modales con mayor z-index abiertos
+          // El modal del croquis usa capture:true y preventDefault, por lo que
+          // este evento solo llegará si el modal del croquis no está abierto
           onClose();
           break;
         case 'ArrowLeft':
@@ -286,6 +298,41 @@ const SectionModal: React.FC<SectionModalProps> = ({
                 <AnexoDetenciones 
                   detencion={getActiveTabData()} 
                   puestaDisposicion={Array.isArray(iph) ? iph[0]?.puestaDisposicion : iph?.puestaDisposicion}
+                  className="mb-0" 
+                />
+              ) : (activeTab === 'puesta-disposicion' || activeTab === 'puesta-disposicion-primer-respondiente') ? (
+                <PuestaDisposicion 
+                  puestaDisposicion={getActiveTabData()} 
+                  className="mb-0" 
+                />
+              ) : activeTab === 'anexo-b-uso-fuerza' ? (
+                <AnexoUsoFuerza 
+                  usoFuerza={getActiveTabData()} 
+                  className="mb-0" 
+                />
+              ) : (activeTab === 'anexo-c-inspeccion' || activeTab === 'anexo-c-inspeccion-vehiculo') ? (
+                <AnexoInspeccionVehiculo 
+                  inspeccionVehiculo={getActiveTabData()} 
+                  className="mb-0" 
+                />
+              ) : activeTab === 'anexo-d-inventario' ? (
+                <AnexoInventario 
+                  armaObjeto={getActiveTabData()} 
+                  className="mb-0" 
+                />
+              ) : activeTab === 'anexo-e-entrevistas' ? (
+                <AnexoEntrevistas 
+                  entrevista={getActiveTabData()} 
+                  className="mb-0" 
+                />
+              ) : activeTab === 'anexo-f-entrega-recepcion' ? (
+                <AnexoEntregaRecepcion 
+                  entregaRecepcion={getActiveTabData()} 
+                  className="mb-0" 
+                />
+              ) : activeTab === 'anexo-archivos' ? (
+                <AnexoArchivos 
+                  archivos={Array.isArray(iph) ? iph[0]?.archivos : iph?.archivos} 
                   className="mb-0" 
                 />
               ) : (

@@ -14,7 +14,7 @@ export type TabStatus = 'sin datos' | 'con datos';
 export interface TabConfig {
   id: string;
   label: string;
-  dataKey: keyof ResponseIphData;
+  dataKey: keyof ResponseIphData | 'iph'; // Permitir acceso directo a iph para archivos
   component: string; // Nombre del componente dummy por ahora
 }
 
@@ -96,7 +96,7 @@ export const TABS_DELICTIVOS_CON_DETENIDO: TabConfig[] = [
   },
   {
     id: 'anexo-c-inspeccion',
-    label: 'Anexo C. Inspección de armas y objetos',
+    label: 'Anexo C. Inspección de vehículo',
     dataKey: 'inspeccionVehiculo',
     component: 'AnexoInspeccion'
   },
@@ -117,6 +117,12 @@ export const TABS_DELICTIVOS_CON_DETENIDO: TabConfig[] = [
     label: 'Anexo F. Entrega - recepción del lugar de la intervención',
     dataKey: 'entregaRecepcion',
     component: 'AnexoEntregaRecepcion'
+  },
+  {
+    id: 'anexo-archivos',
+    label: 'Archivos del IPH',
+    dataKey: 'iph',
+    component: 'AnexoArchivos'
   }
 ];
 
@@ -183,6 +189,12 @@ export const TABS_DELICTIVOS_SIN_DETENIDO: TabConfig[] = [
     label: 'Anexo F. Entrega - recepción del lugar de la intervención',
     dataKey: 'entregaRecepcion',
     component: 'AnexoEntregaRecepcion'
+  },
+  {
+    id: 'anexo-archivos',
+    label: 'Archivos del IPH',
+    dataKey: 'iph',
+    component: 'AnexoArchivos'
   }
 ];
 
@@ -231,6 +243,12 @@ export const TABS_JUSTICIA_CIVICA_CON_DETENIDO: TabConfig[] = [
     label: 'Anexo B. Descripción de vehículo',
     dataKey: 'inspeccionVehiculo',
     component: 'AnexoDescripcionVehiculo'
+  },
+  {
+    id: 'anexo-archivos',
+    label: 'Archivos del IPH',
+    dataKey: 'iph',
+    component: 'AnexoArchivos'
   }
 ];
 
@@ -273,6 +291,12 @@ export const TABS_JUSTICIA_CIVICA_SIN_DETENIDO: TabConfig[] = [
     label: 'Anexo B. Descripción de vehículo',
     dataKey: 'inspeccionVehiculo',
     component: 'AnexoDescripcionVehiculo'
+  },
+  {
+    id: 'anexo-archivos',
+    label: 'Archivos del IPH',
+    dataKey: 'iph',
+    component: 'AnexoArchivos'
   }
 ];
 
@@ -335,8 +359,19 @@ export const hasDataInSection = (data: any): boolean => {
  */
 export const getTabsWithStatus = (tabs: TabConfig[], responseData: ResponseIphData): TabWithStatus[] => {
   return tabs.map(tab => {
-    const sectionData = responseData[tab.dataKey];
-    const hasData = hasDataInSection(sectionData);
+    let hasData = false;
+    
+    // Caso especial para anexo-archivos que necesita revisar iph.archivos
+    if (tab.id === 'anexo-archivos') {
+      const iphData = responseData.iph;
+      if (!Array.isArray(iphData) && iphData?.archivos) {
+        hasData = Array.isArray(iphData.archivos) ? iphData.archivos.length > 0 : hasDataInSection(iphData.archivos);
+      }
+    } else {
+      // Lógica normal para otros tabs
+      const sectionData = responseData[tab.dataKey];
+      hasData = hasDataInSection(sectionData);
+    }
     
     return {
       ...tab,
