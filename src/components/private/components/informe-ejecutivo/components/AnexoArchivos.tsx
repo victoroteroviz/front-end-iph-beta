@@ -305,7 +305,7 @@ const FilePreview: React.FC<FilePreviewProps> = memo(({ archivo, className = "" 
               <span className="text-xs text-red-700 font-medium text-center">PDF</span>
             </div>
             
-            <div className="absolute top-1 right-1 bg-red-600 text-white rounded px-2 py-0.5">
+            <div className="absolute bottom-1 left-1 bg-red-600 text-white rounded px-2 py-0.5">
               <span className="text-xs font-bold">PDF</span>
             </div>
             <div className="absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
@@ -319,7 +319,7 @@ const FilePreview: React.FC<FilePreviewProps> = memo(({ archivo, className = "" 
         <div className={`relative w-full h-full bg-gray-100 rounded-lg flex flex-col items-center justify-center ${className}`}>
           <FileText className="h-6 w-6 text-gray-600 mb-1" />
           <span className="text-xs text-gray-600 font-medium">Documento</span>
-          <div className="absolute top-1 right-1 bg-gray-600 text-white rounded px-2 py-0.5">
+          <div className="absolute bottom-1 left-1 bg-gray-600 text-white rounded px-2 py-0.5">
             <span className="text-xs font-bold">DOC</span>
           </div>
           <div className="absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
@@ -335,6 +335,24 @@ const FilePreview: React.FC<FilePreviewProps> = memo(({ archivo, className = "" 
  * Componente Modal para visualizar archivo
  */
 const FileModal: React.FC<FileModalProps> = ({ archivo, isOpen, onClose }) => {
+  // Handler para tecla ESC - solo para este modal específico
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation(); // Evitar que el evento se propague al modal padre
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown, true); // Usar capture para interceptar antes
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown, true);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const fileType = getFileType(archivo.tipo, archivo.archivo);
@@ -477,8 +495,19 @@ const FileModal: React.FC<FileModalProps> = ({ archivo, isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75">
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col">
+    <div 
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-transparent"
+      onClick={(e) => {
+        e.stopPropagation(); // Evitar propagación al modal padre
+        if (e.target === e.currentTarget) {
+          onClose(); // Solo cerrar si se hace click en el fondo
+        }
+      }}
+    >
+      <div 
+        className="relative bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()} // Evitar que clicks dentro del modal lo cierren
+      >
         
         {/* Header fijo con título y descripción */}
         <div className="flex-shrink-0 p-6 border-b bg-white rounded-t-lg">
