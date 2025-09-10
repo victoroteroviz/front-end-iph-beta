@@ -45,25 +45,54 @@ const ImageModal: React.FC<ImageModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  // Manejar teclas del teclado
+  // Manejar teclas del teclado solo cuando el modal está abierto
   React.useEffect(() => {
+    if (!isOpen) return;
+
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowLeft') onNavigate('prev');
-      if (e.key === 'ArrowRight') onNavigate('next');
+      if (e.key === 'Escape') {
+        onClose();
+      }
+      if (e.key === 'ArrowLeft') {
+        onNavigate('prev');
+      }
+      if (e.key === 'ArrowRight') {
+        onNavigate('next');
+      }
     };
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [onClose, onNavigate]);
+  }, [isOpen, onClose, onNavigate]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4"
+      data-modal-type="image-modal"
+    >
+      {/* CSS para forzar cursor pointer */}
+      <style>{`
+        .modal-pointer-force {
+          cursor: pointer !important;
+        }
+        .modal-pointer-force:hover {
+          cursor: pointer !important;
+        }
+        .modal-not-allowed {
+          cursor: not-allowed !important;
+        }
+      `}</style>
+      
       {/* Overlay */}
-      <div className="absolute inset-0" onClick={onClose} />
+      <div 
+        className="absolute inset-0" 
+        onClick={onClose}
+      />
       
       {/* Modal */}
-      <div className="relative w-full max-w-7xl max-h-[95vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div 
+        className="relative w-full max-w-7xl max-h-[95vh] bg-white rounded-2xl shadow-2xl overflow-hidden"
+      >
         {/* Header mejorado */}
         <div className="flex items-center justify-between p-6 bg-gradient-to-r from-[#c2b186] to-[#a89770] text-white">
           <div className="flex items-center gap-4">
@@ -80,13 +109,15 @@ const ImageModal: React.FC<ImageModalProps> = ({
             </div>
           </div>
           
-          <button
+          <div
             onClick={onClose}
-            className="p-3 hover:bg-white/20 rounded-xl transition-all duration-200 group"
+            className="p-3 hover:bg-white/20 rounded-xl transition-all duration-200 group modal-pointer-force"
             title="Cerrar (Esc)"
+            role="button"
+            tabIndex={0}
           >
             <X className="h-6 w-6" />
-          </button>
+          </div>
         </div>
 
         {/* Contenedor de imagen */}
@@ -105,31 +136,33 @@ const ImageModal: React.FC<ImageModalProps> = ({
           {/* Navegación mejorada */}
           {images.length > 1 && (
             <>
-              <button
-                onClick={() => onNavigate('prev')}
-                disabled={currentIndex === 0}
+              <div
+                onClick={() => currentIndex > 0 && onNavigate('prev')}
                 className={`absolute left-6 top-1/2 transform -translate-y-1/2 p-4 rounded-full shadow-lg transition-all duration-200 ${
                   currentIndex === 0 
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                    : 'bg-white text-[#4d4725] hover:bg-[#c2b186] hover:text-white hover:scale-110 hover:shadow-xl'
+                    ? 'bg-gray-300 text-gray-500 modal-not-allowed' 
+                    : 'bg-white text-[#4d4725] hover:bg-[#c2b186] hover:text-white hover:scale-110 hover:shadow-xl modal-pointer-force'
                 }`}
                 title="Imagen anterior (←)"
+                role="button"
+                tabIndex={0}
               >
                 <ChevronLeft className="h-8 w-8" />
-              </button>
+              </div>
               
-              <button
-                onClick={() => onNavigate('next')}
-                disabled={currentIndex === images.length - 1}
+              <div
+                onClick={() => currentIndex < images.length - 1 && onNavigate('next')}
                 className={`absolute right-6 top-1/2 transform -translate-y-1/2 p-4 rounded-full shadow-lg transition-all duration-200 ${
                   currentIndex === images.length - 1 
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                    : 'bg-white text-[#4d4725] hover:bg-[#c2b186] hover:text-white hover:scale-110 hover:shadow-xl'
+                    ? 'bg-gray-300 text-gray-500 modal-not-allowed' 
+                    : 'bg-white text-[#4d4725] hover:bg-[#c2b186] hover:text-white hover:scale-110 hover:shadow-xl modal-pointer-force'
                 }`}
                 title="Imagen siguiente (→)"
+                role="button"
+                tabIndex={0}
               >
                 <ChevronRight className="h-8 w-8" />
-              </button>
+              </div>
             </>
           )}
           
@@ -138,7 +171,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
             <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
               <div className="flex space-x-2 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full">
                 {images.map((_, index) => (
-                  <button
+                  <div
                     key={index}
                     onClick={() => {
                       if (index < currentIndex) {
@@ -151,11 +184,13 @@ const ImageModal: React.FC<ImageModalProps> = ({
                         }
                       }
                     }}
-                    className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                    className={`w-3 h-3 rounded-full transition-all duration-200 modal-pointer-force ${
                       index === currentIndex 
                         ? 'bg-white scale-125' 
                         : 'bg-white/50 hover:bg-white/75'
                     }`}
+                    role="button"
+                    tabIndex={0}
                   />
                 ))}
               </div>
@@ -194,6 +229,21 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
   // Estados para el modal de imágenes
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Efecto para comunicar el estado del modal hijo al modal padre
+  React.useEffect(() => {
+    // Agregar/remover atributo en el body para indicar que hay un modal hijo abierto
+    if (isImageModalOpen) {
+      document.body.setAttribute('data-child-modal-open', 'true');
+    } else {
+      document.body.removeAttribute('data-child-modal-open');
+    }
+    
+    // Cleanup al desmontar el componente
+    return () => {
+      document.body.removeAttribute('data-child-modal-open');
+    };
+  }, [isImageModalOpen]);
   
   // Verificar si los datos están disponibles
   if (!iph || Array.isArray(iph)) {
@@ -375,7 +425,7 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
                 {iphData.fotos && iphData.fotos.length > 0 && (
                   <button
                     onClick={() => handleImageClick(0)}
-                    className="text-xs text-[#c2b186] hover:text-[#a89770] mt-1 flex items-center gap-1 transition-colors font-medium"
+                    className="text-xs text-[#c2b186] hover:text-[#a89770] mt-1 flex items-center gap-1 transition-colors font-medium cursor-pointer"
                   >
                     <Eye className="h-3 w-3" />
                     Ver galería completa
@@ -472,7 +522,7 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
               </div>
               <div>
                 <p className="font-medium">Precisión del mapa:</p>
-                <p>Zoom fijo nivel 15 (vista de calle)</p>
+                <p>Zoom dinámico (usar +/- para ajustar vista)</p>
               </div>
             </div>
           </div>

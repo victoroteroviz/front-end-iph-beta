@@ -4,8 +4,8 @@
  * Con marcador personalizado de exclamación roja y zoom fijo nivel 18
  */
 
-import React, { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
+import React, { useEffect, useRef, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMapEvents } from 'react-leaflet';
 import { AlertCircle, MapPin, Navigation, Plus, Minus } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -75,6 +75,38 @@ const createCustomIcon = (type: 'alert' | 'exclamation' | 'warning' = 'alert') =
 };
 
 // =====================================================
+// FUNCIÓN HELPER PARA DESCRIBIR EL TIPO DE VISTA
+// =====================================================
+
+const getZoomDescription = (zoom: number): string => {
+  if (zoom <= 8) return 'Vista continental';
+  if (zoom <= 10) return 'Vista de país/región';
+  if (zoom <= 12) return 'Vista de estado/provincia';
+  if (zoom <= 14) return 'Vista de ciudad';
+  if (zoom <= 16) return 'Vista de barrio';
+  if (zoom <= 18) return 'Vista de calle';
+  return 'Vista de edificio';
+};
+
+// =====================================================
+// COMPONENTE PARA DETECTAR CAMBIOS DE ZOOM
+// =====================================================
+
+interface ZoomDetectorProps {
+  onZoomChange: (zoom: number) => void;
+}
+
+const ZoomDetector: React.FC<ZoomDetectorProps> = ({ onZoomChange }) => {
+  useMapEvents({
+    zoomend: (e) => {
+      const zoom = e.target.getZoom();
+      onZoomChange(zoom);
+    }
+  });
+  return null;
+};
+
+// =====================================================
 // COMPONENTE PRINCIPAL
 // =====================================================
 
@@ -87,6 +119,7 @@ const MapSection: React.FC<MapSectionProps> = ({
   markerType = 'alert'
 }) => {
   const mapRef = useRef<L.Map | null>(null);
+  const [currentZoom, setCurrentZoom] = useState(zoomLevel);
 
   // Convertir y validar coordenadas (principalmente strings)
   const parseCoordinate = (coord: string): number => {
@@ -230,9 +263,9 @@ const MapSection: React.FC<MapSectionProps> = ({
             </h4>
           </div>
           <div className="text-xs text-gray-600 font-poppins flex items-center gap-2">
-            <span>Zoom: {zoomLevel}x</span>
+            <span>Zoom: {currentZoom}x</span>
             <span className="text-[#c2b186]">•</span>
-            <span>Usa +/- para zoom</span>
+            <span>{getZoomDescription(currentZoom)}</span>
           </div>
         </div>
         
@@ -275,6 +308,9 @@ const MapSection: React.FC<MapSectionProps> = ({
           className="rounded-b-lg"
           ref={mapRef}
         >
+          {/* Detector de cambios de zoom */}
+          <ZoomDetector onZoomChange={setCurrentZoom} />
+          
           {/* Capa de tiles de OpenStreetMap */}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -312,13 +348,6 @@ const MapSection: React.FC<MapSectionProps> = ({
           </Marker>
         </MapContainer>
 
-        {/* Indicador de estado del mapa */}
-        <div className="absolute top-2 right-2 z-[1000]">
-          <div className="bg-white bg-opacity-90 px-2 py-1 rounded text-xs text-gray-600 font-poppins shadow-sm">
-            <AlertCircle className="h-3 w-3 inline mr-1" />
-            <span>Zoom: +/-</span>
-          </div>
-        </div>
       </div>
     </div>
   );

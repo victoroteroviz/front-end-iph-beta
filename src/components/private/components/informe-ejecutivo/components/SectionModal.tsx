@@ -120,11 +120,13 @@ const SectionModal: React.FC<SectionModalProps> = ({
     if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // No manejar eventos si hay un modal hijo abierto
+      if (document.body.hasAttribute('data-child-modal-open')) {
+        return;
+      }
+      
       switch (event.key) {
         case 'Escape':
-          // Solo cerrar si no hay modales con mayor z-index abiertos
-          // El modal del croquis usa capture:true y preventDefault, por lo que
-          // este evento solo llegará si el modal del croquis no está abierto
           onClose();
           break;
         case 'ArrowLeft':
