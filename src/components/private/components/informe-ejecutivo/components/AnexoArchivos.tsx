@@ -15,6 +15,12 @@ import {
 // Interfaces
 import type { IArchivo } from '../../../../../interfaces/iph/iph.interface';
 
+// Componente reutilizable
+import { PDFViewer } from '../../../common';
+
+// Configuración
+import { API_BASE_URL } from '../../../../../config/env.config';
+
 // =====================================================
 // INTERFACES Y TIPOS
 // =====================================================
@@ -187,14 +193,14 @@ const FilePreview: React.FC<FilePreviewProps> = memo(({ archivo, className = "" 
   
   const fileType = getFileType(archivo.tipo, archivo.archivo);
   
-  // Función para construir la URL completa
+  // Función para construir la URL completa usando configuración centralizada
   const getFullPath = (path: string | undefined) => {
     if (!path) return '';
     if (path.startsWith('http')) return path;
     
     // Limpiar la ruta para evitar dobles barras
     const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-    return `http://localhost:3000/${cleanPath}`;
+    return `${API_BASE_URL}/${cleanPath}`;
   };
   
   const fullPath = getFullPath(archivo.archivo);
@@ -357,13 +363,13 @@ const FileModal: React.FC<FileModalProps> = ({ archivo, isOpen, onClose }) => {
 
   const fileType = getFileType(archivo.tipo, archivo.archivo);
   
-  // Usar la misma función para construir URLs
+  // Usar la misma función para construir URLs con configuración centralizada
   const getFullPath = (path: string | undefined) => {
     if (!path) return '';
     if (path.startsWith('http')) return path;
     
     const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-    return `http://localhost:3000/${cleanPath}`;
+    return `${API_BASE_URL}/${cleanPath}`;
   };
   
   const fullPath = getFullPath(archivo.archivo);
@@ -443,37 +449,48 @@ const FileModal: React.FC<FileModalProps> = ({ archivo, isOpen, onClose }) => {
         const isPDF = isPDFFile(archivo.tipo, archivo.archivo);
         
         if (isPDF) {
+          // Debug logging para PDF
+          console.log('🔵 AnexoArchivos PDF Data:', {
+            originalPath: archivo.archivo,
+            fullPath,
+            apiBaseUrl: API_BASE_URL,
+            fileName: archivo.titulo
+          });
+          
           return (
-            <div className="flex flex-col items-center space-y-6 p-6">
-              <div className="bg-red-100 rounded-full p-6">
-                <FileText className="h-16 w-16 text-red-600" />
-              </div>
-              <div className="text-center">
-                <p className="text-xl font-semibold text-gray-800 mb-2">
-                  {archivo.titulo || 'Documento PDF'}
-                </p>
-                <p className="text-sm text-gray-600 mb-4">
-                  {archivo.descripcion || 'Documento en formato PDF'}
-                </p>
-                
-                {/* Botón para abrir PDF en nueva pestaña */}
-                <button
-                  onClick={() => window.open(fullPath, '_blank')}
-                  className="
-                    inline-flex items-center gap-2 px-6 py-3 
-                    bg-red-600 text-white rounded-lg font-medium
-                    hover:bg-red-700 transition-colors
-                    focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
-                  "
-                >
-                  <FileText className="h-5 w-5" />
-                  Abrir PDF en nueva pestaña
-                </button>
-                
-                <p className="text-xs text-gray-500 mt-3">
-                  El PDF se abrirá en una nueva ventana del navegador
-                </p>
-              </div>
+            <div className="w-full h-full min-h-[500px]" style={{ height: '100%', minHeight: '500px' }}>
+              <PDFViewer
+                url={fullPath}
+                fileName={archivo.titulo || 'Documento PDF'}
+                showPrintButton={true}
+                showDownloadButton={true}
+                showNavigation={true}
+                showZoomControls={true}
+                showToolbar={true}
+                height="100%"
+                width="100%"
+                className="border-0"
+                debugMode={false}
+                enableTextLayer={false}
+                onError={(error) => {
+                  console.error('🔴 Error cargando PDF en AnexoArchivos:', error);
+                }}
+                onLoadSuccess={(numPages) => {
+                  console.log('✅ PDF cargado exitosamente en AnexoArchivos con', numPages, 'páginas');
+                }}
+                onPrint={(fileName) => {
+                  console.log('🖨️ Imprimiendo desde AnexoArchivos:', fileName);
+                }}
+                onDownload={(fileName) => {
+                  console.log('📥 Descargando desde AnexoArchivos:', fileName);
+                }}
+                onPageChange={(page) => {
+                  console.log('📄 Página cambiada en AnexoArchivos:', page);
+                }}
+                onZoomChange={(zoom) => {
+                  console.log('🔍 Zoom cambiado en AnexoArchivos:', zoom);
+                }}
+              />
             </div>
           );
         }
@@ -549,7 +566,7 @@ const FileModal: React.FC<FileModalProps> = ({ archivo, isOpen, onClose }) => {
         </div>
         
         {/* Contenido del archivo con altura fija */}
-        <div className="flex-1 flex items-center justify-center p-6 bg-gray-50 overflow-hidden">
+        <div className="flex-1 flex items-center justify-center p-6 bg-gray-50" style={{ minHeight: '500px', height: 'calc(90vh - 120px)' }}>
           <div className="w-full h-full flex items-center justify-center">
             {renderPreview()}
           </div>

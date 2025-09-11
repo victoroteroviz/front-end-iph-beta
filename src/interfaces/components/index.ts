@@ -11,3 +11,4 @@ export * from './perfilUsuario.interface';
 export * from './usuarios.interface';
 export * from './informe-ejecutivo.interface';
 export * from './informe-policial.interface';
+export * from './pdf-viewer.interface';

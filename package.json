@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "mkdir -p public && cp node_modules/react-pdf/node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.min.js && cp -r node_modules/react-pdf/node_modules/pdfjs-dist/cmaps public/ && cp -r node_modules/react-pdf/node_modules/pdfjs-dist/standard_fonts public/"
   },
   "dependencies": {
     "@fontsource/poppins": "^5.2.6",
@@ -26,6 +27,7 @@
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.1.1",
     "react-leaflet": "^5.0.0",
+    "react-pdf": "^10.1.0",
     "react-router-dom": "^7.8.2",
     "react-select": "^5.10.2",
     "react-window": "^1.8.11",
