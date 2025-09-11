@@ -5,7 +5,7 @@
  * Compatible con text layer y annotation layer
  */
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 // Importar estilos CSS de react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -174,6 +174,7 @@ interface PDFToolbarProps {
   showNavigation?: boolean;
   showZoomControls?: boolean;
   fileUrl?: string;
+  isPrinting?: boolean;
   onPreviousPage: () => void;
   onNextPage: () => void;
   onGoToPage: (page: number) => void;
@@ -193,6 +194,7 @@ const PDFToolbar: React.FC<PDFToolbarProps> = ({
   showDownloadButton = true,
   showNavigation = true,
   showZoomControls = true,
+  isPrinting = false,
   onPreviousPage,
   onNextPage,
   onGoToPage,
@@ -334,11 +336,22 @@ const PDFToolbar: React.FC<PDFToolbarProps> = ({
         {showPrintButton && (
           <button
             onClick={onPrint}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#c2b186] text-white hover:bg-[#a89770] transition-colors text-sm font-medium"
-            title="Imprimir PDF"
+            disabled={isPrinting}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              isPrinting 
+                ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
+                : 'bg-[#c2b186] text-white hover:bg-[#a89770]'
+            }`}
+            title={isPrinting ? "Imprimiendo..." : "Imprimir PDF"}
           >
-            <Printer className="h-4 w-4" />
-            <span className="hidden sm:inline">Imprimir</span>
+            {isPrinting ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Printer className="h-4 w-4" />
+            )}
+            <span className="hidden sm:inline">
+              {isPrinting ? "Imprimiendo..." : "Imprimir"}
+            </span>
           </button>
         )}
       </div>
@@ -353,7 +366,6 @@ const PDFToolbar: React.FC<PDFToolbarProps> = ({
 const PDFViewer: React.FC<PDFViewerProps> = ({
   url,
   fileName,
-  urlType,
   httpHeaders,
   withCredentials = false,
   showPrintButton = true,
@@ -391,9 +403,33 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   
   // Control de text layer
   const [textLayerEnabled, setTextLayerEnabled] = React.useState(enableTextLayer);
-  const [textLayerErrors, setTextLayerErrors] = React.useState(0);
+  
+  // Control de impresión para evitar múltiples instancias
+  const [isPrinting, setIsPrinting] = React.useState(false);
 
   const documentRef = useRef<HTMLDivElement>(null);
+  const textLayerErrorCount = useRef(0);
+
+  // Limpieza de recursos al desmontar el componente
+  React.useEffect(() => {
+    return () => {
+      // Limpiar cualquier iframe de impresión residual
+      const existingIframe = document.getElementById('pdf-print-iframe');
+      if (existingIframe && document.body.contains(existingIframe)) {
+        // Limpiar timeouts asociados
+        const cleanupTimeoutId = existingIframe.dataset.cleanupTimeout;
+        if (cleanupTimeoutId) {
+          clearTimeout(parseInt(cleanupTimeoutId));
+        }
+        
+        document.body.removeChild(existingIframe);
+        console.log('📄 Iframe de impresión limpiado al desmontar componente');
+      }
+      
+      // Resetear contador de errores de text layer
+      textLayerErrorCount.current = 0;
+    };
+  }, []);
 
   // Función para actualizar estado - DEBE estar antes de useEffect
   const updateState = useCallback((updates: Partial<PDFViewerState>) => {
@@ -440,54 +476,72 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
   // Procesar URL al inicializar o cambiar
   React.useEffect(() => {
-    const processUrl = () => {
+    let isActive = true; // Flag para cancelar operaciones si el componente se desmonta
+    
+    const processUrl = async () => {
       try {
         // Validar URL
         if (!validatePdfUrl(url)) {
           throw new Error(`URL inválida: ${url}`);
         }
 
+        // Verificar si el efecto sigue activo
+        if (!isActive) return;
+
         // Obtener información de la URL
         const info = getPdfUrlInfo(url);
+        if (!isActive) return;
+        
         setUrlInfo(info);
 
         // Preparar URL para react-pdf
         const prepared = preparePdfUrl(url, httpHeaders, withCredentials);
+        if (!isActive) return;
+        
         setProcessedUrl(prepared);
 
-        // Reset estados
-        updateState({ 
-          error: null, 
-          isLoading: true,
-          isLoaded: false 
-        });
+        // Reset estados solo si seguimos activos
+        if (isActive) {
+          updateState({ 
+            error: null, 
+            isLoading: true,
+            isLoaded: false 
+          });
 
-        console.log('🟢 PDFViewer URL processed:', {
-          url: url.substring(0, 50) + (url.length > 50 ? '...' : ''),
-          fileName,
-          type: info.type,
-          isValid: info.isValid,
-          canDownload: info.canDownload,
-          requiresCors: info.requiresCors
-        });
+          console.log('🟢 PDFViewer URL processed:', {
+            url: url.substring(0, 50) + (url.length > 50 ? '...' : ''),
+            fileName,
+            type: info.type,
+            isValid: info.isValid,
+            canDownload: info.canDownload,
+            requiresCors: info.requiresCors
+          });
+        }
 
       } catch (error) {
-        console.error('❌ PDFViewer URL processing failed:', error);
-        updateState({ 
-          error: error instanceof Error ? error : new Error(String(error)),
-          isLoading: false 
-        });
+        if (isActive) {
+          console.error('❌ PDFViewer URL processing failed:', error);
+          updateState({ 
+            error: error instanceof Error ? error : new Error(String(error)),
+            isLoading: false 
+          });
+        }
       }
     };
 
     if (url) {
       processUrl();
-    } else {
+    } else if (isActive) {
       updateState({ 
         error: new Error('URL requerida'),
         isLoading: false 
       });
     }
+    
+    // Cleanup function
+    return () => {
+      isActive = false;
+    };
   }, [url, fileName, httpHeaders, withCredentials, updateState]);
 
   // Handlers para carga exitosa
@@ -575,23 +629,265 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     onZoomChange?.(newZoom);
   }, [onZoomChange, updateState]);
 
-  // Función de impresión
-  const handlePrint = useCallback(() => {
-    try {
-      window.print();
-      showSuccess('Documento enviado a impresión');
-      onPrint?.(fileName);
+  // Función mejorada para imprimir PDF con ventana nueva
+  const printPDFWithWindow = useCallback(async (pdfUrl: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      try {
+        console.log('📄 Abriendo PDF en nueva ventana para impresión...');
+        
+        // Abrir nueva ventana con configuración optimizada
+        const printWindow = window.open(
+          pdfUrl,
+          '_blank',
+          'width=800,height=600,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no'
+        );
+
+        if (!printWindow) {
+          throw new Error('El navegador bloqueó la ventana emergente. Permita ventanas emergentes para imprimir.');
+        }
+
+        // Configurar eventos de la nueva ventana
+        let isHandled = false;
+        
+        const handleWindowLoad = () => {
+          if (isHandled) return;
+          
+          try {
+            console.log('📄 PDF cargado en nueva ventana, esperando renderizado...');
+            
+            // Esperar más tiempo para asegurar renderizado completo
+            setTimeout(() => {
+              if (isHandled || printWindow.closed) return;
+              
+              try {
+                // Enfocar la ventana antes de imprimir
+                printWindow.focus();
+                
+                // Ejecutar impresión
+                printWindow.print();
+                console.log('📄 ✅ Comando de impresión ejecutado en nueva ventana');
+                
+                isHandled = true;
+                resolve();
+                
+                // La ventana se cierra automáticamente cuando el usuario termina con el diálogo
+                
+              } catch (printError) {
+                console.warn('📄 Error ejecutando print() en nueva ventana:', printError);
+                if (!printWindow.closed) {
+                  printWindow.close();
+                }
+                isHandled = true;
+                reject(printError);
+              }
+            }, 2000); // Tiempo aumentado para renderizado completo
+            
+          } catch (error) {
+            if (!printWindow.closed) {
+              printWindow.close();
+            }
+            isHandled = true;
+            reject(error);
+          }
+        };
+
+        const handleWindowError = () => {
+          if (!isHandled) {
+            if (!printWindow.closed) {
+              printWindow.close();
+            }
+            isHandled = true;
+            reject(new Error('Error cargando PDF en nueva ventana'));
+          }
+        };
+
+        // Timeout de seguridad más largo
+        const timeout = setTimeout(() => {
+          if (!isHandled) {
+            console.warn('📄 Timeout: PDF no cargó en tiempo esperado');
+            if (!printWindow.closed) {
+              printWindow.close();
+            }
+            isHandled = true;
+            reject(new Error('Timeout: PDF no cargó en tiempo esperado (15 segundos)'));
+          }
+        }, 15000); // Timeout aumentado a 15 segundos
+
+        // Configurar eventos
+        printWindow.addEventListener('load', () => {
+          clearTimeout(timeout);
+          handleWindowLoad();
+        });
+
+        printWindow.addEventListener('error', () => {
+          clearTimeout(timeout);
+          handleWindowError();
+        });
+
+        // Manejar si la ventana se cierra antes de tiempo
+        const checkClosed = setInterval(() => {
+          if (printWindow.closed && !isHandled) {
+            clearInterval(checkClosed);
+            clearTimeout(timeout);
+            isHandled = true;
+            resolve(); // Resolver como exitoso si el usuario cerró la ventana
+          }
+        }, 1000);
+
+        // Cleanup del interval después del timeout
+        setTimeout(() => {
+          clearInterval(checkClosed);
+        }, 16000);
+
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }, []);
+
+  // Función de utilidad para limpiar iframes de impresión residuales
+  const cleanupPrintResources = useCallback(() => {
+    const existingIframe = document.getElementById('pdf-print-iframe');
+    if (existingIframe && document.body.contains(existingIframe)) {
+      // Limpiar timeouts asociados antes de remover
+      const cleanupTimeoutId = existingIframe.dataset.cleanupTimeout;
+      if (cleanupTimeoutId) {
+        clearTimeout(parseInt(cleanupTimeoutId));
+      }
       
+      document.body.removeChild(existingIframe);
+      console.log('📄 Recursos de impresión limpiados manualmente');
+    }
+  }, []);
+
+  // Función mejorada para imprimir PDF con nueva ventana
+  const printPDFDirect = useCallback(async (pdfUrl: string): Promise<boolean> => {
+    try {
+      console.log('📄 Iniciando impresión del PDF...');
+      
+      // Usar el nuevo método de ventana emergente
+      await printPDFWithWindow(pdfUrl);
+      console.log('📄 ✅ Impresión completada');
+      return true;
+      
+    } catch (error) {
+      console.warn('📄 Error en impresión:', error);
+      return false;
+    }
+  }, [printPDFWithWindow]);
+
+  // Función para obtener PDF como blob para impresión optimizada
+  const fetchPDFAsBlob = useCallback(async (pdfUrl: string): Promise<Blob | null> => {
+    try {
+      const response = await fetch(pdfUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/pdf,*/*',
+          ...(httpHeaders || {})
+        },
+        credentials: withCredentials ? 'include' : 'same-origin'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const contentType = response.headers.get('Content-Type');
+      if (contentType && !contentType.includes('pdf')) {
+        console.warn('📄 Respuesta no es PDF:', contentType);
+        return null;
+      }
+
+      return await response.blob();
+    } catch (error) {
+      console.warn('📄 Error obteniendo PDF como blob:', error);
+      return null;
+    }
+  }, [httpHeaders, withCredentials]);
+
+  // Función de impresión directa del PDF - simplificada y optimizada
+  const handlePrint = useCallback(async () => {
+    if (!processedUrl || !urlInfo) {
+      showError('PDF no disponible para impresión');
+      return;
+    }
+
+    // Prevenir múltiples impresiones simultáneas
+    if (isPrinting) {
+      console.log('📄 Impresión ya en progreso, ignorando nueva solicitud');
+      showError('Impresión en progreso, espere por favor...');
+      return;
+    }
+
+    setIsPrinting(true);
+
+    try {
       logInfo('PDFViewer', 'Print initiated', {
         fileName,
         currentPage: state.currentPage,
-        totalPages: state.numPages
+        totalPages: state.numPages,
+        urlType: urlInfo.type
       });
+
+      console.log('📄 Iniciando impresión para tipo:', urlInfo.type);
+
+      // Estrategia simplificada: intentar impresión directa primero
+      const printSuccess = await printPDFDirect(processedUrl);
+      
+      if (printSuccess) {
+        showSuccess('Diálogo de impresión abierto');
+        onPrint?.(fileName);
+        return;
+      }
+
+      // Si falla la impresión directa, intentar con blob para URLs externas
+      if (urlInfo.type === 'external') {
+        console.log('📄 Impresión directa falló, intentando método blob...');
+        
+        try {
+          const pdfBlob = await fetchPDFAsBlob(processedUrl);
+          if (pdfBlob) {
+            const blobUrl = URL.createObjectURL(pdfBlob);
+            try {
+              const blobPrintSuccess = await printPDFDirect(blobUrl);
+              if (blobPrintSuccess) {
+                showSuccess('PDF descargado e impreso');
+                onPrint?.(fileName);
+                return;
+              }
+            } finally {
+              URL.revokeObjectURL(blobUrl);
+            }
+          }
+        } catch (blobError) {
+          console.warn('📄 No se pudo descargar PDF para impresión:', blobError);
+        }
+      }
+
+      // Fallback final: usar window.print() de la página actual
+      console.warn('📄 ⚠️ FALLBACK - usando window.print()');
+      window.print();
+      showSuccess('Vista de página enviada a impresión');
+      onPrint?.(fileName);
+
     } catch (error) {
+      console.error('📄 Error general en handlePrint:', error);
       logError('PDFViewer', 'Print error', String(error));
-      showError('Error al imprimir el documento');
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if (errorMessage.includes('bloqueó la ventana emergente')) {
+        showError('Permita ventanas emergentes en su navegador para imprimir PDFs');
+      } else if (errorMessage.includes('Timeout')) {
+        showError('El PDF tardó mucho en cargar. Intente con un documento más pequeño.');
+      } else {
+        showError(`Error al imprimir: ${errorMessage}`);
+      }
+    } finally {
+      // Siempre limpiar la bandera de impresión
+      setIsPrinting(false);
     }
-  }, [fileName, state.currentPage, state.numPages, onPrint]);
+  }, [processedUrl, urlInfo, fileName, state.currentPage, state.numPages, onPrint, printPDFDirect, fetchPDFAsBlob, isPrinting]);
 
   // Función de descarga mejorada
   const handleDownload = useCallback(async () => {
@@ -626,7 +922,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   }, [url, fileName, urlInfo, onDownload]);
 
   // Memoizar callbacks para Page component - DEBE estar al nivel superior
-  const handlePageLoadSuccess = useCallback((page: any) => {
+  const handlePageLoadSuccess = useCallback((page: { originalWidth?: number; originalHeight?: number }) => {
     console.log('✅ Page rendered successfully:', {
       pageNumber: state.currentPage,
       scale: state.zoom,
@@ -645,14 +941,16 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
   const handleTextLayerError = useCallback((error: Error) => {
     console.warn('⚠️ Text layer render error (continuando sin text layer):', error);
-    setTextLayerErrors(prev => prev + 1);
+    
+    // Incrementar contador usando ref para evitar re-renders
+    textLayerErrorCount.current += 1;
     
     // Si hay muchos errores, desactivar text layer
-    if (textLayerErrors >= 2) {
+    if (textLayerErrorCount.current >= 2) {
       console.log('🔄 Desactivando text layer debido a errores repetidos');
       setTextLayerEnabled(false);
     }
-  }, [textLayerErrors]);
+  }, []); // Sin dependencias para evitar ciclo infinito
 
   const handleAnnotationLayerSuccess = useCallback(() => {
     console.log('✅ Annotation layer rendered successfully for page:', state.currentPage);
@@ -686,6 +984,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     updateState({ isLoading: true });
   }, [fileName, updateState]);
 
+  // Memoizar callback del error boundary para evitar re-renders
+  const handleErrorBoundaryError = useCallback((error: Error) => {
+    console.warn('🔴 PDF rendering error caught by boundary:', error);
+  }, []);
+
   return (
     <div className={`bg-white rounded-lg shadow border border-gray-200 flex flex-col h-full ${className}`}>
       {/* Toolbar */}
@@ -700,6 +1003,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
           showNavigation={showNavigation}
           showZoomControls={showZoomControls}
           fileUrl={url}
+          isPrinting={isPrinting}
           onPreviousPage={goToPreviousPage}
           onNextPage={goToNextPage}
           onGoToPage={goToPage}
@@ -775,9 +1079,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
               options={documentOptions}
             >
               <PDFErrorBoundary
-                onError={(error) => {
-                  console.warn('🔴 PDF rendering error caught by boundary:', error);
-                }}
+                onError={handleErrorBoundaryError}
               >
                 <Page
                   pageNumber={state.currentPage}
