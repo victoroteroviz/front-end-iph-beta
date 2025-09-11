@@ -458,7 +458,7 @@ const FileModal: React.FC<FileModalProps> = ({ archivo, isOpen, onClose }) => {
           });
           
           return (
-            <div className="w-full h-full min-h-[500px]" style={{ height: '100%', minHeight: '500px' }}>
+            <div className="w-full h-full">
               <PDFViewer
                 url={fullPath}
                 fileName={archivo.titulo || 'Documento PDF'}
@@ -469,7 +469,7 @@ const FileModal: React.FC<FileModalProps> = ({ archivo, isOpen, onClose }) => {
                 showToolbar={true}
                 height="100%"
                 width="100%"
-                className="border-0"
+                className="border-0 h-full"
                 debugMode={false}
                 enableTextLayer={false}
                 onError={(error) => {
@@ -565,8 +565,8 @@ const FileModal: React.FC<FileModalProps> = ({ archivo, isOpen, onClose }) => {
           </div>
         </div>
         
-        {/* Contenido del archivo con altura fija */}
-        <div className="flex-1 flex items-center justify-center p-6 bg-gray-50" style={{ minHeight: '500px', height: 'calc(90vh - 120px)' }}>
+        {/* Contenido del archivo - usar flex-1 sin altura fija */}
+        <div className="flex-1 flex items-center justify-center p-6 bg-gray-50 overflow-hidden">
           <div className="w-full h-full flex items-center justify-center">
             {renderPreview()}
           </div>

@@ -687,7 +687,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   }, [fileName, updateState]);
 
   return (
-    <div className={`bg-white rounded-lg shadow border border-gray-200 ${className}`}>
+    <div className={`bg-white rounded-lg shadow border border-gray-200 flex flex-col h-full ${className}`}>
       {/* Toolbar */}
       {showToolbar && state.numPages && (
         <PDFToolbar
@@ -713,7 +713,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
       {/* Contenedor del PDF */}
       <div 
-        className="relative bg-gray-100 overflow-auto"
+        className="relative bg-gray-100 overflow-hidden flex-1"
         style={{ height: typeof height === 'number' ? `${height}px` : height, width }}
         ref={documentRef}
       >
@@ -744,7 +744,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
         {/* Document */}
         {!state.error && processedUrl && (
-          <div className="flex justify-center p-4">
+          <div className="flex justify-center p-4 overflow-auto h-full">
             <Document
               file={processedUrl}
               onLoadSuccess={handleLoadSuccess}
