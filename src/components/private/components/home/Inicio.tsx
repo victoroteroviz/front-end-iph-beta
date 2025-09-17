@@ -231,11 +231,17 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
         )}
         
         {datosPorSemana && (
-          <GraficaSemanaCard 
-            titulo="Reportes de IPH Día" 
-            data={datosPorSemana} 
-            semanaOffset={semanaOffset} 
-            setSemanaOffset={setSemanaOffset} 
+          <GraficaSemanaCard
+            titulo="Reportes de IPH Día"
+            data={datosPorSemana}
+            semanaOffset={semanaOffset}
+            setSemanaOffset={setSemanaOffset}
+            loading={loading}
+            onDateRangeChange={(startDate, endDate) => {
+              // Aquí se podría implementar lógica para cargar datos por rango
+              console.log('Rango seleccionado:', startDate, 'a', endDate);
+              // TODO: Implementar servicio para cargar datos por rango de fechas
+            }}
           />
         )}
       </div>

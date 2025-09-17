@@ -248,6 +248,8 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const [state, setState] = useState<IPerfilUsuarioState>(initialState);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [originalData, setOriginalData] = useState<IPerfilUsuarioFormData | null>(null);
 
   // =====================================================
   // FUNCIONES DE CONTROL DE ACCESO
@@ -331,24 +333,29 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
         }))
         ?.filter(rol => rol.label !== '') || [];
 
+      const formDataFromDB = {
+        nombre: userData.nombre || '',
+        primerApellido: userData.primer_apellido || '',
+        segundoApellido: userData.segundo_apellido || '',
+        correo: userData.correo_electronico || '',
+        telefono: userData.telefono || '',
+        cuip: userData.cuip || '',
+        cup: userData.cup || '',
+        password: '',
+        gradoId: userData.grado?.id?.toString() || '',
+        cargoId: userData.cargo?.id?.toString() || '',
+        municipioId: userData.municipio?.id?.toString() || '',
+        adscripcionId: userData.adscripcion?.id?.toString() || '',
+        sexoId: userData.sexo?.id?.toString() || '',
+        rolesSeleccionados
+      };
+
+      // Guardar datos originales para comparación
+      setOriginalData(formDataFromDB);
+
       setState(prev => ({
         ...prev,
-        formData: {
-          nombre: userData.nombre || '',
-          primerApellido: userData.primer_apellido || '',
-          segundoApellido: userData.segundo_apellido || '',
-          correo: userData.correo_electronico || '',
-          telefono: userData.telefono || '',
-          cuip: userData.cuip || '',
-          cup: userData.cup || '',
-          password: '',
-          gradoId: userData.grado?.id?.toString() || '',
-          cargoId: userData.cargo?.id?.toString() || '',
-          municipioId: userData.municipio?.id?.toString() || '',
-          adscripcionId: userData.adscripcion?.id?.toString() || '',
-          sexoId: userData.sexo?.id?.toString() || '',
-          rolesSeleccionados
-        },
+        formData: formDataFromDB,
         rolesUsuarios: userData.user_roles || [],
         isLoading: false,
         isEditing: true
@@ -426,7 +433,6 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
       const schema = state.isEditing ? perfilUsuarioSchema : perfilUsuarioCreateSchema;
 
       schema.parse(sanitizedData);
-
       return { isValid: true, errors: {} };
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -438,13 +444,6 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
           if (!firstErrorField) firstErrorField = field;
           errors[field as keyof IPerfilUsuarioFormErrors] = err.message;
         });
-
-        // Solo loggear en desarrollo o cuando hay errores críticos
-        if (Object.keys(errors).length > 10) {
-          logError('ValidateForm', 'Muchos errores de validación', JSON.stringify({
-            errorsCount: Object.keys(errors).length
-          }));
-        }
 
         return { isValid: false, errors, firstErrorField };
       }
@@ -463,6 +462,7 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
       isEditing: false,
       rolesUsuarios: []
     }));
+    setOriginalData(null); // Limpiar datos originales
   }, []);
 
   // =====================================================
@@ -493,6 +493,12 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
 
       showError('Por favor, corrige los errores en el formulario', 'Datos Inválidos');
       return;
+    }
+
+    // Confirmación para actualizaciones
+    if (state.isEditing && id) {
+      setShowConfirmationModal(true);
+      return; // Detener ejecución aquí, continuar en handleConfirmUpdate
     }
 
     setState(prev => ({ ...prev, isSubmitting: true }));
@@ -549,6 +555,46 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
       setState(prev => ({ ...prev, isSubmitting: false }));
     }
   }, [state, id, validateForm, updateFormErrors, navigate]);
+
+  // Funciones específicas para el modal de confirmación
+  const handleConfirmUpdate = useCallback(async () => {
+    setShowConfirmationModal(false);
+    setState(prev => ({ ...prev, isSubmitting: true }));
+
+    try {
+      const rolesSeleccionados = state.formData.rolesSeleccionados.map((r) => r.value);
+
+      if (state.isEditing && id) {
+        // Para actualización - usar la nueva función que maneja roles correctamente
+        const updatePayload = buildUpdateUserPayload(state.formData, state.rolesUsuarios);
+        await updateUsuario(id, updatePayload);
+        showSuccess('Usuario actualizado correctamente', 'Actualización Exitosa');
+        logInfo('PerfilUsuarioHook', 'Usuario actualizado', { id });
+        navigate('/usuarios');
+      }
+    } catch (error) {
+      const errorMessage = (error as Error).message;
+      logError('PerfilUsuarioHook', `Error al actualizar usuario: ${(error as Error).message}`);
+
+      // Intentar parsear mensaje de error del backend
+      try {
+        const parsed = JSON.parse(errorMessage);
+        const mensaje = Array.isArray(parsed.message)
+          ? parsed.message.join('\n')
+          : parsed.message;
+        showError(mensaje, 'Error al Actualizar');
+      } catch {
+        showError(errorMessage || 'Error desconocido al actualizar', 'Error al Actualizar');
+      }
+    } finally {
+      setState(prev => ({ ...prev, isSubmitting: false }));
+    }
+  }, [state, id, navigate]);
+
+  const handleCancelUpdate = useCallback(() => {
+    setShowConfirmationModal(false);
+    logInfo('PerfilUsuarioHook', 'Actualización cancelada por el usuario', { id });
+  }, [id]);
 
   const handleCancel = useCallback(() => {
     navigate('/usuarios');
@@ -637,9 +683,59 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
     return !hasErrors;
   }, [validateForm]);
 
+  // Función para comparar roles (arrays de objetos)
+  const compareRoles = (current: IRolOption[], original: IRolOption[]) => {
+    if (current.length !== original.length) return false;
+
+    const currentSorted = [...current].sort((a, b) => a.value - b.value);
+    const originalSorted = [...original].sort((a, b) => a.value - b.value);
+
+    return currentSorted.every((role, index) =>
+      role.value === originalSorted[index]?.value
+    );
+  };
+
   const hasUnsavedChanges = useMemo(() => {
-    return JSON.stringify(state.formData) !== JSON.stringify(initialFormData);
-  }, [state.formData]);
+    // Para modo creación, comparar con datos iniciales vacíos
+    if (!state.isEditing || !originalData) {
+      return JSON.stringify(state.formData) !== JSON.stringify(initialFormData);
+    }
+
+    // Para modo edición, comparar con datos originales de la DB
+    const current = state.formData;
+    const original = originalData;
+
+    // Comparar campos básicos (excluyendo password y roles)
+    const basicFieldsChanged =
+      current.nombre !== original.nombre ||
+      current.primerApellido !== original.primerApellido ||
+      current.segundoApellido !== original.segundoApellido ||
+      current.correo !== original.correo ||
+      current.telefono !== original.telefono ||
+      current.cuip !== original.cuip ||
+      current.cup !== original.cup ||
+      current.gradoId !== original.gradoId ||
+      current.cargoId !== original.cargoId ||
+      current.municipioId !== original.municipioId ||
+      current.adscripcionId !== original.adscripcionId ||
+      current.sexoId !== original.sexoId;
+
+    // Comparar roles
+    const rolesChanged = !compareRoles(current.rolesSeleccionados, original.rolesSeleccionados);
+
+    const hasChanges = basicFieldsChanged || rolesChanged;
+
+    // Debug temporal para verificar comparación
+    console.log('🔄 Comparación de cambios:', {
+      basicFieldsChanged,
+      rolesChanged,
+      hasChanges,
+      currentRolesCount: current.rolesSeleccionados.length,
+      originalRolesCount: original.rolesSeleccionados.length
+    });
+
+    return hasChanges;
+  }, [state.formData, state.isEditing, originalData]);
 
   const canSubmit = useMemo(() => {
     const conditions = {
@@ -647,16 +743,18 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
       notSubmitting: !state.isSubmitting,
       notLoading: !state.isLoading,
       hasPermissions: state.canEdit || state.canCreate,
-      catalogsLoaded: !state.isCatalogsLoading
+      catalogsLoaded: !state.isCatalogsLoading,
+      hasChanges: hasUnsavedChanges // Nueva condición: debe haber cambios reales
     };
 
     const result = conditions.isFormValid &&
                    conditions.notSubmitting &&
                    conditions.notLoading &&
                    conditions.hasPermissions &&
-                   conditions.catalogsLoaded;
+                   conditions.catalogsLoaded &&
+                   conditions.hasChanges; // Agregar condición de cambios
 
-    // Solo loggear cambios en canSubmit
+    // Solo loggear cambios significativos en canSubmit
     if (result !== (state as any)._lastCanSubmit) {
       logInfo('CanSubmit', 'Estado del botón cambió', JSON.stringify({
         canSubmit: result,
@@ -665,7 +763,7 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
     }
 
     return result;
-  }, [isFormValid, state.isSubmitting, state.isLoading, state.canEdit, state.canCreate, state.isCatalogsLoading]);
+  }, [isFormValid, state.isSubmitting, state.isLoading, state.canEdit, state.canCreate, state.isCatalogsLoading, hasUnsavedChanges]);
 
   // =====================================================
   // RETORNO DEL HOOK
@@ -685,7 +783,11 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
     handleRoleChange,
     isFormValid,
     hasUnsavedChanges,
-    canSubmit
+    canSubmit,
+    // Modal de confirmación
+    showConfirmationModal,
+    handleConfirmUpdate,
+    handleCancelUpdate
   };
 };
 

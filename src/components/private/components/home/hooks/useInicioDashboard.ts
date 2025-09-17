@@ -76,29 +76,73 @@ const useInicioDashboard = () => {
   const [semanaOffset, setSemanaOffsetState] = useState(0);
   const [anioSeleccionado, setAnioSeleccionadoState] = useState(new Date().getFullYear());
 
-  // Funciones memoizadas estables con scroll del container correcto
+  // Funciones de carga específicas (declarar antes de las funciones que las usan)
+  const cargarDatosPorAnio = useCallback(async (anio: number) => {
+    try {
+      const añoAnterior = anio - 1;
+
+      // Solo cargar datos que dependen del año
+      const resultados = await Promise.allSettled([
+        getResumenEstadisticas(anio),
+        getVariacionResumen(anio, añoAnterior),
+        getResumenPorMes(anio)
+      ]);
+
+      const [resumenResult, variacionesResult, mesResult] = resultados;
+
+      setState(prev => {
+        const newState = { ...prev };
+
+        if (resumenResult.status === 'fulfilled') {
+          newState.resumen = resumenResult.value;
+        }
+
+        if (variacionesResult.status === 'fulfilled') {
+          newState.variaciones = variacionesResult.value;
+        }
+
+        if (mesResult.status === 'fulfilled') {
+          newState.datosPorMes = mesResult.value;
+        }
+
+        return newState;
+      });
+
+    } catch (error) {
+      logError('useInicioDashboard', error, 'Error cargando datos por año');
+    }
+  }, []);
+
+  const cargarDatosPorSemana = useCallback(async (offset: number) => {
+    try {
+      const resultado = await getResumenPorSemana(offset);
+      setState(prev => ({ ...prev, datosPorSemana: resultado }));
+    } catch (error) {
+      logError('useInicioDashboard', error, 'Error cargando datos por semana');
+    }
+  }, []);
+
+  // Funciones memoizadas estables - DECLARADAS DESPUÉS de las funciones de carga
   const setSemanaOffset = useCallback((offset: number | ((prev: number) => number)) => {
-    // Preservar scroll antes del cambio
-    preserveScrollPosition();
-    
-    setSemanaOffsetState(typeof offset === 'function' ? 
-      (prev) => offset(prev) : 
-      offset
-    );
-    
-    // Restaurar scroll después del re-render
-    setTimeout(restoreScrollPosition, 100);
-  }, [preserveScrollPosition, restoreScrollPosition]);
+    if (typeof offset === 'function') {
+      setSemanaOffsetState(prev => {
+        const newVal = offset(prev);
+        cargarDatosPorSemana(newVal);
+        return newVal;
+      });
+    } else {
+      setSemanaOffsetState(offset);
+      cargarDatosPorSemana(offset);
+    }
+  }, [cargarDatosPorSemana]);
 
   const setAnioSeleccionado = useCallback((anio: number) => {
-    // Preservar scroll antes del cambio
-    preserveScrollPosition();
-    
+    // Cambiar el estado local inmediatamente
     setAnioSeleccionadoState(anio);
-    
-    // Restaurar scroll después del re-render  
-    setTimeout(restoreScrollPosition, 100);
-  }, [preserveScrollPosition, restoreScrollPosition]);
+
+    // Cargar solo los datos que dependen del año (sin recargar todo)
+    cargarDatosPorAnio(anio);
+  }, [cargarDatosPorAnio]);
 
   // Verificación de autorización
   const verificarAutorizacion = useCallback(() => {
@@ -155,21 +199,22 @@ const useInicioDashboard = () => {
     }
   }, [navigate]);
 
-  // Carga optimizada de datos con Promise.allSettled
-  const cargarDatos = useCallback(async () => {
-    if (state.autorizado === false) return; // Solo retornar si explícitamente no autorizado
-    
-    setState(prev => ({ ...prev, loading: true }));
-    
-    try {
-      const añoActual = anioSeleccionado;
-      const añoAnterior = añoActual - 1;
+  // Carga inicial de datos (solo se ejecuta una vez)
+  const cargarDatosIniciales = useCallback(async () => {
+    if (state.autorizado === false) return;
 
-      // Cargar todos los datos en paralelo
+    setState(prev => ({ ...prev, loading: true }));
+
+    try {
+      const añoActual = new Date().getFullYear(); // Usar año actual, no el estado
+      const añoAnterior = añoActual - 1;
+      const offsetInicial = 0; // Usar offset inicial
+
+      // Cargar todos los datos en paralelo para carga inicial
       const resultados = await Promise.allSettled([
         getResumenEstadisticas(añoActual),
         getVariacionResumen(añoActual, añoAnterior),
-        getResumenPorSemana(semanaOffset),
+        getResumenPorSemana(offsetInicial),
         getResumenPorMes(añoActual)
       ]);
 
@@ -229,7 +274,7 @@ const useInicioDashboard = () => {
       logError('useInicioDashboard', error, 'Error general dashboard');
       setState(prev => ({ ...prev, loading: false }));
     }
-  }, [state.autorizado, anioSeleccionado, semanaOffset]);
+  }, [state.autorizado]);
 
   // Effects
   useEffect(() => {
@@ -238,9 +283,9 @@ const useInicioDashboard = () => {
 
   useEffect(() => {
     if (state.autorizado === true) {
-      cargarDatos();
+      cargarDatosIniciales();
     }
-  }, [state.autorizado, cargarDatos]);
+  }, [state.autorizado, cargarDatosIniciales]);
 
   return {
     // Estados
@@ -260,7 +305,7 @@ const useInicioDashboard = () => {
     setAnioSeleccionado,
     
     // Funciones
-    recargarDatos: cargarDatos
+    recargarDatos: cargarDatosIniciales
   };
 };
 

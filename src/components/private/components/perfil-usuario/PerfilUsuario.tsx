@@ -31,6 +31,7 @@ import GradosSelector from './components/GradosSelector';
 import CargosSelector from './components/CargosSelector';
 import MunicipiosSelector from './components/MunicipiosSelector';
 import AdscripcionesSelector from './components/AdscripcionesSelector';
+import ConfirmationModal from './components/ConfirmationModal';
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';
@@ -55,7 +56,10 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
     handleSubmit,
     handleCancel,
     handleRoleChange,
-    canSubmit
+    canSubmit,
+    showConfirmationModal,
+    handleConfirmUpdate,
+    handleCancelUpdate
   } = usePerfilUsuario();
 
   const {
@@ -403,6 +407,18 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
           />
         </div>
       </form>
+
+      {/* Modal de Confirmación para Actualización */}
+      <ConfirmationModal
+        isOpen={showConfirmationModal}
+        title="Confirmar Actualización"
+        message="¿Está seguro que desea actualizar la información de este usuario? Esta acción modificará permanentemente los datos del usuario en el sistema."
+        confirmText="Sí, Actualizar"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmUpdate}
+        onCancel={handleCancelUpdate}
+        type="warning"
+      />
     </div>
   );
 };

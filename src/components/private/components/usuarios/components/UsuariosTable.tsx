@@ -3,7 +3,7 @@
  * Tabla de usuarios con ordenamiento, acciones y estados de carga
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ChevronUp,
   ChevronDown,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import type { IUsuariosTableProps } from '../../../../../interfaces/components/usuarios.interface';
 import type { IPaginatedUsers } from '../../../../../interfaces/user/crud/get-paginated.users.interface';
+import UsuarioViewModal from './UsuarioViewModal';
 
 const UsuariosTable: React.FC<IUsuariosTableProps> = ({
   usuarios,
@@ -27,7 +28,12 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
   onDelete,
   className = ''
 }) => {
-  
+  // Estado del modal de vista
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    selectedUserId: ''
+  });
+
   // Configuración de columnas
   const columns = useMemo(() => [
     { 
@@ -80,6 +86,21 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
   const handleSort = (columnKey: string) => {
     if (loading) return;
     onSort(columnKey);
+  };
+
+  // Funciones del modal de vista
+  const handleRowClick = (usuario: IPaginatedUsers) => {
+    setModalState({
+      isOpen: true,
+      selectedUserId: usuario.id
+    });
+  };
+
+  const handleCloseModal = () => {
+    setModalState({
+      isOpen: false,
+      selectedUserId: ''
+    });
   };
 
   const formatUserName = (usuario: IPaginatedUsers): string => {
@@ -150,7 +171,7 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
                   key={column.key}
                   className={`
                     px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider
-                    border-b border-r border-gray-200 last:border-r-0
+                    border-b border-gray-200
                     ${column.sortable ? 'cursor-pointer hover:bg-gray-100 select-none' : ''}
                     ${column.className}
                   `}
@@ -168,12 +189,14 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
           {/* Body de tabla */}
           <tbody className="bg-white divide-y divide-gray-200">
             {Array.isArray(usuarios) && usuarios.map((usuario) => (
-              <tr 
+              <tr
                 key={usuario.id}
-                className="hover:bg-gray-50 transition-colors duration-150"
+                onClick={() => handleRowClick(usuario)}
+                className="hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                title="Clic para ver información detallada"
               >
                 {/* Nombre */}
-                <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div>
                     <div className="text-sm font-medium text-gray-900 font-poppins">
                       {formatUserName(usuario)}
@@ -185,28 +208,28 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
                 </td>
 
                 {/* CUIP */}
-                <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 font-poppins font-mono">
                     {usuario.cuip || 'N/A'}
                   </div>
                 </td>
 
                 {/* CUP */}
-                <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 font-poppins font-mono">
                     {usuario.cup || 'N/A'}
                   </div>
                 </td>
 
                 {/* Grado */}
-                <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 font-poppins">
                     {usuario.grado?.nombre || 'N/A'}
                   </div>
                 </td>
 
                 {/* Cargo */}
-                <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 font-poppins">
                     {usuario.cargo?.nombre || 'N/A'}
                   </div>
@@ -219,7 +242,10 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
                     {/* Botón Editar */}
                     {canEdit && (
                       <button
-                        onClick={() => onEdit(usuario)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit(usuario);
+                        }}
                         disabled={loading}
                         className="
                           inline-flex items-center px-3 py-1.5 text-xs font-medium
@@ -240,7 +266,10 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
                     {/* Botón Eliminar */}
                     {canDelete && (
                       <button
-                        onClick={() => onDelete(usuario)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(usuario);
+                        }}
                         disabled={loading}
                         className="
                           inline-flex items-center px-3 py-1.5 text-xs font-medium
@@ -281,6 +310,13 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Modal de Vista de Usuario */}
+      <UsuarioViewModal
+        isOpen={modalState.isOpen}
+        onClose={handleCloseModal}
+        userId={modalState.selectedUserId}
+      />
     </div>
   );
 };

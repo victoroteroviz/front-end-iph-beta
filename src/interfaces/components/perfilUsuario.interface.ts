@@ -270,25 +270,30 @@ export interface IRolesResponse {
 export interface IUsePerfilUsuarioReturn {
   // Estado
   state: IPerfilUsuarioState;
-  
+
   // Funciones de formulario
   updateFormData: (data: Partial<IPerfilUsuarioFormData>) => void;
   updateFormErrors: (errors: Partial<IPerfilUsuarioFormErrors>) => void;
   resetForm: () => void;
   validateForm: () => IFormValidationResult;
-  
+
   // Funciones de datos
   loadUserData: (userId: string) => Promise<void>;
   loadCatalogs: () => Promise<void>;
   loadRoles: () => Promise<void>;
-  
+
   // Funciones de acciones
   handleSubmit: () => Promise<void>;
   handleCancel: () => void;
   handleRoleChange: (selectedRoles: IRolOption[]) => void;
-  
+
   // Utilidades
   isFormValid: boolean;
   hasUnsavedChanges: boolean;
   canSubmit: boolean;
+
+  // Modal de confirmación
+  showConfirmationModal: boolean;
+  handleConfirmUpdate: () => Promise<void>;
+  handleCancelUpdate: () => void;
 }

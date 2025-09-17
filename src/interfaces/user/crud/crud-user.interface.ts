@@ -128,8 +128,13 @@ export interface Sexo {
 }
 
 export interface UserRoleGet {
-  id: number;
-  privilegioId: number;
-  is_active: boolean;
+  id?: string;
+  privilegioId?: number;
+  fecha_registro?: string;
+  privilegio?: {
+    id?: number;
+    nombre?: string;
+    is_active?: boolean;
+  } | null;
 }
 
