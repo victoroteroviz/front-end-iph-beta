@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { TrendingUp, Award, AlertTriangle, Users, Loader2 } from 'lucide-react';
+import { TrendingUp, Award, AlertTriangle, Users, Loader2, UserIcon } from 'lucide-react';
 import type { IEstadisticasCardsProps } from '../../../../../interfaces/components/usuarios.interface';
 
 const EstadisticasCards: React.FC<IEstadisticasCardsProps> = ({
@@ -159,14 +159,21 @@ const EstadisticaCard: React.FC<EstadisticaCardProps> = ({ config, data }) => {
       <div className="flex items-center space-x-4">
         {/* Avatar */}
         <div className="flex-shrink-0">
-          <img 
-            src={data.imagen} 
-            alt={data.nombre}
-            className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
-            onError={(e) => {
-              e.currentTarget.src = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-            }}
-          />
+          {data.imagen ? (
+            <img
+              src={data.imagen}
+              alt={data.nombre}
+              className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+              onError={(e) => {
+                // Ocultar imagen y mostrar ícono de fallback
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+          ) : null}
+          <div className={`w-12 h-12 rounded-full bg-gray-200 border-2 border-white shadow-sm flex items-center justify-center ${data.imagen ? 'hidden' : ''}`}>
+            <UserIcon className="w-6 h-6 text-gray-500" />
+          </div>
         </div>
 
         {/* Información */}

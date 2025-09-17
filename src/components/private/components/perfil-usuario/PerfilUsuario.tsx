@@ -172,6 +172,8 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
               onChange={(value) => updateFormData({ sexoId: value })}
               error={formErrors.sexoId}
               options={sexos}
+              placeholder="Selecciona un sexo"
+              showPlaceholderOption={true}
               required
             />
           </div>

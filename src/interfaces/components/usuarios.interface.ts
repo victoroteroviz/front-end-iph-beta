@@ -11,8 +11,8 @@ import type { IPaginatedUsers } from '../user/crud/get-paginated.users.interface
 
 export interface IUsuariosFilters {
   search: string;
-  searchBy: 'nombre' | 'cuip' | 'grado' | 'cargo';
-  orderBy: 'nombre' | 'cuip' | 'gradoId' | 'cargoId';
+  searchBy: 'nombre' | 'cuip' | 'cup' | 'grado' | 'cargo';
+  orderBy: 'nombre' | 'cuip' | 'cup' | 'gradoId' | 'cargoId';
   order: 'ASC' | 'DESC';
   page: number;
 }
@@ -225,6 +225,7 @@ export enum UsuariosPermission {
 export const USUARIOS_SEARCH_OPTIONS = [
   { value: 'nombre', label: 'Nombre' },
   { value: 'cuip', label: 'CUIP' },
+  { value: 'cup', label: 'CUP' },
   { value: 'grado', label: 'Grado' },
   { value: 'cargo', label: 'Cargo' }
 ] as const;
@@ -232,6 +233,7 @@ export const USUARIOS_SEARCH_OPTIONS = [
 export const USUARIOS_ORDER_OPTIONS = [
   { value: 'nombre', label: 'Nombre' },
   { value: 'cuip', label: 'CUIP' },
+  { value: 'cup', label: 'CUP' },
   { value: 'gradoId', label: 'Grado' },
   { value: 'cargoId', label: 'Cargo' }
 ] as const;

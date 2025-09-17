@@ -4,11 +4,13 @@
  */
 
 import { logInfo, logError } from '../../helper/log/logger.helper';
-import type { 
+// import { HttpHelper } from '../../helper/http/http.helper'; // Para futuras implementaciones reales
+// import { API_BASE_URL } from '../../config/env.config'; // Para futuras implementaciones reales
+import type {
   IEstadisticasUsuarios,
   IUsuarioMetricas,
   IEstadisticasResponse,
-  IUsuarioMetricasResponse 
+  IUsuarioMetricasResponse
 } from '../../interfaces/components/usuarios.interface';
 import type { IPaginatedUsers } from '../../interfaces/user/crud/get-paginated.users.interface';
 
@@ -17,6 +19,16 @@ import type { IPaginatedUsers } from '../../interfaces/user/crud/get-paginated.u
 // =====================================================
 
 const USE_MOCK_DATA = true; // Cambiar a false cuando API esté lista
+
+// TODO: Descomentar cuando se implemente API real
+// const http: HttpHelper = HttpHelper.getInstance({
+//   baseURL: API_BASE_URL || '',
+//   timeout: 10000,
+//   retries: 3,
+//   defaultHeaders: {
+//     'Content-Type': 'application/json'
+//   }
+// });
 
 // =====================================================
 // FUNCIONES PRINCIPALES
@@ -121,21 +133,21 @@ const getMockEstadisticas = async (): Promise<IEstadisticasResponse> => {
       id: '1',
       nombre: 'María López Hernández',
       descripcion: '42 IPH creados este mes',
-      imagen: 'https://randomuser.me/api/portraits/women/45.jpg',
+      imagen: '', // Usará ícono de fallback
       color: 'green'
     },
     mejorTiempo: {
       id: '2',
       nombre: 'Luis Martínez García',
       descripcion: '87% de efectividad promedio',
-      imagen: 'https://randomuser.me/api/portraits/men/32.jpg',
+      imagen: '', // Usará ícono de fallback
       color: 'green'
     },
     peorRendimiento: {
       id: '3',
       nombre: 'Carlos González Ruiz',
       descripción: '8 IPH pendientes de completar',
-      imagen: 'https://randomuser.me/api/portraits/men/28.jpg',
+      imagen: '', // Usará ícono de fallback
       color: 'red'
     }
   };
@@ -190,7 +202,7 @@ const getDefaultEstadisticas = (): IEstadisticasUsuarios => ({
   }
 });
 
-const getDefaultAvatar = (): string => 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+const getDefaultAvatar = (): string => ''; // Retorna vacío para usar ícono de fallback en componente
 
 // =====================================================
 // FUNCIONES REALES (PARA FUTURA IMPLEMENTACIÓN)

@@ -18,6 +18,7 @@ interface FormFieldProps {
   options?: Array<{ id: number | string; nombre: string }>;
   className?: string;
   autoComplete?: string;
+  showPlaceholderOption?: boolean; // Nueva prop para controlar si mostrar opción placeholder
 }
 
 const FormField: React.FC<FormFieldProps> = ({
@@ -31,7 +32,8 @@ const FormField: React.FC<FormFieldProps> = ({
   disabled = false,
   options = [],
   className = '',
-  autoComplete
+  autoComplete,
+  showPlaceholderOption = true
 }) => {
   const baseInputClasses = `
     w-full p-2 rounded transition-all duration-200
@@ -62,9 +64,11 @@ const FormField: React.FC<FormFieldProps> = ({
           className={selectInputClasses}
           disabled={disabled}
         >
-          <option value="">
-            {placeholder || `Selecciona ${label.toLowerCase()}`}
-          </option>
+          {showPlaceholderOption && (
+            <option value="" disabled>
+              {placeholder || `Selecciona ${label.toLowerCase()}`}
+            </option>
+          )}
           {options && Array.isArray(options) ? options.map((option) => (
             <option key={option.id} value={option.id}>
               {option.nombre}

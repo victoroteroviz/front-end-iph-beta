@@ -271,27 +271,38 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
 
   const iphData = iph as I_IphData;
   
-  // Construir URLs de imágenes usando VITE_API_BASE_URL con debugging
-  const imageUrls = iphData.fotos && iphData.fotos.length > 0 
+  // Función helper para construir URLs de imágenes
+  const buildImageUrl = (imagePath: string): string => {
+    // Si no hay ruta de imagen, retornar vacío
+    if (!imagePath) return '';
+
+    // En desarrollo, API_BASE_URL puede estar vacío (usa proxy de Vite)
+    if (!API_BASE_URL || API_BASE_URL.trim() === '') {
+      // En desarrollo: usar rutas relativas que serán manejadas por el proxy de Vite
+      return imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    }
+
+    // En producción: usar URL completa del servidor
+    if (imagePath.startsWith('/')) {
+      return `${API_BASE_URL}${imagePath}`;
+    } else {
+      return `${API_BASE_URL}/${imagePath}`;
+    }
+  };
+
+  // Construir URLs de imágenes con manejo robusto para desarrollo/producción
+  const imageUrls = iphData.fotos && iphData.fotos.length > 0
     ? iphData.fotos.map((fotoPath, index) => {
-        let finalUrl: string;
-        
-        // Si la ruta empieza con /, añadir directamente a base URL
-        if (fotoPath.startsWith('/')) {
-          finalUrl = `${API_BASE_URL}${fotoPath}`;
-        } else {
-          // Si no empieza con /, añadir con / intermedio
-          finalUrl = `${API_BASE_URL}/${fotoPath}`;
-        }
-        
+        const finalUrl = buildImageUrl(fotoPath);
+
         // Debug logging
         console.log(`🖼️ Imagen ${index + 1}:`, {
           rutaOriginal: fotoPath,
-          apiBaseUrl: API_BASE_URL,
+          apiBaseUrl: API_BASE_URL || '(vacío - modo desarrollo)',
           urlFinal: finalUrl,
-          empiezaConSlash: fotoPath.startsWith('/')
+          modoDesarrollo: !API_BASE_URL || API_BASE_URL.trim() === ''
         });
-        
+
         return finalUrl;
       })
     : [];

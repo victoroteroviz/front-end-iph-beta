@@ -35,6 +35,23 @@ export default defineConfig(({ mode }) => {
               console.log(`📦 Response: ${req.method} ${req.url} → ${proxyRes.statusCode}`);
             });
           }
+        },
+        // Proxy para archivos estáticos /uploads/* al backend
+        '/uploads': {
+          target: apiBaseUrl,
+          changeOrigin: true,
+          secure: false,
+          configure: (proxy, _options) => {
+            proxy.on('error', (err, _req, _res) => {
+              console.log('🚨 Upload proxy error:', err);
+            });
+            proxy.on('proxyReq', (proxyReq, req, _res) => {
+              console.log(`📁 Upload proxy: ${req.method} ${req.url} → ${apiBaseUrl}${proxyReq.path}`);
+            });
+            proxy.on('proxyRes', (proxyRes, req, _res) => {
+              console.log(`🖼️ Upload response: ${req.method} ${req.url} → ${proxyRes.statusCode}`);
+            });
+          }
         }
       }
     }

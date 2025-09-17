@@ -3,7 +3,7 @@
  * Filtros de búsqueda y acciones para la lista de usuarios
  */
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Filter, X, UserPlus, RefreshCw } from 'lucide-react';
 import type { IUsuariosFiltersProps } from '../../../../../interfaces/components/usuarios.interface';
 import { USUARIOS_SEARCH_OPTIONS } from '../../../../../interfaces/components/usuarios.interface';
@@ -18,11 +18,30 @@ const UsuariosFilters: React.FC<IUsuariosFiltersProps> = ({
   onCreate,
   className = ''
 }) => {
-  const handleSearchInputChange = (value: string) => {
-    onFiltersChange({ search: value });
-  };
+  // Estado local para el input de búsqueda (para debounce)
+  const [searchInput, setSearchInput] = useState(filters.search);
 
-  const handleSearchByChange = (searchBy: 'nombre' | 'cuip' | 'grado' | 'cargo') => {
+  // Debounce: actualizar filtros después de 500ms sin cambios
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchInput !== filters.search) {
+        onFiltersChange({ search: searchInput });
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchInput, filters.search, onFiltersChange]);
+
+  // Sincronizar estado local con filtros externos
+  useEffect(() => {
+    setSearchInput(filters.search);
+  }, [filters.search]);
+
+  const handleSearchInputChange = useCallback((value: string) => {
+    setSearchInput(value);
+  }, []);
+
+  const handleSearchByChange = (searchBy: 'nombre' | 'cuip' | 'cup' | 'grado' | 'cargo') => {
     onFiltersChange({ searchBy });
   };
 
@@ -49,22 +68,22 @@ const UsuariosFilters: React.FC<IUsuariosFiltersProps> = ({
             <input
               type="text"
               placeholder="Buscar usuarios..."
-              value={filters.search}
+              value={searchInput}
               onChange={(e) => handleSearchInputChange(e.target.value)}
               onKeyPress={handleKeyPress}
               className="
-                w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg 
-                focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] 
+                w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg
+                focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54]
                 disabled:opacity-50 disabled:cursor-not-allowed
                 font-poppins text-sm
               "
               disabled={loading}
               maxLength={100}
             />
-            {filters.search && (
+            {searchInput && (
               <button
                 onClick={() => handleSearchInputChange('')}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
                 disabled={loading}
               >
                 <X className="h-4 w-4" />
@@ -77,12 +96,12 @@ const UsuariosFilters: React.FC<IUsuariosFiltersProps> = ({
             <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             <select
               value={filters.searchBy}
-              onChange={(e) => handleSearchByChange(e.target.value as 'nombre' | 'cuip' | 'grado' | 'cargo')}
+              onChange={(e) => handleSearchByChange(e.target.value as 'nombre' | 'cuip' | 'cup' | 'grado' | 'cargo')}
               className="
-                pl-10 pr-8 py-2 border border-gray-300 rounded-lg 
+                pl-10 pr-8 py-2 border border-gray-300 rounded-lg
                 focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54]
                 disabled:opacity-50 disabled:cursor-not-allowed
-                font-poppins text-sm min-w-32
+                cursor-pointer font-poppins text-sm min-w-32
               "
               disabled={loading}
             >
@@ -103,11 +122,11 @@ const UsuariosFilters: React.FC<IUsuariosFiltersProps> = ({
             onClick={onSearch}
             disabled={loading}
             className="
-              flex items-center gap-2 px-4 py-2 text-sm font-medium 
+              flex items-center gap-2 px-4 py-2 text-sm font-medium
               text-blue-700 bg-blue-50 border border-blue-200 rounded-lg
               hover:bg-blue-100 hover:border-blue-300
               disabled:opacity-50 disabled:cursor-not-allowed
-              transition-colors duration-200 font-poppins
+              cursor-pointer transition-colors duration-200 font-poppins
             "
           >
             <Search className="h-4 w-4" />
@@ -124,7 +143,7 @@ const UsuariosFilters: React.FC<IUsuariosFiltersProps> = ({
                 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg
                 hover:bg-gray-100 hover:border-gray-300
                 disabled:opacity-50 disabled:cursor-not-allowed
-                transition-colors duration-200 font-poppins
+                cursor-pointer transition-colors duration-200 font-poppins
               "
             >
               <X className="h-4 w-4" />
@@ -142,7 +161,7 @@ const UsuariosFilters: React.FC<IUsuariosFiltersProps> = ({
                 text-white bg-[#948b54] border border-[#948b54] rounded-lg
                 hover:bg-[#7d7548] hover:border-[#7d7548]
                 disabled:opacity-50 disabled:cursor-not-allowed
-                transition-colors duration-200 font-poppins
+                cursor-pointer transition-colors duration-200 font-poppins
                 shadow-sm hover:shadow-md
               "
             >
