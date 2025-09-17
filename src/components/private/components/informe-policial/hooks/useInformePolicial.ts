@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 // Servicios
 import { informePolicialService, getCurrentUserInfo } from '../../../../../services/informe-policial/informe-policial.service';
+import { getTiposIPH } from '../../../../../services/informe-policial/tipos-iph.service';
 
 // Helpers
 import { showSuccess, showError, showWarning } from '../../../../../helper/notification/notification.helper';
@@ -51,7 +52,9 @@ const createInitialState = (): IInformePolicialState => {
     autoRefreshEnabled: true,
     nextAutoRefresh: Date.now() + INFORME_POLICIAL_CONFIG.AUTO_REFRESH_INTERVAL,
     userCanViewAll: userInfo.canViewAll,
-    currentUserId: userInfo.userId
+    currentUserId: userInfo.userId,
+    tiposIPH: [],
+    tiposLoading: false
   };
 };
 
@@ -110,6 +113,43 @@ const useInformePolicial = (
   // =====================================================
   // FUNCIONES DE CARGA DE DATOS
   // =====================================================
+
+  /**
+   * Carga los tipos de IPH disponibles
+   */
+  const loadTiposIPH = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, tiposLoading: true }));
+
+      logInfo('InformePolicial', 'Loading IPH types');
+
+      const tipos = await getTiposIPH();
+
+      setState(prev => ({
+        ...prev,
+        tiposIPH: tipos,
+        tiposLoading: false
+      }));
+
+      logInfo('InformePolicial', 'IPH types loaded successfully', {
+        count: tipos.length,
+        types: tipos.map(t => ({ id: t.id, nombre: t.nombre }))
+      });
+
+    } catch (error) {
+      const errorMessage = (error as Error).message || 'Error al cargar tipos de IPH';
+      
+      logError('InformePolicial', 'Error loading IPH types', { 
+        error: errorMessage
+      });
+
+      setState(prev => ({
+        ...prev,
+        tiposLoading: false,
+        tiposIPH: [] // Array vacío en caso de error
+      }));
+    }
+  }, []);
 
   const loadIPHs = useCallback(async (showLoadingIndicator: boolean = true) => {
     try {
@@ -255,7 +295,8 @@ const useInformePolicial = (
   // =====================================================
 
   const handlePageChange = useCallback((page: number) => {
-    if (page < 1 || page > state.pagination.totalPages || page === state.pagination.currentPage) {
+    // Comparar con el número de página actual en los filtros, no en la paginación
+    if (page < 1 || page > state.pagination.totalPages || page === state.filters.page) {
       return;
     }
     
@@ -264,8 +305,12 @@ const useInformePolicial = (
       filters: { ...prev.filters, page }
     }));
 
-    logInfo('InformePolicial', 'Page changed', { page, totalPages: state.pagination.totalPages });
-  }, [state.pagination.totalPages, state.pagination.currentPage]);
+    logInfo('InformePolicial', 'Page changed', { 
+      page, 
+      totalPages: state.pagination.totalPages,
+      previousPage: state.filters.page 
+    });
+  }, [state.pagination.totalPages, state.filters.page]);
 
   // =====================================================
   // FUNCIONES DE NAVEGACIÓN
@@ -332,9 +377,10 @@ const useInformePolicial = (
     const hasAccess = checkAccess();
     if (!hasAccess) return;
 
-    // Carga inicial
+    // Cargar tipos y datos iniciales
+    loadTiposIPH();
     loadIPHs();
-  }, [checkAccess]); // Solo en mount
+  }, [checkAccess, loadTiposIPH]); // Solo en mount
 
   // Efecto de filtros - escucha TODOS los cambios de filtros
   useEffect(() => {
@@ -353,7 +399,7 @@ const useInformePolicial = (
       // Sin búsqueda o filtros de ordenamiento/paginación - cargar inmediatamente
       loadIPHs();
     }
-  }, [state.filters.search, state.filters.searchBy, state.filters.orderBy, state.filters.order, state.filters.page, loadIPHs]);
+  }, [state.filters.search, state.filters.searchBy, state.filters.orderBy, state.filters.order, state.filters.page, state.filters.tipoId, loadIPHs]);
 
   // Efecto de auto-refresh
   useEffect(() => {

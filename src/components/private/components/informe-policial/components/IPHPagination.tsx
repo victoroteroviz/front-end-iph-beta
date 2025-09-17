@@ -24,8 +24,22 @@ const IPHPagination: React.FC<IIPHPaginationProps> = ({
 
   const handlePageChange = (page: number) => {
     if (loading || page === currentPage || page < 1 || page > totalPages) {
+      console.log('IPHPagination: Page change blocked', {
+        loading,
+        requestedPage: page,
+        currentPage,
+        totalPages,
+        reason: loading ? 'loading' : page === currentPage ? 'same_page' : 'invalid_range'
+      });
       return;
     }
+    
+    console.log('IPHPagination: Changing page', {
+      from: currentPage,
+      to: page,
+      totalPages
+    });
+    
     onPageChange(page);
   };
 
@@ -68,6 +82,7 @@ const IPHPagination: React.FC<IIPHPaginationProps> = ({
   const buttonBaseClasses = `
     px-3 py-2 text-sm font-medium border transition-colors duration-150
     disabled:opacity-50 disabled:cursor-not-allowed font-poppins
+    cursor-pointer hover:cursor-pointer
   `;
 
   const pageButtonClasses = `

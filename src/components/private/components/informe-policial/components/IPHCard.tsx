@@ -17,6 +17,46 @@ import {
   formatCreationDate
 } from '../../../../../interfaces/components/informe-policial.interface';
 
+// =====================================================
+// CONFIGURACIÓN DE COLORES PARA CARDS
+// =====================================================
+
+/**
+ * Determina los colores de una card IPH basado en el tipo
+ * Incluye manejo para casos undefined/null/vacío
+ */
+const getCardColors = (tipoNombre?: string) => {
+  // Caso corrupto: tipo undefined, null o vacío
+  if (!tipoNombre || tipoNombre.trim() === '') {
+    return {
+      borderColor: '#000000',     // Negro completo para IPH corrupto
+      shadowColor: '0, 0, 0'      // RGB para usar en box-shadow
+    };
+  }
+  
+  // Justicia Cívica
+  if (tipoNombre.includes('Justicia Cívica')) {
+    return {
+      borderColor: '#FDD835',     // Amarillo dorado
+      shadowColor: '253, 216, 53' // RGB equivalente para sombra
+    };
+  } 
+  
+  // Hechos Probablemente Delictivos
+  if (tipoNombre.includes('Hechos Probablemente Delictivos')) {
+    return {
+      borderColor: '#FF6F00',     // Naranja
+      shadowColor: '255, 111, 0'  // RGB equivalente para sombra
+    };
+  }
+  
+  // Fallback para otros tipos
+  return {
+    borderColor: '#c2b186',       // Color original del proyecto
+    shadowColor: '194, 177, 134'  // RGB equivalente
+  };
+};
+
 const IPHCard: React.FC<IIPHCardProps> = ({
   registro,
   onClick,
@@ -25,7 +65,7 @@ const IPHCard: React.FC<IIPHCardProps> = ({
 }) => {
 
   const getIcon = (iconType: IPHIconType) => {
-    const iconProps = { size: 40, className: "text-[#b8ab84]" };
+    const iconProps = { size: 32, className: "text-[#b8ab84]" };
     
     switch (iconType) {
       case 'delictivo':
@@ -48,15 +88,24 @@ const IPHCard: React.FC<IIPHCardProps> = ({
 
   if (loading) {
     return (
-      <div className={`bg-white rounded-lg shadow p-4 relative animate-pulse ${className}`}>
-        <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-gray-200" />
+      <div className={`bg-white rounded-lg shadow-md p-4 relative animate-pulse border border-gray-100 ${className}`}>
+        {/* Header con indicador */}
+        <div className="flex justify-between items-start mb-3">
+          <div className="h-6 bg-gray-200 rounded w-2/3" />
+          <div className="w-4 h-4 rounded-full bg-gray-200" />
+        </div>
+        
+        {/* Contenido */}
+        <div className="space-y-2 mb-3">
+          <div className="h-4 bg-gray-200 rounded w-1/2" />
+          <div className="h-4 bg-gray-200 rounded w-3/4" />
+          <div className="h-3 bg-gray-200 rounded w-1/3" />
+        </div>
+
+        {/* Footer con badge e ícono */}
         <div className="flex justify-between items-center">
-          <div className="flex-1">
-            <div className="h-6 bg-gray-200 rounded mb-2 w-3/4" />
-            <div className="h-4 bg-gray-200 rounded mb-1 w-1/2" />
-            <div className="h-4 bg-gray-200 rounded w-2/3" />
-          </div>
-          <div className="w-10 h-10 bg-gray-200 rounded-full" />
+          <div className="h-6 bg-gray-200 rounded-full w-20" />
+          <div className="w-8 h-8 bg-gray-200 rounded-full" />
         </div>
       </div>
     );
@@ -65,8 +114,7 @@ const IPHCard: React.FC<IIPHCardProps> = ({
   return (
     <div 
       className={`
-        bg-white rounded-lg shadow-md p-4 relative 
-        flex justify-between items-center cursor-pointer
+        bg-white rounded-lg shadow-md p-4 relative cursor-pointer
         transition-all duration-200 hover:shadow-lg hover:scale-[1.02]
         border border-gray-100 hover:border-[#b8ab84]
         ${className}
@@ -82,65 +130,56 @@ const IPHCard: React.FC<IIPHCardProps> = ({
         }
       }}
     >
-      {/* Indicador de estado */}
-      <div 
-        className={`
-          absolute top-3 right-3 w-4 h-4 rounded-full border-2 
-          ${isActive ? 'border-green-500 bg-green-100' : 'border-red-500 bg-red-100'}
-        `}
-        title={statusDescription}
-      >
-        {/* Dot interior para mejor visibilidad */}
+      {/* Header con referencia e indicador */}
+      <div className="flex justify-between items-start mb-3">
+        <h2 className="font-bold text-lg text-[#4d4725] font-poppins truncate flex-1 mr-2">
+          {registro.n_referencia}
+        </h2>
+        
+        {/* Indicador de estado simplificado */}
         <div 
           className={`
-            w-2 h-2 rounded-full absolute top-0.5 left-0.5
+            w-4 h-4 rounded-full flex-shrink-0
             ${isActive ? 'bg-green-500' : 'bg-red-500'}
-          `} 
+          `}
+          title={statusDescription}
+          aria-label={statusDescription}
         />
       </div>
 
       {/* Contenido principal */}
-      <div className="text-[#4d4725] flex-1 mr-4">
-        {/* Referencia principal */}
-        <h2 className="font-bold text-lg mb-1 font-poppins truncate">
-          {registro.n_referencia}
-        </h2>
-        
+      <div className="space-y-2 mb-3">
         {/* Tipo */}
-        <p className="text-sm mb-1 font-poppins text-gray-600">
+        <p className="text-sm font-poppins text-gray-600 truncate">
           <span className="font-medium">Tipo:</span> {registro.tipo?.nombre || 'No especificado'}
         </p>
         
         {/* Folio */}
-        <p className="text-sm font-poppins text-gray-600">
+        <p className="text-sm font-poppins text-gray-600 truncate">
           <span className="font-medium">Folio:</span> {registro.n_folio_sist}
         </p>
 
         {/* Información adicional */}
-        <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
           {registro.fecha_creacion && (
             <div className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              <span>{formatCreationDate(registro.fecha_creacion)}</span>
+              <Clock className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">{formatCreationDate(registro.fecha_creacion)}</span>
             </div>
           )}
           
           {registro.usuario_id && (
             <div className="flex items-center gap-1">
-              <User className="h-3 w-3" />
-              <span>ID: {registro.usuario_id}</span>
+              <User className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">ID: {registro.usuario_id}</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Icono */}
-      <div className="flex-shrink-0">
-        {getIcon(iconType)}
-      </div>
-
-      {/* Badge de estatus */}
-      <div className="absolute bottom-2 left-4">
+      {/* Footer con badge e ícono */}
+      <div className="flex justify-between items-center">
+        {/* Badge de estatus */}
         <span 
           className={`
             inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
@@ -153,8 +192,13 @@ const IPHCard: React.FC<IIPHCardProps> = ({
           <div 
             className={`w-1.5 h-1.5 rounded-full mr-1 ${isActive ? 'bg-green-500' : 'bg-red-500'}`} 
           />
-          {registro.estatus?.nombre || 'Sin estado'}
+          <span className="truncate max-w-20">{registro.estatus?.nombre || 'Sin estado'}</span>
         </span>
+
+        {/* Icono */}
+        <div className="flex-shrink-0 ml-2">
+          {getIcon(iconType)}
+        </div>
       </div>
 
       {/* Efecto hover overlay */}

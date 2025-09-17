@@ -4,9 +4,9 @@
  * Sistema escalable de permisos y navegación
  */
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { LogOut, X } from 'lucide-react';
 
 // Helpers
 import { logInfo, logError } from '../../../../helper/log/logger.helper';
@@ -34,7 +34,8 @@ import type {
 const SidebarItem: React.FC<SidebarItemProps> = ({ 
   config, 
   currentPath, 
-  onNavigate 
+  onNavigate,
+  isCollapsed = false
 }) => {
   const isActive = currentPath === config.to;
   
@@ -59,22 +60,27 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       to={config.to || '#'} 
       onClick={handleClick}
       className={`
-        flex items-center gap-3 px-2 py-2 rounded transition-colors duration-200
+        flex items-center gap-3 px-2 py-3 rounded transition-all duration-200
         ${isActive 
           ? 'bg-[#7a7246] text-white shadow-sm' 
-          : 'hover:bg-[#7a7246] cursor-pointer'
+          : 'hover:bg-[#7a7246] hover:text-white cursor-pointer'
         }
         ${config.isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
+        ${isCollapsed ? 'justify-center' : ''}
+        min-h-[44px] touch-manipulation
       `}
       aria-label={`Navegar a ${config.label}`}
       aria-current={isActive ? 'page' : undefined}
+      title={isCollapsed ? config.label : undefined}
     >
       <span className="flex-shrink-0" aria-hidden="true">
         {config.icon}
       </span>
-      <span className="text-sm font-medium truncate">
-        {config.label}
-      </span>
+      {!isCollapsed && (
+        <span className="text-sm font-medium truncate">
+          {config.label}
+        </span>
+      )}
     </Link>
   );
 };
@@ -97,7 +103,10 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
   currentPath: propCurrentPath, 
   userRole: propUserRole, 
   onLogout: propOnLogout,
-  className = '' 
+  className = '',
+  isOpen = false,
+  onToggle,
+  isMobile = false
 }) => {
   const location = useLocation();
   const { 
@@ -107,10 +116,30 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
     isLoading 
   } = useUserSession();
 
+  // Estado para detectar si estamos en móvil
+  const [windowWidth, setWindowWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 1024);
+  const isActuallyMobile = windowWidth < 768;
+  const isTablet = windowWidth >= 768 && windowWidth < 1024;
+  const isDesktop = windowWidth >= 1024;
+
+  // Detectar cambios en el tamaño de la ventana
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Usar props o datos de sesión
   const currentPath = propCurrentPath || location.pathname;
   const userRole = propUserRole || sessionUserRole;
   const onLogout = propOnLogout || sessionLogout;
+
+  // Determinar si debe estar colapsado
+  const shouldCollapse = isTablet;
+  const shouldUseOverlay = isActuallyMobile;
 
   /**
    * Obtiene los items filtrados según permisos del usuario
@@ -126,9 +155,15 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
     logInfo('Sidebar', 'User navigated to new route', {
       fromPath: location.pathname,
       toPath: path,
-      userRole: userRole || 'unknown'
+      userRole: userRole || 'unknown',
+      isMobile: shouldUseOverlay
     });
-  }, [location.pathname, userRole]);
+
+    // Cerrar sidebar en móvil después de la navegación
+    if (shouldUseOverlay && onToggle) {
+      onToggle();
+    }
+  }, [location.pathname, userRole, shouldUseOverlay, onToggle]);
 
   /**
    * Maneja el logout con logging
@@ -141,6 +176,15 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
     
     onLogout();
   }, [location.pathname, userRole, onLogout]);
+
+  /**
+   * Maneja el cierre del sidebar en móvil
+   */
+  const handleClose = useCallback((): void => {
+    if (onToggle) {
+      onToggle();
+    }
+  }, [onToggle]);
 
   // Log cuando se filtra el sidebar según permisos
   React.useEffect(() => {
@@ -179,27 +223,58 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
   }
 
   return (
-    <aside 
-      className={`
-        w-60 bg-[#948b54] text-white flex flex-col justify-between
-        font-poppins shadow-lg
-        ${className}
-      `}
-      role="navigation"
-      aria-label="Navegación principal"
-    >
+    <>
+      {/* Overlay para móvil */}
+      {shouldUseOverlay && isOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={handleClose}
+          aria-hidden="true"
+        />
+      )}
+      
+      <aside 
+        className={`
+          ${shouldUseOverlay 
+            ? `fixed left-0 top-0 h-full z-50 transform transition-transform duration-300 ease-in-out
+               ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+               w-64`
+            : shouldCollapse 
+              ? 'w-16 lg:w-60'
+              : 'w-60'
+          }
+          bg-[#948b54] text-white flex flex-col justify-between
+          font-poppins shadow-lg
+          ${className}
+        `}
+        role="navigation"
+        aria-label="Navegación principal"
+      >
       {/* Header del sidebar */}
       <div>
-        {/* Título/Brand */}
-        <div className="p-4 font-bold text-lg border-b border-white/20">
-          <h1 className="text-white leading-tight">
-            {SIDEBAR_CONFIG.title}
+        {/* Título/Brand con botón de cierre en móvil */}
+        <div className="p-4 font-bold text-lg border-b border-white/20 relative">
+          {shouldUseOverlay && (
+            <button
+              onClick={handleClose}
+              className="absolute right-2 top-2 p-2 hover:bg-white/10 rounded-lg transition-colors"
+              aria-label="Cerrar menú"
+            >
+              <X size={20} />
+            </button>
+          )}
+          <h1 className={`text-white leading-tight transition-opacity duration-200 ${
+            shouldCollapse && !shouldUseOverlay ? 'lg:opacity-100 opacity-0 text-xs text-center' : ''
+          }`}>
+            {shouldCollapse && !shouldUseOverlay ? 'IPH' : SIDEBAR_CONFIG.title}
           </h1>
         </div>
 
         {/* Navegación principal */}
         <nav 
-          className="mt-4 space-y-2 px-4"
+          className={`mt-4 space-y-2 transition-all duration-200 ${
+            shouldCollapse && !shouldUseOverlay ? 'px-2' : 'px-4'
+          }`}
           role="menu"
           aria-label="Menú de navegación"
         >
@@ -210,11 +285,14 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
                   config={item}
                   currentPath={currentPath}
                   onNavigate={handleNavigation}
+                  isCollapsed={shouldCollapse && !shouldUseOverlay}
                 />
               </div>
             ))
           ) : (
-            <div className="px-2 py-4 text-sm text-white/70 text-center">
+            <div className={`px-2 py-4 text-sm text-white/70 text-center ${
+              shouldCollapse && !shouldUseOverlay ? 'hidden' : ''
+            }`}>
               No tienes acceso a ninguna sección
             </div>
           )}
@@ -222,22 +300,29 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
       </div>
 
       {/* Footer con logout */}
-      <div className="px-4 pb-6">
+      <div className={`pb-6 transition-all duration-200 ${
+        shouldCollapse && !shouldUseOverlay ? 'px-2' : 'px-4'
+      }`}>
         <button
           onClick={handleLogout}
-          className="
-            w-full flex items-center gap-3 px-2 py-2 rounded 
-            hover:bg-[#7a7246] cursor-pointer transition-colors duration-200
-            text-left text-white
-          "
+          className={`
+            w-full flex items-center gap-3 px-2 py-3 rounded 
+            hover:bg-[#7a7246] hover:text-white cursor-pointer transition-all duration-200
+            text-left text-white min-h-[44px] touch-manipulation
+            ${shouldCollapse && !shouldUseOverlay ? 'justify-center' : ''}
+          `}
           aria-label="Cerrar sesión"
           type="button"
+          title={shouldCollapse && !shouldUseOverlay ? 'Desconectar' : undefined}
         >
           <LogOut size={20} aria-hidden="true" />
-          <span className="text-sm font-medium">Desconectar</span>
+          {!(shouldCollapse && !shouldUseOverlay) && (
+            <span className="text-sm font-medium">Desconectar</span>
+          )}
         </button>
       </div>
     </aside>
+  </>
   );
 };
 

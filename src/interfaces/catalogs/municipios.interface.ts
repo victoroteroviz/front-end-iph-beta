@@ -29,3 +29,15 @@ export interface IMunicipioRequest {
   codigo: string
   estadoId: number
 }
+
+export interface IMunicipios {
+  id: string;
+  nombre: string;
+  codigo: string;
+  estado: Estado;
+}
+
+export interface IMunicipiosAllData {
+  data: IMunicipios[];
+  total: number;
+}

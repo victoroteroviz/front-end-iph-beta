@@ -4,12 +4,11 @@
  */
 
 import React, { useMemo } from 'react';
-import { 
-  ChevronUp, 
-  ChevronDown, 
-  Edit3, 
-  Trash2, 
-  BarChart3, 
+import {
+  ChevronUp,
+  ChevronDown,
+  Edit3,
+  Trash2,
   User,
   Loader2,
   AlertCircle,
@@ -27,7 +26,6 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
   onSort,
   onEdit,
   onDelete,
-  onViewStats,
   className = ''
 }) => {
   
@@ -227,20 +225,6 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
                 {/* Acciones */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex items-center gap-2">
-                    
-                    {/* Botón Ver Estadísticas */}
-                    <button
-                      onClick={() => onViewStats(usuario)}
-                      className="
-                        inline-flex items-center px-2 py-1 text-xs font-medium
-                        text-blue-700 bg-blue-100 rounded hover:bg-blue-200
-                        transition-colors duration-150 font-poppins
-                      "
-                      title="Ver estadísticas"
-                    >
-                      <BarChart3 className="h-3 w-3 mr-1" />
-                      Stats
-                    </button>
 
                     {/* Botón Editar */}
                     {canEdit && (

@@ -209,8 +209,8 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
             disabled={loading}
             className="
               flex items-center gap-2 px-4 py-2 text-sm font-medium 
-              text-white bg-[#4d4725] border border-[#4d4725] rounded-lg
-              hover:bg-[#3a3419] hover:border-[#3a3419]
+              text-white bg-[#c2b186] border border-[#c2b186] rounded-lg
+              hover:bg-[#4d4725] hover:border-[#4d4725]
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-colors duration-200 font-poppins shadow-sm
             "
@@ -251,10 +251,10 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
           disabled={loading}
           className="
             flex items-center gap-2 px-4 py-2 text-sm font-medium
-            text-[#b8ab84] bg-white border border-[#b8ab84] rounded-lg
-            hover:bg-[#b8ab84] hover:text-white
+            text-white bg-[#c2b186] border border-[#c2b186] rounded-lg
+            hover:bg-[#4d4725] hover:border-[#4d4725]
             disabled:opacity-50 disabled:cursor-not-allowed
-            transition-colors duration-200 font-poppins
+            transition-colors duration-200 font-poppins shadow-sm
           "
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />

@@ -8,11 +8,6 @@ import { useNavigate } from 'react-router-dom';
 
 // Servicios
 import { getUsuarios, deleteUsuario } from '../../../../../services/user/crud-user.service';
-import { 
-  getEstadisticasUsuarios, 
-  getUsuarioMetricas,
-  calcularEstadisticasFromUsers 
-} from '../../../../../services/usuarios/usuarios-estadisticas.service';
 
 // Helpers
 import { showSuccess, showError, showWarning, showConfirmation } from '../../../../../helper/notification/notification.helper';
@@ -35,10 +30,8 @@ import type { IPaginatedUsers } from '../../../../../interfaces/user/crud/get-pa
 
 const initialState: IUsuariosState = {
   usuarios: [],
-  estadisticas: null,
   isLoading: false,
   isDeleting: null,
-  isLoadingStats: false,
   error: null,
   deleteError: null,
   filters: DEFAULT_USUARIOS_FILTERS,
@@ -47,10 +40,7 @@ const initialState: IUsuariosState = {
   canCreateUsers: false,
   canEditUsers: false,
   canDeleteUsers: false,
-  canViewAllUsers: false,
-  selectedUserForStats: null,
-  showStatsModal: false,
-  userMetricas: null
+  canViewAllUsers: false
 };
 
 // =====================================================
@@ -155,48 +145,6 @@ const useUsuarios = (): IUseUsuariosReturn => {
     }
   }, [state.filters]);
 
-  const loadEstadisticas = useCallback(async () => {
-    setState(prev => ({ ...prev, isLoadingStats: true }));
-    
-    try {
-      const response = await getEstadisticasUsuarios();
-      
-      setState(prev => ({
-        ...prev,
-        estadisticas: response.data,
-        isLoadingStats: false
-      }));
-
-      logInfo('UsuariosHook', 'Estadísticas cargadas exitosamente');
-    } catch (error) {
-      logError('UsuariosHook', 'Error al cargar estadísticas, usando fallback', { error });
-      
-      // Fallback: calcular desde usuarios existentes
-      if (state.usuarios.length > 0) {
-        const estadisticasCalculadas = calcularEstadisticasFromUsers(state.usuarios);
-        setState(prev => ({
-          ...prev,
-          estadisticas: estadisticasCalculadas,
-          isLoadingStats: false
-        }));
-      } else {
-        setState(prev => ({ ...prev, isLoadingStats: false }));
-      }
-    }
-  }, [state.usuarios]);
-
-  const loadUserMetricas = useCallback(async (userId: string) => {
-    try {
-      const response = await getUsuarioMetricas(userId);
-      setState(prev => ({
-        ...prev,
-        userMetricas: response.data
-      }));
-    } catch (error) {
-      logError('UsuariosHook', 'Error al cargar métricas de usuario', { userId, error });
-      showError('No se pudieron cargar las métricas del usuario', 'Error');
-    }
-  }, []);
 
   // =====================================================
   // FUNCIONES DE FILTROS
@@ -327,44 +275,21 @@ const useUsuarios = (): IUseUsuariosReturn => {
     }
   }, [state.canDeleteUsers, loadUsuarios]);
 
-  const handleViewStats = useCallback(async (usuario: IPaginatedUsers) => {
-    setState(prev => ({
-      ...prev,
-      selectedUserForStats: usuario,
-      showStatsModal: true,
-      userMetricas: null
-    }));
-
-    logInfo('UsuariosHook', 'Abriendo estadísticas de usuario', { userId: usuario.id });
-
-    // Cargar métricas
-    await loadUserMetricas(usuario.id);
-  }, [loadUserMetricas]);
-
-  const closeStatsModal = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      selectedUserForStats: null,
-      showStatsModal: false,
-      userMetricas: null
-    }));
-  }, []);
 
   // =====================================================
   // FUNCIONES DE UTILIDAD
   // =====================================================
 
   const refreshData = useCallback(async () => {
-    logInfo('UsuariosHook', 'Refrescando todos los datos');
-    await Promise.all([loadUsuarios(), loadEstadisticas()]);
-  }, [loadUsuarios, loadEstadisticas]);
+    logInfo('UsuariosHook', 'Refrescando datos');
+    await loadUsuarios();
+  }, [loadUsuarios]);
 
   const canPerformAction = useCallback((action: string): boolean => {
     switch (action) {
       case 'create': return state.canCreateUsers;
       case 'edit': return state.canEditUsers;
       case 'delete': return state.canDeleteUsers;
-      case 'view_stats': return true; // Todos pueden ver estadísticas
       default: return false;
     }
   }, [state.canCreateUsers, state.canEditUsers, state.canDeleteUsers]);
@@ -381,19 +306,12 @@ const useUsuarios = (): IUseUsuariosReturn => {
     loadUsuarios();
   }, [checkPermissions, loadUsuarios]);
 
-  useEffect(() => {
-    // Cargar estadísticas cuando haya usuarios
-    if (state.usuarios.length > 0 && !state.estadisticas) {
-      loadEstadisticas();
-    }
-  }, [state.usuarios.length, state.estadisticas, loadEstadisticas]);
 
   // =====================================================
   // VALORES COMPUTADOS
   // =====================================================
 
   const hasData = useMemo(() => state.usuarios.length > 0, [state.usuarios.length]);
-  const isAnyLoading = useMemo(() => state.isLoading || state.isLoadingStats, [state.isLoading, state.isLoadingStats]);
 
   // =====================================================
   // RETORNO DEL HOOK
@@ -409,11 +327,6 @@ const useUsuarios = (): IUseUsuariosReturn => {
     handleCreateUser,
     handleEditUser,
     handleDeleteUser,
-    handleViewStats,
-    loadUsuarios,
-    loadEstadisticas,
-    loadUserMetricas,
-    closeStatsModal,
     refreshData,
     canPerformAction
   };

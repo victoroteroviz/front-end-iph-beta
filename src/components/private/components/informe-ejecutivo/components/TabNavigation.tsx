@@ -96,7 +96,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
       <div className="md:hidden">
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="w-full flex items-center justify-between p-4 text-left rounded-t-lg"
+          className="w-full flex items-center justify-between p-4 text-left rounded-t-lg cursor-pointer"
           style={{ backgroundColor: '#c2b186' }}
         >
           <div className="flex items-center gap-3">
@@ -159,6 +159,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
                       transition-all duration-300 ease-in-out font-poppins group
                       transform hover:scale-[1.02] active:scale-[0.98]
                       bg-white border border-transparent hover:bg-gray-50 hover:border-gray-200 hover:shadow-sm
+                      cursor-pointer
                     "
                   >
                     {/* Número de orden */}
@@ -229,6 +230,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
                     transition-all duration-300 ease-in-out font-poppins
                     border-l-4 transform active:scale-[0.98]
                     border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-200 hover:shadow-sm
+                    cursor-pointer
                   "
                 >
                   {/* Número */}

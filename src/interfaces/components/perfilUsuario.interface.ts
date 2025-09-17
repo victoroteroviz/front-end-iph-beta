@@ -21,8 +21,21 @@ export interface ICatalogItem {
 
 export interface IGrado extends ICatalogItem {}
 export interface ICargo extends ICatalogItem {}
-export interface IMunicipio extends ICatalogItem {}
-export interface IAdscripcion extends ICatalogItem {}
+export interface IMunicipio extends ICatalogItem {
+  estado: {
+    id: number;
+    nombre: string;
+    codigo: string;
+  };
+}
+export interface IAdscripcion extends ICatalogItem {
+  institucion: {
+    id: number;
+    nombre_corto: string;
+    nombre_largo: string;
+    codigo: string;
+  };
+}
 export interface ISexo extends ICatalogItem {}
 
 // =====================================================
@@ -98,7 +111,8 @@ export interface IPerfilUsuarioState {
   // Estado del formulario
   formData: IPerfilUsuarioFormData;
   formErrors: IPerfilUsuarioFormErrors;
-  
+  touchedFields: Partial<Record<keyof IPerfilUsuarioFormData, boolean>>;
+
   // Estados de carga
   isLoading: boolean;
   isSubmitting: boolean;

@@ -211,7 +211,7 @@ export const TABS_JUSTICIA_CIVICA_CON_DETENIDO: TabConfig[] = [
   {
     id: 'puesta-disposicion-primer-respondiente',
     label: 'Puesta a disposición / Primer Respondiente',
-    dataKey: 'puestaDisposicion', // Usaremos puestaDisposicion como principal
+    dataKey: 'primerRespondiente', // Cambiar a primerRespondiente para el componente PrimerRespondiente
     component: 'PuestaDisposicionPrimerRespondiente'
   },
   {
@@ -233,7 +233,7 @@ export const TABS_JUSTICIA_CIVICA_CON_DETENIDO: TabConfig[] = [
     component: 'NarrativaHechos'
   },
   {
-    id: 'anexo-a-detenciones',
+    id: 'anexo-a-detenciones-civica',
     label: 'Anexo A. Detenciones',
     dataKey: 'detencion',
     component: 'AnexoDetenciones'
@@ -241,7 +241,7 @@ export const TABS_JUSTICIA_CIVICA_CON_DETENIDO: TabConfig[] = [
   {
     id: 'anexo-b-descripcion-vehiculo',
     label: 'Anexo B. Descripción de vehículo',
-    dataKey: 'inspeccionVehiculo',
+    dataKey: 'inspeccionVehiculo', // Usar inspeccionVehiculo para el componente AnexoInspeccionVehiculo
     component: 'AnexoDescripcionVehiculo'
   },
   {
@@ -265,7 +265,7 @@ export const TABS_JUSTICIA_CIVICA_SIN_DETENIDO: TabConfig[] = [
   {
     id: 'puesta-disposicion-primer-respondiente',
     label: 'Puesta a disposición / Primer Respondiente',
-    dataKey: 'puestaDisposicion',
+    dataKey: 'primerRespondiente', // Cambiar a primerRespondiente para el componente PrimerRespondiente
     component: 'PuestaDisposicionPrimerRespondiente'
   },
   {
@@ -289,7 +289,7 @@ export const TABS_JUSTICIA_CIVICA_SIN_DETENIDO: TabConfig[] = [
   {
     id: 'anexo-b-descripcion-vehiculo',
     label: 'Anexo B. Descripción de vehículo',
-    dataKey: 'inspeccionVehiculo',
+    dataKey: 'inspeccionVehiculo', // Usar inspeccionVehiculo para el componente AnexoInspeccionVehiculo
     component: 'AnexoDescripcionVehiculo'
   },
   {

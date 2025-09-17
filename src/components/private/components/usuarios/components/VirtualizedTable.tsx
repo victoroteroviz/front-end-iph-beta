@@ -5,12 +5,11 @@
 
 import React, { useMemo, useCallback } from 'react';
 import { FixedSizeList as List } from 'react-window';
-import { 
-  ChevronUp, 
-  ChevronDown, 
-  Edit3, 
-  Trash2, 
-  BarChart3, 
+import {
+  ChevronUp,
+  ChevronDown,
+  Edit3,
+  Trash2,
   User,
   Users
 } from 'lucide-react';
@@ -30,7 +29,6 @@ const VirtualizedTable: React.FC<IUsuariosTableProps> = ({
   onSort,
   onEdit,
   onDelete,
-  onViewStats,
   className = ''
 }) => {
   
@@ -119,14 +117,6 @@ const VirtualizedTable: React.FC<IUsuariosTableProps> = ({
 
         {/* Acciones - 20% */}
         <div className="flex items-center gap-1" style={{ width: '20%' }}>
-          <button
-            onClick={() => onViewStats(usuario)}
-            className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded hover:bg-blue-200 transition-colors duration-150 font-poppins"
-            title="Ver estadísticas"
-          >
-            <BarChart3 className="h-3 w-3 mr-1" />
-            Stats
-          </button>
 
           {canEdit && (
             <button
@@ -152,7 +142,7 @@ const VirtualizedTable: React.FC<IUsuariosTableProps> = ({
         </div>
       </div>
     );
-  }, [usuarios, canEdit, canDelete, onEdit, onDelete, onViewStats]);
+  }, [usuarios, canEdit, canDelete, onEdit, onDelete]);
 
   if (!usuarios || usuarios.length === 0) {
     return (

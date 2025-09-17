@@ -3,17 +3,18 @@
  * Maneja toda la lógica de negocio separada de la presentación
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
 // Servicios
-import { 
-  getUsuarioById, 
-  createUsuario, 
+import {
+  getUsuarioById,
+  createUsuario,
   updateUsuario,
   getCatalogos,
-  getRolesDisponibles
+  getRolesDisponibles,
+  buildUpdateUserPayload
 } from '../../../../../services/perfil-usuario/perfil-usuario.service';
 
 // Helpers
@@ -40,7 +41,8 @@ import type {
 // ESQUEMAS DE VALIDACIÓN
 // =====================================================
 
-const perfilUsuarioSchema = z.object({
+// Schema base sin refinements (para poder usar .extend())
+const perfilUsuarioBaseSchema = z.object({
   nombre: z.string()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
     .max(50, 'El nombre no puede exceder 50 caracteres')
@@ -52,9 +54,9 @@ const perfilUsuarioSchema = z.object({
     .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'Solo se permiten letras y espacios'),
   
   segundoApellido: z.string()
+    .min(2, 'El segundo apellido debe tener al menos 2 caracteres')
     .max(50, 'El segundo apellido no puede exceder 50 caracteres')
-    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/, 'Solo se permiten letras y espacios')
-    .optional(),
+    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'Solo se permiten letras y espacios'),
   
   correo: z.string()
     .email('Formato de correo inválido')
@@ -66,16 +68,32 @@ const perfilUsuarioSchema = z.object({
     .regex(/^[0-9+\-\s\(\)]+$/, 'Formato de teléfono inválido'),
   
   cuip: z.string()
-    .min(8, 'El CUIP debe tener al menos 8 caracteres')
-    .max(20, 'El CUIP no puede exceder 20 caracteres'),
-  
+    .max(20, 'El CUIP no puede exceder 20 caracteres')
+    .optional()
+    .or(z.literal('')),
+
   cup: z.string()
-    .min(8, 'El CUP debe tener al menos 8 caracteres')
-    .max(20, 'El CUP no puede exceder 20 caracteres'),
+    .max(20, 'El CUP no puede exceder 20 caracteres')
+    .optional()
+    .or(z.literal('')),
   
   password: z.string()
-    .min(8, 'La contraseña debe tener al menos 8 caracteres')
-    .optional(),
+    .min(8, 'La contraseña debe tener mínimo 8 caracteres')
+    .max(12, 'La contraseña debe tener máximo 12 caracteres')
+    .refine(
+      (password) => !password || (password.match(/[A-Z]/g) || []).length >= 2,
+      'La contraseña debe contener al menos 2 letras mayúsculas'
+    )
+    .refine(
+      (password) => !password || (password.match(/[0-9]/g) || []).length >= 2,
+      'La contraseña debe contener al menos 2 números'
+    )
+    .refine(
+      (password) => !password || (password.match(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/g) || []).length >= 2,
+      'La contraseña debe contener al menos 2 caracteres especiales'
+    )
+    .optional()
+    .or(z.literal('')),
   
   gradoId: z.string().min(1, 'Debe seleccionar un grado'),
   cargoId: z.string().min(1, 'Debe seleccionar un cargo'),
@@ -88,6 +106,98 @@ const perfilUsuarioSchema = z.object({
     label: z.string()
   })).min(1, 'Debe seleccionar al menos un rol')
 });
+
+// Schema para edición (con refinements)
+const perfilUsuarioSchema = perfilUsuarioBaseSchema.refine(
+  (data) => {
+    // Al menos uno de CUIP o CUP debe estar presente y con longitud mínima
+    const cuipValid = data.cuip && data.cuip.trim().length >= 8;
+    const cupValid = data.cup && data.cup.trim().length >= 8;
+    return cuipValid || cupValid;
+  },
+  {
+    message: 'Debe proporcionar al menos un CUIP (mín. 8 chars) o CUP (mín. 8 chars)',
+    path: ['cuip'] // El error se mostrará en el campo CUIP
+  }
+).refine(
+  (data) => {
+    // Validar formato de CUIP si está presente
+    if (data.cuip && data.cuip.trim().length > 0) {
+      return data.cuip.trim().length >= 8 && data.cuip.trim().length <= 20;
+    }
+    return true;
+  },
+  {
+    message: 'El CUIP debe tener entre 8 y 20 caracteres',
+    path: ['cuip']
+  }
+).refine(
+  (data) => {
+    // Validar formato de CUP si está presente
+    if (data.cup && data.cup.trim().length > 0) {
+      return data.cup.trim().length >= 8 && data.cup.trim().length <= 20;
+    }
+    return true;
+  },
+  {
+    message: 'El CUP debe tener entre 8 y 20 caracteres',
+    path: ['cup']
+  }
+);
+
+// Schema para creación (con password requerido y refinements)
+const perfilUsuarioCreateSchema = perfilUsuarioBaseSchema.extend({
+  password: z.string()
+    .min(8, 'La contraseña debe tener mínimo 8 caracteres')
+    .max(12, 'La contraseña debe tener máximo 12 caracteres')
+    .refine(
+      (password) => (password.match(/[A-Z]/g) || []).length >= 2,
+      'La contraseña debe contener al menos 2 letras mayúsculas'
+    )
+    .refine(
+      (password) => (password.match(/[0-9]/g) || []).length >= 2,
+      'La contraseña debe contener al menos 2 números'
+    )
+    .refine(
+      (password) => (password.match(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/g) || []).length >= 2,
+      'La contraseña debe contener al menos 2 caracteres especiales'
+    )
+}).refine(
+  (data) => {
+    // Al menos uno de CUIP o CUP debe estar presente y con longitud mínima
+    const cuipValid = data.cuip && data.cuip.trim().length >= 8;
+    const cupValid = data.cup && data.cup.trim().length >= 8;
+    return cuipValid || cupValid;
+  },
+  {
+    message: 'Debe proporcionar al menos un CUIP (mín. 8 chars) o CUP (mín. 8 chars)',
+    path: ['cuip']
+  }
+).refine(
+  (data) => {
+    // Validar formato de CUIP si está presente
+    if (data.cuip && data.cuip.trim().length > 0) {
+      return data.cuip.trim().length >= 8 && data.cuip.trim().length <= 20;
+    }
+    return true;
+  },
+  {
+    message: 'El CUIP debe tener entre 8 y 20 caracteres',
+    path: ['cuip']
+  }
+).refine(
+  (data) => {
+    // Validar formato de CUP si está presente
+    if (data.cup && data.cup.trim().length > 0) {
+      return data.cup.trim().length >= 8 && data.cup.trim().length <= 20;
+    }
+    return true;
+  },
+  {
+    message: 'El CUP debe tener entre 8 y 20 caracteres',
+    path: ['cup']
+  }
+);
 
 // =====================================================
 // ESTADO INICIAL
@@ -113,6 +223,7 @@ const initialFormData: IPerfilUsuarioFormData = {
 const initialState: IPerfilUsuarioState = {
   formData: initialFormData,
   formErrors: {},
+  touchedFields: {},
   isLoading: false,
   isSubmitting: false,
   isCatalogsLoading: false,
@@ -179,13 +290,20 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
         getRolesDisponibles()
       ]);
 
+      // Debug: Log de datos recibidos
+      logInfo('PerfilUsuarioHook', 'Datos de catálogos recibidos', {
+        grados: catalogsData.grados,
+        gradosIsArray: Array.isArray(catalogsData.grados),
+        gradosLength: Array.isArray(catalogsData.grados) ? catalogsData.grados.length : 'N/A'
+      });
+
       setState(prev => ({
         ...prev,
-        grados: catalogsData.grados,
-        cargos: catalogsData.cargos,
-        municipios: catalogsData.municipios,
-        adscripciones: catalogsData.adscripciones,
-        sexos: catalogsData.sexos,
+        grados: Array.isArray(catalogsData.grados) ? catalogsData.grados : [],
+        cargos: Array.isArray(catalogsData.cargos) ? catalogsData.cargos : [],
+        municipios: Array.isArray(catalogsData.municipios) ? catalogsData.municipios : [],
+        adscripciones: Array.isArray(catalogsData.adscripciones) ? catalogsData.adscripciones : [],
+        sexos: Array.isArray(catalogsData.sexos) ? catalogsData.sexos : [],
         rolesDisponibles: Array.isArray(rolesData.roles) ? rolesData.roles : [],
         isCatalogsLoading: false
       }));
@@ -263,11 +381,24 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
   // =====================================================
 
   const updateFormData = useCallback((data: Partial<IPerfilUsuarioFormData>) => {
-    setState(prev => ({
-      ...prev,
-      formData: { ...prev.formData, ...data },
-      formErrors: { ...prev.formErrors, ...Object.keys(data).reduce((acc, key) => ({ ...acc, [key]: undefined }), {}) }
-    }));
+    setState(prev => {
+      // Marcar campos como tocados
+      const newTouchedFields = { ...prev.touchedFields };
+      Object.keys(data).forEach(key => {
+        newTouchedFields[key as keyof IPerfilUsuarioFormData] = true;
+      });
+
+      return {
+        ...prev,
+        formData: { ...prev.formData, ...data },
+        touchedFields: newTouchedFields,
+        // Solo limpiar errores de los campos que se están actualizando
+        formErrors: {
+          ...prev.formErrors,
+          ...Object.keys(data).reduce((acc, key) => ({ ...acc, [key]: undefined }), {})
+        }
+      };
+    });
   }, []);
 
   const updateFormErrors = useCallback((errors: Partial<IPerfilUsuarioFormErrors>) => {
@@ -291,13 +422,11 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
         cup: sanitizeInput(state.formData.cup)
       };
 
-      // Validar con esquema - para creación, password es requerido
-      const schema = !state.isEditing 
-        ? perfilUsuarioSchema
-        : perfilUsuarioSchema.extend({ password: z.string().optional() });
-        
+      // Seleccionar el schema correcto según el modo
+      const schema = state.isEditing ? perfilUsuarioSchema : perfilUsuarioCreateSchema;
+
       schema.parse(sanitizedData);
-      
+
       return { isValid: true, errors: {} };
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -310,8 +439,17 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
           errors[field as keyof IPerfilUsuarioFormErrors] = err.message;
         });
 
+        // Solo loggear en desarrollo o cuando hay errores críticos
+        if (Object.keys(errors).length > 10) {
+          logError('ValidateForm', 'Muchos errores de validación', JSON.stringify({
+            errorsCount: Object.keys(errors).length
+          }));
+        }
+
         return { isValid: false, errors, firstErrorField };
       }
+
+      logError('ValidateForm', 'Error de validación desconocido', String(error));
       return { isValid: false, errors: { general: 'Error de validación desconocido' } };
     }
   }, [state.formData, state.isEditing]);
@@ -321,6 +459,7 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
       ...prev,
       formData: initialFormData,
       formErrors: {},
+      touchedFields: {},
       isEditing: false,
       rolesUsuarios: []
     }));
@@ -337,10 +476,21 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
       return;
     }
 
-    // Validar formulario
+    // Validar formulario completo al intentar enviar
     const validation = validateForm();
     if (!validation.isValid) {
-      updateFormErrors(validation.errors);
+      // Al intentar enviar, marcar TODOS los campos como tocados y mostrar TODOS los errores
+      const allFieldsTouched: Partial<Record<keyof IPerfilUsuarioFormData, boolean>> = {};
+      Object.keys(initialFormData).forEach(key => {
+        allFieldsTouched[key as keyof IPerfilUsuarioFormData] = true;
+      });
+
+      setState(prev => ({
+        ...prev,
+        touchedFields: allFieldsTouched,
+        formErrors: validation.errors
+      }));
+
       showError('Por favor, corrige los errores en el formulario', 'Datos Inválidos');
       return;
     }
@@ -351,26 +501,8 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
       const rolesSeleccionados = state.formData.rolesSeleccionados.map((r) => r.value);
 
       if (state.isEditing && id) {
-        // Para actualización
-        const updatePayload: IUpdateUser = {
-          nombre: state.formData.nombre,
-          primer_apellido: state.formData.primerApellido,
-          segundo_apellido: state.formData.segundoApellido,
-          correo_electronico: state.formData.correo,
-          telefono: state.formData.telefono,
-          cuip: state.formData.cuip,
-          cup: state.formData.cup,
-          gradoId: parseInt(state.formData.gradoId),
-          cargoId: parseInt(state.formData.cargoId),
-          municipioId: parseInt(state.formData.municipioId),
-          adscripcionId: parseInt(state.formData.adscripcionId),
-          sexoId: parseInt(state.formData.sexoId),
-          is_verific: true,
-          user_roles: rolesSeleccionados.map(roleId => ({
-            id: roleId.toString(),
-            is_active: true
-          }))
-        };
+        // Para actualización - usar la nueva función que maneja roles correctamente
+        const updatePayload = buildUpdateUserPayload(state.formData, state.rolesUsuarios);
         await updateUsuario(id, updatePayload);
         showSuccess('Usuario actualizado correctamente', 'Actualización Exitosa');
         logInfo('PerfilUsuarioHook', 'Usuario actualizado', { id });
@@ -445,12 +577,64 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
   }, [id, loadUserData, state.rolesDisponibles.length]);
 
   // =====================================================
+  // VALIDACIÓN DEBOUNCED
+  // =====================================================
+
+  const validationTimeoutRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    // Solo validar si hay campos tocados
+    const hasTouchedFields = Object.keys(state.touchedFields).length > 0;
+    if (!hasTouchedFields) return;
+
+    // Limpiar timeout anterior
+    if (validationTimeoutRef.current) {
+      clearTimeout(validationTimeoutRef.current);
+    }
+
+    // Programar nueva validación después de 500ms de inactividad
+    validationTimeoutRef.current = setTimeout(() => {
+      const validation = validateForm();
+
+      // Solo mostrar errores para campos que han sido tocados
+      const filteredErrors: IPerfilUsuarioFormErrors = {};
+      Object.entries(validation.errors).forEach(([field, error]) => {
+        if (state.touchedFields[field as keyof IPerfilUsuarioFormData]) {
+          filteredErrors[field as keyof IPerfilUsuarioFormErrors] = error;
+        }
+      });
+
+      if (JSON.stringify(filteredErrors) !== JSON.stringify(state.formErrors)) {
+        updateFormErrors(filteredErrors);
+      }
+    }, 500);
+
+    // Cleanup
+    return () => {
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current);
+      }
+    };
+  }, [state.formData, state.touchedFields, validateForm, state.formErrors, updateFormErrors]);
+
+  // =====================================================
   // VALORES COMPUTADOS
   // =====================================================
 
   const isFormValid = useMemo(() => {
+    // Para canSubmit, necesitamos validar TODO el formulario, no solo campos tocados
     const validation = validateForm();
-    return validation.isValid;
+    const hasErrors = !validation.isValid;
+
+    // Solo loggear cuando hay cambios significativos
+    if (hasErrors !== !hasErrors) {
+      logInfo('FormValidation', 'Estado de validación para submit cambió', JSON.stringify({
+        hasErrors,
+        errorsCount: Object.keys(validation.errors).length
+      }));
+    }
+
+    return !hasErrors;
   }, [validateForm]);
 
   const hasUnsavedChanges = useMemo(() => {
@@ -458,11 +642,29 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
   }, [state.formData]);
 
   const canSubmit = useMemo(() => {
-    return isFormValid && 
-           !state.isSubmitting && 
-           !state.isLoading && 
-           (state.canEdit || state.canCreate) &&
-           !state.isCatalogsLoading;
+    const conditions = {
+      isFormValid,
+      notSubmitting: !state.isSubmitting,
+      notLoading: !state.isLoading,
+      hasPermissions: state.canEdit || state.canCreate,
+      catalogsLoaded: !state.isCatalogsLoading
+    };
+
+    const result = conditions.isFormValid &&
+                   conditions.notSubmitting &&
+                   conditions.notLoading &&
+                   conditions.hasPermissions &&
+                   conditions.catalogsLoaded;
+
+    // Solo loggear cambios en canSubmit
+    if (result !== (state as any)._lastCanSubmit) {
+      logInfo('CanSubmit', 'Estado del botón cambió', JSON.stringify({
+        canSubmit: result,
+        ...conditions
+      }));
+    }
+
+    return result;
   }, [isFormValid, state.isSubmitting, state.isLoading, state.canEdit, state.canCreate, state.isCatalogsLoading]);
 
   // =====================================================

@@ -33,6 +33,7 @@ export interface SidebarItemProps {
   config: SidebarItemConfig;
   currentPath: string;
   onNavigate?: (path: string) => void;
+  isCollapsed?: boolean;
 }
 
 /**
@@ -43,6 +44,9 @@ export interface SidebarProps {
   userRole: string;
   onLogout: () => void;
   className?: string;
+  isOpen?: boolean;
+  onToggle?: () => void;
+  isMobile?: boolean;
 }
 
 /**

@@ -48,6 +48,7 @@ export interface IInformePolicialFilters {
   order: 'ASC' | 'DESC';
   search: string;
   searchBy: 'n_referencia' | 'n_folio_sist';
+  tipoId?: string; // Filtro por tipo de IPH
 }
 
 export interface IInformePolicialPagination {
@@ -109,6 +110,14 @@ export interface IAutoRefreshIndicatorProps {
   className?: string;
 }
 
+export interface IIPHTipoFilterProps {
+  tipos: ITipoIPH[];
+  selectedTipoId: string;
+  loading: boolean;
+  onTipoChange: (tipoId: string) => void;
+  className?: string;
+}
+
 // =====================================================
 // INTERFACES DE HOOK Y ESTADO
 // =====================================================
@@ -125,6 +134,8 @@ export interface IInformePolicialState {
   nextAutoRefresh: number; // timestamp
   userCanViewAll: boolean; // true para SuperAdmin/Admin/Superior, false para Elemento
   currentUserId: string | null;
+  tiposIPH: ITipoIPH[]; // Tipos de IPH disponibles
+  tiposLoading: boolean; // Estado de carga de tipos
 }
 
 export interface IUseInformePolicialReturn {
@@ -190,10 +201,11 @@ export const INFORME_POLICIAL_CONFIG = {
 
 export const DEFAULT_FILTERS: IInformePolicialFilters = {
   page: 1,
-  orderBy: 'estatus',
-  order: 'ASC',
+  orderBy: 'fecha_creacion',
+  order: 'DESC',
   search: '',
-  searchBy: 'n_referencia'
+  searchBy: 'n_referencia',
+  tipoId: '' // Sin filtro por tipo por defecto
 };
 
 export const SEARCH_OPTIONS = [
@@ -202,10 +214,10 @@ export const SEARCH_OPTIONS = [
 ];
 
 export const ORDER_OPTIONS = [
+  { value: 'fecha_creacion' as const, label: 'Fecha' },
   { value: 'estatus' as const, label: 'Estatus' },
   { value: 'n_referencia' as const, label: 'Referencia' },
-  { value: 'n_folio_sist' as const, label: 'Folio' },
-  { value: 'fecha_creacion' as const, label: 'Fecha' }
+  { value: 'n_folio_sist' as const, label: 'Folio' }
 ];
 
 // =====================================================

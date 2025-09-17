@@ -19,17 +19,17 @@ import {
   MapPin,
   Eye,
   EyeOff,
+  UserCheck,
   ChevronDown,
   ChevronUp,
   ChevronLeft,
   ChevronRight,
   AlertCircle,
-  Info,
   Shield,
   Target,
   Slash
 } from 'lucide-react';
-import type { I_ArmaObjeto, IDisposicionOficial, ITestigo } from '../../../../../interfaces/iph/iph.interface';
+import type { I_ArmaObjeto } from '../../../../../interfaces/iph/iph.interface';
 
 // =====================================================
 // INTERFACES
@@ -69,31 +69,54 @@ const CampoTachado: React.FC<{ label: string; className?: string }> = ({
 );
 
 /**
+ * Helper para normalizar valores booleanos de diferentes formatos
+ */
+const normalizarBooleano = (valor: unknown): boolean => {
+  if (typeof valor === 'boolean') return valor;
+  if (typeof valor === 'string') {
+    const valorLower = valor.toLowerCase();
+    return valorLower === 'sí' || valorLower === 'si' || valorLower === 'true' || valorLower === '1';
+  }
+  return Boolean(valor);
+};
+
+/**
+ * Helper para concatenar nombres completos
+ */
+const concatenarNombre = (nombre?: string, primerApellido?: string, segundoApellido?: string): string => {
+  return [nombre, primerApellido, segundoApellido].filter(Boolean).join(' ') || 'No disponible';
+};
+
+/**
  * Componente para mostrar un campo booleano con íconos
  */
 const CampoBooleano: React.FC<{ 
   label: string; 
-  valor: boolean | undefined; 
+  valor: unknown; 
   className?: string;
 }> = ({ 
   label, 
   valor, 
   className = ''
-}) => (
-  <div className={`flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20 ${className}`}>
-    {valor ? (
-      <CheckCircle className="h-5 w-5 text-green-600" />
-    ) : (
-      <XCircle className="h-5 w-5 text-gray-500" />
-    )}
-    <div>
-      <p className="text-sm font-medium text-[#4d4725]">{label}</p>
-      <p className={`text-xs ${valor ? 'text-green-600' : 'text-gray-500'}`}>
-        {valor ? 'Sí' : 'No'}
-      </p>
+}) => {
+  const esVerdadero = normalizarBooleano(valor);
+  
+  return (
+    <div className={`flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20 ${className}`}>
+      {esVerdadero ? (
+        <CheckCircle className="h-5 w-5 text-green-600" />
+      ) : (
+        <XCircle className="h-5 w-5 text-gray-500" />
+      )}
+      <div>
+        <p className="text-sm font-medium text-[#4d4725]">{label}</p>
+        <p className={`text-xs ${esVerdadero ? 'text-green-600' : 'text-gray-500'}`}>
+          {esVerdadero ? 'Sí' : 'No'}
+        </p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 /**
  * Componente para texto expandible
@@ -197,12 +220,10 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
   const objetos = Array.isArray(armaObjeto) ? armaObjeto : [armaObjeto];
   const objeto = objetos[objetoActivo];
 
-  // Procesar disposiciones como array
-  const disposiciones = objeto.disposiciones ? 
-    (Array.isArray(objeto.disposiciones) ? objeto.disposiciones : [objeto.disposiciones]) : [];
-
-  // Procesar testigos
-  const testigos = objeto.testigos || [];
+  // Procesar disposiciones y testigos como arrays
+  const disposiciones = Array.isArray(objeto.disposiciones) ? objeto.disposiciones : 
+                       objeto.disposiciones ? [objeto.disposiciones] : [];
+  const testigos = Array.isArray(objeto.testigos) ? objeto.testigos : [];
 
   return (
     <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
@@ -441,9 +462,7 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
               <h4 className="text-sm font-semibold text-[#4d4725] mb-3">Datos Personales</h4>
               {(objeto.nombreAsegurado || objeto.primerApellidoAsegurado || objeto.segundoApellidoAsegurado) ? (
                 <p className="text-sm font-medium text-[#4d4725]">
-                  {[objeto.nombreAsegurado, objeto.primerApellidoAsegurado, objeto.segundoApellidoAsegurado]
-                    .filter(Boolean).join(' ') || 'No disponible'
-                  }
+                  {concatenarNombre(objeto.nombreAsegurado, objeto.primerApellidoAsegurado, objeto.segundoApellidoAsegurado)}
                 </p>
               ) : (
                 <div className="flex items-center gap-2 text-gray-500">
@@ -486,9 +505,9 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
                     </div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-[#4d4725] text-sm mb-1">
-                        {[oficial.nombre, oficial.primerApellido, oficial.segundoApellido]
-                          .filter(Boolean)
-                          .join(' ') || `Oficial ${index + 1}`
+                        {concatenarNombre(oficial.nombre, oficial.primerApellido, oficial.segundoApellido) !== 'No disponible' 
+                          ? concatenarNombre(oficial.nombre, oficial.primerApellido, oficial.segundoApellido)
+                          : `Oficial ${index + 1}`
                         }
                       </h4>
                       
@@ -524,7 +543,7 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
           <div className="pt-6 border-t border-gray-200">
             <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
               <div className="p-2 bg-[#c2b186] rounded-lg">
-                <Eye className="h-5 w-5 text-white" />
+                <UserCheck className="h-5 w-5 text-white" />
               </div>
               Testigos
               <span className="text-sm font-normal text-gray-600">
@@ -539,14 +558,14 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
                   className="bg-white p-4 rounded-lg border border-[#c2b186]/30"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-orange-500 rounded-full">
-                      <Eye className="h-4 w-4 text-white" />
+                    <div className="p-2 bg-blue-500 rounded-full">
+                      <UserCheck className="h-4 w-4 text-white" />
                     </div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-[#4d4725] text-sm">
-                        {[testigo.nombre, testigo.primerApellido, testigo.segundoApellido]
-                          .filter(Boolean)
-                          .join(' ') || `Testigo ${index + 1}`
+                        {concatenarNombre(testigo.nombre, testigo.primerApellido, testigo.segundoApellido) !== 'No disponible' 
+                          ? concatenarNombre(testigo.nombre, testigo.primerApellido, testigo.segundoApellido)
+                          : `Testigo ${index + 1}`
                         }
                       </h4>
                     </div>
@@ -557,28 +576,6 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
           </div>
         )}
 
-        {/* Información adicional */}
-        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-start gap-3">
-            <Info className="h-5 w-5 text-green-600 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-green-800 mb-1">
-                Información del Inventario
-              </p>
-              <div className="text-sm text-green-700 space-y-1">
-                <p>
-                  • Este anexo documenta el inventario de armas y objetos encontrados.
-                </p>
-                <p>
-                  • Se registran detalles técnicos, personal involucrado y testigos.
-                </p>
-                <p>
-                  • Información recopilada según protocolos de cadena de custodia.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

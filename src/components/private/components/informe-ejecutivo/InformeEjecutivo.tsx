@@ -187,13 +187,35 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
             )}
           </div>
           
-          {showPDFButton && informeId && (
-            <PDFExportButton
-              informeId={informeId}
-              referencia={!Array.isArray(iph) ? iph?.nReferencia : undefined}
-              onExport={handlePDFExport}
-            />
-          )}
+          <div className="flex items-center gap-3">
+            {/* Botón de actualizar */}
+            <button
+              onClick={refreshInforme}
+              disabled={state.isLoading}
+              className="
+                flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all duration-200 font-semibold shadow-sm
+                text-white bg-[#c2b186] border-[#c2b186] 
+                hover:bg-[#4d4725] hover:border-[#4d4725] hover:shadow-md hover:scale-105 
+                active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+                cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#c2b186] focus:ring-offset-2
+              "
+              title="Actualizar datos del informe"
+            >
+              <RefreshCw 
+                className={`h-4 w-4 ${state.isLoading ? 'animate-spin' : ''}`} 
+              />
+              <span className="hidden sm:inline">Actualizar</span>
+            </button>
+
+            {/* Botón PDF si está habilitado */}
+            {showPDFButton && informeId && (
+              <PDFExportButton
+                informeId={informeId}
+                referencia={!Array.isArray(iph) ? iph?.nReferencia : undefined}
+                onExport={handlePDFExport}
+              />
+            )}
+          </div>
         </div>
 
         {/* Sistema de navegación por lista */}

@@ -4,7 +4,7 @@
  */
 
 import { logInfo, logError } from '../../helper/log/logger.helper';
-import { getUserById, createUsuario, updateUsuario } from '../user/crud-user.service';
+import { getUserById, createUsuario as createUsuarioAPI, updateUsuario as updateUsuarioAPI } from '../user/crud-user.service';
 import { getRoles } from '../roles/get-roles.service';
 import { getGrados } from '../catalogs/grados.service';
 import { getCargos } from '../catalogs/cargos.service';
@@ -12,11 +12,12 @@ import { getMunicipios } from '../catalogs/municipios.service';
 import { getAdscripciones } from '../catalogs/adscripciones.service';
 import { getSexos } from '../catalogs/sexos.service';
 
-import type { 
-  IGetUserById, 
-  ICreateUser, 
-  IUpdateUser, 
-  ICreatedUser 
+import type {
+  IGetUserById,
+  ICreateUser,
+  IUpdateUser,
+  ICreatedUser,
+  UserRole
 } from '../../interfaces/user/crud/crud-user.interface';
 import type { IRole } from '../../interfaces/role/role.interface';
 import type { 
@@ -70,7 +71,7 @@ export const createUsuario = async (userData: ICreateUser): Promise<ICreatedUser
     if (USE_MOCK_DATA) {
       return await createMockUser(userData);
     } else {
-      return await createUsuario(userData);
+      return await createUsuarioAPI(userData);
     }
   } catch (error) {
     logError('PerfilUsuarioService', 'Error al crear usuario', { error });
@@ -91,7 +92,7 @@ export const updateUsuario = async (id: string, userData: IUpdateUser): Promise<
     if (USE_MOCK_DATA) {
       return await updateMockUser(id, userData);
     } else {
-      return await updateUsuario(id, userData);
+      return await updateUsuarioAPI(id, userData);
     }
   } catch (error) {
     logError('PerfilUsuarioService', 'Error al actualizar usuario', { id, error });
@@ -105,11 +106,14 @@ export const updateUsuario = async (id: string, userData: IUpdateUser): Promise<
  */
 export const getCatalogos = async (): Promise<ICatalogsResponse> => {
   logInfo('PerfilUsuarioService', 'Cargando catálogos');
-  
+
   try {
     if (USE_MOCK_DATA) {
+      logInfo('PerfilUsuarioService', 'Usando datos mock');
       return await getMockCatalogs();
     } else {
+      logInfo('PerfilUsuarioService', 'Usando API real, ejecutando peticiones...');
+
       const [grados, cargos, municipios, adscripciones, sexos] = await Promise.all([
         getGrados(),
         getCargos(),
@@ -117,7 +121,13 @@ export const getCatalogos = async (): Promise<ICatalogsResponse> => {
         getAdscripciones(),
         getSexos()
       ]);
-      
+
+      logInfo('PerfilUsuarioService', 'Catálogos obtenidos de la API', {
+        gradosCount: Array.isArray(grados) ? grados.length : 'No es array',
+        cargosCount: Array.isArray(cargos) ? cargos.length : 'No es array',
+        municipiosCount: Array.isArray(municipios) ? municipios.length : 'No es array'
+      });
+
       return { grados, cargos, municipios, adscripciones, sexos };
     }
   } catch (error) {
@@ -151,64 +161,96 @@ export const getRolesDisponibles = async (): Promise<IRolesResponse> => {
 // =====================================================
 
 /**
- * Construye la estructura user_roles para el backend
- * Mantiene la lógica original del componente legacy
- * 
+ * Construye la estructura user_roles para el backend NestJS
+ * Coincide exactamente con lo que espera el UpdateUsersWebDto
+ *
  * @param rolesSeleccionados - Roles seleccionados en el form
  * @param rolesUsuarios - Roles existentes del usuario
- * @returns Estructura para el backend
+ * @returns Estructura para el backend NestJS
  */
 export const construirUserRoles = (
-  rolesSeleccionados: number[], 
+  rolesSeleccionados: number[],
   rolesUsuarios: any[]
-): IUserRoleOperation[] => {
-  logInfo('PerfilUsuarioService', 'Construyendo user_roles', {
+): UserRole[] => {
+  logInfo('PerfilUsuarioService', 'Construyendo user_roles para NestJS', {
     seleccionados: rolesSeleccionados,
     existentes: rolesUsuarios.length
   });
 
-  // 1. Activar o desactivar los que ya tenía
-  const actualizados = rolesUsuarios.map(r => ({
-    id: r.id,
-    is_active: rolesSeleccionados.includes(r.privilegioId),
-  }));
+  const resultado: UserRole[] = [];
 
-  // 2. Agregar nuevos (que no existían antes)
-  const nuevos = rolesSeleccionados
-    .filter(idPrivilegio => !rolesUsuarios.some(r => r.privilegioId === idPrivilegio))
-    .map(idPrivilegio => ({ 
-      id_privilegio: idPrivilegio, 
-      is_active: true 
-    }));
+  // 1. Procesar roles existentes (UPDATE)
+  rolesUsuarios.forEach(rolExistente => {
+    resultado.push({
+      id: rolExistente.id.toString(), // Backend espera string
+      is_active: rolesSeleccionados.includes(rolExistente.privilegioId)
+    });
+  });
 
-  // 3. Combinar todo
-  const resultado = [...actualizados, ...nuevos];
-  
-  logInfo('PerfilUsuarioService', 'User roles construidos', {
-    actualizados: actualizados.length,
-    nuevos: nuevos.length,
-    total: resultado.length
+  // 2. Agregar roles nuevos (INSERT)
+  const rolesNuevos = rolesSeleccionados.filter(privilegioId =>
+    !rolesUsuarios.some(r => r.privilegioId === privilegioId)
+  );
+
+  rolesNuevos.forEach(privilegioId => {
+    resultado.push({
+      id_privilegio: privilegioId, // Para INSERT usa id_privilegio
+      is_active: true
+    });
+  });
+
+  logInfo('PerfilUsuarioService', 'User roles construidos para NestJS', {
+    totalRoles: resultado.length,
+    rolesExistentes: rolesUsuarios.length,
+    rolesNuevos: rolesNuevos.length
   });
 
   return resultado;
 };
 
 /**
- * Convierte datos del formulario a payload para el backend
+ * Convierte datos del formulario a ICreateUser para crear usuario
+ * @param formData - Datos del formulario
+ * @returns Payload para crear usuario
+ */
+export const buildCreateUserPayload = (formData: any): ICreateUser => {
+  const rolesSeleccionados = formData.rolesSeleccionados.map((r: any) => r.value);
+
+  const payload: ICreateUser = {
+    nombre: formData.nombre,
+    primer_apellido: formData.primerApellido,
+    segundo_apellido: formData.segundoApellido,
+    correo_electronico: formData.correo,
+    telefono: formData.telefono,
+    cuip: formData.cuip,
+    cup: formData.cup,
+    gradoId: parseInt(formData.gradoId),
+    cargoId: parseInt(formData.cargoId),
+    municipioId: parseInt(formData.municipioId),
+    adscripcionId: parseInt(formData.adscripcionId),
+    sexoId: parseInt(formData.sexoId),
+    is_verific: true,
+    password_hash: formData.password,
+    roles: rolesSeleccionados
+  };
+
+  return payload;
+};
+
+/**
+ * Convierte datos del formulario a IUpdateUser para actualización en NestJS
  * @param formData - Datos del formulario
  * @param rolesUsuarios - Roles existentes del usuario
- * @param isEditing - Si es edición o creación
- * @returns Payload para el backend
+ * @returns Payload para el backend NestJS
  */
-export const buildUserPayload = (
+export const buildUpdateUserPayload = (
   formData: any,
-  rolesUsuarios: any[] = [],
-  isEditing: boolean = false
-): IPerfilUsuarioPayload => {
+  rolesUsuarios: any[] = []
+): IUpdateUser => {
   const rolesSeleccionados = formData.rolesSeleccionados.map((r: any) => r.value);
   const user_roles = construirUserRoles(rolesSeleccionados, rolesUsuarios);
 
-  const payload: IPerfilUsuarioPayload = {
+  const payload: IUpdateUser = {
     nombre: formData.nombre,
     primer_apellido: formData.primerApellido,
     segundo_apellido: formData.segundoApellido,
@@ -224,11 +266,6 @@ export const buildUserPayload = (
     is_verific: true,
     user_roles
   };
-
-  // Solo agregar password si es creación y hay contraseña
-  if (!isEditing && formData.password) {
-    payload.password_hash = formData.password;
-  }
 
   return payload;
 };
@@ -279,11 +316,58 @@ const updateMockUser = async (id: string, userData: IUpdateUser): Promise<ICreat
 const getMockCatalogs = async (): Promise<ICatalogsResponse> => {
   await new Promise(resolve => setTimeout(resolve, 300));
   return {
-    grados: [{ id: 1, nombre: 'Capitán' }, { id: 2, nombre: 'Teniente' }],
-    cargos: [{ id: 1, nombre: 'Investigador' }, { id: 2, nombre: 'Analista' }],
-    municipios: [{ id: 1, nombre: 'Guadalajara' }, { id: 2, nombre: 'Zapopan' }],
-    adscripciones: [{ id: 1, nombre: 'Región Centro' }, { id: 2, nombre: 'Región Norte' }],
-    sexos: [{ id: 1, nombre: 'Masculino' }, { id: 2, nombre: 'Femenino' }]
+    grados: [{ id: '1', nombre: 'Capitán' }, { id: '2', nombre: 'Teniente' }],
+    cargos: [{ id: '1', nombre: 'Investigador' }, { id: '2', nombre: 'Analista' }],
+    municipios: [
+      {
+        id: 1,
+        nombre: 'Guadalajara',
+        estado: { id: 1, nombre: 'Jalisco', codigo: 'JAL' }
+      },
+      {
+        id: 2,
+        nombre: 'Zapopan',
+        estado: { id: 1, nombre: 'Jalisco', codigo: 'JAL' }
+      },
+      {
+        id: 3,
+        nombre: 'Monterrey',
+        estado: { id: 2, nombre: 'Nuevo León', codigo: 'NL' }
+      }
+    ],
+    adscripciones: [
+      {
+        id: 1,
+        nombre: 'Comisaría Centro',
+        institucion: {
+          id: 1,
+          nombre_corto: 'SSP',
+          nombre_largo: 'Secretaría de Seguridad Pública',
+          codigo: 'SSP-001'
+        }
+      },
+      {
+        id: 2,
+        nombre: 'Comisaría Norte',
+        institucion: {
+          id: 1,
+          nombre_corto: 'SSP',
+          nombre_largo: 'Secretaría de Seguridad Pública',
+          codigo: 'SSP-002'
+        }
+      },
+      {
+        id: 3,
+        nombre: 'Dirección General',
+        institucion: {
+          id: 2,
+          nombre_corto: 'FGE',
+          nombre_largo: 'Fiscalía General del Estado',
+          codigo: 'FGE-001'
+        }
+      }
+    ],
+    sexos: [{ id: '1', nombre: 'Masculino' }, { id: '2', nombre: 'Femenino' }]
   };
 };
 

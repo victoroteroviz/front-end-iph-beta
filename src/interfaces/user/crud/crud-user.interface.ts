@@ -57,8 +57,9 @@ export interface IUpdateUser {
 }
 
 export interface UserRole {
-  id: string
-  is_active: boolean
+  id?: string;  // Para roles existentes (UPDATE)
+  id_privilegio?: number;  // Para roles nuevos (INSERT)
+  is_active: boolean;
 }
 
 export interface IGetUserById {
@@ -127,6 +128,8 @@ export interface Sexo {
 }
 
 export interface UserRoleGet {
-  id: string
+  id: number;
+  privilegioId: number;
+  is_active: boolean;
 }
 

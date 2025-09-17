@@ -60,20 +60,18 @@ export interface IUsuarioMetricas {
 export interface IUsuariosState {
   // Datos principales
   usuarios: IPaginatedUsers[];
-  estadisticas: IEstadisticasUsuarios | null;
-  
+
   // Estados de carga
   isLoading: boolean;
   isDeleting: string | null; // ID del usuario siendo eliminado
-  isLoadingStats: boolean;
-  
+
   // Estados de error
   error: string | null;
   deleteError: string | null;
-  
+
   // Filtros y búsqueda
   filters: IUsuariosFilters;
-  
+
   // Paginación
   totalPages: number;
   totalUsers: number;
@@ -83,11 +81,6 @@ export interface IUsuariosState {
   canEditUsers: boolean;
   canDeleteUsers: boolean;
   canViewAllUsers: boolean;
-  
-  // Modal de estadísticas
-  selectedUserForStats: IPaginatedUsers | null;
-  showStatsModal: boolean;
-  userMetricas: IUsuarioMetricas | null;
 }
 
 // =====================================================
@@ -109,7 +102,6 @@ export interface IUsuariosTableProps {
   onSort: (column: string) => void;
   onEdit: (usuario: IPaginatedUsers) => void;
   onDelete: (usuario: IPaginatedUsers) => void;
-  onViewStats: (usuario: IPaginatedUsers) => void;
   className?: string;
 }
 
@@ -177,29 +169,20 @@ export interface IUsuarioMetricasResponse {
 export interface IUseUsuariosReturn {
   // Estado
   state: IUsuariosState;
-  
+
   // Funciones de filtros
   updateFilters: (filters: Partial<IUsuariosFilters>) => void;
   handleSearch: () => void;
   handleClearFilters: () => void;
   handleSort: (column: string) => void;
-  
+
   // Funciones de paginación
   handlePageChange: (page: number) => void;
-  
+
   // Funciones de acciones
   handleCreateUser: () => void;
   handleEditUser: (usuario: IPaginatedUsers) => void;
   handleDeleteUser: (usuario: IPaginatedUsers) => void;
-  handleViewStats: (usuario: IPaginatedUsers) => void;
-  
-  // Funciones de datos
-  loadUsuarios: () => Promise<void>;
-  loadEstadisticas: () => Promise<void>;
-  loadUserMetricas: (userId: string) => Promise<void>;
-  
-  // Funciones de modal
-  closeStatsModal: () => void;
   
   // Utilidades
   refreshData: () => Promise<void>;

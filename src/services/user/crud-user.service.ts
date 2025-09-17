@@ -10,6 +10,7 @@ import type {
   IGetUserById,
   IUpdateUser,
 } from "../../interfaces/user/crud/crud-user.interface";
+import { UserSearchParams, UserOrderByParams, SortOrder } from "../../interfaces/user/crud/user-search-params.enum";
 
 const http: HttpHelper = HttpHelper.getInstance({
   baseURL: API_BASE_URL,
@@ -21,13 +22,30 @@ const http: HttpHelper = HttpHelper.getInstance({
 });
 
 const URL_API = `/api/users-web/`;
+
+/**
+ * Interfaz para los parámetros de la función getUsuarios
+ */
+export interface GetUsuariosParams {
+  page?: number;
+  orderBy?: UserOrderByParams;
+  order?: SortOrder;
+  search?: string;
+  searchBy?: UserSearchParams;
+}
+
+/**
+ * Obtiene usuarios paginados con parámetros de búsqueda y ordenamiento
+ * @param params - Parámetros de paginación, ordenamiento y búsqueda
+ * @returns Promise<IPaginatedUsers>
+ */
 export const getUsuarios = async ({
   page = 1,
-  orderBy = "nombre",
-  order = "ASC",
+  orderBy = UserOrderByParams.NOMBRE,
+  order = SortOrder.ASC,
   search = "",
-  searchBy = "nombre",
-}): Promise<IPaginatedUsers> => {
+  searchBy = UserSearchParams.NOMBRE,
+}: GetUsuariosParams): Promise<IPaginatedUsers> => {
   const url: string = `${URL_API}paginated?page=${page}&orderBy=${orderBy}&order=${order}&search=${encodeURIComponent(
     search
   )}&searchBy=${searchBy}`;
@@ -78,7 +96,7 @@ export const updateUsuario = async (
 ): Promise<ICreatedUser> => {
   const url: string = `${URL_API}${id}`;
   try {
-    const response = await http.put<ICreatedUser>(url, user);
+    const response = await http.patch<ICreatedUser>(url, user);
     const usuarioActualizado: ICreatedUser = response.data;
     if (!usuarioActualizado)
       throw new Error("No se pudo actualizar el usuario");

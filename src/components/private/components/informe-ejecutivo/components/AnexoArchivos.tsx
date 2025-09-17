@@ -6,10 +6,11 @@
  */
 
 import React, { useState, useMemo, useEffect, useRef, memo, useCallback } from 'react';
+import { Document, Page } from 'react-pdf';
 import {
   FileText, Info, File, FileImage, FileVideo, FileAudio,
   Grid3X3, List, Filter, X, ZoomIn, Play, Volume2,
-  Eye, Maximize2
+  Eye, Maximize2, RefreshCw
 } from 'lucide-react';
 
 // Interfaces
@@ -42,6 +43,7 @@ interface FileModalProps {
 interface FilePreviewProps {
   archivo: IArchivo;
   className?: string;
+  viewContext?: 'list' | 'grid';
 }
 
 
@@ -143,12 +145,170 @@ const isPDFFile = (tipo: string | undefined, archivo?: string): boolean => {
   return tipoLower.includes('pdf') || archivoLower.includes('.pdf');
 };
 
+// =====================================================
+// COMPONENTE PDF THUMBNAIL
+// =====================================================
+
+interface PDFThumbnailProps {
+  url: string;
+  className?: string;
+  fallback?: React.ReactNode;
+  height?: number;
+}
+
+/**
+ * Componente optimizado para mostrar thumbnail de la primera página del PDF
+ * Con lazy loading, error handling y fallback
+ */
+const PDFThumbnail: React.FC<PDFThumbnailProps> = memo(({ 
+  url, 
+  className = '', 
+  fallback,
+  height = 160
+}) => {
+  const [error, setError] = useState<string | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Intersection Observer para lazy loading
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    observerRef.current = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isVisible) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    observerRef.current.observe(container);
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [isVisible]);
+
+  // Callbacks memoizados para evitar re-renders
+  const handleLoadSuccess = useCallback(() => {
+    setError(null);
+  }, []);
+
+  const handleLoadError = useCallback((err: Error) => {
+    console.warn('PDF Thumbnail load error:', err.message);
+    setError(err.message);
+  }, []);
+
+  const handlePageLoadSuccess = useCallback(() => {
+    // Página cargada exitosamente
+    setError(null);
+  }, []);
+
+  const handlePageLoadError = useCallback((err: Error) => {
+    console.warn('PDF Page thumbnail load error:', err.message);
+    setError('Error al cargar página');
+  }, []);
+
+  // Opciones memoizadas para Document
+  const documentOptions = useMemo(() => ({
+    cMapUrl: '/cmaps/',
+    cMapPacked: true,
+    standardFontDataUrl: '/standard_fonts/',
+    verbosity: 0, // Minimal logging para thumbnails
+    disableFontFace: true, // Optimización para thumbnails
+    useSystemFonts: false,
+    // Configuración optimizada para thumbnails
+    maxImageSize: 1024 * 1024, // 1MB límite
+    disableAutoFetch: true, // Solo cargar página 1
+    disableStream: false,
+  }), []);
+
+  // Componente de loading
+  const LoadingComponent = useMemo(() => (
+    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg">
+      <RefreshCw className="h-4 w-4 animate-spin text-gray-500 mb-1" />
+      <span className="text-xs text-gray-500">Cargando...</span>
+    </div>
+  ), []);
+
+  // Fallback por defecto
+  const DefaultFallback = useMemo(() => (
+    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 rounded-lg">
+      <FileText className="h-6 w-6 text-red-600 mb-1" />
+      <span className="text-xs text-red-700 font-medium text-center">PDF</span>
+      <div className="absolute bottom-1 left-1 bg-red-600 text-white rounded px-2 py-0.5">
+        <span className="text-xs font-bold">PDF</span>
+      </div>
+    </div>
+  ), []);
+
+  return (
+    <div 
+      ref={containerRef}
+      className={`relative overflow-hidden ${className}`}
+      style={{ width: '100%', height: '100%' }}
+    >
+      {!isVisible ? (
+        // Placeholder mientras no es visible
+        <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
+          <FileText className="h-6 w-6 text-gray-400" />
+        </div>
+      ) : error ? (
+        // Mostrar fallback en caso de error
+        fallback || DefaultFallback
+      ) : (
+        // Renderizar PDF thumbnail
+        <div className="w-full h-full flex items-center justify-center bg-white rounded-lg">
+          <Document
+            file={url}
+            onLoadSuccess={handleLoadSuccess}
+            onLoadError={handleLoadError}
+            loading={LoadingComponent}
+            error={fallback || DefaultFallback}
+            options={documentOptions}
+            className="flex items-center justify-center"
+          >
+            <Page
+              pageNumber={1} // Solo primera página
+              height={height} // Usar altura para controlar el tamaño
+              renderTextLayer={false} // Sin text layer para thumbnails
+              renderAnnotationLayer={false} // Sin annotation layer para thumbnails
+              onLoadSuccess={handlePageLoadSuccess}
+              onLoadError={handlePageLoadError}
+              loading={LoadingComponent}
+              error={fallback || DefaultFallback}
+              className="rounded-lg shadow-sm"
+            />
+          </Document>
+        </div>
+      )}
+      
+      {/* Badge overlay */}
+      <div className="absolute bottom-1 left-1 bg-red-600 text-white rounded px-2 py-0.5">
+        <span className="text-xs font-bold">PDF</span>
+      </div>
+      
+      {/* Hover overlay */}
+      <div className="absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+        <Eye className="h-4 w-4 text-gray-800" />
+      </div>
+    </div>
+  );
+});
+
+PDFThumbnail.displayName = 'PDFThumbnail';
+
 
 /**
  * Componente para mostrar preview de archivo
  * Optimizado con memo para evitar re-renders innecesarios
  */
-const FilePreview: React.FC<FilePreviewProps> = memo(({ archivo, className = "" }) => {
+const FilePreview: React.FC<FilePreviewProps> = memo(({ archivo, className = "", viewContext = 'grid' }) => {
   const [imageError, setImageError] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -303,20 +463,23 @@ const FilePreview: React.FC<FilePreviewProps> = memo(({ archivo, className = "" 
       // Para PDFs y otros documentos
       const isPDF = isPDFFile(archivo.tipo, archivo.archivo);
       
-      if (isPDF) {
+      if (isPDF && fullPath) {
+        // Dimensiones según el contexto de vista
+        const pdfHeight = viewContext === 'list' ? 64 : 150; // Lista: más pequeño, Grid: más grande
+        
         return (
-          <div className={`relative w-full h-full bg-gradient-to-br from-red-50 to-red-100 rounded-lg overflow-hidden ${className}`}>
-            <div className="w-full h-full flex flex-col items-center justify-center">
-              <FileText className="h-6 w-6 text-red-600 mb-1" />
-              <span className="text-xs text-red-700 font-medium text-center">PDF</span>
-            </div>
-            
-            <div className="absolute bottom-1 left-1 bg-red-600 text-white rounded px-2 py-0.5">
-              <span className="text-xs font-bold">PDF</span>
-            </div>
-            <div className="absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-              <Eye className="h-4 w-4 text-red-800" />
-            </div>
+          <div className={`relative w-full h-full rounded-lg overflow-hidden ${className}`}>
+            <PDFThumbnail
+              url={fullPath}
+              className="w-full h-full"
+              height={pdfHeight}
+              fallback={
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 rounded-lg">
+                  <FileText className="h-6 w-6 text-red-600 mb-1" />
+                  <span className="text-xs text-red-700 font-medium text-center">PDF</span>
+                </div>
+              }
+            />
           </div>
         );
       }
@@ -419,28 +582,43 @@ const FileModal: React.FC<FileModalProps> = ({ archivo, isOpen, onClose }) => {
       
       case 'audio':
         return (
-          <div className="flex flex-col items-center space-y-6 p-6">
-            <div className="bg-green-100 rounded-full p-8">
+          <div className="flex flex-col items-center space-y-6 p-8 w-full max-w-4xl mx-auto">
+            <div className="bg-gradient-to-br from-green-100 to-green-200 rounded-full p-8 shadow-lg">
               <Volume2 className="h-20 w-20 text-green-600" />
             </div>
-            <div className="text-center">
-              <p className="text-xl font-semibold text-gray-800 mb-4">
+            <div className="text-center w-full">
+              <p className="text-xl font-semibold text-gray-800 mb-6">
                 {archivo.titulo || 'Audio'}
               </p>
-              <audio 
-                controls 
-                className="w-full max-w-md rounded-lg"
-                preload="metadata"
-                onError={() => {
-                  console.warn('Error cargando audio en modal:', fullPath);
-                }}
-                crossOrigin="anonymous"
-              >
-                <source src={fullPath} type="audio/mpeg" />
-                <source src={fullPath} type="audio/wav" />
-                <source src={fullPath} type="audio/ogg" />
-                Tu navegador no soporta la reproducción de audio.
-              </audio>
+              <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+                <audio 
+                  controls 
+                  className="w-full rounded-lg border border-gray-300"
+                  preload="metadata"
+                  onError={() => {
+                    console.warn('Error cargando audio en modal:', fullPath);
+                  }}
+                  crossOrigin="anonymous"
+                  style={{
+                    minWidth: '100%',
+                    maxWidth: '100%',
+                    minHeight: '48px',
+                    backgroundColor: '#fafafa',
+                    outline: 'none'
+                  }}
+                >
+                  <source src={fullPath} type="audio/mpeg" />
+                  <source src={fullPath} type="audio/wav" />
+                  <source src={fullPath} type="audio/ogg" />
+                  Tu navegador no soporta la reproducción de audio.
+                </audio>
+                
+                {/* Información adicional */}
+                <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
+                  <Volume2 className="h-4 w-4 text-green-600" />
+                  <p>Usa los controles para reproducir, pausar y ajustar el volumen</p>
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -742,7 +920,7 @@ const AnexoArchivos: React.FC<AnexoArchivosProps> = memo(({
                       {/* Preview horizontal con tamaño fijo */}
                       <div className="flex-shrink-0 w-32 h-20 flex items-center justify-center bg-gray-50">
                         <div className="w-28 h-16">
-                          <FilePreview archivo={archivo} className="rounded-md" />
+                          <FilePreview archivo={archivo} className="rounded-md" viewContext="list" />
                         </div>
                       </div>
                       
@@ -798,7 +976,7 @@ const AnexoArchivos: React.FC<AnexoArchivosProps> = memo(({
                     {/* Preview con tamaño fijo */}
                     <div className="relative w-full h-40 bg-gray-50 flex items-center justify-center">
                       <div className="w-full h-full">
-                        <FilePreview archivo={archivo} />
+                        <FilePreview archivo={archivo} viewContext="grid" />
                       </div>
                       <div className="absolute top-2 right-2 bg-black bg-opacity-50 rounded p-1">
                         <Maximize2 className="h-3 w-3 text-white" />

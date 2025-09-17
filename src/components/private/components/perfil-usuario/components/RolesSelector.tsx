@@ -39,6 +39,7 @@ const RolesSelector: React.FC<RolesSelectorProps> = ({
       border: error ? '1px solid #ef4444' : '1px solid #d1d5db',
       borderRadius: '0.375rem',
       boxShadow: state.isFocused ? '0 0 0 2px #948b54' : 'none',
+      cursor: 'pointer',
       '&:hover': {
         borderColor: error ? '#ef4444' : '#948b54'
       },
@@ -56,14 +57,6 @@ const RolesSelector: React.FC<RolesSelectorProps> = ({
       fontSize: '0.875rem',
       fontWeight: '500'
     }),
-    multiValueRemove: (provided: any) => ({
-      ...provided,
-      color: '#ffffff',
-      ':hover': {
-        backgroundColor: '#7d7548',
-        color: '#ffffff'
-      }
-    }),
     placeholder: (provided: any) => ({
       ...provided,
       color: '#6b7280',
@@ -71,13 +64,31 @@ const RolesSelector: React.FC<RolesSelectorProps> = ({
     }),
     option: (provided: any, state: any) => ({
       ...provided,
-      backgroundColor: state.isSelected 
-        ? '#948b54' 
-        : state.isFocused 
-          ? '#f3f4f6' 
+      backgroundColor: state.isSelected
+        ? '#948b54'
+        : state.isFocused
+          ? '#f3f4f6'
           : '#ffffff',
       color: state.isSelected ? '#ffffff' : '#374151',
+      cursor: 'pointer',
       fontFamily: 'Poppins, sans-serif'
+    }),
+    dropdownIndicator: (provided: any) => ({
+      ...provided,
+      cursor: 'pointer'
+    }),
+    clearIndicator: (provided: any) => ({
+      ...provided,
+      cursor: 'pointer'
+    }),
+    multiValueRemove: (provided: any) => ({
+      ...provided,
+      color: '#ffffff',
+      cursor: 'pointer',
+      ':hover': {
+        backgroundColor: '#7d7548',
+        color: '#ffffff'
+      }
     })
   };
 

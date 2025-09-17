@@ -41,11 +41,17 @@ const FormField: React.FC<FormFieldProps> = ({
     font-poppins
   `;
 
+  const selectClasses = `
+    ${baseInputClasses}
+    cursor-pointer
+  `;
+
   const errorClasses = error 
     ? 'border-red-500 bg-red-50 focus:ring-red-500 focus:border-red-500'
     : '';
 
   const inputClasses = `${baseInputClasses} ${errorClasses}`;
+  const selectInputClasses = `${selectClasses} ${errorClasses}`;
 
   const renderInput = () => {
     if (type === 'select' && options.length > 0) {
@@ -53,7 +59,7 @@ const FormField: React.FC<FormFieldProps> = ({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className={inputClasses}
+          className={selectInputClasses}
           disabled={disabled}
         >
           <option value="">

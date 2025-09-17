@@ -14,9 +14,7 @@ import useUsuarios from './hooks/useUsuarios';
 import UsuariosFilters from './components/UsuariosFilters';
 import UsuariosTable from './components/UsuariosTable';
 import VirtualizedTable from './components/VirtualizedTable';
-import EstadisticasCards from './components/EstadisticasCards';
 import Pagination from './components/Pagination';
-import EstadisticasModal from './components/EstadisticasModal';
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';
@@ -41,8 +39,6 @@ const Usuarios: React.FC<UsuariosProps> = ({
     handleCreateUser,
     handleEditUser,
     handleDeleteUser,
-    handleViewStats,
-    closeStatsModal,
     refreshData
   } = useUsuarios();
 
@@ -94,12 +90,6 @@ const Usuarios: React.FC<UsuariosProps> = ({
         </button>
       </div>
 
-      {/* Estadísticas Cards */}
-      <EstadisticasCards
-        estadisticas={state.estadisticas}
-        loading={state.isLoadingStats}
-        className="mb-6"
-      />
 
       {/* Filtros de búsqueda */}
       <UsuariosFilters
@@ -157,7 +147,6 @@ const Usuarios: React.FC<UsuariosProps> = ({
         onSort={handleSort}
         onEdit={handleEditUser}
         onDelete={handleDeleteUser}
-        onViewStats={handleViewStats}
       />
 
       {/* Paginación - Solo mostrar si no se usa virtualización */}
@@ -171,14 +160,6 @@ const Usuarios: React.FC<UsuariosProps> = ({
         />
       )}
 
-      {/* Modal de estadísticas */}
-      <EstadisticasModal
-        isOpen={state.showStatsModal}
-        usuario={state.selectedUserForStats}
-        metricas={state.userMetricas}
-        loading={state.isLoadingStats}
-        onClose={closeStatsModal}
-      />
 
       {/* Información adicional */}
       <div className="mt-8 p-4 bg-gray-50 rounded-lg border">
@@ -189,7 +170,6 @@ const Usuarios: React.FC<UsuariosProps> = ({
               Información del Sistema
             </h3>
             <ul className="mt-2 text-xs text-gray-600 space-y-1 font-poppins">
-              <li>• Las estadísticas mostradas son datos de demostración</li>
               <li>• La paginación se adapta automáticamente al número de usuarios</li>
               <li>• Los permisos se basan en el rol del usuario actual</li>
               {shouldUseVirtualization && (

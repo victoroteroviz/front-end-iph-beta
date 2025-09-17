@@ -38,6 +38,7 @@ import type { I_InspeccionVehiculo, IDisposicionOficial } from '../../../../../i
 interface AnexoInspeccionVehiculoProps {
   inspeccionVehiculo: I_InspeccionVehiculo | I_InspeccionVehiculo[] | null;
   className?: string;
+  title?: string;
 }
 
 // =====================================================
@@ -154,7 +155,8 @@ const TextoExpandible: React.FC<{
 
 const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
   inspeccionVehiculo,
-  className = ''
+  className = '',
+  title = 'Anexo C. Inspección de vehículo'
 }) => {
   // Estado para manejar múltiples vehículos
   const [vehiculoActivo, setVehiculoActivo] = useState(0);
@@ -167,7 +169,7 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
           className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
           style={{ backgroundColor: '#c2b186' }}
         >
-          Anexo C. Inspección de vehículo
+          {title}
         </h2>
         
         <div 
@@ -193,7 +195,7 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
         className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
         style={{ backgroundColor: '#c2b186' }}
       >
-        Anexo C. Inspección de vehículo
+        {title}
         {vehiculos.length > 1 && (
           <span className="ml-2 text-xs opacity-90">
             ({vehiculoActivo + 1} de {vehiculos.length})

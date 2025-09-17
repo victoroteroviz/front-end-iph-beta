@@ -23,6 +23,7 @@ import type { IPrimerRespondiente } from '../../../../../interfaces/iph/iph.inte
 interface PrimerRespondienteProps {
   primerRespondiente: IPrimerRespondiente | IPrimerRespondiente[] | null;
   className?: string;
+  title?: string;
 }
 
 // =====================================================
@@ -31,7 +32,8 @@ interface PrimerRespondienteProps {
 
 const PrimerRespondiente: React.FC<PrimerRespondienteProps> = ({
   primerRespondiente,
-  className = ''
+  className = '',
+  title = 'Primer Respondiente'
 }) => {
   
   // Verificar si los datos están disponibles
@@ -42,7 +44,7 @@ const PrimerRespondiente: React.FC<PrimerRespondienteProps> = ({
           className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
           style={{ backgroundColor: '#c2b186' }}
         >
-          Primer Respondiente
+          {title}
         </h2>
         
         <div 
@@ -66,7 +68,7 @@ const PrimerRespondiente: React.FC<PrimerRespondienteProps> = ({
         className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
         style={{ backgroundColor: '#c2b186' }}
       >
-        Primer Respondiente
+        {title}
       </h2>
       
       <div 

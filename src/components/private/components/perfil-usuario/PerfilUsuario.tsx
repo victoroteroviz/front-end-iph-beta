@@ -27,6 +27,10 @@ import RolesSelector from './components/RolesSelector';
 import LoadingSpinner from './components/LoadingSpinner';
 import ActionButtons from './components/ActionButtons';
 import FormSection from './components/FormSection';
+import GradosSelector from './components/GradosSelector';
+import CargosSelector from './components/CargosSelector';
+import MunicipiosSelector from './components/MunicipiosSelector';
+import AdscripcionesSelector from './components/AdscripcionesSelector';
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';
@@ -156,7 +160,8 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
               value={formData.segundoApellido}
               onChange={(value) => updateFormData({ segundoApellido: value })}
               error={formErrors.segundoApellido}
-              placeholder="Segundo apellido (opcional)"
+              placeholder="Segundo apellido"
+              required
               autoComplete="family-name"
             />
             
@@ -201,23 +206,26 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
 
         {/* Sección: Identificación */}
         <FormSection title="Identificación" icon={IdCard}>
+          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Nota:</strong> Debe proporcionar al menos uno de los códigos de identificación (CUIP o CUP).
+            </p>
+          </div>
           <div className="grid md:grid-cols-2 gap-4">
             <FormField
-              label="CUIP"
+              label="CUIP (opcional si tiene CUP)"
               value={formData.cuip}
               onChange={(value) => updateFormData({ cuip: value })}
               error={formErrors.cuip}
-              placeholder="Código CUIP"
-              required
+              placeholder="Código CUIP (mín. 8 caracteres)"
             />
-            
+
             <FormField
-              label="CUP"
+              label="CUP (opcional si tiene CUIP)"
               value={formData.cup}
               onChange={(value) => updateFormData({ cup: value })}
               error={formErrors.cup}
-              placeholder="Código CUP"
-              required
+              placeholder="Código CUP (mín. 8 caracteres)"
             />
           </div>
         </FormSection>
@@ -225,23 +233,23 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
         {/* Sección: Información Profesional */}
         <FormSection title="Información Profesional" icon={Briefcase}>
           <div className="grid md:grid-cols-2 gap-4">
-            <FormField
-              label="Grado"
-              type="select"
-              value={formData.gradoId}
-              onChange={(value) => updateFormData({ gradoId: value })}
+            <GradosSelector
+              grados={Array.isArray(grados) ? grados.map(g => ({ id: Number(g.id), nombre: g.nombre })) : []}
+              selectedGradoId={formData.gradoId}
+              onSelect={(gradoId) => updateFormData({ gradoId })}
               error={formErrors.gradoId}
-              options={grados}
+              disabled={isSubmitting}
+              loading={isCatalogsLoading}
               required
             />
-            
-            <FormField
-              label="Cargo"
-              type="select"
-              value={formData.cargoId}
-              onChange={(value) => updateFormData({ cargoId: value })}
+
+            <CargosSelector
+              cargos={Array.isArray(cargos) ? cargos : []}
+              selectedCargoId={formData.cargoId}
+              onSelect={(cargoId) => updateFormData({ cargoId })}
               error={formErrors.cargoId}
-              options={cargos}
+              loading={isCatalogsLoading}
+              disabled={isSubmitting}
               required
             />
           </div>
@@ -250,23 +258,23 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
         {/* Sección: Ubicación */}
         <FormSection title="Ubicación y Adscripción" icon={MapPin}>
           <div className="grid md:grid-cols-2 gap-4">
-            <FormField
-              label="Municipio"
-              type="select"
-              value={formData.municipioId}
-              onChange={(value) => updateFormData({ municipioId: value })}
+            <MunicipiosSelector
+              municipios={Array.isArray(municipios) ? municipios : []}
+              selectedMunicipioId={formData.municipioId}
+              onSelect={(municipioId) => updateFormData({ municipioId })}
               error={formErrors.municipioId}
-              options={municipios}
+              loading={isCatalogsLoading}
+              disabled={isSubmitting}
               required
             />
             
-            <FormField
-              label="Adscripción"
-              type="select"
-              value={formData.adscripcionId}
-              onChange={(value) => updateFormData({ adscripcionId: value })}
+            <AdscripcionesSelector
+              adscripciones={Array.isArray(adscripciones) ? adscripciones : []}
+              selectedAdscripcionId={formData.adscripcionId}
+              onSelect={(adscripcionId) => updateFormData({ adscripcionId })}
               error={formErrors.adscripcionId}
-              options={adscripciones}
+              loading={isCatalogsLoading}
+              disabled={isSubmitting}
               required
             />
           </div>
@@ -282,27 +290,78 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
                 value={formData.password}
                 onChange={(value) => updateFormData({ password: value })}
                 error={formErrors.password}
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Ingresa tu contraseña"
                 required={!isEditing}
                 autoComplete="new-password"
               />
-              
-              {formData.password && (
-                <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
-                  <strong>Requisitos de contraseña:</strong>
-                  <ul className="list-disc list-inside mt-1 space-y-1">
-                    <li className={formData.password.length >= 8 ? 'text-green-600' : 'text-red-600'}>
-                      Mínimo 8 caracteres
-                    </li>
-                    <li className={/[A-Z]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}>
-                      Al menos una mayúscula
-                    </li>
-                    <li className={/[0-9]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}>
-                      Al menos un número
-                    </li>
-                  </ul>
+
+              {/* Requisitos de contraseña - Lista dinámica siempre visible */}
+              <div className="mt-3 text-sm bg-[#fdf7f1] p-3 rounded-lg border border-[#c2b186]">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="flex items-center justify-center w-5 h-5 bg-[#948b54] rounded-full text-white text-xs font-bold">
+                    !
+                  </span>
+                  <strong className="text-[#4d4725] font-medium">Requisitos de contraseña:</strong>
                 </div>
-              )}
+                <ul className="list-none space-y-1.5">
+                  <li className={`flex items-center gap-2 transition-colors duration-200 ${
+                    formData.password.length >= 8 && formData.password.length <= 12
+                      ? 'text-green-600'
+                      : 'text-[#6b6b6b]'
+                  }`}>
+                    <span className={`w-4 h-4 text-center font-bold ${
+                      formData.password.length >= 8 && formData.password.length <= 12
+                        ? 'text-green-600'
+                        : 'text-[#6b6b6b]'
+                    }`}>
+                      {formData.password.length >= 8 && formData.password.length <= 12 ? '✓' : '•'}
+                    </span>
+                    Entre 8 y 12 caracteres {formData.password ? `(${formData.password.length}/12)` : ''}
+                  </li>
+                  <li className={`flex items-center gap-2 transition-colors duration-200 ${
+                    (formData.password.match(/[A-Z]/g) || []).length >= 2
+                      ? 'text-green-600'
+                      : 'text-[#6b6b6b]'
+                  }`}>
+                    <span className={`w-4 h-4 text-center font-bold ${
+                      (formData.password.match(/[A-Z]/g) || []).length >= 2
+                        ? 'text-green-600'
+                        : 'text-[#6b6b6b]'
+                    }`}>
+                      {(formData.password.match(/[A-Z]/g) || []).length >= 2 ? '✓' : '•'}
+                    </span>
+                    Mínimo 2 letras mayúsculas {formData.password ? `(${(formData.password.match(/[A-Z]/g) || []).length}/2)` : ''}
+                  </li>
+                  <li className={`flex items-center gap-2 transition-colors duration-200 ${
+                    (formData.password.match(/[0-9]/g) || []).length >= 2
+                      ? 'text-green-600'
+                      : 'text-[#6b6b6b]'
+                  }`}>
+                    <span className={`w-4 h-4 text-center font-bold ${
+                      (formData.password.match(/[0-9]/g) || []).length >= 2
+                        ? 'text-green-600'
+                        : 'text-[#6b6b6b]'
+                    }`}>
+                      {(formData.password.match(/[0-9]/g) || []).length >= 2 ? '✓' : '•'}
+                    </span>
+                    Mínimo 2 números {formData.password ? `(${(formData.password.match(/[0-9]/g) || []).length}/2)` : ''}
+                  </li>
+                  <li className={`flex items-center gap-2 transition-colors duration-200 ${
+                    (formData.password.match(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/g) || []).length >= 2
+                      ? 'text-green-600'
+                      : 'text-[#6b6b6b]'
+                  }`}>
+                    <span className={`w-4 h-4 text-center font-bold ${
+                      (formData.password.match(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/g) || []).length >= 2
+                        ? 'text-green-600'
+                        : 'text-[#6b6b6b]'
+                    }`}>
+                      {(formData.password.match(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/g) || []).length >= 2 ? '✓' : '•'}
+                    </span>
+                    Mínimo 2 caracteres especiales {formData.password ? `(${(formData.password.match(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/g) || []).length}/2)` : ''}
+                  </li>
+                </ul>
+              </div>
             </div>
           </FormSection>
         )}
@@ -330,13 +389,14 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
           </FormSection>
         )}
 
+
         {/* Botones de Acción */}
         <div className="flex justify-end pt-6 border-t border-gray-200">
           <ActionButtons
             isEditing={isEditing}
             isSubmitting={isSubmitting}
             canSubmit={canSubmit}
-            onSave={onSave || handleSubmit}
+            onSave={handleSubmit}
             onCancel={onCancel || handleCancel}
           />
         </div>

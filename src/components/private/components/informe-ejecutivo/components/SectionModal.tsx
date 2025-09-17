@@ -4,7 +4,7 @@
  * Con navegación interna, overlay difuminado y controles de navegación
  */
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { 
   X, 
   ChevronLeft, 
@@ -69,6 +69,7 @@ const getIconForTab = (tabId: string) => {
     'puesta-disposicion': Users,
     'puesta-disposicion-primer-respondiente': Users,
     'anexo-a-detenciones': Users,
+    'anexo-a-detenciones-civica': Users,
     'anexo-b-uso-fuerza': Shield,
     'anexo-c-inspeccion': Package,
     'anexo-c-inspeccion-vehiculo': Car,
@@ -96,6 +97,8 @@ const SectionModal: React.FC<SectionModalProps> = ({
   getActiveTabData,
   className = ''
 }) => {
+  // Ref para el contenedor de scroll
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Encontrar el índice del tab activo
   const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
@@ -114,6 +117,20 @@ const SectionModal: React.FC<SectionModalProps> = ({
       onTabChange(tabs[currentIndex + 1].id);
     }
   }, [currentIndex, tabs, onTabChange]);
+
+  // Resetear scroll al inicio cuando cambie la sección o se abra el modal
+  useEffect(() => {
+    if (isOpen && scrollContainerRef.current) {
+      // Resetear scroll inmediatamente
+      scrollContainerRef.current.scrollTop = 0;
+      
+      // También resetear scroll suave por si acaso
+      scrollContainerRef.current.scrollTo({
+        top: 0,
+        behavior: 'auto' // Inmediato, sin animación
+      });
+    }
+  }, [activeTab, isOpen]); // Se ejecuta cuando cambia activeTab o isOpen
 
   // Manejar teclas del teclado
   useEffect(() => {
@@ -217,7 +234,7 @@ const SectionModal: React.FC<SectionModalProps> = ({
                       p-3 rounded-xl transition-all duration-200 font-semibold shadow-md border-2
                       ${currentIndex === 0 
                         ? 'text-gray-400 cursor-not-allowed bg-gray-100 border-gray-200' 
-                        : 'text-[#4d4725] bg-white border-[#c2b186] hover:bg-[#c2b186] hover:text-white hover:shadow-lg hover:scale-105 active:scale-95'
+                        : 'text-[#4d4725] bg-white border-[#c2b186] hover:bg-[#c2b186] hover:text-white hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer'
                       }
                     `}
                     title="Sección anterior (←)"
@@ -232,7 +249,7 @@ const SectionModal: React.FC<SectionModalProps> = ({
                       p-3 rounded-xl transition-all duration-200 font-semibold shadow-md border-2
                       ${currentIndex === tabs.length - 1 
                         ? 'text-gray-400 cursor-not-allowed bg-gray-100 border-gray-200' 
-                        : 'text-[#4d4725] bg-white border-[#c2b186] hover:bg-[#c2b186] hover:text-white hover:shadow-lg hover:scale-105 active:scale-95'
+                        : 'text-[#4d4725] bg-white border-[#c2b186] hover:bg-[#c2b186] hover:text-white hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer'
                       }
                     `}
                     title="Sección siguiente (→)"
@@ -249,6 +266,7 @@ const SectionModal: React.FC<SectionModalProps> = ({
                     text-red-700 bg-red-50 border-red-300 
                     hover:bg-red-600 hover:text-white hover:border-red-600 hover:shadow-lg hover:scale-105 
                     active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
+                    cursor-pointer
                   "
                   title="Cerrar modal (Esc)"
                 >
@@ -272,7 +290,10 @@ const SectionModal: React.FC<SectionModalProps> = ({
           </div>
 
           {/* Contenido del Modal */}
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div 
+            ref={scrollContainerRef}
+            className="flex-1 p-6 overflow-y-auto"
+          >
             <div className="transition-all duration-300 h-full">
               {activeTab === 'datos-generales' ? (
                 <DatosGenerales iph={iph} className="mb-0" />
@@ -296,15 +317,27 @@ const SectionModal: React.FC<SectionModalProps> = ({
                   narrativaHecho={getActiveTabData()} 
                   className="mb-0" 
                 />
-              ) : activeTab === 'anexo-a-detenciones' ? (
+              ) : activeTab === 'anexo-a-detenciones' || activeTab === 'anexo-a-detenciones-civica' ? (
                 <AnexoDetenciones 
                   detencion={getActiveTabData()} 
                   puestaDisposicion={Array.isArray(iph) ? iph[0]?.puestaDisposicion : iph?.puestaDisposicion}
                   className="mb-0" 
                 />
-              ) : (activeTab === 'puesta-disposicion' || activeTab === 'puesta-disposicion-primer-respondiente') ? (
+              ) : activeTab === 'puesta-disposicion' ? (
                 <PuestaDisposicion 
                   puestaDisposicion={getActiveTabData()} 
+                  className="mb-0" 
+                />
+              ) : activeTab === 'puesta-disposicion-primer-respondiente' ? (
+                <PrimerRespondiente 
+                  primerRespondiente={getActiveTabData()} 
+                  title="Puesta a disposición / Primer Respondiente"
+                  className="mb-0" 
+                />
+              ) : activeTab === 'anexo-b-descripcion-vehiculo' ? (
+                <AnexoInspeccionVehiculo 
+                  inspeccionVehiculo={getActiveTabData()} 
+                  title="Anexo B. Descripción de vehículo"
                   className="mb-0" 
                 />
               ) : activeTab === 'anexo-b-uso-fuerza' ? (

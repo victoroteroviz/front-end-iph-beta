@@ -13,6 +13,7 @@ import useInformePolicial from './hooks/useInformePolicial';
 
 // Componentes atómicos
 import IPHFilters from './components/IPHFilters';
+import IPHTipoFilter from './components/IPHTipoFilter';
 import IPHCardsGrid from './components/IPHCardsGrid';
 import IPHPagination from './components/IPHPagination';
 import AutoRefreshIndicator from './components/AutoRefreshIndicator';
@@ -107,7 +108,7 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-[#4d4725]" />
               <span className="text-sm font-medium text-gray-700 font-poppins">
-                Página {state.pagination.currentPage} de {state.pagination.totalPages}
+                Página {state.filters.page} de {state.pagination.totalPages}
               </span>
             </div>
           </div>
@@ -132,6 +133,14 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
           onSearch={handleSearch}
           onClear={handleClearFilters}
           onRefresh={handleManualRefresh}
+        />
+
+        {/* Filtro por tipo de IPH */}
+        <IPHTipoFilter
+          tipos={state.tiposIPH}
+          selectedTipoId={state.filters.tipoId || ''}
+          loading={state.tiposLoading}
+          onTipoChange={(tipoId) => updateFilters({ tipoId })}
         />
 
         {/* Indicador de actualización */}
@@ -190,7 +199,10 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
         {state.pagination.totalPages > 1 && (
           <div className="bg-white rounded-lg shadow-sm p-4">
             <IPHPagination
-              pagination={state.pagination}
+              pagination={{
+                ...state.pagination,
+                currentPage: state.filters.page // Usar la página de los filtros, no del servidor
+              }}
               loading={isAnyLoading}
               onPageChange={handlePageChange}
             />

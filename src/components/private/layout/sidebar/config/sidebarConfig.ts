@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, BarChart, FileText, Clock, Users, Settings, UserCircle, FileCheck } from 'lucide-react';
+import { Home, BarChart, FileText, Clock, Users, Settings, FileCheck } from 'lucide-react';
 import { ALLOWED_ROLES } from '../../../../../config/env.config';
 import type { SidebarConfig, SidebarItemConfig } from '../../../../../interfaces/components/dashboard.interface';
 
@@ -64,20 +64,12 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       isDisabled: true // Temporarily disabled - accessed via direct links only
     },
     {
-      id: 'perfil',
-      label: 'Mi Perfil',
-      to: '/perfil',
-      icon: React.createElement(UserCircle, { size: 20 }),
-      requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
-      order: 7
-    },
-    {
       id: 'ajustes',
       label: 'Ajuste',
       to: '/ajustes',
       icon: React.createElement(Settings, { size: 20 }),
       requiredRoles: ['SuperAdmin'],
-      order: 8,
+      order: 7,
       isDisabled: true // Temporalmente deshabilitado
     }
   ]

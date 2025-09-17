@@ -102,7 +102,8 @@ const transformFiltersToServiceParams = (filters: IInformePolicialFilters): any 
     orderBy: filters.orderBy,
     order: filters.order,
     search: filters.search,
-    searchBy: filters.searchBy
+    searchBy: filters.searchBy,
+    tipoId: filters.tipoId || undefined // Solo enviar si tiene valor
   };
 };
 
