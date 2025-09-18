@@ -19,12 +19,9 @@ import type {
   ICreatedUser,
   UserRole
 } from '../../interfaces/user/crud/crud-user.interface';
-import type { IRole } from '../../interfaces/role/role.interface';
 import type { 
   ICatalogsResponse, 
   IRolesResponse,
-  IPerfilUsuarioPayload,
-  IUserRoleOperation 
 } from '../../interfaces/components/perfilUsuario.interface';
 
 // =====================================================
@@ -52,7 +49,7 @@ export const getUsuarioById = async (id: string): Promise<IGetUserById> => {
       return await getUserById(id);
     }
   } catch (error) {
-    logError('PerfilUsuarioService', 'Error al obtener usuario', { id, error });
+    logError('PerfilUsuarioService', 'Error al obtener usuario',` ${{ id, error }}`);
     throw error;
   }
 };

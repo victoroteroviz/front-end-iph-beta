@@ -19,8 +19,8 @@ export interface ICatalogItem {
   descripcion?: string;
 }
 
-export interface IGrado extends ICatalogItem {}
-export interface ICargo extends ICatalogItem {}
+export type IGrado = ICatalogItem;
+export type ICargo = ICatalogItem;
 export interface IMunicipio extends ICatalogItem {
   estado: {
     id: number;
@@ -36,7 +36,7 @@ export interface IAdscripcion extends ICatalogItem {
     codigo: string;
   };
 }
-export interface ISexo extends ICatalogItem {}
+export type ISexo = ICatalogItem;
 
 // =====================================================
 // INTERFACES DE ROLES
@@ -226,19 +226,23 @@ export interface IFormValidationResult {
 // ENUMS Y CONSTANTES
 // =====================================================
 
-export enum PerfilUsuarioMode {
-  CREATE = 'create',
-  EDIT = 'edit',
-  VIEW = 'view'
-}
+export const PerfilUsuarioMode = {
+  CREATE: 'create',
+  EDIT: 'edit',
+  VIEW: 'view'
+} as const;
 
-export enum PerfilUsuarioPermission {
-  CREATE_USER = 'create_user',
-  EDIT_USER = 'edit_user',
-  VIEW_USER = 'view_user',
-  EDIT_OWN_PROFILE = 'edit_own_profile',
-  VIEW_SENSITIVE_DATA = 'view_sensitive_data'
-}
+export type PerfilUsuarioMode = typeof PerfilUsuarioMode[keyof typeof PerfilUsuarioMode];
+
+export const PerfilUsuarioPermission = {
+  CREATE_USER: 'create_user',
+  EDIT_USER: 'edit_user',
+  VIEW_USER: 'view_user',
+  EDIT_OWN_PROFILE: 'edit_own_profile',
+  VIEW_SENSITIVE_DATA: 'view_sensitive_data'
+} as const;
+
+export type PerfilUsuarioPermission = typeof PerfilUsuarioPermission[keyof typeof PerfilUsuarioPermission];
 
 // =====================================================
 // INTERFACES DE RESPUESTA API

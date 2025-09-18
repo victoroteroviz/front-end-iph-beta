@@ -1,0 +1,61 @@
+services:
+  frontend:
+    build: .
+    container_name: iph-frontend
+    # image: iph-frontend:0.0.1,
+    restart: always
+    ports:
+      - "5000:4173"
+    environment:
+      VITE_API_BASE_URL: "http://localhost:3000"
+      VITE_SUPERADMIN_ROLE: "[{\"id\":1,\"nombre\":\"SuperAdmin\"}]"
+      VITE_ADMIN_ROLE: "[{\"id\":2,\"nombre\":\"Administrador\"}]"
+      VITE_SUPERIOR_ROLE: "[{\"id\":3,\"nombre\":\"Superior\"}]"
+      VITE_ELEMENTO_ROLE: "[{\"id\":4,\"nombre\":\"Elemento\"}]"
+
+      #Logs
+      VITE_LOG_LEVEL: 1
+
+      # Habilitar logging en consola (true/false)
+      VITE_LOG_CONSOLE: true
+
+      # Habilitar almacenamiento de logs (true/false)
+      VITE_LOG_STORAGE: true
+
+      # Máximo de entradas en storage
+      VITE_LOG_MAX_ENTRIES: 1000
+
+      # =====================================================
+      # CONFIGURACIÓN HTTP
+      # =====================================================
+      # Timeout en milisegundos para peticiones HTTP
+      VITE_HTTP_TIMEOUT: 30000
+
+      # Número de reintentos para peticiones fallidas
+      VITE_HTTP_RETRIES: 3
+
+      # Delay entre reintentos en milisegundos
+      VITE_HTTP_RETRY_DELAY: 1000
+      # CONFIGURACIÓN DE AUTENTICACIÓN
+      # =====================================================
+      # Nombre del header de autenticación
+      VITE_AUTH_HEADER_NAME: Authorization
+
+      # Prefijo del token de autenticación
+      VITE_AUTH_HEADER_PREFIX: Bearer
+
+      # Clave para almacenar el token en sessionStorage
+      VITE_AUTH_TOKEN_KEY: auth_token
+
+      # =====================================================
+      # CONFIGURACIONES ADICIONALES
+      # =====================================================
+      # Habilitar modo debug (true/false) 
+      VITE_DEBUG_MODE: false
+
+      # Versión de la aplicación
+      VITE_APP_VERSION: 1.0.0
+
+      # Nombre de la aplicación
+      VITE_APP_NAME: IPH Frontend
+

@@ -1,4 +1,3 @@
-import { API_BASE_ROUTES } from "../../config/routes.config";
 
 import { API_BASE_URL } from "../../config/env.config";
 

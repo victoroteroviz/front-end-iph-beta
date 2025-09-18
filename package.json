@@ -11,7 +11,7 @@
     "postinstall": "mkdir -p public && cp node_modules/react-pdf/node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.min.js && cp -r node_modules/react-pdf/node_modules/pdfjs-dist/cmaps public/ && cp -r node_modules/react-pdf/node_modules/pdfjs-dist/standard_fonts public/"
   },
   "dependencies": {
-    "@fontsource/poppins": "^5.2.6",
+    "@fontsource/poppins": "^5.2.7",
     "@tailwindcss/vite": "^4.1.12",
     "@types/leaflet": "^1.9.20",
     "@types/react-datepicker": "^6.2.0",
@@ -39,6 +39,7 @@
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^24.5.2",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react-swc": "^4.0.0",

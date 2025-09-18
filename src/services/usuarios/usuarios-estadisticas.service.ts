@@ -48,7 +48,7 @@ export const getEstadisticasUsuarios = async (): Promise<IEstadisticasResponse> 
       return await getRealEstadisticas();
     }
   } catch (error) {
-    logError('UsuariosEstadisticasService', 'Error al obtener estadísticas', { error });
+    logError(`UsuariosEstadisticasService`, `Error al obtener estadísticas`,   `${error}`);
     throw error;
   }
 };
@@ -68,7 +68,7 @@ export const getUsuarioMetricas = async (userId: string): Promise<IUsuarioMetric
       return await getRealUsuarioMetricas(userId);
     }
   } catch (error) {
-    logError('UsuariosEstadisticasService', 'Error al obtener métricas de usuario', { userId, error });
+    logError(`UsuariosEstadisticasService`, `Error al obtener métricas de usuario ${{ userId, error }}`);
     throw error;
   }
 };
@@ -146,7 +146,7 @@ const getMockEstadisticas = async (): Promise<IEstadisticasResponse> => {
     peorRendimiento: {
       id: '3',
       nombre: 'Carlos González Ruiz',
-      descripción: '8 IPH pendientes de completar',
+      descripcion: '8 IPH pendientes de completar',
       imagen: '', // Usará ícono de fallback
       color: 'red'
     }
@@ -158,7 +158,8 @@ const getMockEstadisticas = async (): Promise<IEstadisticasResponse> => {
   };
 };
 
-const getMockUsuarioMetricas = async (userId: string): Promise<IUsuarioMetricasResponse> => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const getMockUsuarioMetricas = async (_userId: string): Promise<IUsuarioMetricasResponse> => {
   // Simular delay de red
   await new Promise(resolve => setTimeout(resolve, 600));
   
