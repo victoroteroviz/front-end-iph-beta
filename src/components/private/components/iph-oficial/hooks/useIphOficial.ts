@@ -109,7 +109,7 @@ export const useIphOficial = (): UseIphOficialReturn => {
 
       return hasPermission;
     } catch (error) {
-      logError('useIphOficial', 'Error parseando datos de usuario', { error });
+      logError('useIphOficial', error, 'Error parseando datos de usuario');
       return false;
     }
   }, []);
@@ -152,14 +152,14 @@ export const useIphOficial = (): UseIphOficialReturn => {
 
       logInfo('useIphOficial', 'Datos del IPH oficial obtenidos exitosamente', {
         id: response.data.id,
-        referencia: response.data.n_referencia,
-        tipo: response.data.tipo.nombre,
-        estatus: response.data.estatus.nombre
+        referencia: response.data.nReferencia,
+        tipo: response.data.tipoIph?.nombre || 'No especificado',
+        estatus: response.data.estatus || 'No especificado'
       });
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      logError('useIphOficial', 'Error obteniendo datos del IPH oficial', { error, id });
+      logError('useIphOficial', error, `Error obteniendo datos del IPH oficial ID: ${id}`);
       
       // Implementar retry logic para errores de red
       if (retryCount < DEFAULT_CONFIG.maxRetries && errorMessage.includes('Error desconocido')) {
@@ -204,7 +204,7 @@ export const useIphOficial = (): UseIphOficialReturn => {
 
       return true;
     } catch (error) {
-      logError('useIphOficial', 'Error validando IPH', { error, id });
+      logError('useIphOficial', error, `Error validando IPH ID: ${id}`);
       // Si hay error en la validación, intentar cargar de todas formas
       return true;
     }
@@ -288,11 +288,22 @@ export const useIphOficial = (): UseIphOficialReturn => {
    */
   const getBasicInfo = useCallback(async () => {
     if (!id) return null;
-    
+
     try {
-      return await getIphOficialBasicInfo(id);
+      const serviceResult = await getIphOficialBasicInfo(id);
+      if (!serviceResult) return null;
+
+      // Transformar al formato BasicIphInfo
+      return {
+        id: serviceResult.id || '',
+        nReferencia: serviceResult.nReferencia || '',
+        nFolioSist: serviceResult.nFolioSist || '',
+        estatus: serviceResult.estatus || 'No especificado',
+        tipo: serviceResult.tipoIph?.nombre || 'No especificado',
+        fechaCreacion: serviceResult.fechaCreacion || ''
+      };
     } catch (error) {
-      logError('useIphOficial', 'Error obteniendo información básica', { error, id });
+      logError('useIphOficial', error, `Error obteniendo información básica ID: ${id}`);
       return null;
     }
   }, [id]);
@@ -311,11 +322,11 @@ export const useIphOficial = (): UseIphOficialReturn => {
     if (!data) return null;
 
     return {
-      referencia: data.n_referencia,
-      folio: data.n_folio_sist,
-      tipo: data.tipo.nombre,
-      estatus: data.estatus.nombre,
-      fechaCreacion: data.fecha_creacion
+      referencia: data.nReferencia || '',
+      folio: data.nFolioSist || '',
+      tipo: data.tipoIph?.nombre || 'No especificado',
+      estatus: data.estatus || 'No especificado',
+      fechaCreacion: data.fechaCreacion || ''
     };
   }, [data]);
 

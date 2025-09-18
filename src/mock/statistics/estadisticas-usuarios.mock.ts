@@ -93,7 +93,7 @@ export const mockUsuariosIphCount: IUsuarioIphCount[] = [
  */
 export const getMockIphCountByUsers = async (
   mes: number = new Date().getMonth() + 1,
-  anio: number = new Date().getFullYear(),
+  _anio: number = new Date().getFullYear(),
   page: number = 1,
   limit: number = 10
 ): Promise<IUsuarioIphCountResponse> => {

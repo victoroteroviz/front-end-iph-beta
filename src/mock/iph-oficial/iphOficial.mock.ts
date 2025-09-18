@@ -22,7 +22,7 @@ import type {
 import type {
   Estatus,
   Tipo,
-  PrimerRespondiente
+  IPrimerRespondiente
 } from '../../interfaces/iph/iph.interface';
 
 /**
@@ -50,12 +50,15 @@ export const tipoMock: Tipo = {
 /**
  * Mock data para primer respondiente
  */
-export const primerRespondienteMock: PrimerRespondiente = {
-  id: 1,
-  unidad_arrivo: "S19",
-  n_elementos: 2,
-  fecha_creacion: "2024-01-15T08:30:00Z",
-  fecha_actualizacion: "2024-01-15T08:30:00Z"
+export const primerRespondienteMock: IPrimerRespondiente = {
+  foto: undefined,
+  nombre: "Adrian Lino",
+  primerApellido: "Marmolejo",
+  segundoApellido: undefined,
+  institucion: "Policía Municipal",
+  gradoCargo: "Oficial",
+  unidadArribo: "S19",
+  nElementos: 2
 };
 
 /**
@@ -289,19 +292,19 @@ export const entrevistasMock: Entrevista[] = [
 export const iphOficialMockData: IphOficialData = {
   // Campos base de I_IPHById
   id: "GUGN01123060520252247",
-  n_referencia: "GUGN01123060520252247",
-  n_folio_sist: "2582393922",
+  nReferencia: "GUGN01123060520252247",
+  nFolioSist: "2582393922",
   observaciones: "Caso prioritario por uso de arma de fuego",
-  latitud: "20.913237209466967",
-  longitud: "-100.74995748193386",
+  coordenadas: {
+    latitud: "20.913237209466967",
+    longitud: "-100.74995748193386"
+  },
   hechos: "Se encontró en el cel rocolorado un cuerpo parcialmente fallecido por el accionamiento de disparos de una calibre 22 pistola hkp7 alrededor de las 17 horas rumbo a San Nicolás del Bravo",
-  fecha_creacion: "2025-05-06T22:47:00Z",
-  fecha_subida: "2025-05-07T08:30:00Z",
+  fechaCreacion: "2025-05-06T22:47:00Z",
   
   // Relaciones tipadas
-  primer_respondiente: primerRespondienteMock,
-  estatus: estatusMock,
-  tipo: tipoMock,
+  primerRespondiente: primerRespondienteMock,
+  estatus: "Activo",
   
   // Campos extendidos con tipos específicos
   conocimiento_hecho: conocimientoHechoMock,

@@ -15,14 +15,16 @@ import { logInfo, logError, logAuth } from '../../../../../helper/log/logger.hel
 import { ALLOWED_ROLES } from '../../../../../config/env.config';
 
 // Interfaces
-import type { 
+import type {
   IUsuariosState,
   IUsuariosFilters,
   IUseUsuariosReturn,
-  UsuariosPermission
+  UsuariosPermission,
+  SortableColumn
 } from '../../../../../interfaces/components/usuarios.interface';
 import { DEFAULT_USUARIOS_FILTERS } from '../../../../../interfaces/components/usuarios.interface';
 import type { IPaginatedUsers } from '../../../../../interfaces/user/crud/get-paginated.users.interface';
+import { UserOrderByParams, UserSearchParams, SortOrder } from '../../../../../interfaces/user/crud/user-search-params.enum';
 
 // =====================================================
 // ESTADO INICIAL
@@ -108,32 +110,32 @@ const useUsuarios = (): IUseUsuariosReturn => {
     try {
       const params = {
         page: state.filters.page,
-        orderBy: state.filters.orderBy,
-        order: state.filters.order,
+        orderBy: UserOrderByParams[state.filters.orderBy.toUpperCase() as keyof typeof UserOrderByParams] || UserOrderByParams.NOMBRE,
+        order: state.filters.order === 'ASC' ? SortOrder.ASC : SortOrder.DESC,
         search: state.filters.search,
-        searchBy: state.filters.searchBy
+        searchBy: UserSearchParams[state.filters.searchBy.toUpperCase() as keyof typeof UserSearchParams] || UserSearchParams.NOMBRE
       };
 
       logInfo('UsuariosHook', 'Cargando usuarios', params);
 
       const response = await getUsuarios(params);
-      
+
       setState(prev => ({
         ...prev,
-        usuarios: Array.isArray(response.data) ? response.data : (Array.isArray(response) ? response : []),
+        usuarios: response.data || [],
         totalPages: response.totalPages || 1,
-        totalUsers: response.totalUsers || (Array.isArray(response) ? response.length : 0) || 0,
+        totalUsers: response.total || 0,
         isLoading: false
       }));
 
       logInfo('UsuariosHook', 'Usuarios cargados exitosamente', {
-        cantidad: response.data?.length || 0,
+        cantidad: response.data ? response.data.length : 0,
         totalPages: response.totalPages || 1
       });
 
     } catch (error) {
       const errorMessage = (error as Error).message || 'Error al cargar usuarios';
-      logError('UsuariosHook', 'Error al cargar usuarios', { error });
+      logError('UsuariosHook', error, 'Error al cargar usuarios');
       
       setState(prev => ({
         ...prev,
@@ -170,7 +172,7 @@ const useUsuarios = (): IUseUsuariosReturn => {
     logInfo('UsuariosHook', 'Filtros limpiados');
   }, []);
 
-  const handleSort = useCallback((column: string) => {
+  const handleSort = useCallback((column: SortableColumn) => {
     setState(prev => {
       const newOrder = prev.filters.orderBy === column && prev.filters.order === 'ASC' 
         ? 'DESC' 
@@ -268,10 +270,7 @@ const useUsuarios = (): IUseUsuariosReturn => {
 
       showError(errorMessage, 'Error al Eliminar');
       
-      logError('UsuariosHook', 'Error al eliminar usuario', { 
-        userId: usuario.id, 
-        error 
-      });
+      logError('UsuariosHook', error, `Error al eliminar usuario ID: ${usuario.id}`);
     }
   }, [state.canDeleteUsers, loadUsuarios]);
 

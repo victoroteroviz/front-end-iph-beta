@@ -23,7 +23,7 @@ import type {
   GetIphOficialParams
 } from '../../interfaces/components/iphOficial.interface';
 
-import type { I_IPHById } from '../../interfaces/iph/iph.interface';
+import type { ResponseIphData } from '../../interfaces/iph/iph.interface';
 
 // Mock data imports
 import {
@@ -57,57 +57,40 @@ const SERVICE_CONFIG = {
  * @param serverData - Datos del servidor en formato I_IPHById
  * @returns Datos transformados en formato IphOficialData
  */
-const transformServerDataToComponent = (serverData: I_IPHById): IphOficialData => {
-  logInfo('IphOficial Service', 'Transformando datos del servidor', { 
-    id: serverData.id,
-    referencia: serverData.n_referencia 
+const transformServerDataToComponent = (serverData: ResponseIphData): IphOficialData => {
+  const iphData = Array.isArray(serverData.iph) ? null : serverData.iph;
+
+  logInfo('IphOficial Service', 'Transformando datos del servidor', {
+    id: iphData?.id,
+    referencia: iphData?.nReferencia
   });
 
   // Transformar los campos any a tipos específicos
   const transformedData: IphOficialData = {
     // Campos base
-    id: serverData.id,
-    n_referencia: serverData.n_referencia,
-    n_folio_sist: serverData.n_folio_sist,
-    observaciones: serverData.observaciones || 'Sin observaciones',
-    latitud: serverData.latitud,
-    longitud: serverData.longitud,
-    hechos: serverData.hechos,
-    fecha_creacion: serverData.fecha_creacion,
-    fecha_subida: serverData.fecha_subida,
+    id: iphData?.id,
+    nReferencia: iphData?.nReferencia,
+    nFolioSist: iphData?.nFolioSist,
+    observaciones: iphData?.observaciones || 'Sin observaciones',
+    coordenadas: iphData?.coordenadas,
+    hechos: iphData?.hechos,
+    fechaCreacion: iphData?.fechaCreacion,
     
     // Relaciones
-    primer_respondiente: serverData.primer_respondiente,
-    estatus: serverData.estatus,
-    tipo: serverData.tipo,
+    primerRespondiente: Array.isArray(serverData.primerRespondiente) ? undefined : serverData.primerRespondiente,
+    estatus: iphData?.estatus,
     
     // Campos extendidos - transformar de any a tipos específicos
-    conocimiento_hecho: serverData.conocimiento_hecho || undefined,
-    lugar_intervencion: serverData.lugar_intervencion || undefined,
-    narrativaHechos: serverData.narrativaHechos || undefined,
-    detencion_pertenencias: Array.isArray(serverData.detencion_pertenencias) 
-      ? serverData.detencion_pertenencias 
-      : [],
-    cInspeccionVehiculo: Array.isArray(serverData.cInspeccionVehiculo) 
-      ? serverData.cInspeccionVehiculo 
-      : [],
-    armas_objetos: Array.isArray(serverData.armas_objetos) 
-      ? serverData.armas_objetos 
-      : [],
-    uso_fuerza: serverData.uso_fuerza || undefined,
-    entrega_recepcion: serverData.entrega_recepcion || undefined,
-    continuacion: Array.isArray(serverData.continuacion) 
-      ? serverData.continuacion 
-      : [],
-    ruta_fotos_lugar: Array.isArray(serverData.ruta_fotos_lugar) 
-      ? serverData.ruta_fotos_lugar 
-      : [],
-    disposicion_ofc: Array.isArray(serverData.disposicion_ofc) 
-      ? serverData.disposicion_ofc 
-      : [],
-    entrevistas: Array.isArray(serverData.entrevistas) 
-      ? serverData.entrevistas 
-      : []
+    conocimiento_hecho: Array.isArray(serverData.conocimientoHecho) ? undefined : serverData.conocimientoHecho as any,
+    lugar_intervencion: Array.isArray(serverData.lugarIntervencion) ? undefined : serverData.lugarIntervencion as any,
+    narrativaHechos: Array.isArray(serverData.narrativaHecho) ? undefined : serverData.narrativaHecho as any,
+    detencion_pertenencias: Array.isArray(serverData.detencion) ? serverData.detencion as any : [],
+    cInspeccionVehiculo: Array.isArray(serverData.inspeccionVehiculo) ? serverData.inspeccionVehiculo as any : [],
+    armas_objetos: Array.isArray(serverData.armaObjeto) ? serverData.armaObjeto as any : [],
+    uso_fuerza: Array.isArray(serverData.usoFuerza) ? undefined : serverData.usoFuerza as any,
+    entrega_recepcion: Array.isArray(serverData.entregaRecepcion) ? undefined : serverData.entregaRecepcion as any,
+    continuacion: Array.isArray(serverData.continuacion) ? serverData.continuacion as any : [],
+    entrevistas: Array.isArray(serverData.entrevista) ? serverData.entrevista as any : []
   };
 
   logInfo('IphOficial Service', 'Transformación de datos completada', {
@@ -156,8 +139,7 @@ const getIphOficialMock = async (params: GetIphOficialParams): Promise<IphOficia
   
   logInfo('IphOficial Service', 'IPH oficial obtenido exitosamente (mock)', {
     id: data.id,
-    referencia: data.n_referencia,
-    tipo: data.tipo.nombre
+    referencia: data.nReferencia
   });
   
   return response;
@@ -194,14 +176,14 @@ const getIphOficialFromAPI = async (params: GetIphOficialParams): Promise<IphOfi
     
     logInfo('IphOficial Service', 'IPH oficial obtenido exitosamente desde API', {
       id: transformedData.id,
-      referencia: transformedData.n_referencia,
-      estatus: transformedData.estatus.nombre
+      referencia: transformedData.nReferencia,
+      estatus: transformedData.estatus
     });
     
     return response;
     
   } catch (error) {
-    logError('IphOficial Service', 'Error obteniendo IPH oficial desde API', { error, params });
+    logError('IphOficial Service', error, `Error obteniendo IPH oficial desde API - params: ${JSON.stringify(params)}`);
     throw error;
   }
 };
@@ -230,7 +212,7 @@ export const getIphOficial = async (params: GetIphOficialParams): Promise<IphOfi
     // Validar parámetros
     if (!params.id || params.id.trim() === '') {
       const error = 'ID de IPH es requerido';
-      logError('IphOficial Service', error, { params });
+      logError('IphOficial Service', error, `Error en mock fallback - params: ${JSON.stringify(params)}`);
       throw new Error(error);
     }
 
@@ -241,7 +223,7 @@ export const getIphOficial = async (params: GetIphOficialParams): Promise<IphOfi
       return await getIphOficialFromAPI(params);
     }
   } catch (error) {
-    logError('IphOficial Service', 'Error en getIphOficial', { error, params });
+    logError('IphOficial Service', error, `Error en getIphOficial - params: ${JSON.stringify(params)}`);
     throw error;
   }
 };
@@ -272,7 +254,7 @@ export const iphOficialExists = async (id: string): Promise<boolean> => {
       }
     }
   } catch (error) {
-    logError('IphOficial Service', 'Error verificando existencia de IPH', { error, id });
+    logError('IphOficial Service', error, `Error verificando existencia de IPH - id: ${id}`);
     return false;
   }
 };
@@ -284,26 +266,26 @@ export const iphOficialExists = async (id: string): Promise<boolean> => {
  * @param id - ID del IPH
  * @returns Promise con información básica
  */
-export const getIphOficialBasicInfo = async (id: string): Promise<Pick<IphOficialData, 'id' | 'n_referencia' | 'n_folio_sist' | 'estatus' | 'tipo' | 'fecha_creacion'> | null> => {
+export const getIphOficialBasicInfo = async (id: string): Promise<Pick<IphOficialData, 'id' | 'nReferencia' | 'nFolioSist' | 'estatus' | 'tipoIph' | 'fechaCreacion'> | null> => {
   try {
     logInfo('IphOficial Service', 'Obteniendo información básica de IPH', { id });
     
     const response = await getIphOficial({ id });
     
     const basicInfo = {
-      id: response.data.id,
-      n_referencia: response.data.n_referencia,
-      n_folio_sist: response.data.n_folio_sist,
-      estatus: response.data.estatus,
-      tipo: response.data.tipo,
-      fecha_creacion: response.data.fecha_creacion
+      id: response.data.id || '',
+      nReferencia: response.data.nReferencia || '',
+      nFolioSist: response.data.nFolioSist || '',
+      estatus: response.data.estatus || 'No especificado',
+      tipoIph: response.data.tipoIph,
+      fechaCreacion: response.data.fechaCreacion || ''
     };
     
     logInfo('IphOficial Service', 'Información básica obtenida', { basicInfo });
     return basicInfo;
     
   } catch (error) {
-    logError('IphOficial Service', 'Error obteniendo información básica', { error, id });
+    logError('IphOficial Service', error, `Error obteniendo información básica - id: ${id}`);
     return null;
   }
 };

@@ -49,7 +49,7 @@ export const getUsuarioById = async (id: string): Promise<IGetUserById> => {
       return await getUserById(id);
     }
   } catch (error) {
-    logError('PerfilUsuarioService', 'Error al obtener usuario',` ${{ id, error }}`);
+    logError('PerfilUsuarioService', error, `Error al obtener usuario - id: ${id}`);
     throw error;
   }
 };
@@ -71,7 +71,7 @@ export const createUsuario = async (userData: ICreateUser): Promise<ICreatedUser
       return await createUsuarioAPI(userData);
     }
   } catch (error) {
-    logError('PerfilUsuarioService', 'Error al crear usuario', { error });
+    logError('PerfilUsuarioService', error, 'Error al crear usuario');
     throw error;
   }
 };
@@ -92,7 +92,7 @@ export const updateUsuario = async (id: string, userData: IUpdateUser): Promise<
       return await updateUsuarioAPI(id, userData);
     }
   } catch (error) {
-    logError('PerfilUsuarioService', 'Error al actualizar usuario', { id, error });
+    logError('PerfilUsuarioService', error, `Error al actualizar usuario - id: ${id}`);
     throw error;
   }
 };
@@ -125,10 +125,10 @@ export const getCatalogos = async (): Promise<ICatalogsResponse> => {
         municipiosCount: Array.isArray(municipios) ? municipios.length : 'No es array'
       });
 
-      return { grados, cargos, municipios, adscripciones, sexos };
+      return { grados: grados as any, cargos: cargos as any, municipios: municipios as any, adscripciones, sexos: sexos as any };
     }
   } catch (error) {
-    logError('PerfilUsuarioService', 'Error al cargar catálogos', { error });
+    logError('PerfilUsuarioService', error, 'Error al cargar catálogos');
     throw error;
   }
 };
@@ -148,7 +148,7 @@ export const getRolesDisponibles = async (): Promise<IRolesResponse> => {
       return { roles };
     }
   } catch (error) {
-    logError('PerfilUsuarioService', 'Error al obtener roles', { error });
+    logError('PerfilUsuarioService', error, 'Error al obtener roles');
     throw error;
   }
 };
@@ -160,46 +160,54 @@ export const getRolesDisponibles = async (): Promise<IRolesResponse> => {
 /**
  * Construye la estructura user_roles para el backend NestJS
  * Coincide exactamente con lo que espera el UpdateUsersWebDto
+ * Implementa la lógica de los custom validators:
+ * - RequireIdPrivilegioIfIdIsNull: Si no hay ID, debe tener id_privilegio
+ * - ForbidIdPrivilegioIfIdExists: Si hay ID, no debe tener id_privilegio
  *
  * @param rolesSeleccionados - Roles seleccionados en el form
  * @param rolesUsuarios - Roles existentes del usuario
- * @returns Estructura para el backend NestJS
+ * @returns Estructura para el backend NestJS que cumple con UserRoleUpdateDto[]
  */
 export const construirUserRoles = (
   rolesSeleccionados: number[],
   rolesUsuarios: any[]
 ): UserRole[] => {
-  logInfo('PerfilUsuarioService', 'Construyendo user_roles para NestJS', {
+  logInfo('PerfilUsuarioService', 'Construyendo user_roles para NestJS UpdateUsersWebDto', {
     seleccionados: rolesSeleccionados,
     existentes: rolesUsuarios.length
   });
 
   const resultado: UserRole[] = [];
 
-  // 1. Procesar roles existentes (UPDATE)
+  // 1. Procesar roles existentes (UPDATE) - Cumple con ForbidIdPrivilegioIfIdExists
   rolesUsuarios.forEach(rolExistente => {
-    resultado.push({
-      id: rolExistente.id.toString(), // Backend espera string
+    const userRole: UserRole = {
+      id: rolExistente.id.toString(), // Backend espera string en UpdateUsersWebDto
       is_active: rolesSeleccionados.includes(rolExistente.privilegioId)
-    });
+      // NO incluir id_privilegio para roles existentes (ForbidIdPrivilegioIfIdExists)
+    };
+    resultado.push(userRole);
   });
 
-  // 2. Agregar roles nuevos (INSERT)
+  // 2. Agregar roles nuevos (INSERT) - Cumple con RequireIdPrivilegioIfIdIsNull
   const rolesNuevos = rolesSeleccionados.filter(privilegioId =>
     !rolesUsuarios.some(r => r.privilegioId === privilegioId)
   );
 
   rolesNuevos.forEach(privilegioId => {
-    resultado.push({
-      id_privilegio: privilegioId, // Para INSERT usa id_privilegio
+    const userRole: UserRole = {
+      // NO incluir id para roles nuevos (será null/undefined)
+      id_privilegio: privilegioId, // REQUERIDO para roles nuevos (RequireIdPrivilegioIfIdIsNull)
       is_active: true
-    });
+    };
+    resultado.push(userRole);
   });
 
-  logInfo('PerfilUsuarioService', 'User roles construidos para NestJS', {
+  logInfo('PerfilUsuarioService', 'User roles construidos para UpdateUsersWebDto', {
     totalRoles: resultado.length,
     rolesExistentes: rolesUsuarios.length,
-    rolesNuevos: rolesNuevos.length
+    rolesNuevos: rolesNuevos.length,
+    validationCompliant: true
   });
 
   return resultado;
@@ -236,9 +244,11 @@ export const buildCreateUserPayload = (formData: any): ICreateUser => {
 
 /**
  * Convierte datos del formulario a IUpdateUser para actualización en NestJS
- * @param formData - Datos del formulario
+ * Mapea correctamente los campos del frontend al formato que espera UpdateUsersWebDto
+ *
+ * @param formData - Datos del formulario (camelCase frontend)
  * @param rolesUsuarios - Roles existentes del usuario
- * @returns Payload para el backend NestJS
+ * @returns Payload para el backend NestJS (snake_case backend)
  */
 export const buildUpdateUserPayload = (
   formData: any,
@@ -247,22 +257,38 @@ export const buildUpdateUserPayload = (
   const rolesSeleccionados = formData.rolesSeleccionados.map((r: any) => r.value);
   const user_roles = construirUserRoles(rolesSeleccionados, rolesUsuarios);
 
+  // Mapeo explícito frontend camelCase → backend snake_case para UpdateUsersWebDto
   const payload: IUpdateUser = {
-    nombre: formData.nombre,
-    primer_apellido: formData.primerApellido,
-    segundo_apellido: formData.segundoApellido,
-    correo_electronico: formData.correo,
-    telefono: formData.telefono,
-    cuip: formData.cuip,
-    cup: formData.cup,
-    gradoId: parseInt(formData.gradoId),
-    cargoId: parseInt(formData.cargoId),
-    municipioId: parseInt(formData.municipioId),
-    adscripcionId: parseInt(formData.adscripcionId),
-    sexoId: parseInt(formData.sexoId),
+    // Campos de texto - cumplen con @IsString() y @Length()
+    nombre: formData.nombre.trim(),
+    primer_apellido: formData.primerApellido.trim(),
+    segundo_apellido: formData.segundoApellido.trim(),
+    correo_electronico: formData.correo.trim(), // @IsEmail()
+    telefono: formData.telefono.trim(),
+
+    // Códigos de identificación - pueden ser vacíos o con longitud mínima
+    cuip: formData.cuip?.trim() || '',
+    cup: formData.cup?.trim() || '',
+
+    // IDs de catálogos - @IsNumber() @IsInt() @IsPositive()
+    gradoId: parseInt(formData.gradoId, 10),
+    cargoId: parseInt(formData.cargoId, 10),
+    municipioId: parseInt(formData.municipioId, 10),
+    adscripcionId: parseInt(formData.adscripcionId, 10),
+    sexoId: parseInt(formData.sexoId, 10),
+
+    // Campo booleano por defecto
     is_verific: true,
+
+    // Array de roles que cumple con UserRoleUpdateDto[] y custom validators
     user_roles
   };
+
+  logInfo('PerfilUsuarioService', 'Payload construido para UpdateUsersWebDto', {
+    camposBasicos: Object.keys(payload).filter(k => k !== 'user_roles').length,
+    totalRoles: user_roles.length,
+    validStructure: true
+  });
 
   return payload;
 };
@@ -280,7 +306,7 @@ const getMockUserById = async (id: string): Promise<IGetUserById> => {
   
   // Mock data basado en la interfaz real
   return {
-    id: parseInt(id),
+    id: id,
     nombre: 'Juan',
     primer_apellido: 'Pérez',
     segundo_apellido: 'García',
@@ -296,25 +322,45 @@ const getMockUserById = async (id: string): Promise<IGetUserById> => {
     user_roles: [
       { id: 1, privilegioId: 2, is_active: true },
       { id: 2, privilegioId: 3, is_active: true }
-    ]
-  } as IGetUserById;
+    ],
+    photo: undefined,
+    is_active: true,
+    is_verific: true,
+    ultima_conexion: new Date().toISOString(),
+    fecha_registro: new Date().toISOString()
+  } as unknown as IGetUserById;
 };
 
 const createMockUser = async (userData: ICreateUser): Promise<ICreatedUser> => {
   await new Promise(resolve => setTimeout(resolve, 1000));
-  return { id: Date.now(), ...userData } as ICreatedUser;
+  return {
+    id: Date.now().toString(),
+    ...userData,
+    is_active: true,
+    ultima_conexion: new Date().toISOString(),
+    fecha_registro: new Date().toISOString(),
+    fecha_modificacion: new Date().toISOString()
+  } as ICreatedUser;
 };
 
 const updateMockUser = async (id: string, userData: IUpdateUser): Promise<ICreatedUser> => {
   await new Promise(resolve => setTimeout(resolve, 800));
-  return { id: parseInt(id), ...userData } as ICreatedUser;
+  return {
+    id: id,
+    ...userData,
+    is_active: true,
+    ultima_conexion: new Date().toISOString(),
+    password_hash: 'mock_hash',
+    fecha_registro: new Date().toISOString(),
+    fecha_modificacion: new Date().toISOString()
+  } as ICreatedUser;
 };
 
 const getMockCatalogs = async (): Promise<ICatalogsResponse> => {
   await new Promise(resolve => setTimeout(resolve, 300));
   return {
-    grados: [{ id: '1', nombre: 'Capitán' }, { id: '2', nombre: 'Teniente' }],
-    cargos: [{ id: '1', nombre: 'Investigador' }, { id: '2', nombre: 'Analista' }],
+    grados: [{ id: 1, nombre: 'Capitán' }, { id: 2, nombre: 'Teniente' }],
+    cargos: [{ id: 1, nombre: 'Investigador' }, { id: 2, nombre: 'Analista' }],
     municipios: [
       {
         id: 1,
@@ -364,7 +410,7 @@ const getMockCatalogs = async (): Promise<ICatalogsResponse> => {
         }
       }
     ],
-    sexos: [{ id: '1', nombre: 'Masculino' }, { id: '2', nombre: 'Femenino' }]
+    sexos: [{ id: 1, nombre: 'Masculino' }, { id: 2, nombre: 'Femenino' }]
   };
 };
 

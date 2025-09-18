@@ -33,9 +33,6 @@ import type {
   PaginacionHistorial
 } from '../../../../../interfaces/components/historialIph.interface';
 
-// Role system
-import { ALLOWED_ROLES } from '../../../../../config/env.config';
-import { getRouteForUser } from '../../../../../helper/navigation/navigation.helper';
 
 // ==================== CONFIGURACIÓN ====================
 
@@ -139,24 +136,24 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
     }
 
     try {
-      const userData = JSON.parse(userDataStr);
+      JSON.parse(userDataStr);
       const userRoles = JSON.parse(rolesStr) || [];
       
       // Solo Admin y SuperAdmin pueden acceder
       const allowedRoleNames = ['Administrador', 'SuperAdmin'];
-      const hasPermission = userRoles.some((role: any) => 
+      const hasPermission = userRoles.some((role: {id: number; nombre: string}) =>
         allowedRoleNames.includes(role.nombre)
       );
 
       if (!hasPermission) {
         logWarning('useHistorialIPH', 'Usuario sin permisos para acceder al historial', {
-          userRoles: userRoles.map((r: any) => r.nombre)
+          userRoles: userRoles.map((r: {id: number; nombre: string}) => r.nombre)
         });
       }
 
       return hasPermission;
     } catch (error) {
-      logError('useHistorialIPH', 'Error parseando datos de usuario', { error });
+      logError('useHistorialIPH', error, 'Error parseando datos de usuario');
       return false;
     }
   }, []);
@@ -207,7 +204,7 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      logError('useHistorialIPH', 'Error obteniendo datos del historial', { error, filtros });
+      logError('useHistorialIPH', error, 'Error obteniendo datos del historial');
       
       // Implementar retry logic
       if (retryCount < DEFAULT_CONFIG.maxRetries) {
@@ -242,7 +239,7 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
     if (error) {
       setError(null);
     }
-  }, [filtros]);
+  }, [filtros, error]);
 
   // ==================== ACCIONES PÚBLICAS ====================
 
@@ -307,7 +304,7 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
       setRegistroSeleccionado(registroCompleto || registro);
       
     } catch (error) {
-      logError('useHistorialIPH', 'Error obteniendo detalle del registro', { error, registroId: registro.id });
+      logError('useHistorialIPH', error, `Error obteniendo detalle del registro ID: ${registro.id}`);
       showError('No se pudo cargar el detalle del registro');
       setRegistroSeleccionado(registro); // Fallback al registro original
     }
@@ -361,7 +358,7 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      logError('useHistorialIPH', 'Error editando estatus', { error, id, nuevoEstatus });
+      logError('useHistorialIPH', error, `Error editando estatus ID: ${id} a ${nuevoEstatus}`);
       showError(`Error actualizando estatus: ${errorMessage}`);
     } finally {
       setLoading(false);

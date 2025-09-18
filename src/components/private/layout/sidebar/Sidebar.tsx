@@ -99,14 +99,14 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
  * @param props - Props del sidebar (opcional para retrocompatibilidad)
  * @returns JSX.Element del sidebar completo
  */
-const Sidebar: React.FC<Partial<SidebarProps>> = ({ 
-  currentPath: propCurrentPath, 
-  userRole: propUserRole, 
+const Sidebar: React.FC<Partial<SidebarProps>> = ({
+  currentPath: propCurrentPath,
+  userRole: propUserRole,
   onLogout: propOnLogout,
   className = '',
   isOpen = false,
   onToggle,
-  isMobile = false
+  isMobile: _isMobile = false
 }) => {
   const location = useLocation();
   const { 

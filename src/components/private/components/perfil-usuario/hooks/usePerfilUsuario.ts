@@ -24,13 +24,14 @@ import { sanitizeInput } from '../../../../../helper/security/security.helper';
 import { ALLOWED_ROLES } from '../../../../../config/env.config';
 
 // Interfaces
-import type { 
+import type {
   IPerfilUsuarioState,
   IPerfilUsuarioFormData,
   IPerfilUsuarioFormErrors,
   IUsePerfilUsuarioReturn,
   IFormValidationResult,
-  IRolOption
+  IRolOption,
+  IUserRole
 } from '../../../../../interfaces/components/perfilUsuario.interface';
 import type { 
   ICreateUser, 
@@ -312,7 +313,7 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
 
       logInfo('PerfilUsuarioHook', 'Catálogos cargados exitosamente');
     } catch (error) {
-      logError('PerfilUsuarioHook', 'Error al cargar catálogos', { error });
+      logError('PerfilUsuarioHook', error, 'Error al cargar catálogos');
       showError('Error al cargar los datos del formulario', 'Error de Carga');
       setState(prev => ({ ...prev, isCatalogsLoading: false }));
     }
@@ -326,9 +327,9 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
       
       // Mapear roles del usuario a formato de react-select
       const rolesSeleccionados: IRolOption[] = userData.user_roles
-        ?.filter(r => r.is_active !== false)
+        ?.filter(r => r.privilegio?.is_active !== false)
         ?.map(r => ({
-          value: r.privilegioId,
+          value: r.privilegioId || 0,
           label: state.rolesDisponibles.find(rol => rol.id === r.privilegioId)?.nombre || ''
         }))
         ?.filter(rol => rol.label !== '') || [];
@@ -353,17 +354,24 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
       // Guardar datos originales para comparación
       setOriginalData(formDataFromDB);
 
+      // Transformar UserRoleGet[] a IUserRole[]
+      const rolesTransformados: IUserRole[] = userData.user_roles?.map(role => ({
+        id: parseInt(role.id || '0'),
+        privilegioId: role.privilegioId || 0,
+        is_active: role.privilegio?.is_active || true
+      })) || [];
+
       setState(prev => ({
         ...prev,
         formData: formDataFromDB,
-        rolesUsuarios: userData.user_roles || [],
+        rolesUsuarios: rolesTransformados,
         isLoading: false,
         isEditing: true
       }));
 
       logInfo('PerfilUsuarioHook', 'Datos de usuario cargados', { userId });
     } catch (error) {
-      logError('PerfilUsuarioHook', 'Error al cargar usuario', { userId, error });
+      logError('PerfilUsuarioHook', error, `Error al cargar usuario ID: ${userId}`);
       showError('Error al cargar los datos del usuario', 'Error de Carga');
       setState(prev => ({ ...prev, isLoading: false }));
       navigate('/usuarios');
@@ -626,7 +634,7 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
   // VALIDACIÓN DEBOUNCED
   // =====================================================
 
-  const validationTimeoutRef = useRef<NodeJS.Timeout>();
+  const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Solo validar si hay campos tocados

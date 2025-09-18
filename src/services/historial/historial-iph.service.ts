@@ -13,10 +13,20 @@
 
 import { logInfo, logError, logWarning } from '../../helper/log/logger.helper';
 import { HttpHelper } from '../../helper/http/http.helper';
-import { 
+import {
   API_BASE_URL
 } from '../../config/env.config';
 import { API_BASE_ROUTES } from '../../config/routes.config';
+
+// Configuración del cliente HTTP
+const http: HttpHelper = HttpHelper.getInstance({
+  baseURL: API_BASE_URL || '',
+  timeout: 10000,
+  retries: 3,
+  defaultHeaders: {
+    "Content-Type": "application/json"
+  }
+});
 
 // Interfaces
 import type {
@@ -194,7 +204,7 @@ const getHistorialFromAPI = async (params: GetHistorialIPHParams): Promise<Histo
     
     const url = `${API_BASE_URL}${API_BASE_ROUTES.HISTORIAL}${HISTORIAL_ENDPOINTS.GET_HISTORIAL}?${queryParams}`;
     
-    const response = await HttpHelper.get<HistorialIPHResponse>(url, {
+    const response = await http.get<HistorialIPHResponse>(url, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
@@ -202,14 +212,14 @@ const getHistorialFromAPI = async (params: GetHistorialIPHParams): Promise<Histo
     });
     
     logInfo('HistorialIPH Service', 'Historial obtenido exitosamente desde API', {
-      totalRegistros: response.registros.length,
+      totalRegistros: response.data.registros.length,
       pagina: page
     });
-    
-    return response;
+
+    return response.data;
     
   } catch (error) {
-    logError('HistorialIPH Service', 'Error obteniendo historial desde API', { error, params });
+    logError('HistorialIPH Service', error, `Error obteniendo historial desde API - params: ${JSON.stringify(params)}`);
     throw error;
   }
 };
@@ -246,7 +256,7 @@ const updateEstatusFromAPI = async (params: UpdateEstatusIPHParams): Promise<Reg
       observaciones: params.observaciones
     };
     
-    const response = await HttpHelper.put<RegistroHistorialIPH>(url, body, {
+    const response = await http.put<RegistroHistorialIPH>(url, body, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
@@ -258,10 +268,10 @@ const updateEstatusFromAPI = async (params: UpdateEstatusIPHParams): Promise<Reg
       nuevoEstatus: params.nuevoEstatus
     });
     
-    return response;
+    return response.data;
     
   } catch (error) {
-    logError('HistorialIPH Service', 'Error actualizando estatus desde API', { error, params });
+    logError('HistorialIPH Service', error, `Error actualizando estatus desde API - params: ${JSON.stringify(params)}`);
     throw error;
   }
 };
@@ -286,7 +296,7 @@ export const getHistorialIPH = async (params: GetHistorialIPHParams = {}): Promi
       return await getHistorialFromAPI(params);
     }
   } catch (error) {
-    logError('HistorialIPH Service', 'Error en getHistorialIPH', { error, params });
+    logError('HistorialIPH Service', error, `Error en getHistorialIPH - params: ${JSON.stringify(params)}`);
     throw error;
   }
 };
@@ -309,7 +319,7 @@ export const updateEstatusIPH = async (params: UpdateEstatusIPHParams): Promise<
       return await updateEstatusFromAPI(params);
     }
   } catch (error) {
-    logError('HistorialIPH Service', 'Error en updateEstatusIPH', { error, params });
+    logError('HistorialIPH Service', error, `Error en updateEstatusIPH - params: ${JSON.stringify(params)}`);
     throw error;
   }
 };
@@ -332,17 +342,17 @@ export const getRegistroIPHById = async (id: number): Promise<RegistroHistorialI
       // TODO: Implementar llamada al API
       const url = `${API_BASE_URL}${API_BASE_ROUTES.HISTORIAL}${HISTORIAL_ENDPOINTS.GET_DETALLE}/${id}`;
       
-      const response = await HttpHelper.get<RegistroHistorialIPH>(url, {
+      const response = await http.get<RegistroHistorialIPH>(url, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
         }
       });
       
-      return response;
+      return response.data;
     }
   } catch (error) {
-    logError('HistorialIPH Service', 'Error obteniendo registro por ID', { error, id });
+    logError('HistorialIPH Service', error, `Error obteniendo registro por ID - id: ${id}`);
     throw error;
   }
 };
@@ -363,17 +373,17 @@ export const getEstadisticasHistorial = async (): Promise<EstadisticasHistorial>
       // TODO: Implementar llamada al API
       const url = `${API_BASE_URL}${API_BASE_ROUTES.HISTORIAL}${HISTORIAL_ENDPOINTS.GET_ESTADISTICAS}`;
       
-      const response = await HttpHelper.get<EstadisticasHistorial>(url, {
+      const response = await http.get<EstadisticasHistorial>(url, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
         }
       });
       
-      return response;
+      return response.data;
     }
   } catch (error) {
-    logError('HistorialIPH Service', 'Error obteniendo estadísticas', { error });
+    logError('HistorialIPH Service', error, 'Error obteniendo estadísticas');
     throw error;
   }
 };

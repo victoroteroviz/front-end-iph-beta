@@ -1,47 +1,48 @@
 /**
  * Ejemplos de uso del LoginService refactorizado
- * Demuestra cómo usar el nuevo servicio de autenticación
- * 
- * ## Características principales demostradas:
- * - Login y logout seguros
- * - Validación de sesiones
- * - Integración con sistema de roles
- * - Manejo de errores robusto
- * - Almacenamiento atómico
- * 
+ * NOTA: Estos ejemplos están basados en una API anterior y necesitan actualización
+ * para funcionar con la implementación actual del servicio de login.
+ *
+ * ⚠️ ARCHIVO DE EJEMPLO - NO USAR EN PRODUCCIÓN
+ *
  * @author IPH Development Team
  */
 
-import loginService from '../services/user/login.service';
-import { canAccess } from '../helper/role.helper';
-import { RoleType } from '../interfaces/role';
-import type { LoginCredentials } from '../interfaces/auth';
+import { login, logout, isLoggedIn } from '../services/user/login.service';
+import { canAccess } from '../helper/role/role.helper';
+import type { LoginRequest } from '../interfaces/user/login/login.interface';
+import type { ProcessedUserRole } from '../interfaces/auth/auth.interface';
+
+// Mock para roles mientras se actualiza el sistema
+const mockRoleType = {
+  ELEMENTO: 'Elemento',
+  SUPERIOR: 'Superior',
+  ADMIN: 'Administrador',
+  SUPERADMIN: 'SuperAdmin'
+} as const;
 
 /**
  * Ejemplo 1: Login básico con manejo de errores
  */
 export const exampleBasicLogin = async () => {
   console.log('=== Ejemplo 1: Login Básico ===');
-  
-  const credentials: LoginCredentials = {
-    correo: 'usuario@ejemplo.com',
+
+  const credentials: LoginRequest = {
+    correo_electronico: 'usuario@ejemplo.com',
     password: 'password123'
   };
 
   try {
-    const result = await loginService.login(credentials);
-    
-    if (result.success) {
-      console.log('✅ Login exitoso!');
-      console.log('Usuario:', result.user?.profile.nombre_completo);
-      console.log('Rol principal:', result.user?.roles.rol_principal.privilegio_nombre);
-      console.log('Todos los roles:', result.user?.roles.nombres_roles);
-    } else {
-      console.log('❌ Login fallido:', result.message);
-      console.log('Tipo de error:', result.error?.type);
-    }
+    // NOTA: La API actual usa login() directamente
+    await login(credentials);
+    console.log('✅ Login ejecutado');
+
+    // Verificar si está loggeado
+    const isLoggedInResult = isLoggedIn();
+    console.log('Estado de login:', isLoggedInResult ? 'Autenticado' : 'No autenticado');
+
   } catch (error) {
-    console.error('Error inesperado:', error);
+    console.error('Error en login:', error);
   }
 };
 
@@ -50,24 +51,24 @@ export const exampleBasicLogin = async () => {
  */
 export const exampleAuthCheck = () => {
   console.log('\n=== Ejemplo 2: Verificación de Autenticación ===');
-  
-  const isAuth = loginService.isAuthenticated();
+
+  const isAuth = isLoggedIn();
   console.log('¿Usuario autenticado?', isAuth);
 
   if (isAuth) {
-    const currentUser = loginService.getCurrentUser();
-    if (currentUser) {
-      console.log('Usuario actual:', currentUser.profile.nombre_completo);
-      console.log('ID:', currentUser.profile.id);
-      console.log('Rol principal:', currentUser.roles.rol_principal.privilegio_nombre);
-      
-      // Obtener información de sesión
-      const sessionInfo = loginService.getSessionInfo();
-      if (sessionInfo) {
-        console.log('Sesión creada:', new Date(sessionInfo.created_at));
-        console.log('Expira:', new Date(sessionInfo.expires_at));
-        console.log('Última actividad:', new Date(sessionInfo.last_activity));
-      }
+    // Obtener datos del sessionStorage
+    const userData = sessionStorage.getItem('user_data');
+    const roles = sessionStorage.getItem('roles');
+
+    if (userData) {
+      const user = JSON.parse(userData);
+      console.log('Usuario actual:', user.nombre);
+      console.log('ID:', user.id);
+    }
+
+    if (roles) {
+      const userRoles = JSON.parse(roles);
+      console.log('Roles:', userRoles.map((r: any) => r.nombre).join(', '));
     }
   } else {
     console.log('No hay sesión activa');
@@ -79,26 +80,23 @@ export const exampleAuthCheck = () => {
  */
 export const exampleRoleIntegration = () => {
   console.log('\n=== Ejemplo 3: Integración con Sistema de Roles ===');
-  
-  const userContext = loginService.getUserRoleContext();
-  
-  if (!userContext) {
-    console.log('No hay contexto de usuario disponible');
+
+  const roles = sessionStorage.getItem('roles');
+
+  if (!roles) {
+    console.log('No hay datos de roles disponibles');
     return;
   }
 
-  console.log('Contexto de usuario creado:', {
-    userId: userContext.userId,
-    rol: userContext.currentRole.nombre,
-    username: userContext.username
-  });
+  const userRoles = JSON.parse(roles);
+  console.log('Roles del usuario:', userRoles.map((r: any) => r.nombre));
 
-  // Verificar permisos usando el sistema de roles
+  // Verificar permisos usando el sistema de roles actualizado
   const permissions = {
-    puedeVerUsuarios: canAccess(userContext, RoleType.ELEMENTO),
-    puedeEditarUsuarios: canAccess(userContext, RoleType.SUPERIOR),
-    puedeEliminarUsuarios: canAccess(userContext, RoleType.ADMIN),
-    puedeGestionarRoles: canAccess(userContext, RoleType.SUPERADMIN, true)
+    puedeVerUsuarios: canAccess(mockRoleType.ELEMENTO, userRoles),
+    puedeEditarUsuarios: canAccess(mockRoleType.SUPERIOR, userRoles),
+    puedeEliminarUsuarios: canAccess(mockRoleType.ADMIN, userRoles),
+    puedeGestionarRoles: canAccess(mockRoleType.SUPERADMIN, userRoles)
   };
 
   console.log('Permisos del usuario:', permissions);
@@ -109,29 +107,25 @@ export const exampleRoleIntegration = () => {
  */
 export const exampleMultipleRoles = () => {
   console.log('\n=== Ejemplo 4: Manejo de Múltiples Roles ===');
-  
-  const currentUser = loginService.getCurrentUser();
-  
-  if (!currentUser) {
+
+  const roles = sessionStorage.getItem('roles');
+
+  if (!roles) {
     console.log('No hay usuario autenticado');
     return;
   }
 
-  const rolesData = currentUser.roles;
-  
+  const userRoles = JSON.parse(roles);
+
   console.log('Información de roles:');
-  console.log('- Rol principal:', rolesData.rol_principal.privilegio_nombre);
-  console.log('- Total de roles:', rolesData.roles.length);
-  console.log('- Nombres de roles:', rolesData.nombres_roles);
-  console.log('- IDs de privilegios:', rolesData.privilegio_ids);
+  console.log('- Total de roles:', userRoles.length);
+  console.log('- Nombres de roles:', userRoles.map((r: any) => r.nombre));
 
   // Mostrar detalles de cada rol
-  rolesData.roles.forEach((rol, index) => {
+  userRoles.forEach((rol: any, index: number) => {
     console.log(`Rol ${index + 1}:`, {
-      nombre: rol.privilegio_nombre,
-      id: rol.privilegio_id,
-      esPrincipal: rol.es_principal,
-      fechaAsignacion: new Date(rol.fecha_registro)
+      nombre: rol.nombre,
+      id: rol.id
     });
   });
 };
@@ -139,20 +133,22 @@ export const exampleMultipleRoles = () => {
 /**
  * Ejemplo 5: Logout y limpieza
  */
-export const exampleLogout = () => {
+export const exampleLogout = async () => {
   console.log('\n=== Ejemplo 5: Logout ===');
-  
-  const wasAuthenticated = loginService.isAuthenticated();
+
+  const wasAuthenticated = isLoggedIn();
   console.log('Estado antes del logout:', wasAuthenticated ? 'Autenticado' : 'No autenticado');
-  
+
   if (wasAuthenticated) {
-    const currentUser = loginService.getCurrentUser();
-    console.log('Cerrando sesión de:', currentUser?.profile.nombre_completo);
-    
-    loginService.logout();
-    
-    console.log('Estado después del logout:', loginService.isAuthenticated() ? 'Autenticado' : 'No autenticado');
-    console.log('Usuario actual:', loginService.getCurrentUser());
+    const userData = sessionStorage.getItem('user_data');
+    if (userData) {
+      const user = JSON.parse(userData);
+      console.log('Cerrando sesión de:', user.nombre);
+    }
+
+    await logout();
+
+    console.log('Estado después del logout:', isLoggedIn() ? 'Autenticado' : 'No autenticado');
   } else {
     console.log('No hay sesión para cerrar');
   }
@@ -163,21 +159,27 @@ export const exampleLogout = () => {
  */
 export const exampleErrorHandling = async () => {
   console.log('\n=== Ejemplo 6: Manejo de Errores ===');
-  
-  // Error de credenciales vacías
-  console.log('1. Credenciales vacías:');
-  const emptyResult = await loginService.login({ correo: '', password: '' });
-  console.log('Resultado:', emptyResult.success ? 'Éxito' : emptyResult.message);
-  console.log('Tipo de error:', emptyResult.error?.type);
 
-  // Error de credenciales incorrectas
-  console.log('\n2. Credenciales incorrectas:');
-  const wrongResult = await loginService.login({ 
-    correo: 'wrong@example.com', 
-    password: 'wrongpassword' 
-  });
-  console.log('Resultado:', wrongResult.success ? 'Éxito' : wrongResult.message);
-  console.log('Tipo de error:', wrongResult.error?.type);
+  try {
+    // Error de credenciales vacías
+    console.log('1. Credenciales vacías:');
+    await login({ correo_electronico: '', password: '' });
+    console.log('Login exitoso (inesperado)');
+  } catch (error) {
+    console.log('Error capturado:', (error as Error).message);
+  }
+
+  try {
+    // Error de credenciales incorrectas
+    console.log('\n2. Credenciales incorrectas:');
+    await login({
+      correo_electronico: 'wrong@example.com',
+      password: 'wrongpassword'
+    });
+    console.log('Login exitoso (inesperado)');
+  } catch (error) {
+    console.log('Error capturado:', (error as Error).message);
+  }
 };
 
 /**
@@ -185,18 +187,10 @@ export const exampleErrorHandling = async () => {
  */
 export const exampleServiceConfiguration = () => {
   console.log('\n=== Ejemplo 7: Configuración del Servicio ===');
-  
-  // Actualizar configuración
-  loginService.updateConfig({
-    useEncryption: true,
-    validateTokenExpiration: true,
-    tokenExpirationWarning: 600000, // 10 minutos
-    autoCleanStorage: true
-  });
-  
-  console.log('Configuración actualizada');
-  
-  // El servicio aplicará la nueva configuración en futuras operaciones
+
+  // NOTA: La API actual no expone configuración
+  console.log('La configuración del servicio actual se maneja internamente');
+  console.log('Las configuraciones se pueden modificar en env.config.ts');
 };
 
 /**
@@ -204,45 +198,45 @@ export const exampleServiceConfiguration = () => {
  */
 export const exampleCompleteFlow = async () => {
   console.log('\n=== Ejemplo 8: Flujo Completo de Autenticación ===');
-  
-  // 1. Verificar estado inicial
-  console.log('1. Estado inicial:', loginService.isAuthenticated() ? 'Autenticado' : 'No autenticado');
-  
-  // 2. Intentar login
-  console.log('2. Intentando login...');
-  const loginResult = await loginService.login({
-    correo: 'admin@iph.com',
-    password: 'admin123'
-  });
-  
-  if (loginResult.success) {
-    console.log('3. Login exitoso');
-    
+
+  try {
+    // 1. Verificar estado inicial
+    console.log('1. Estado inicial:', isLoggedIn() ? 'Autenticado' : 'No autenticado');
+
+    // 2. Intentar login
+    console.log('2. Intentando login...');
+    await login({
+      correo_electronico: 'admin@iph.com',
+      password: 'admin123'
+    });
+
+    console.log('3. Login ejecutado');
+
     // 4. Verificar autenticación
-    console.log('4. Verificando autenticación:', loginService.isAuthenticated());
-    
+    console.log('4. Verificando autenticación:', isLoggedIn());
+
     // 5. Obtener datos del usuario
-    const user = loginService.getCurrentUser();
-    console.log('5. Usuario autenticado:', user?.profile.nombre_completo);
-    
+    const userData = sessionStorage.getItem('user_data');
+    if (userData) {
+      const user = JSON.parse(userData);
+      console.log('5. Usuario autenticado:', user.nombre);
+    }
+
     // 6. Verificar permisos
-    const userContext = loginService.getUserRoleContext();
-    if (userContext) {
-      const isAdmin = canAccess(userContext, RoleType.ADMIN);
+    const roles = sessionStorage.getItem('roles');
+    if (roles) {
+      const userRoles = JSON.parse(roles);
+      const isAdmin = canAccess(mockRoleType.ADMIN, userRoles);
       console.log('6. ¿Es administrador?', isAdmin);
     }
-    
-    // 7. Actualizar actividad
-    loginService.updateActivity();
-    console.log('7. Actividad actualizada');
-    
-    // 8. Logout
-    console.log('8. Cerrando sesión...');
-    loginService.logout();
-    console.log('9. Estado final:', loginService.isAuthenticated() ? 'Autenticado' : 'No autenticado');
-    
-  } else {
-    console.log('3. Login fallido:', loginResult.message);
+
+    // 7. Logout
+    console.log('7. Cerrando sesión...');
+    await logout();
+    console.log('8. Estado final:', isLoggedIn() ? 'Autenticado' : 'No autenticado');
+
+  } catch (error) {
+    console.log('Error en el flujo:', (error as Error).message);
   }
 };
 

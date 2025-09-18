@@ -31,7 +31,7 @@ interface EstadisticasModalProps {
 const EstadisticasModal: React.FC<EstadisticasModalProps> = ({
   isOpen,
   usuario,
-  metricas,
+  metricas: _metricas,
   loading,
   onClose,
   className = ''

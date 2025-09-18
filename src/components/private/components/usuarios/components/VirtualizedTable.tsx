@@ -13,7 +13,7 @@ import {
   User,
   Users
 } from 'lucide-react';
-import type { IUsuariosTableProps } from '../../../../../interfaces/components/usuarios.interface';
+import type { IUsuariosTableProps, SortableColumn } from '../../../../../interfaces/components/usuarios.interface';
 import type { IPaginatedUsers } from '../../../../../interfaces/user/crud/get-paginated.users.interface';
 
 const ROW_HEIGHT = 80;
@@ -49,7 +49,7 @@ const VirtualizedTable: React.FC<IUsuariosTableProps> = ({
       : <ChevronDown className="h-4 w-4 text-[#948b54]" />;
   };
 
-  const handleSort = (columnKey: string) => {
+  const handleSort = (columnKey: SortableColumn) => {
     if (loading) return;
     onSort(columnKey);
   };
@@ -190,7 +190,7 @@ const VirtualizedTable: React.FC<IUsuariosTableProps> = ({
               className={`text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
                 column.sortable ? 'cursor-pointer hover:bg-gray-100 select-none rounded px-2 py-1' : ''
               }`}
-              onClick={() => column.sortable && handleSort(column.key)}
+              onClick={() => column.sortable && handleSort(column.key as SortableColumn)}
             >
               <div className="flex items-center gap-1">
                 <span>{column.label}</span>
@@ -205,6 +205,7 @@ const VirtualizedTable: React.FC<IUsuariosTableProps> = ({
       <div style={{ height: `${Math.min(CONTAINER_HEIGHT, usuarios.length * ROW_HEIGHT)}px` }}>
         <List
           height={Math.min(CONTAINER_HEIGHT, usuarios.length * ROW_HEIGHT)}
+          width="100%"
           itemCount={usuarios.length}
           itemSize={ROW_HEIGHT}
           overscanCount={5}

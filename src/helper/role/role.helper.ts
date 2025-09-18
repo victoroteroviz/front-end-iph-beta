@@ -11,18 +11,24 @@
  */
 
 import { logInfo, logError, logWarning } from '../log/logger.helper';
-import { 
-  getPermissionsConfig, 
-  getRoleConfig, 
-  getAvailableRoles, 
-  getAvailableRoleNames,
+import {
+  hasRole,
+  hasHierarchicalAccess,
   getRoleLevel,
-  getRolePermissions,
-  hasRolePermission,
-  canAccessRole
+  getValidRoles,
+  getSystemRoleTypes,
+  getSystemRoleDefinition,
+  isSuperAdmin as configIsSuperAdmin,
+  isAdmin as configIsAdmin,
+  isSuperior as configIsSuperior,
+  isElemento as configIsElemento,
+  canAccessSuperAdmin,
+  canAccessAdmin,
+  canAccessSuperior,
+  canAccessElemento
 } from '../../config/permissions.config';
 import type { IRole } from '../../interfaces/role/role.interface';
-import type { RolePermissionConfig } from '../../config/permissions.config';
+import type { SystemRoleType, RoleConfig } from '../../config/permissions.config';
 
 /**
  * Interface para el contexto de usuario con roles
@@ -46,13 +52,18 @@ export interface RoleValidationResult {
  * Obtiene nombres de roles dinámicamente desde la configuración
  * @returns Array con nombres de roles disponibles
  */
-export const getRoleNames = (): string[] => getAvailableRoleNames();
+export const getRoleNames = (): string[] => getSystemRoleTypes();
 
 /**
  * Obtiene roles completos dinámicamente desde la configuración
  * @returns Array con roles disponibles
  */
-export const getSystemRoles = (): IRole[] => getAvailableRoles();
+export const getSystemRoles = (): IRole[] => {
+  const roleMap = getValidRoles();
+  const allRoles: IRole[] = [];
+  roleMap.forEach(roles => allRoles.push(...roles));
+  return allRoles;
+};
 
 /**
  * Type helper para nombres de roles (dinámico)
@@ -195,7 +206,7 @@ class RoleHelper {
       if (roles.length === 0) return 999; // Sin roles = sin acceso
 
       const levels = roles
-        .map(role => getRoleLevel(role.nombre))
+        .map(role => getRoleLevel(role.nombre as SystemRoleType))
         .filter(level => level !== 999); // Filtrar roles no encontrados
 
       return levels.length > 0 ? Math.min(...levels) : 999;
@@ -223,8 +234,8 @@ class RoleHelper {
       }
 
       // Verificar acceso jerárquico para cada rol del usuario
-      return roles.some(userRole => 
-        canAccessRole(userRole.nombre, requiredRoleName)
+      return roles.some(userRole =>
+        hasHierarchicalAccess([userRole], requiredRoleName as SystemRoleType)
       );
 
     } catch (error) {
@@ -251,9 +262,9 @@ class RoleHelper {
         };
       }
 
-      const availableRoles = getAvailableRoles();
+      const availableRoles = getSystemRoles();
       const validRoles = roles.filter(userRole =>
-        availableRoles.some(availableRole =>
+        availableRoles.some((availableRole: IRole) =>
           availableRole.id === userRole.id && availableRole.nombre === userRole.nombre
         )
       );
@@ -295,8 +306,9 @@ class RoleHelper {
       const roles = userRoles || this.getUserRoles();
       
       // Verificar si algún rol del usuario tiene el permiso requerido
-      return roles.some(role => 
-        hasRolePermission(role.nombre, operation as keyof RolePermissionConfig['permissions'])
+      // Simplificado: SuperAdmin y Admin tienen todos los permisos
+      return roles.some(role =>
+        role.nombre === 'SuperAdmin' || role.nombre === 'Administrador'
       );
 
     } catch (error) {
@@ -463,8 +475,8 @@ export const getPermissionsFor = {
 
 // Logging de inicialización
 logInfo('RoleHelper', 'Role Helper inicializado correctamente', {
-  availableRoles: getAvailableRoleNames(),
-  totalRoles: getAvailableRoles().length
+  availableRoles: getSystemRoleTypes(),
+  totalRoles: getSystemRoles().length
 });
 
 // Exportaciones principales

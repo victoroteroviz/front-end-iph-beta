@@ -102,7 +102,7 @@ export const registrosMockData: RegistroHistorialIPH[] = [
     numero_reporte: 'IPH-2024-009',
     fecha: '2024-01-23',
     hora: '12:40:00',
-    ubicación: 'Escuela Primaria Benito Juárez',
+    ubicacion: 'Escuela Primaria Benito Juárez',
     tipo_delito: 'Vandalismo',
     estatus: 'Activo',
     usuario: 'Sandra Elizabeth Morales',

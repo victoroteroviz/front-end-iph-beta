@@ -1,10 +1,10 @@
-import React, { ReactElement, cloneElement, FormEvent } from 'react';
+import React, { type ReactElement, cloneElement, type FormEvent } from 'react';
 import { sanitizeInput } from '../../../helper/security/security.helper';
 import { logInfo } from '../../../helper/log/logger.helper';
 
 interface FormSanitizerProps {
   children: ReactElement;
-  onSubmit?: (event: FormEvent<HTMLFormElement>, sanitizedData: Record<string, any>) => void;
+  onSubmit?: (event: FormEvent<HTMLFormElement>, sanitizedData: Record<string, unknown>) => void;
   sanitizeOnChange?: boolean;
   sanitizeOnSubmit?: boolean;
   excludeFields?: string[];
@@ -37,8 +37,8 @@ export const FormSanitizer: React.FC<FormSanitizerProps> = ({
   /**
    * Sanitiza un objeto con todos los valores del formulario
    */
-  const sanitizeFormData = (formData: FormData): Record<string, any> => {
-    const sanitizedData: Record<string, any> = {};
+  const sanitizeFormData = (formData: FormData): Record<string, unknown> => {
+    const sanitizedData: Record<string, unknown> = {};
     
     formData.forEach((value, key) => {
       if (typeof value === 'string') {
@@ -71,7 +71,7 @@ export const FormSanitizer: React.FC<FormSanitizerProps> = ({
   /**
    * Maneja el evento onChange de inputs
    */
-  const handleInputChange = (originalHandler: any, fieldName: string) => {
+  const handleInputChange = (originalHandler: ((event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void) | undefined, fieldName: string) => {
     return (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       if (sanitizeOnChange && event.target.value) {
         const sanitizedValue = sanitizeInputValue(event.target.value, fieldName);
@@ -97,7 +97,7 @@ export const FormSanitizer: React.FC<FormSanitizerProps> = ({
 
     const formData = new FormData(event.currentTarget);
     
-    let finalData: Record<string, any>;
+    let finalData: Record<string, unknown>;
 
     if (sanitizeOnSubmit) {
       finalData = sanitizeFormData(formData);
@@ -120,19 +120,19 @@ export const FormSanitizer: React.FC<FormSanitizerProps> = ({
    */
   const cloneWithSanitization = (element: ReactElement): ReactElement => {
     // Solo procesar elementos HTML con name
-    if (typeof element.type === 'string' && element.props.name) {
-      const fieldName = element.props.name;
-      const originalOnChange = element.props.onChange;
+    if (typeof element.type === 'string' && (element.props as Record<string, unknown>)?.name) {
+      const fieldName = (element.props as Record<string, unknown>).name as string;
+      const originalOnChange = (element.props as Record<string, unknown>).onChange as ((event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void) | undefined;
 
       return cloneElement(element, {
-        ...element.props,
+        ...(element.props as Record<string, unknown>),
         onChange: handleInputChange(originalOnChange, fieldName)
-      });
+      } as React.HTMLAttributes<unknown>);
     }
 
     // Si tiene children, procesarlos recursivamente
-    if (element.props && element.props.children) {
-      const processedChildren = React.Children.map(element.props.children, (child) => {
+    if (element.props && (element.props as Record<string, unknown>)?.children) {
+      const processedChildren = React.Children.map((element.props as Record<string, unknown>).children as React.ReactNode, (child) => {
         if (React.isValidElement(child)) {
           return cloneWithSanitization(child);
         }
@@ -140,9 +140,9 @@ export const FormSanitizer: React.FC<FormSanitizerProps> = ({
       });
 
       return cloneElement(element, {
-        ...element.props,
+        ...(element.props as Record<string, unknown>),
         children: processedChildren
-      });
+      } as React.HTMLAttributes<unknown>);
     }
 
     return element;
@@ -154,11 +154,11 @@ export const FormSanitizer: React.FC<FormSanitizerProps> = ({
   // Si el hijo es un form, agregar onSubmit
   if (children.type === 'form') {
     return cloneElement(processedForm, {
-      ...processedForm.props,
+      ...(processedForm.props as Record<string, unknown>),
       onSubmit: handleFormSubmit,
-      className: className || processedForm.props.className,
+      className: className || (processedForm.props as Record<string, unknown>).className,
       autoComplete: autoComplete
-    });
+    } as React.HTMLAttributes<unknown>);
   }
 
   // Si no es un form, envolver en div

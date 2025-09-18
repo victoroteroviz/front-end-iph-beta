@@ -66,3 +66,11 @@ export interface Sexo {
 export interface UserRole {
   id: string
 }
+
+export interface IPaginatedUsersResponse {
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+  data: IPaginatedUsers[]
+}

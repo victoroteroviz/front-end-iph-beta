@@ -1,98 +1,114 @@
 /**
  * Ejemplos de uso del sistema de roles IPH
- * Demuestra cómo utilizar los helpers y servicios de roles
+ * NOTA: Estos ejemplos están basados en una API anterior y necesitan actualización
+ * para funcionar con la implementación actual del sistema de roles.
+ *
+ * ⚠️ ARCHIVO DE EJEMPLO - NO USAR EN PRODUCCIÓN
  */
 
-import { 
-  createUserContext, 
-  isSuperAdmin, 
-  isAdmin, 
-  canAccess, 
-  findRoleByName,
-  validateMultipleRoles,
-  getAvailableRoles
-} from '../helper/role.helper';
-import { RoleType } from '../interfaces/role';
+import { canAccess } from '../helper/role/role.helper';
+import type { IRole } from '../interfaces/role/role.interface';
+
+// Mock para funciones que no existen en la implementación actual
+const mockCreateUserContext = (id: number, role: IRole, username?: string) => ({ id, role, username });
+const mockIsSuperAdmin = () => false;
+const mockIsAdmin = () => false;
+const mockFindRoleByName = (name: string): IRole | null => ({ id: 1, nombre: name });
+const mockValidateMultipleRoles = () => ({ isValid: false, message: 'Mock validation' });
+const mockGetAvailableRoles = (): IRole[] => [
+  { id: 1, nombre: 'SuperAdmin' },
+  { id: 2, nombre: 'Administrador' },
+  { id: 3, nombre: 'Superior' },
+  { id: 4, nombre: 'Elemento' }
+];
+
+// Mock para tipos de roles
+const mockRoleType = {
+  SUPERADMIN: 'SuperAdmin',
+  ADMIN: 'Administrador',
+  SUPERIOR: 'Superior',
+  ELEMENTO: 'Elemento'
+} as const;
+
+type MockRoleType = typeof mockRoleType[keyof typeof mockRoleType];
 
 /**
  * Ejemplo 1: Validación básica de roles
  */
 export const exampleBasicValidation = () => {
   // Simular un usuario con rol de Administrador
-  const adminRole = findRoleByName('Administrador');
+  const adminRole = mockFindRoleByName('Administrador');
   if (!adminRole) {
     console.error('Admin role not found');
     return;
   }
 
-  const userContext = createUserContext(123, adminRole, 'juan.admin');
+  const userContext = mockCreateUserContext(123, adminRole, 'juan.admin');
 
   // Verificar si es SuperAdmin (debería ser false)
-  console.log('Is SuperAdmin:', isSuperAdmin(userContext)); // false
+  console.log('Is SuperAdmin:', mockIsSuperAdmin()); // false
 
   // Verificar si es Admin o superior (debería ser true)
-  console.log('Is Admin or higher:', isAdmin(userContext)); // true
+  console.log('Is Admin or higher:', mockIsAdmin()); // true
 
-  // Verificar acceso específico
-  console.log('Can access Superior functions:', canAccess(userContext, RoleType.SUPERIOR)); // true (jerárquico)
-  console.log('Can access SuperAdmin functions:', canAccess(userContext, RoleType.SUPERADMIN)); // false
+  // Verificar acceso específico (usando mock ya que la API actual es diferente)
+  const roles = [adminRole];
+  console.log('Can access Superior functions:', canAccess(mockRoleType.SUPERIOR, roles)); // ejemplo simplificado
+  console.log('Can access SuperAdmin functions:', canAccess(mockRoleType.SUPERADMIN, roles)); // ejemplo simplificado
 };
 
 /**
  * Ejemplo 2: Validación estricta vs jerárquica
  */
 export const exampleStrictVsHierarchical = () => {
-  const superiorRole = findRoleByName('Superior');
+  const superiorRole = mockFindRoleByName('Superior');
   if (!superiorRole) {
     console.error('Superior role not found');
     return;
   }
 
-  const userContext = createUserContext(456, superiorRole, 'maria.superior');
+  const userContext = mockCreateUserContext(456, superiorRole, 'maria.superior');
+  const roles = [superiorRole];
 
   // Validación jerárquica (por defecto) - puede acceder a funciones de Elemento
-  console.log('Can access Elemento (hierarchical):', canAccess(userContext, RoleType.ELEMENTO)); // true
+  console.log('Can access Elemento (hierarchical):', canAccess(mockRoleType.ELEMENTO, roles)); // ejemplo simplificado
 
-  // Validación estricta - solo puede acceder a funciones exactas de Superior
-  console.log('Can access Elemento (strict):', canAccess(userContext, RoleType.ELEMENTO, true)); // false
-  console.log('Can access Superior (strict):', canAccess(userContext, RoleType.SUPERIOR, true)); // true
+  // NOTA: La validación estricta vs jerárquica requiere actualización en la API actual
+  console.log('Can access Elemento (strict): MOCK - función no disponible en API actual');
+  console.log('Can access Superior (strict):', canAccess(mockRoleType.SUPERIOR, roles));
 };
 
 /**
  * Ejemplo 3: Validación de múltiples roles
  */
 export const exampleMultipleRoles = () => {
-  const elementoRole = findRoleByName('Elemento');
+  const elementoRole = mockFindRoleByName('Elemento');
   if (!elementoRole) {
     console.error('Elemento role not found');
     return;
   }
 
-  const userContext = createUserContext(789, elementoRole, 'carlos.elemento');
+  const userContext = mockCreateUserContext(789, elementoRole, 'carlos.elemento');
 
   // Verificar si tiene alguno de los roles administrativos
-  const adminRoles = [RoleType.SUPERADMIN, RoleType.ADMIN];
-  const validation = validateMultipleRoles(userContext, adminRoles);
-  
+  const adminRoles = [mockRoleType.SUPERADMIN, mockRoleType.ADMIN];
+  const validation = mockValidateMultipleRoles();
+
   console.log('Has admin roles:', validation.isValid); // false
   console.log('Validation message:', validation.message);
 
-  // Verificar si tiene algún rol válido del sistema
-  const allRoles = [RoleType.SUPERADMIN, RoleType.ADMIN, RoleType.SUPERIOR, RoleType.ELEMENTO];
-  const anyRoleValidation = validateMultipleRoles(userContext, allRoles);
-  
-  console.log('Has any valid role:', anyRoleValidation.isValid); // true
-  console.log('Matched role:', anyRoleValidation.matchedRole); // 'elemento'
+  // NOTA: La validación de múltiples roles requiere actualización en la API actual
+  console.log('Multiple role validation: MOCK - función simplificada');
 };
 
 /**
  * Ejemplo 4: Listar roles disponibles
  */
 export const exampleListRoles = () => {
-  const roles = getAvailableRoles();
+  const roles = mockGetAvailableRoles();
   console.log('Available roles:', roles);
-  
-  roles.forEach(role => {
+
+  roles.forEach((role: IRole) => {
     console.log(`- ${role.nombre} (ID: ${role.id})`);
   });
 };
@@ -101,20 +117,21 @@ export const exampleListRoles = () => {
  * Ejemplo 5: Uso en un componente simulado
  */
 export const exampleComponentUsage = (currentUserId: number, currentUserRole: string) => {
-  const userRole = findRoleByName(currentUserRole);
+  const userRole = mockFindRoleByName(currentUserRole);
   if (!userRole) {
     console.error(`Role ${currentUserRole} not found`);
     return { canViewUsers: false, canEditUsers: false, canDeleteUsers: false };
   }
 
-  const userContext = createUserContext(currentUserId, userRole);
+  const userContext = mockCreateUserContext(currentUserId, userRole);
+  const roles = [userRole];
 
-  // Diferentes niveles de acceso según el rol
+  // Diferentes niveles de acceso según el rol (adaptado a API actual)
   const permissions = {
-    canViewUsers: canAccess(userContext, RoleType.ELEMENTO), // Todos pueden ver
-    canEditUsers: canAccess(userContext, RoleType.SUPERIOR), // Superior o mayor
-    canDeleteUsers: canAccess(userContext, RoleType.ADMIN), // Admin o mayor
-    canManageRoles: canAccess(userContext, RoleType.SUPERADMIN, true), // Solo SuperAdmin
+    canViewUsers: canAccess(mockRoleType.ELEMENTO, roles), // Todos pueden ver
+    canEditUsers: canAccess(mockRoleType.SUPERIOR, roles), // Superior o mayor
+    canDeleteUsers: canAccess(mockRoleType.ADMIN, roles), // Admin o mayor
+    canManageRoles: canAccess(mockRoleType.SUPERADMIN, roles), // Solo SuperAdmin
   };
 
   console.log(`Permissions for ${currentUserRole}:`, permissions);
@@ -125,18 +142,19 @@ export const exampleComponentUsage = (currentUserId: number, currentUserRole: st
  * Ejemplo 6: Guard para rutas (simulado)
  */
 export const exampleRouteGuard = (
-  currentUserId: number, 
-  currentUserRole: string, 
-  requiredRole: RoleType
+  currentUserId: number,
+  currentUserRole: string,
+  requiredRole: MockRoleType
 ): boolean => {
-  const userRole = findRoleByName(currentUserRole);
+  const userRole = mockFindRoleByName(currentUserRole);
   if (!userRole) {
     console.error('User role not found, access denied');
     return false;
   }
 
-  const userContext = createUserContext(currentUserId, userRole);
-  const hasAccess = canAccess(userContext, requiredRole);
+  const userContext = mockCreateUserContext(currentUserId, userRole);
+  const roles = [userRole];
+  const hasAccess = canAccess(requiredRole, roles);
 
   if (!hasAccess) {
     console.warn(`Access denied: User ${currentUserId} with role ${currentUserRole} cannot access ${requiredRole} route`);
@@ -166,5 +184,5 @@ console.log('\n5. Component Usage (Admin):');
 exampleComponentUsage(100, 'Administrador');
 
 console.log('\n6. Route Guard (Superior accessing Admin route):');
-exampleRouteGuard(200, 'Superior', RoleType.ADMIN);
+exampleRouteGuard(200, 'Superior', mockRoleType.ADMIN);
 */

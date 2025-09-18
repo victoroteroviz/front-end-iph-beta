@@ -46,7 +46,7 @@ import type { IPerfilUsuarioProps } from '../../../../interfaces/components/perf
 const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
   userId,
   mode = 'edit',
-  onSave,
+  onSave: _onSave,
   onCancel,
   className = ''
 }) => {

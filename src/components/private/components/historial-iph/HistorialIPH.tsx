@@ -30,8 +30,7 @@ import PaginacionHistorial from './components/PaginacionHistorial';
 import DetalleIPH from './components/DetalleIPH';
 
 // Helpers
-import { logInfo, logError, logWarning } from '../../../../helper/log/logger.helper';
-import { showError } from '../../../../helper/notification/notification.helper';
+import { logInfo } from '../../../../helper/log/logger.helper';
 
 // Interfaces
 import type { HistorialIPHProps } from '../../../../interfaces/components/historialIph.interface';
@@ -310,7 +309,7 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
         <DetalleIPH
           registro={registroSeleccionado}
           onClose={cerrarDetalle}
-          onEditarEstatus={editarEstatus}
+          onEditarEstatus={(nuevoEstatus) => editarEstatus(registroSeleccionado.id, nuevoEstatus)}
         />
       )}
     </div>

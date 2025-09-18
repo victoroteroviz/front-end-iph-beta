@@ -216,10 +216,7 @@ const getIPHList = async (
     return transformedData;
 
   } catch (error) {
-    logError('InformePolicialService', 'Error getting IPH list', {
-      error: (error as Error).message,
-      params
-    });
+    logError('InformePolicialService', error, `Error getting IPH list - params: ${JSON.stringify(params)}`);
     throw error;
   }
 };

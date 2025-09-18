@@ -3,10 +3,10 @@
  * Soluciona el problema de scroll reset en re-renders
  */
 
-import React, { createContext, useContext, useRef, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useRef, useCallback, type ReactNode } from 'react';
 
 interface ScrollContextType {
-  scrollContainerRef: React.RefObject<HTMLDivElement>;
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
   preserveScrollPosition: () => void;
   restoreScrollPosition: () => void;
 }

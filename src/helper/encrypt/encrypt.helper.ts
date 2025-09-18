@@ -468,7 +468,7 @@ export class EncryptHelper {
    * [IMPLEMENTACIÓN EN PRÓXIMA PARTE]
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async hashPassword(password: string): Promise<HashResult> {
+  public async hashPassword(_password: string): Promise<HashResult> {
     throw new Error('Método no implementado - Parte 2');
   }
 
@@ -477,7 +477,7 @@ export class EncryptHelper {
    * [IMPLEMENTACIÓN EN PRÓXIMA PARTE]
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async verifyPassword(password: string, hash: string): Promise<PasswordVerification> {
+  public async verifyPassword(_password: string, _hash: string): Promise<PasswordVerification> {
     throw new Error('Método no implementado - Parte 2');
   }
 
@@ -487,17 +487,17 @@ export class EncryptHelper {
    * [IMPLEMENTACIÓN EN PRÓXIMA PARTE]
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async encryptData(data: string, passphrase?: string): Promise<EncryptionResult> {
+  public async encryptData(_data: string, _passphrase?: string): Promise<EncryptionResult> {
     throw new Error('Método no implementado - Parte 3');
   }
 
   /**
-   * Desencripta datos sensibles  
+   * Desencripta datos sensibles
    * Si no se proporciona passphrase, usa la de variables de entorno
    * [IMPLEMENTACIÓN EN PRÓXIMA PARTE]
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async decryptData(encryptedData: EncryptionResult, passphrase?: string): Promise<string> {
+  public async decryptData(_encryptedData: EncryptionResult, _passphrase?: string): Promise<string> {
     throw new Error('Método no implementado - Parte 3');
   }
 
@@ -506,7 +506,7 @@ export class EncryptHelper {
    * [IMPLEMENTACIÓN EN PRÓXIMA PARTE]
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public generateSecureToken(length: number = 32): string {
+  public generateSecureToken(_length: number = 32): string {
     throw new Error('Método no implementado - Parte 3');
   }
 }

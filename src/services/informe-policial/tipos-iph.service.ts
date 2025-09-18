@@ -127,10 +127,7 @@ export const getTiposIPH = async (): Promise<ITipoIPH[]> => {
   } catch (error) {
     const errorMessage = (error as Error).message || 'Error al cargar tipos de IPH';
     
-    logError('TiposIPHService', 'Error loading IPH types', {
-      error: errorMessage,
-      useMockData: USE_MOCK_DATA
-    });
+    logError('TiposIPHService', error, `Error loading IPH types - useMockData: ${USE_MOCK_DATA}`);
 
     // En caso de error, devolver array vacío para no romper la UI
     return [];
@@ -155,10 +152,7 @@ export const getTipoIPHById = async (id: string): Promise<ITipoIPH | undefined> 
     
     return tipo;
   } catch (error) {
-    logError('TiposIPHService', 'Error searching IPH type by ID', {
-      searchId: id,
-      error: (error as Error).message
-    });
+    logError('TiposIPHService', error, `Error searching IPH type by ID - searchId: ${id}`);
     
     return undefined;
   }

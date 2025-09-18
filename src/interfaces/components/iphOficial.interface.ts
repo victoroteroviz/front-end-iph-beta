@@ -4,11 +4,14 @@
  */
 
 // Importar interfaces base del sistema
-import type { 
-  I_IPHById, 
-  Estatus, 
-  Tipo, 
-  PrimerRespondiente 
+import type {
+  I_IPHById,
+  Estatus,
+  Tipo,
+  IPrimerRespondiente,
+  ICoordenadas,
+  ITipoIph,
+  IArchivo
 } from '../iph/iph.interface';
 
 // Re-exportar para uso en componentes
@@ -186,22 +189,26 @@ export interface Entrevista {
 
 /**
  * Interface principal para IPH oficial con campos tipados
- * Extiende I_IPHById con tipos específicos en lugar de any
+ * Incluye las propiedades básicas de I_IphData y propiedades extendidas
  */
-export interface IphOficialData extends Omit<I_IPHById, 
-  'conocimiento_hecho' | 
-  'lugar_intervencion' | 
-  'narrativaHechos' | 
-  'detencion_pertenencias' |
-  'cInspeccionVehiculo' |
-  'armas_objetos' |
-  'uso_fuerza' |
-  'entrega_recepcion' |
-  'continuacion' |
-  'ruta_fotos_lugar' |
-  'disposicion_ofc' |
-  'entrevistas'
-> {
+export interface IphOficialData {
+  // Propiedades básicas de I_IphData
+  id?: string | undefined;
+  nReferencia?: string | undefined;
+  nFolioSist?: string | undefined;
+  observaciones?: string | undefined;
+  coordenadas?: ICoordenadas | undefined;
+  hechos?: string | undefined;
+  estatus?: string | undefined;
+  tipoIph?: ITipoIph | undefined;
+  archivos?: IArchivo[] | undefined;
+  fotos?: string[] | undefined;
+  fechaCreacion?: string | undefined;
+
+  // Propiedades adicionales del ResponseIphData
+  primerRespondiente?: IPrimerRespondiente | undefined;
+
+  // Propiedades extendidas tipadas
   conocimiento_hecho?: ConocimientoHecho;
   lugar_intervencion?: LugarIntervencion;
   narrativaHechos?: NarrativaHechos;
@@ -249,7 +256,7 @@ export interface InfoRowProps {
  * Props para sección de información general
  */
 export interface InformacionGeneralProps {
-  data: Pick<IphOficialData, 'n_referencia' | 'n_folio_sist' | 'observaciones' | 'estatus'>;
+  data: Pick<IphOficialData, 'nReferencia' | 'nFolioSist' | 'observaciones' | 'estatus'>;
   loading?: boolean;
   className?: string;
 }
@@ -258,7 +265,7 @@ export interface InformacionGeneralProps {
  * Props para sección de primer respondiente
  */
 export interface PrimerRespondienteProps {
-  data: PrimerRespondiente;
+  data?: IPrimerRespondiente | undefined;
   loading?: boolean;
   className?: string;
 }
@@ -277,8 +284,8 @@ export interface ConocimientoHechosProps {
  */
 export interface LugarIntervencionProps {
   data?: LugarIntervencion;
-  latitud?: string;
-  longitud?: string;
+  latitud?: string | undefined;
+  longitud?: string | undefined;
   loading?: boolean;
   className?: string;
 }
@@ -339,11 +346,11 @@ export interface UseIphOficialComputed {
  */
 export interface BasicIphInfo {
   id: string;
-  n_referencia: string;
-  n_folio_sist: string;
-  estatus: Estatus;
-  tipo: Tipo;
-  fecha_creacion: string;
+  nReferencia: string;
+  nFolioSist: string;
+  estatus: string;
+  tipo: string;
+  fechaCreacion: string;
 }
 
 /**

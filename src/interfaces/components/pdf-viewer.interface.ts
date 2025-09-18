@@ -181,20 +181,24 @@ export interface PDFErrorState {
   type: 'load' | 'render' | 'network' | 'permission' | 'unknown';
 }
 
-// Enums para configuraciones
-export enum PDFZoomMode {
-  FIT_WIDTH = 'fit-width',
-  FIT_HEIGHT = 'fit-height',
-  FIT_PAGE = 'fit-page',
-  ACTUAL_SIZE = 'actual-size',
-  CUSTOM = 'custom'
-}
+// Configuraciones para PDF (const objects para compatibilidad con erasableSyntaxOnly)
+export const PDFZoomMode = {
+  FIT_WIDTH: 'fit-width',
+  FIT_HEIGHT: 'fit-height',
+  FIT_PAGE: 'fit-page',
+  ACTUAL_SIZE: 'actual-size',
+  CUSTOM: 'custom'
+} as const;
 
-export enum PDFViewMode {
-  SINGLE_PAGE = 'single',
-  CONTINUOUS = 'continuous',
-  FACING = 'facing'
-}
+export type PDFZoomMode = typeof PDFZoomMode[keyof typeof PDFZoomMode];
 
-// Re-exportar interfaces de react-pdf si las necesitamos
-export type { PDFDocumentProxy, PDFPageProxy } from 'react-pdf';
+export const PDFViewMode = {
+  SINGLE_PAGE: 'single',
+  CONTINUOUS: 'continuous',
+  FACING: 'facing'
+} as const;
+
+export type PDFViewMode = typeof PDFViewMode[keyof typeof PDFViewMode];
+
+// NOTA: react-pdf types will be imported directly where needed
+// export type { PDFDocumentProxy, PDFPageProxy } from 'react-pdf';

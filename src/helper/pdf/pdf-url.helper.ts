@@ -104,9 +104,9 @@ export const getPdfUrlInfo = (url: string): PDFUrlInfo => {
  * Prepara la URL para react-pdf según su tipo
  */
 export const preparePdfUrl = (
-  url: string, 
-  httpHeaders?: Record<string, string>,
-  withCredentials?: boolean
+  url: string,
+  _httpHeaders?: Record<string, string>,
+  _withCredentials?: boolean
 ): string => {
   const urlInfo = getPdfUrlInfo(url);
   

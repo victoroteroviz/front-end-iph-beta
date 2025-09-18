@@ -139,9 +139,7 @@ const useInformePolicial = (
     } catch (error) {
       const errorMessage = (error as Error).message || 'Error al cargar tipos de IPH';
       
-      logError('InformePolicial', 'Error loading IPH types', { 
-        error: errorMessage
-      });
+      logError('InformePolicial', errorMessage, 'Error loading IPH types');
 
       setState(prev => ({
         ...prev,
@@ -204,10 +202,7 @@ const useInformePolicial = (
     } catch (error) {
       const errorMessage = (error as Error).message || 'Error al cargar los informes';
       
-      logError('InformePolicial', 'Error loading IPH list', { 
-        error: errorMessage,
-        filters: state.filters
-      });
+      logError('InformePolicial', errorMessage, 'Error loading IPH list');
 
       setState(prev => ({
         ...prev,

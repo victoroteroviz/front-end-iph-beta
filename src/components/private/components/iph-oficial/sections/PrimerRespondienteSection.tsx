@@ -25,35 +25,37 @@ const PrimerRespondienteSection: React.FC<PrimerRespondienteProps> = ({
 }) => {
   // TODO: Obtener información adicional del respondiente desde catálogos
   // Por ahora mostramos los campos básicos disponibles
-  
+
+  if (!data) {
+    return (
+      <InfoSection
+        title="PRIMER RESPONDIENTE"
+        isLoading={loading}
+        className={className}
+      >
+        <div className="text-gray-500 text-center py-4">
+          No hay información del primer respondiente disponible
+        </div>
+      </InfoSection>
+    );
+  }
+
   return (
-    <InfoSection 
-      title="PRIMER RESPONDIENTE" 
+    <InfoSection
+      title="PRIMER RESPONDIENTE"
       isLoading={loading}
       className={className}
     >
-      <InfoRow 
-        label="Unidad de Arribo:" 
-        value={data.unidad_arrivo || 'N/A'} 
+      <InfoRow
+        label="Unidad de Arribo:"
+        value={data.unidadArribo || 'N/A'}
       />
-      <InfoRow 
-        label="Número de Elementos:" 
-        value={data.n_elementos || 0} 
+      <InfoRow
+        label="Número de Elementos:"
+        value={data.nElementos || 0}
       />
-      <InfoRow 
-        label="Fecha de Registro:" 
-        value={data.fecha_creacion} 
-        type="date" 
-      />
-      
-      {/* Información adicional si está disponible */}
-      {data.fecha_actualizacion && (
-        <InfoRow 
-          label="Última Actualización:" 
-          value={data.fecha_actualizacion} 
-          type="date" 
-        />
-      )}
+
+      {/* Información adicional del primer respondiente */}
 
       {/* Placeholder para información adicional del respondiente */}
       <div className="mt-4 p-3 bg-gray-50 rounded border-l-4 border-yellow-400">

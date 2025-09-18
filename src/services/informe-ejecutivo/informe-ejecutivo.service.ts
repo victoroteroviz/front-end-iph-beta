@@ -152,29 +152,7 @@ const transformServerDataToInformeEjecutivo = (serverData: any): IInformeEjecuti
         }))
       : [],
 
-    // NUEVAS SECCIONES AGREGADAS
-    conocimiento_hecho: serverData.conocimiento_hecho || null,
-    detencion_pertenencias: Array.isArray(serverData.detencion_pertenencias) 
-      ? serverData.detencion_pertenencias 
-      : [],
-    cInspeccionVehiculo: Array.isArray(serverData.cInspeccionVehiculo) 
-      ? serverData.cInspeccionVehiculo 
-      : [],
-    armas_objetos: Array.isArray(serverData.armas_objetos) 
-      ? serverData.armas_objetos 
-      : [],
-    continuacion: Array.isArray(serverData.continuacion) 
-      ? serverData.continuacion 
-      : [],
-    disposicion_ofc: Array.isArray(serverData.disposicion_ofc) 
-      ? serverData.disposicion_ofc 
-      : [],
-    archivos: Array.isArray(serverData.archivos) 
-      ? serverData.archivos 
-      : [],
-    entrevistas: Array.isArray(serverData.entrevistas) 
-      ? serverData.entrevistas 
-      : [],
+    // NUEVAS SECCIONES AGREGADAS (compatible con IInformeEjecutivo interface)
     
     // Metadatos
     usuario_creador: serverData.usuario_creador,
@@ -220,10 +198,7 @@ const getInformeEjecutivoReal = async (id: string): Promise<IInformeEjecutivo> =
     return transformedData;
 
   } catch (error) {
-    logError('InformeEjecutivoService', 'Error al obtener informe ejecutivo real', {
-      id,
-      error: (error as Error).message
-    });
+    logError('InformeEjecutivoService', error, `Error al obtener informe ejecutivo real - id: ${id}`);
     throw error;
   }
 };
@@ -260,10 +235,7 @@ const exportInformeToPDFReal = async (id: string): Promise<Blob> => {
     return pdfBlob;
 
   } catch (error) {
-    logError('InformeEjecutivoService', 'Error al exportar PDF real', {
-      id,
-      error: (error as Error).message
-    });
+    logError('InformeEjecutivoService', error, `Error al exportar PDF real - id: ${id}`);
     throw error;
   }
 };
@@ -332,10 +304,7 @@ startxref
     return mockBlob;
 
   } catch (error) {
-    logError('InformeEjecutivoService', 'Error al exportar PDF mock', {
-      id,
-      error: (error as Error).message
-    });
+    logError('InformeEjecutivoService', error, `Error al exportar PDF mock - id: ${id}`);
     throw error;
   }
 };

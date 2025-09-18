@@ -29,22 +29,15 @@ const InformacionGeneral: React.FC<InformacionGeneralProps> = ({
       isLoading={loading}
       className={className}
     >
-      <InfoRow label="No. Referencia:" value={data.n_referencia} />
-      <InfoRow label="No. Folio:" value={data.n_folio_sist} />
-      <InfoRow 
-        label="Estatus:" 
-        value={data.estatus?.nombre || 'N/A'} 
+      <InfoRow label="No. Referencia:" value={data.nReferencia} />
+      <InfoRow label="No. Folio:" value={data.nFolioSist} />
+      <InfoRow
+        label="Estatus:"
+        value={data.estatus || 'N/A'}
       />
       <InfoRow label="Observaciones:" value={data.observaciones || 'N/A'} />
       
-      {/* Información adicional del estatus */}
-      {data.estatus && (
-        <InfoRow 
-          label="Última actualización:" 
-          value={data.estatus.fecha_actualizacion} 
-          type="date" 
-        />
-      )}
+      {/* Nota: estatus es ahora un string simple, sin propiedades adicionales */}
     </InfoSection>
   );
 };

@@ -116,11 +116,7 @@ const useEstadisticasUsuario = (config: UseEstadisticasUsuarioConfig = {}): UseE
         hasData: false
       }));
 
-      logError('useEstadisticasUsuario', error, 'Error cargando estadísticas de usuarios', {
-        mes,
-        anio,
-        page
-      });
+      logError('useEstadisticasUsuario', error, `Error cargando estadísticas de usuarios mes:${mes} año:${anio} página:${page}`);
 
       showError(errorMessage, 'Error en Estadísticas');
     }

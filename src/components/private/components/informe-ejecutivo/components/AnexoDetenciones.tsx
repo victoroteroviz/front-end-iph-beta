@@ -166,7 +166,7 @@ const CampoBooleano: React.FC<{
 
 const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
   detencion,
-  puestaDisposicion,
+  puestaDisposicion: _puestaDisposicion,
   className = ''
 }) => {
   // Estado para manejar múltiples detenciones

@@ -31,31 +31,66 @@ const getMockMunicipios = (): IMunicipios[] => [
     id: '1',
     nombre: 'Guadalajara',
     codigo: 'GDL',
-    estado: { id: 1, nombre: 'Jalisco', codigo: 'JAL' }
+    estado: {
+      id: 1,
+      nombre: 'Jalisco',
+      codigo: 'JAL',
+      is_active: true,
+      fecha_creacion: '2024-01-01T00:00:00Z',
+      fecha_actualizacion: '2024-01-01T00:00:00Z'
+    }
   },
   {
     id: '2',
     nombre: 'Zapopan',
     codigo: 'ZAP',
-    estado: { id: 1, nombre: 'Jalisco', codigo: 'JAL' }
+    estado: {
+      id: 1,
+      nombre: 'Jalisco',
+      codigo: 'JAL',
+      is_active: true,
+      fecha_creacion: '2024-01-01T00:00:00Z',
+      fecha_actualizacion: '2024-01-01T00:00:00Z'
+    }
   },
   {
     id: '3',
     nombre: 'Monterrey',
     codigo: 'MTY',
-    estado: { id: 2, nombre: 'Nuevo León', codigo: 'NL' }
+    estado: {
+      id: 2,
+      nombre: 'Nuevo León',
+      codigo: 'NL',
+      is_active: true,
+      fecha_creacion: '2024-01-01T00:00:00Z',
+      fecha_actualizacion: '2024-01-01T00:00:00Z'
+    }
   },
   {
     id: '4',
     nombre: 'San Pedro Garza García',
     codigo: 'SPG',
-    estado: { id: 2, nombre: 'Nuevo León', codigo: 'NL' }
+    estado: {
+      id: 2,
+      nombre: 'Nuevo León',
+      codigo: 'NL',
+      is_active: true,
+      fecha_creacion: '2024-01-01T00:00:00Z',
+      fecha_actualizacion: '2024-01-01T00:00:00Z'
+    }
   },
   {
     id: '5',
     nombre: 'Ciudad de México',
     codigo: 'CDMX',
-    estado: { id: 3, nombre: 'Ciudad de México', codigo: 'CDMX' }
+    estado: {
+      id: 3,
+      nombre: 'Ciudad de México',
+      codigo: 'CDMX',
+      is_active: true,
+      fecha_creacion: '2024-01-01T00:00:00Z',
+      fecha_actualizacion: '2024-01-01T00:00:00Z'
+    }
   }
 ];
 

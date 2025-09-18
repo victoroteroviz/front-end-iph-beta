@@ -1,7 +1,7 @@
 services:
   frontend:
     build: .
-    container_name: iph-frontend
+    # container_name: iph-frontend
     # image: iph-frontend:0.0.1,
     restart: always
     ports:

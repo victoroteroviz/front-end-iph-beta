@@ -90,21 +90,25 @@ export interface IRouteAccessCheck {
 // ENUMS Y CONSTANTES
 // =====================================================
 
-export enum AuthValidationError {
-  NO_TOKEN = 'no_token',
-  NO_USER_DATA = 'no_user_data',
-  NO_ROLES = 'no_roles',
-  INSUFFICIENT_ROLES = 'insufficient_roles',
-  EXPIRED_SESSION = 'expired_session',
-  INVALID_DATA = 'invalid_data'
-}
+export const AuthValidationError = {
+  NO_TOKEN: 'no_token',
+  NO_USER_DATA: 'no_user_data',
+  NO_ROLES: 'no_roles',
+  INSUFFICIENT_ROLES: 'insufficient_roles',
+  EXPIRED_SESSION: 'expired_session',
+  INVALID_DATA: 'invalid_data'
+} as const;
 
-export enum RedirectReason {
-  NOT_AUTHENTICATED = 'not_authenticated',
-  INSUFFICIENT_ROLES = 'insufficient_roles',
-  EXPIRED_SESSION = 'expired_session',
-  ERROR = 'error'
-}
+export type AuthValidationError = typeof AuthValidationError[keyof typeof AuthValidationError];
+
+export const RedirectReason = {
+  NOT_AUTHENTICATED: 'not_authenticated',
+  INSUFFICIENT_ROLES: 'insufficient_roles',
+  EXPIRED_SESSION: 'expired_session',
+  ERROR: 'error'
+} as const;
+
+export type RedirectReason = typeof RedirectReason[keyof typeof RedirectReason];
 
 // =====================================================
 // CONFIGURACIONES POR DEFECTO

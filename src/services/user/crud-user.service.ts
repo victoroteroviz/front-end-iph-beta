@@ -2,7 +2,7 @@
 import { API_BASE_URL } from "../../config/env.config";
 
 import { HttpHelper } from "../../helper/http/http.helper";
-import type { IPaginatedUsers } from "../../interfaces/user/crud/get-paginated.users.interface";
+import type { IPaginatedUsers, IPaginatedUsersResponse } from "../../interfaces/user/crud/get-paginated.users.interface";
 import type {
   ICreatedUser,
   ICreateUser,
@@ -36,7 +36,7 @@ export interface GetUsuariosParams {
 /**
  * Obtiene usuarios paginados con parámetros de búsqueda y ordenamiento
  * @param params - Parámetros de paginación, ordenamiento y búsqueda
- * @returns Promise<IPaginatedUsers>
+ * @returns Promise<IPaginatedUsersResponse>
  */
 export const getUsuarios = async ({
   page = 1,
@@ -44,15 +44,15 @@ export const getUsuarios = async ({
   order = SortOrder.ASC,
   search = "",
   searchBy = UserSearchParams.NOMBRE,
-}: GetUsuariosParams): Promise<IPaginatedUsers> => {
+}: GetUsuariosParams): Promise<IPaginatedUsersResponse> => {
   const url: string = `${URL_API}paginated?page=${page}&orderBy=${orderBy}&order=${order}&search=${encodeURIComponent(
     search
   )}&searchBy=${searchBy}`;
   try {
-    const response = await http.get<IPaginatedUsers>(url);
-    const usuarios: IPaginatedUsers = response.data;
-    if (!usuarios) throw new Error("No se encontraron usuarios");
-    return usuarios;
+    const response = await http.get<IPaginatedUsersResponse>(url);
+    const usuariosResponse: IPaginatedUsersResponse = response.data;
+    if (!usuariosResponse) throw new Error("No se encontraron usuarios");
+    return usuariosResponse;
   } catch (error) {
     throw new Error(
       (error as Error).message || "Error desconocido, habla con soporte"

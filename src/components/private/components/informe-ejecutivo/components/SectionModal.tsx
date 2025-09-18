@@ -318,10 +318,10 @@ const SectionModal: React.FC<SectionModalProps> = ({
                   className="mb-0" 
                 />
               ) : activeTab === 'anexo-a-detenciones' || activeTab === 'anexo-a-detenciones-civica' ? (
-                <AnexoDetenciones 
-                  detencion={getActiveTabData()} 
-                  puestaDisposicion={Array.isArray(iph) ? iph[0]?.puestaDisposicion : iph?.puestaDisposicion}
-                  className="mb-0" 
+                <AnexoDetenciones
+                  detencion={getActiveTabData()}
+                  puestaDisposicion={undefined}
+                  className="mb-0"
                 />
               ) : activeTab === 'puesta-disposicion' ? (
                 <PuestaDisposicion 

@@ -13,7 +13,7 @@ import {
   AlertCircle,
   Users
 } from 'lucide-react';
-import type { IUsuariosTableProps } from '../../../../../interfaces/components/usuarios.interface';
+import type { IUsuariosTableProps, SortableColumn } from '../../../../../interfaces/components/usuarios.interface';
 import type { IPaginatedUsers } from '../../../../../interfaces/user/crud/get-paginated.users.interface';
 import UsuarioViewModal from './UsuarioViewModal';
 
@@ -83,7 +83,7 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
       : <ChevronDown className="h-4 w-4 text-[#948b54]" />;
   };
 
-  const handleSort = (columnKey: string) => {
+  const handleSort = (columnKey: SortableColumn) => {
     if (loading) return;
     onSort(columnKey);
   };
@@ -175,7 +175,7 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
                     ${column.sortable ? 'cursor-pointer hover:bg-gray-100 select-none' : ''}
                     ${column.className}
                   `}
-                  onClick={() => column.sortable && handleSort(column.key)}
+                  onClick={() => column.sortable && handleSort(column.key as SortableColumn)}
                 >
                   <div className="flex items-center gap-1">
                     <span>{column.label}</span>
@@ -188,9 +188,9 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
 
           {/* Body de tabla */}
           <tbody className="bg-white divide-y divide-gray-200">
-            {Array.isArray(usuarios) && usuarios.map((usuario) => (
+            {Array.isArray(usuarios) && usuarios.map((usuario, index) => (
               <tr
-                key={usuario.id}
+                key={usuario.id || `usuario-${index}`}
                 onClick={() => handleRowClick(usuario)}
                 className="hover:bg-gray-50 cursor-pointer transition-colors duration-150"
                 title="Clic para ver información detallada"
@@ -202,7 +202,7 @@ const UsuariosTable: React.FC<IUsuariosTableProps> = ({
                       {formatUserName(usuario)}
                     </div>
                     <div className="text-sm text-gray-500 font-poppins">
-                      {usuario.correo_electronico}
+                      {usuario.correo_electronico || 'No especificado'}
                     </div>
                   </div>
                 </td>

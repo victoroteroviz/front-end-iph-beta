@@ -72,7 +72,7 @@ const IphOficial: React.FC<IphOficialProps> = ({
    * Maneja la impresión del documento
    */
   const handlePrint = () => {
-    logInfo('IphOficial', 'Impresión solicitada', { id, referencia: data?.n_referencia });
+    logInfo('IphOficial', 'Impresión solicitada', { id, referencia: data?.nReferencia });
     
     // TODO: Implementar funcionalidad de impresión optimizada
     window.print();
@@ -296,8 +296,8 @@ const IphOficial: React.FC<IphOficialProps> = ({
             {/* Información General */}
             <InformacionGeneral
               data={{
-                n_referencia: data.n_referencia,
-                n_folio_sist: data.n_folio_sist,
+                nReferencia: data.nReferencia,
+                nFolioSist: data.nFolioSist,
                 observaciones: data.observaciones,
                 estatus: data.estatus
               }}
@@ -306,7 +306,7 @@ const IphOficial: React.FC<IphOficialProps> = ({
 
             {/* Primer Respondiente */}
             <PrimerRespondienteSection
-              data={data.primer_respondiente}
+              data={Array.isArray(data.primerRespondiente) ? undefined : data.primerRespondiente}
               loading={loading}
             />
 
@@ -319,8 +319,8 @@ const IphOficial: React.FC<IphOficialProps> = ({
             {/* Lugar de Intervención */}
             <LugarIntervencionSection
               data={data.lugar_intervencion}
-              latitud={data.latitud}
-              longitud={data.longitud}
+              latitud={data.coordenadas?.latitud}
+              longitud={data.coordenadas?.longitud}
               loading={loading}
             />
 

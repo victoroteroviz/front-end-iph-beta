@@ -85,8 +85,8 @@ const UsuarioViewModal: React.FC<IUsuarioViewModalProps> = ({
       return (
         <div className="space-y-2">
           {/* Roles válidos */}
-          {validRoles.map((userRole) => (
-            <div key={userRole.id || `role-${userRole.privilegioId}`} className="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
+          {validRoles.map((userRole, index) => (
+            <div key={userRole.id || `valid-role-${userRole.privilegioId}-${index}`} className="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#948b54] text-white">
                 {userRole.privilegio?.nombre}
               </span>
@@ -98,7 +98,7 @@ const UsuarioViewModal: React.FC<IUsuarioViewModalProps> = ({
 
           {/* Roles incompletos */}
           {incompleteRoles.map((userRole, index) => (
-            <div key={userRole?.id || `incomplete-role-${index}`} className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div key={`incomplete-role-${userRole?.id || userRole?.privilegioId || index}`} className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500 text-white">
                 Privilegio ID: {userRole?.privilegioId || 'Desconocido'}
               </span>

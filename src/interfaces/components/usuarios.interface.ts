@@ -9,10 +9,12 @@ import type { IPaginatedUsers } from '../user/crud/get-paginated.users.interface
 // INTERFACES DE FILTROS Y BÚSQUEDA
 // =====================================================
 
+export type SortableColumn = 'nombre' | 'cuip' | 'cup' | 'gradoId' | 'cargoId';
+
 export interface IUsuariosFilters {
   search: string;
   searchBy: 'nombre' | 'cuip' | 'cup' | 'grado' | 'cargo';
-  orderBy: 'nombre' | 'cuip' | 'cup' | 'gradoId' | 'cargoId';
+  orderBy: SortableColumn;
   order: 'ASC' | 'DESC';
   page: number;
 }
@@ -99,7 +101,7 @@ export interface IUsuariosTableProps {
   filters: IUsuariosFilters;
   canEdit: boolean;
   canDelete: boolean;
-  onSort: (column: string) => void;
+  onSort: (column: SortableColumn) => void;
   onEdit: (usuario: IPaginatedUsers) => void;
   onDelete: (usuario: IPaginatedUsers) => void;
   className?: string;
@@ -174,7 +176,7 @@ export interface IUseUsuariosReturn {
   updateFilters: (filters: Partial<IUsuariosFilters>) => void;
   handleSearch: () => void;
   handleClearFilters: () => void;
-  handleSort: (column: string) => void;
+  handleSort: (column: SortableColumn) => void;
 
   // Funciones de paginación
   handlePageChange: (page: number) => void;
@@ -203,24 +205,28 @@ export interface IUsuariosValidation {
 // ENUMS Y CONSTANTES
 // =====================================================
 
-export enum UsuariosAction {
-  CREATE = 'create',
-  EDIT = 'edit',
-  DELETE = 'delete',
-  VIEW_STATS = 'view_stats',
-  EXPORT = 'export'
-}
+export const UsuariosAction = {
+  CREATE: 'create',
+  EDIT: 'edit',
+  DELETE: 'delete',
+  VIEW_STATS: 'view_stats',
+  EXPORT: 'export'
+} as const;
 
-export enum UsuariosPermission {
-  MANAGE_ALL_USERS = 'manage_all_users',
-  MANAGE_TEAM_USERS = 'manage_team_users',
-  VIEW_ALL_USERS = 'view_all_users',
-  VIEW_TEAM_USERS = 'view_team_users',
-  CREATE_USERS = 'create_users',
-  EDIT_USERS = 'edit_users',
-  DELETE_USERS = 'delete_users',
-  VIEW_USER_STATS = 'view_user_stats'
-}
+export type UsuariosAction = typeof UsuariosAction[keyof typeof UsuariosAction];
+
+export const UsuariosPermission = {
+  MANAGE_ALL_USERS: 'manage_all_users',
+  MANAGE_TEAM_USERS: 'manage_team_users',
+  VIEW_ALL_USERS: 'view_all_users',
+  VIEW_TEAM_USERS: 'view_team_users',
+  CREATE_USERS: 'create_users',
+  EDIT_USERS: 'edit_users',
+  DELETE_USERS: 'delete_users',
+  VIEW_USER_STATS: 'view_user_stats'
+} as const;
+
+export type UsuariosPermission = typeof UsuariosPermission[keyof typeof UsuariosPermission];
 
 export const USUARIOS_SEARCH_OPTIONS = [
   { value: 'nombre', label: 'Nombre' },
