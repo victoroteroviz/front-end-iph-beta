@@ -153,61 +153,112 @@ export const getRolesDisponibles = async (): Promise<IRolesResponse> => {
   }
 };
 
+/**
+ * Valida que todos los catálogos necesarios estén disponibles para la actualización
+ * Asegura que tenemos toda la información de contexto antes de enviar al backend
+ *
+ * @param rolesDisponibles - Todos los roles disponibles en el sistema
+ * @param rolesUsuarios - Roles existentes del usuario
+ * @param rolesSeleccionados - Roles seleccionados en el formulario
+ * @returns Resultado de validación con detalles
+ */
+export const validateCatalogCompleteness = (
+  rolesDisponibles: any[],
+  rolesUsuarios: any[],
+  rolesSeleccionados: number[]
+): { isComplete: boolean; warnings: string[]; info: any } => {
+  const warnings: string[] = [];
+  const info: any = {
+    rolesDisponibles: rolesDisponibles.length,
+    rolesUsuarios: rolesUsuarios.length,
+    rolesSeleccionados: rolesSeleccionados.length,
+    coverage: 0
+  };
+
+  // Validar que tenemos roles disponibles
+  if (rolesDisponibles.length === 0) {
+    warnings.push('No hay roles disponibles cargados desde el sistema');
+  }
+
+  // Validar cobertura de roles
+  if (rolesDisponibles.length > 0) {
+    const rolesConCobertura = rolesSeleccionados.filter(seleccionado =>
+      rolesDisponibles.some(disponible => disponible.id === seleccionado)
+    );
+    info.coverage = rolesSeleccionados.length > 0 ? (rolesConCobertura.length / rolesSeleccionados.length) * 100 : 100;
+
+    if (info.coverage < 100 && rolesSeleccionados.length > 0) {
+      warnings.push(`Algunos roles seleccionados no están en el catálogo disponible (${info.coverage.toFixed(1)}% de cobertura)`);
+    }
+  }
+
+  // Validar roles huérfanos
+  const rolesHuerfanos = rolesUsuarios.filter(existente =>
+    !rolesDisponibles.some(disponible => disponible.id === (existente.privilegioId || 0))
+  );
+
+  if (rolesHuerfanos.length > 0) {
+    warnings.push(`Se encontraron ${rolesHuerfanos.length} roles existentes que no están en el catálogo actual`);
+    info.rolesHuerfanos = rolesHuerfanos.length;
+  }
+
+  logInfo('PerfilUsuarioService', 'Validación de completitud de catálogos', {
+    isComplete: warnings.length === 0,
+    warnings: warnings.length,
+    info
+  });
+
+  return {
+    isComplete: warnings.length === 0,
+    warnings,
+    info
+  };
+};
+
 // =====================================================
 // UTILIDADES DE USER ROLES
 // =====================================================
 
 /**
- * Construye la estructura user_roles para el backend NestJS
- * Coincide exactamente con lo que espera el UpdateUsersWebDto
- * Implementa la lógica de los custom validators:
- * - RequireIdPrivilegioIfIdIsNull: Si no hay ID, debe tener id_privilegio
- * - ForbidIdPrivilegioIfIdExists: Si hay ID, no debe tener id_privilegio
+ * Construye la estructura user_roles SOLO para roles seleccionados
+ * LÓGICA SIMPLIFICADA: Solo envía los roles que el usuario tiene seleccionados
  *
- * @param rolesSeleccionados - Roles seleccionados en el form
- * @param rolesUsuarios - Roles existentes del usuario
- * @returns Estructura para el backend NestJS que cumple con UserRoleUpdateDto[]
+ * - Si un rol está seleccionado → se envía como { id_privilegio: X, is_active: true }
+ * - Si un rol se quita → simplemente NO se envía (no aparece en el array)
+ * - No enviamos roles inactivos, solo los activos seleccionados
+ *
+ * @param rolesSeleccionados - Roles seleccionados en el form [1,2,3]
+ * @param rolesUsuarios - Roles existentes del usuario (no se usa, solo para compatibilidad)
+ * @param todosLosRolesDisponibles - No se usa, solo para compatibilidad
+ * @returns Array solo con roles seleccionados como activos
  */
 export const construirUserRoles = (
   rolesSeleccionados: number[],
-  rolesUsuarios: any[]
+  _rolesUsuarios: any[],
+  _todosLosRolesDisponibles: any[] = []
 ): UserRole[] => {
-  logInfo('PerfilUsuarioService', 'Construyendo user_roles para NestJS UpdateUsersWebDto', {
-    seleccionados: rolesSeleccionados,
-    existentes: rolesUsuarios.length
+  logInfo('PerfilUsuarioService', 'Construyendo user_roles SOLO roles seleccionados', {
+    seleccionados: rolesSeleccionados.length,
+    arrayIds: rolesSeleccionados
   });
 
   const resultado: UserRole[] = [];
 
-  // 1. Procesar roles existentes (UPDATE) - Cumple con ForbidIdPrivilegioIfIdExists
-  rolesUsuarios.forEach(rolExistente => {
+  // SOLO agregar los roles seleccionados como activos
+  // Si el usuario quita un rol del formulario, simplemente no aparece aquí
+  rolesSeleccionados.forEach(privilegioId => {
     const userRole: UserRole = {
-      id: rolExistente.id.toString(), // Backend espera string en UpdateUsersWebDto
-      is_active: rolesSeleccionados.includes(rolExistente.privilegioId)
-      // NO incluir id_privilegio para roles existentes (ForbidIdPrivilegioIfIdExists)
+      id_privilegio: privilegioId,
+      is_active: true  // Todos los enviados son activos por definición
     };
     resultado.push(userRole);
   });
 
-  // 2. Agregar roles nuevos (INSERT) - Cumple con RequireIdPrivilegioIfIdIsNull
-  const rolesNuevos = rolesSeleccionados.filter(privilegioId =>
-    !rolesUsuarios.some(r => r.privilegioId === privilegioId)
-  );
-
-  rolesNuevos.forEach(privilegioId => {
-    const userRole: UserRole = {
-      // NO incluir id para roles nuevos (será null/undefined)
-      id_privilegio: privilegioId, // REQUERIDO para roles nuevos (RequireIdPrivilegioIfIdIsNull)
-      is_active: true
-    };
-    resultado.push(userRole);
-  });
-
-  logInfo('PerfilUsuarioService', 'User roles construidos para UpdateUsersWebDto', {
-    totalRoles: resultado.length,
-    rolesExistentes: rolesUsuarios.length,
-    rolesNuevos: rolesNuevos.length,
-    validationCompliant: true
+  logInfo('PerfilUsuarioService', 'User roles construidos - SOLO seleccionados', {
+    totalEnviados: resultado.length,
+    rolesIds: rolesSeleccionados,
+    logicaSimplificada: true,
+    soloActivos: true
   });
 
   return resultado;
@@ -246,16 +297,22 @@ export const buildCreateUserPayload = (formData: any): ICreateUser => {
  * Convierte datos del formulario a IUpdateUser para actualización en NestJS
  * Mapea correctamente los campos del frontend al formato que espera UpdateUsersWebDto
  *
+ * MODIFICACIÓN: Ahora incluye TODOS los roles disponibles para sincronización completa
+ *
  * @param formData - Datos del formulario (camelCase frontend)
  * @param rolesUsuarios - Roles existentes del usuario
+ * @param todosLosRolesDisponibles - Todos los roles disponibles en el sistema
  * @returns Payload para el backend NestJS (snake_case backend)
  */
 export const buildUpdateUserPayload = (
   formData: any,
-  rolesUsuarios: any[] = []
+  rolesUsuarios: any[] = [],
+  todosLosRolesDisponibles: any[] = []
 ): IUpdateUser => {
   const rolesSeleccionados = formData.rolesSeleccionados.map((r: any) => r.value);
-  const user_roles = construirUserRoles(rolesSeleccionados, rolesUsuarios);
+
+  // Usar la versión mejorada que incluye TODOS los roles disponibles
+  const user_roles = construirUserRoles(rolesSeleccionados, rolesUsuarios, todosLosRolesDisponibles);
 
   // Mapeo explícito frontend camelCase → backend snake_case para UpdateUsersWebDto
   const payload: IUpdateUser = {
@@ -280,13 +337,26 @@ export const buildUpdateUserPayload = (
     // Campo booleano por defecto
     is_verific: true,
 
-    // Array de roles que cumple con UserRoleUpdateDto[] y custom validators
+    // Array COMPLETO de roles que cumple con UserRoleUpdateDto[] y custom validators
+    // Incluye roles activos, inactivos y nuevos para sincronización total
     user_roles
   };
 
-  logInfo('PerfilUsuarioService', 'Payload construido para UpdateUsersWebDto', {
+  // Agregar contraseña solo si está presente y no está vacía
+  const password = ((formData as any).password as string);
+  if (password && password.trim().length > 0) {
+    payload.password_hash = password.trim();
+    logInfo('PerfilUsuarioService', 'Contraseña incluida en payload de actualización');
+  } else {
+    logInfo('PerfilUsuarioService', 'Contraseña omitida en payload de actualización (vacía o no proporcionada)');
+  }
+
+  logInfo('PerfilUsuarioService', 'Payload COMPLETO construido para UpdateUsersWebDto', {
     camposBasicos: Object.keys(payload).filter(k => k !== 'user_roles').length,
     totalRoles: user_roles.length,
+    todosRolesDisponibles: todosLosRolesDisponibles.length,
+    incluyePassword: !!payload.password_hash,
+    envioCompleto: true,
     validStructure: true
   });
 

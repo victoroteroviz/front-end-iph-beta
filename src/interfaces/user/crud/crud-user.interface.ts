@@ -53,6 +53,7 @@ export interface IUpdateUser {
   municipioId: number
   adscripcionId: number
   sexoId: number
+  password_hash?: string  // Campo opcional para actualización de contraseña
   user_roles: UserRole[]
 }
 

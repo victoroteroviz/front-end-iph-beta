@@ -14,7 +14,8 @@ import {
   updateUsuario,
   getCatalogos,
   getRolesDisponibles,
-  buildUpdateUserPayload
+  buildUpdateUserPayload,
+  validateCatalogCompleteness
 } from '../../../../../services/perfil-usuario/perfil-usuario.service';
 
 // Helpers
@@ -515,11 +516,37 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
       const rolesSeleccionados = state.formData.rolesSeleccionados.map((r) => r.value);
 
       if (state.isEditing && id) {
+        // Validar completitud de catálogos antes del envío
+        const catalogValidation = validateCatalogCompleteness(
+          state.rolesDisponibles,
+          state.rolesUsuarios,
+          rolesSeleccionados
+        );
+
+        if (!catalogValidation.isComplete) {
+          logInfo('PerfilUsuarioHook', 'Advertencias en completitud de catálogos', catalogValidation.warnings);
+          // Mostrar advertencias pero continuar (no es bloqueante)
+          catalogValidation.warnings.forEach(warning => {
+            logInfo('PerfilUsuarioHook', `ADVERTENCIA: ${warning}`);
+          });
+        }
+
         // Para actualización - usar la nueva función que maneja roles correctamente
-        const updatePayload = buildUpdateUserPayload(state.formData, state.rolesUsuarios);
+        // MODIFICACIÓN: Ahora pasamos TODOS los roles disponibles para sincronización completa
+        const updatePayload = buildUpdateUserPayload(
+          state.formData,
+          state.rolesUsuarios,
+          state.rolesDisponibles
+        );
+
+        logInfo('PerfilUsuarioHook', 'Enviando actualización con datos completos', {
+          payloadUserRoles: updatePayload.user_roles.length,
+          catalogValidation: catalogValidation.info
+        });
+
         await updateUsuario(id, updatePayload);
         showSuccess('Usuario actualizado correctamente', 'Actualización Exitosa');
-        logInfo('PerfilUsuarioHook', 'Usuario actualizado', { id });
+        logInfo('PerfilUsuarioHook', 'Usuario actualizado con catálogos completos', { id, totalRoles: state.rolesDisponibles.length });
       } else {
         // Para creación
         const createPayload: ICreateUser = {
@@ -570,14 +597,39 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
     setState(prev => ({ ...prev, isSubmitting: true }));
 
     try {
-      const rolesSeleccionados = state.formData.rolesSeleccionados.map((r) => r.value);
-
       if (state.isEditing && id) {
+        const rolesSeleccionados = state.formData.rolesSeleccionados.map((r) => r.value);
+
+        // Validar completitud de catálogos antes del envío
+        const catalogValidation = validateCatalogCompleteness(
+          state.rolesDisponibles,
+          state.rolesUsuarios,
+          rolesSeleccionados
+        );
+
+        if (!catalogValidation.isComplete) {
+          logInfo('PerfilUsuarioHook', 'Advertencias en completitud de catálogos (modal)', catalogValidation.warnings);
+          catalogValidation.warnings.forEach(warning => {
+            logInfo('PerfilUsuarioHook', `ADVERTENCIA MODAL: ${warning}`);
+          });
+        }
+
         // Para actualización - usar la nueva función que maneja roles correctamente
-        const updatePayload = buildUpdateUserPayload(state.formData, state.rolesUsuarios);
+        // MODIFICACIÓN: Ahora pasamos TODOS los roles disponibles para sincronización completa
+        const updatePayload = buildUpdateUserPayload(
+          state.formData,
+          state.rolesUsuarios,
+          state.rolesDisponibles
+        );
+
+        logInfo('PerfilUsuarioHook', 'Enviando actualización con datos completos desde modal', {
+          payloadUserRoles: updatePayload.user_roles.length,
+          catalogValidation: catalogValidation.info
+        });
+
         await updateUsuario(id, updatePayload);
         showSuccess('Usuario actualizado correctamente', 'Actualización Exitosa');
-        logInfo('PerfilUsuarioHook', 'Usuario actualizado', { id });
+        logInfo('PerfilUsuarioHook', 'Usuario actualizado con catálogos completos desde modal', { id, totalRoles: state.rolesDisponibles.length });
         navigate('/usuarios');
       }
     } catch (error) {

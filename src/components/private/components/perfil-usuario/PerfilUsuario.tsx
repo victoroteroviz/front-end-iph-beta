@@ -16,7 +16,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { User, Mail, Phone, IdCard, Users, MapPin, Briefcase, Award } from 'lucide-react';
+import { User, Mail, IdCard, Users, MapPin, Briefcase, Award } from 'lucide-react';
 
 // Hook personalizado
 import usePerfilUsuario from './hooks/usePerfilUsuario';
@@ -46,7 +46,6 @@ import type { IPerfilUsuarioProps } from '../../../../interfaces/components/perf
 const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
   userId,
   mode = 'edit',
-  onSave: _onSave,
   onCancel,
   className = ''
 }) => {
@@ -286,20 +285,28 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
           </div>
         </FormSection>
 
-        {/* Sección: Seguridad (solo para creación) */}
-        {!isEditing && (
-          <FormSection title="Seguridad" icon={Award}>
-            <div className="grid md:grid-cols-1 gap-4">
-              <FormField
-                label="Contraseña"
-                type="password"
-                value={formData.password}
-                onChange={(value) => updateFormData({ password: value })}
-                error={formErrors.password}
-                placeholder="Ingresa tu contraseña"
-                required={!isEditing}
-                autoComplete="new-password"
-              />
+        {/* Sección: Seguridad (disponible tanto para creación como edición) */}
+        <FormSection title="Seguridad" icon={Award}>
+          <div className="grid md:grid-cols-1 gap-4">
+            {/* Información adicional para modo edición */}
+            {isEditing && (
+              <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Nota:</strong> Deja este campo vacío si no deseas cambiar la contraseña.
+                </p>
+              </div>
+            )}
+
+            <FormField
+              label={isEditing ? "Nueva Contraseña (opcional)" : "Contraseña"}
+              type="password"
+              value={formData.password}
+              onChange={(value) => updateFormData({ password: value })}
+              error={formErrors.password}
+              placeholder={isEditing ? "Ingresa nueva contraseña (opcional)" : "Ingresa tu contraseña"}
+              required={!isEditing}
+              autoComplete="new-password"
+            />
 
               {/* Requisitos de contraseña - Lista dinámica siempre visible */}
               <div className="mt-3 text-sm bg-[#fdf7f1] p-3 rounded-lg border border-[#c2b186]">
@@ -370,7 +377,6 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
               </div>
             </div>
           </FormSection>
-        )}
 
         {/* Sección: Roles (solo si puede editar roles) */}
         {canViewSensitiveData && (
