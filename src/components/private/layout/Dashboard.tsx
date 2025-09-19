@@ -13,7 +13,7 @@
  */
 
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 
 // Componentes atómicos
@@ -36,21 +36,33 @@ import type { DashboardProps } from '../../../interfaces/components/dashboard.in
 /**
  * Componente interno que usa el scroll context
  */
-const DashboardContent: React.FC<DashboardProps> = ({ 
+const DashboardContent: React.FC<DashboardProps> = ({
   children,
   className = ''
 }) => {
   const { scrollContainerRef } = useScrollContext();
-  const { 
-    userRole, 
-    userData, 
-    isAuthenticated, 
-    isLoading, 
-    logout 
+  const location = useLocation();
+  const {
+    userRole,
+    userData,
+    isAuthenticated,
+    isLoading,
+    logout
   } = useUserSession();
 
   // Hook para manejo del sidebar responsive
   const sidebar = useSidebar();
+
+  // Resetear scroll cuando cambia la ruta
+  React.useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+      logInfo('Dashboard', 'Scroll reset on route change', {
+        pathname: location.pathname,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [location.pathname, scrollContainerRef]);
 
   // Log cuando se monta el dashboard
   React.useEffect(() => {

@@ -30,7 +30,7 @@ const GraficaCard: React.FC<GraficaCardProps> = ({
   const availableYears = useMemo(() => {
     const currentYear = new Date().getFullYear();
     const years = [];
-    for (let year = currentYear - 2; year <= currentYear + 1; year++) {
+    for (let year = currentYear - 2; year <= currentYear; year++) {
       years.push(year);
     }
     return years;

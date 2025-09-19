@@ -157,6 +157,7 @@ const PaginacionHistorial: React.FC<PaginacionHistorialProps> = ({
               bg-white text-gray-900
               focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
               disabled:opacity-50 disabled:cursor-not-allowed
+              cursor-pointer
             "
             aria-label="Seleccionar página"
           >

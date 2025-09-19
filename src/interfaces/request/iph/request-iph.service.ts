@@ -4,5 +4,6 @@ export interface getIph{
   order: string;
   search: string;
   searchBy: string;
+  type?: string;
 }
 

@@ -294,7 +294,13 @@ export const getAllIph = async (params: getIph ={
   search: "",
   searchBy: "n_referencia"
 }): Promise<IPaginatedIPH> => {
-  const url: string = `${urlFather}/paginated?page=${params.page}&orderBy=${params.orderBy}&order=${params.order}&search=${encodeURIComponent(params.search)}&searchBy=${params.searchBy}`;
+  // Construir URL base
+  let url: string = `${urlFather}/paginated?page=${params.page}&orderBy=${params.orderBy}&order=${params.order}&search=${encodeURIComponent(params.search)}&searchBy=${params.searchBy}`;
+
+  // Agregar parámetro type si está presente
+  if (params.type && params.type.trim() !== '') {
+    url += `&type=${encodeURIComponent(params.type)}`;
+  }
 
   try {
     const response = await http.get<IPaginatedIPH>(url);

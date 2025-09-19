@@ -109,7 +109,7 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
                   focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725]
                   hover:border-[#4d4725]/40 hover:shadow-lg
                   disabled:opacity-50 disabled:cursor-not-allowed
-                  transition-all duration-300 ease-out
+                  cursor-pointer transition-all duration-300 ease-out
                   appearance-none text-center
                   group-hover:shadow-md
                 "
@@ -152,7 +152,7 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
                   focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725]
                   hover:border-[#4d4725]/40 hover:shadow-lg
                   disabled:opacity-50 disabled:cursor-not-allowed
-                  transition-all duration-300 ease-out
+                  cursor-pointer transition-all duration-300 ease-out
                   appearance-none text-center
                   group-hover:shadow-md
                 "

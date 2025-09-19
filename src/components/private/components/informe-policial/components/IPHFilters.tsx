@@ -7,7 +7,6 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Search, X, RefreshCw, Filter, SortAsc, SortDesc } from 'lucide-react';
 import type { IIPHFiltersProps } from '../../../../../interfaces/components/informe-policial.interface';
 import { SEARCH_OPTIONS, ORDER_OPTIONS } from '../../../../../interfaces/components/informe-policial.interface';
-
 const IPHFilters: React.FC<IIPHFiltersProps> = ({
   filters,
   loading,
@@ -53,6 +52,7 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
     debouncedSearch(value);
   }, [debouncedSearch]);
 
+
   /**
    * Efecto para sincronizar estado local con filtros externos
    */
@@ -84,13 +84,13 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
     onFiltersChange({ order: newOrder });
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       onSearch();
     }
   };
 
-  const hasActiveFilters = filters.search && filters.search.length > 0;
+  const hasActiveFilters = (filters.search && filters.search.length > 0);
 
   return (
     <div className={`bg-white rounded-lg shadow-sm p-4 mb-6 ${className}`}>
@@ -123,7 +123,7 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
             placeholder="Buscar por referencia o folio del sistema"
             value={localSearch}
             onChange={(e) => handleSearchInputChange(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             className="
               w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg 
               focus:ring-2 focus:ring-[#b8ab84] focus:border-[#b8ab84] 
@@ -149,7 +149,7 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
           value={filters.searchBy}
           onChange={(e) => handleSearchByChange(e.target.value as 'n_referencia' | 'n_folio_sist')}
           className="
-            px-3 py-2 border border-gray-300 rounded-lg 
+            px-3 py-2 border border-gray-300 rounded-lg cursor-pointer
             focus:ring-2 focus:ring-[#b8ab84] focus:border-[#b8ab84]
             disabled:opacity-50 disabled:cursor-not-allowed
             font-poppins text-sm min-w-32
@@ -163,13 +163,14 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
           ))}
         </select>
 
+
         {/* Ordenamiento */}
         <div className="flex items-stretch">
           <select
             value={filters.orderBy}
             onChange={(e) => handleOrderByChange(e.target.value as 'estatus' | 'n_referencia' | 'n_folio_sist' | 'fecha_creacion')}
             className="
-              px-3 py-2 border border-gray-300 rounded-l-lg border-r-0
+              px-3 py-2 border border-gray-300 rounded-l-lg border-r-0 cursor-pointer
               focus:ring-2 focus:ring-[#b8ab84] focus:border-[#b8ab84]
               disabled:opacity-50 disabled:cursor-not-allowed
               font-poppins text-sm min-w-[120px]
@@ -188,7 +189,7 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
             className="
               px-3 py-2 border border-gray-300 rounded-r-lg
               hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed
-              transition-colors duration-200 min-w-[44px]
+              cursor-pointer transition-colors duration-200 min-w-[44px]
               flex items-center justify-center
               focus:ring-2 focus:ring-[#b8ab84] focus:border-[#b8ab84]
             "
@@ -208,11 +209,11 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
             onClick={onSearch}
             disabled={loading}
             className="
-              flex items-center gap-2 px-4 py-2 text-sm font-medium 
+              flex items-center gap-2 px-4 py-2 text-sm font-medium
               text-white bg-[#c2b186] border border-[#c2b186] rounded-lg
               hover:bg-[#4d4725] hover:border-[#4d4725]
               disabled:opacity-50 disabled:cursor-not-allowed
-              transition-colors duration-200 font-poppins shadow-sm
+              cursor-pointer transition-colors duration-200 font-poppins shadow-sm
             "
           >
             <Search className="h-4 w-4" />
@@ -236,7 +237,7 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
                 text-[#4d4725] bg-gray-100 border border-gray-300 rounded-lg
                 hover:bg-gray-200 hover:border-gray-400
                 disabled:opacity-50 disabled:cursor-not-allowed
-                transition-colors duration-200 font-poppins
+                cursor-pointer transition-colors duration-200 font-poppins
               "
             >
               <X className="h-4 w-4" />
@@ -254,7 +255,7 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
             text-white bg-[#c2b186] border border-[#c2b186] rounded-lg
             hover:bg-[#4d4725] hover:border-[#4d4725]
             disabled:opacity-50 disabled:cursor-not-allowed
-            transition-colors duration-200 font-poppins shadow-sm
+            cursor-pointer transition-colors duration-200 font-poppins shadow-sm
           "
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -265,11 +266,16 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
       {/* Indicadores de filtros activos */}
       {hasActiveFilters && (
         <div className="mt-3 pt-3 border-t border-gray-200">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-sm text-gray-600 flex-wrap">
             <span className="font-medium">Filtros activos:</span>
-            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-              Búsqueda por {SEARCH_OPTIONS.find(opt => opt.value === filters.searchBy)?.label}: "{filters.search}"
-            </span>
+
+            {/* Filtro de búsqueda */}
+            {filters.search && filters.search.length > 0 && (
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                Búsqueda por {SEARCH_OPTIONS.find(opt => opt.value === filters.searchBy)?.label}: "{filters.search}"
+              </span>
+            )}
+
           </div>
         </div>
       )}

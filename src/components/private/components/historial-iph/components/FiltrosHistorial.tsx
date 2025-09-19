@@ -295,7 +295,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
                 bg-white text-gray-900
                 focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
                 disabled:opacity-50 disabled:cursor-not-allowed
-                transition-colors duration-200
+                cursor-pointer transition-colors duration-200
               "
             >
               <option value="">Todos los estados</option>
@@ -323,7 +323,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
                 bg-white text-gray-900
                 focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
                 disabled:opacity-50 disabled:cursor-not-allowed
-                transition-colors duration-200
+                cursor-pointer transition-colors duration-200
               "
             >
               <option value="">Cualquier tipo de delito</option>

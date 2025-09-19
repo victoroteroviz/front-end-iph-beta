@@ -833,7 +833,7 @@ const AnexoArchivos: React.FC<AnexoArchivosProps> = memo(({
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value as FileType)}
-                className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#c2b186]"
+                className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#c2b186] cursor-pointer"
               >
                 <option value="all">Todos ({typeCounts.all})</option>
                 {typeCounts.video > 0 && <option value="video">Videos ({typeCounts.video})</option>}

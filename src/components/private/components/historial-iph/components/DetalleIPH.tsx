@@ -225,6 +225,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                 className="
                   px-3 py-1.5 border border-gray-300 rounded-md text-sm
                   focus:outline-none focus:ring-2 focus:ring-[#4d4725]
+                  cursor-pointer
                 "
               >
                 {Object.entries(estatusConfig).map(([key, config]) => (

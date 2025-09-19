@@ -1,9 +1,10 @@
 /**
  * Servicio para obtener tipos de IPH
- * Mock service que puede ser reemplazado por API real
+ * Integrado con el servicio real de tipos-iph.service
  */
 
 import type { ITipoIPH } from '../../interfaces/components/informe-policial.interface';
+import { getTiposIph, type ITiposIph } from '../catalogs/tipos-iph.service';
 import { logInfo, logError } from '../../helper/log/logger.helper';
 
 // =====================================================
@@ -41,7 +42,7 @@ const MOCK_TIPOS_IPH: ITipoIPH[] = [
 // CONFIGURACIÓN
 // =====================================================
 
-const USE_MOCK_DATA = true; // Cambiar a false para API real
+const USE_MOCK_DATA = false; // Usar API real por defecto
 
 // =====================================================
 // SERVICIO REAL (ALTERNATIVA)
@@ -91,6 +92,18 @@ const generateCodigoFromNombre = (nombre: string): string => {
 // =====================================================
 
 /**
+ * Convierte ITiposIph a ITipoIPH para compatibilidad
+ */
+const transformTiposIph = (tipos: ITiposIph[]): ITipoIPH[] => {
+  return tipos.map(tipo => ({
+    id: tipo.id.toString(),
+    nombre: tipo.nombre,
+    descripcion: tipo.descripcion,
+    codigo: generateCodigoFromNombre(tipo.nombre)
+  }));
+};
+
+/**
  * Obtiene todos los tipos de IPH disponibles
  * @returns Promise con array de tipos de IPH
  */
@@ -103,30 +116,28 @@ export const getTiposIPH = async (): Promise<ITipoIPH[]> => {
     if (USE_MOCK_DATA) {
       // Simular latencia de red
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       logInfo('TiposIPHService', 'IPH types loaded from mock', {
         count: MOCK_TIPOS_IPH.length,
         types: MOCK_TIPOS_IPH.map(t => ({ id: t.id, nombre: t.nombre }))
       });
-      
+
       return MOCK_TIPOS_IPH;
     } else {
-      // TODO: Opción 1 - Endpoint específico para tipos (si existe)
-      // const response = await fetch(`${API_BASE_URL}/api/tipos-iph`);
-      // const data = await response.json();
-      // return data;
-      
-      // TODO: Opción 2 - Extraer tipos de una muestra de IPH
-      // const { getAllIph } = await import('../iph/get-iph.service');
-      // const iphSample = await getAllIph({ page: 1, orderBy: 'fecha_creacion', order: 'DESC', search: '', searchBy: 'n_referencia' });
-      // return extractTiposFromIPHList(iphSample.data);
-      
-      logInfo('TiposIPHService', 'Using mock data as fallback since real API is not implemented');
-      return MOCK_TIPOS_IPH;
+      // Usar el servicio real de tipos de IPH
+      const tiposFromAPI = await getTiposIph();
+      const transformedTipos = transformTiposIph(tiposFromAPI);
+
+      logInfo('TiposIPHService', 'IPH types loaded from real API', {
+        count: transformedTipos.length,
+        types: transformedTipos.map(t => ({ id: t.id, nombre: t.nombre }))
+      });
+
+      return transformedTipos;
     }
   } catch (error) {
     const errorMessage = (error as Error).message || 'Error al cargar tipos de IPH';
-    
+
     logError('TiposIPHService', error, `Error loading IPH types - useMockData: ${USE_MOCK_DATA}`);
 
     // En caso de error, devolver array vacío para no romper la UI

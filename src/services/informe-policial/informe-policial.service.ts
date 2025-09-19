@@ -103,7 +103,7 @@ const transformFiltersToServiceParams = (filters: IInformePolicialFilters): any 
     order: filters.order,
     search: filters.search,
     searchBy: filters.searchBy,
-    tipoId: filters.tipoId || undefined // Solo enviar si tiene valor
+    type: filters.tipoId || undefined // Mapear tipoId -> type para el backend
   };
 };
 

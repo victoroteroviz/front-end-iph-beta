@@ -92,7 +92,7 @@ const IPHTipoFilter: React.FC<IIPHTipoFilterProps> = ({
             disabled={loading}
             className="
               flex items-center gap-1 px-2 py-1 text-xs text-gray-500
-              hover:text-gray-700 hover:bg-gray-100 rounded
+              hover:text-gray-700 hover:bg-gray-100 rounded cursor-pointer
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-colors duration-200 font-poppins
             "

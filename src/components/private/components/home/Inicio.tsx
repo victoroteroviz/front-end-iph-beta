@@ -238,9 +238,46 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
             setSemanaOffset={setSemanaOffset}
             loading={loading}
             onDateRangeChange={(startDate, endDate) => {
-              // Aquí se podría implementar lógica para cargar datos por rango
-              console.log('Rango seleccionado:', startDate, 'a', endDate);
-              // TODO: Implementar servicio para cargar datos por rango de fechas
+              console.log('📅 Calendar: Rango seleccionado desde el calendario:', {
+                startDate: startDate.toISOString(),
+                endDate: endDate.toISOString(),
+                startFormatted: startDate.toLocaleDateString('es-ES'),
+                endFormatted: endDate.toLocaleDateString('es-ES')
+              });
+
+              // Calcular diferencia en semanas desde hoy hasta la fecha de fin del rango
+              const hoy = new Date();
+              const inicioSemanaActual = new Date(hoy);
+              const diaSemana = hoy.getDay();
+              const diasHastaLunes = diaSemana === 0 ? -6 : 1 - diaSemana;
+              inicioSemanaActual.setDate(hoy.getDate() + diasHastaLunes);
+              inicioSemanaActual.setHours(0, 0, 0, 0);
+
+              const inicioRangoSeleccionado = new Date(startDate);
+              inicioRangoSeleccionado.setHours(0, 0, 0, 0);
+
+              const diffTime = inicioSemanaActual.getTime() - inicioRangoSeleccionado.getTime();
+              const diffWeeks = Math.round(diffTime / (1000 * 60 * 60 * 24 * 7));
+
+              // El offset es la diferencia: 0 = semana actual, negativo = semanas pasadas
+              const targetOffset = -diffWeeks;
+
+              console.log('📊 Calendar: Cálculo de offset:', {
+                inicioSemanaActual: inicioSemanaActual.toISOString(),
+                inicioRangoSeleccionado: inicioRangoSeleccionado.toISOString(),
+                diffTime,
+                diffWeeks,
+                targetOffset,
+                currentOffset: semanaOffset
+              });
+
+              // Solo actualizar si el offset calculado es diferente al actual
+              if (targetOffset !== semanaOffset) {
+                console.log(`📡 Calendar: Actualizando offset de ${semanaOffset} a ${targetOffset}`);
+                setSemanaOffset(targetOffset);
+              } else {
+                console.log('📡 Calendar: El offset calculado es igual al actual, no se requiere actualización');
+              }
             }}
           />
         )}
