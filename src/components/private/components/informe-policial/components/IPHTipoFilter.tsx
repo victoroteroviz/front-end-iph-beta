@@ -18,26 +18,26 @@ import type { IIPHTipoFilterProps } from '../../../../../interfaces/components/i
 const getTipoColors = (nombre: string) => {
   if (nombre.includes('Justicia Cívica')) {
     return {
-      border: '#FDD835',     // Color del borde (ARGB 255, 253, 216, 53)
-      bgLight: '#FEF7CD',    // Versión ligera para estado normal
-      bgNormal: '#FDD835',   // Color del borde para hover
-      bgDark: '#F9A825',     // Versión oscura para seleccionado
-      textLight: '#92400E',  // Texto para fondo ligero
-      textNormal: '#1A1A1A', // Texto para hover (contraste con amarillo)
-      textDark: '#1A1A1A'    // Texto para seleccionado
+      border: '#fcd34d',     // amber-300
+      bgLight: '#fef3c7',    // amber-100
+      bgNormal: '#fcd34d',   // amber-300 (primario)
+      bgDark: '#f59e0b',     // amber-400 (secundario)
+      textLight: '#92400e',  // amber-800
+      textNormal: '#1f2937', // gray-800 (mejor contraste)
+      textDark: '#1f2937'    // gray-800
     };
   } else if (nombre.includes('Hechos Probablemente Delictivos')) {
     return {
-      border: '#FF6F00',     // Color del borde (ARGB 255, 255, 111, 0)
-      bgLight: '#FFF3E0',    // Versión ligera para estado normal
-      bgNormal: '#FF6F00',   // Color del borde para hover
-      bgDark: '#E65100',     // Versión oscura para seleccionado
-      textLight: '#BF360C',  // Texto para fondo ligero
-      textNormal: '#FFFFFF', // Texto para hover (contraste con naranja)
-      textDark: '#FFFFFF'    // Texto para seleccionado
+      border: '#fb923c',     // orange-300
+      bgLight: '#fed7aa',    // orange-100
+      bgNormal: '#fb923c',   // orange-300 (primario)
+      bgDark: '#f97316',     // orange-400 (secundario)
+      textLight: '#c2410c',  // orange-700
+      textNormal: '#ffffff', // white (buen contraste con naranja)
+      textDark: '#ffffff'    // white
     };
   }
-  
+
   // Fallback para otros tipos (si los hubiera)
   return {
     border: '#c2b186',
@@ -77,36 +77,48 @@ const IPHTipoFilter: React.FC<IIPHTipoFilterProps> = ({
   const hasSelectedTipo = selectedTipoId && selectedTipoId.trim() !== '';
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm p-4 ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-[#4d4725] font-poppins flex items-center gap-2">
-          <Filter className="h-4 w-4" />
-          Tipo de IPH
-        </h3>
-        
-        {/* Botón limpiar todo */}
+    <div className={`bg-gradient-to-br from-white via-[#fdf7f1] to-white rounded-xl shadow-lg border border-gray-100 p-6 backdrop-blur-sm ${className}`}>
+      {/* Header mejorado */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-[#c2b186] to-[#4d4725] rounded-lg shadow-md">
+            <Filter className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-[#4d4725] font-poppins">
+              Tipo de IPH
+            </h3>
+          </div>
+        </div>
+
+        {/* Botón limpiar todo mejorado */}
         {hasSelectedTipo && (
           <button
             onClick={handleClearAll}
             disabled={loading}
             className="
-              flex items-center gap-1 px-2 py-1 text-xs text-gray-500
-              hover:text-gray-700 hover:bg-gray-100 rounded cursor-pointer
-              disabled:opacity-50 disabled:cursor-not-allowed
-              transition-colors duration-200 font-poppins
+              group flex items-center gap-2 px-4 py-2 text-sm font-medium
+              text-gray-700 bg-gradient-to-r from-gray-100 to-gray-50
+              border-2 border-gray-300 rounded-xl shadow-lg
+              hover:from-red-50 hover:to-red-100 hover:border-red-300 hover:text-red-700
+              hover:shadow-xl hover:scale-105 hover:-translate-y-0.5
+              disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+              focus:ring-4 focus:ring-gray-300/30
+              cursor-pointer transition-all duration-300 font-poppins
+              overflow-hidden
             "
             aria-label="Limpiar filtros"
           >
-            <X className="h-3 w-3" />
-            Limpiar
+            <div className="absolute inset-0 bg-gradient-to-r from-red-100/0 to-red-100/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <X className="h-4 w-4 relative z-10" />
+            <span className="relative z-10">Limpiar</span>
           </button>
         )}
       </div>
 
-      {/* Botones de tipos */}
-      <div className="flex flex-wrap gap-3">
-        {tipos.map((tipo) => {
+      {/* Botones de tipos mejorados */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {tipos?.map((tipo) => {
           const isSelected = selectedTipoId === tipo.id;
           const isLoading = loading;
           
@@ -126,58 +138,57 @@ const IPHTipoFilter: React.FC<IIPHTipoFilterProps> = ({
               onClick={() => handleTipoClick(tipo.id)}
               disabled={isLoading}
               className={`
-                flex items-center gap-2 px-3 py-2 rounded-lg font-poppins text-xs font-medium
+                group relative flex items-center gap-2 px-3 py-2 rounded-lg font-poppins text-xs font-medium
                 transition-all duration-200 min-h-[36px] cursor-pointer
-                disabled:opacity-50 disabled:cursor-not-allowed
-                max-w-[280px] flex-shrink-0 border-2
-                ${isSelected 
-                  ? 'shadow-md' 
+                disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+                border-2 shadow-sm overflow-hidden
+                ${isSelected
+                  ? 'shadow-md'
                   : 'hover:scale-105 hover:shadow-sm'
                 }
               `}
               style={{
-                // Estado seleccionado: fondo oscuro
-                backgroundColor: isSelected ? colors.bgDark : colors.bgLight,
+                backgroundColor: isSelected ? colors.bgNormal : colors.bgLight,
                 borderColor: colors.border,
-                color: isSelected ? colors.textDark : colors.textLight
+                color: isSelected ? colors.textNormal : colors.textLight
               }}
               onMouseEnter={(e) => {
                 if (!isSelected && !isLoading) {
-                  // Hover: usar color del borde y texto contrastante
                   e.currentTarget.style.backgroundColor = colors.bgNormal;
                   e.currentTarget.style.color = colors.textNormal;
+                  e.currentTarget.style.borderColor = colors.border;
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isSelected && !isLoading) {
-                  // Volver al estado normal: fondo ligero
                   e.currentTarget.style.backgroundColor = colors.bgLight;
                   e.currentTarget.style.color = colors.textLight;
+                  e.currentTarget.style.borderColor = colors.border;
                 }
               }}
               aria-label={`Filtrar por ${tipo.nombre}`}
               aria-pressed={isSelected}
-              title={tipo.nombre} // Tooltip con nombre completo
+              title={tipo.nombre}
             >
               {/* Indicador de selección */}
               {isSelected && (
                 <Check className="h-3 w-3 flex-shrink-0" />
               )}
-              
+
               {/* Nombre abreviado */}
               <span className="truncate text-left leading-tight">
                 {nombreAbreviado}
               </span>
-              
+
               {/* Código opcional */}
               {tipo.codigo && (
-                <span 
+                <span
                   className="text-[10px] px-1 py-0.5 rounded font-mono flex-shrink-0 transition-all duration-200"
                   style={{
-                    backgroundColor: isSelected 
-                      ? 'rgba(255,255,255,0.25)' 
+                    backgroundColor: isSelected
+                      ? 'rgba(255,255,255,0.25)'
                       : 'rgba(0,0,0,0.1)',
-                    color: isSelected ? colors.textDark : colors.textLight
+                    color: isSelected ? colors.textNormal : colors.textLight
                   }}
                 >
                   {tipo.codigo}
@@ -188,7 +199,7 @@ const IPHTipoFilter: React.FC<IIPHTipoFilterProps> = ({
         })}
         
         {/* Estado de carga */}
-        {loading && tipos.length === 0 && (
+        {loading && (!tipos || tipos.length === 0) && (
           <div className="flex items-center gap-2 text-gray-500 text-sm font-poppins">
             <div className="w-4 h-4 border-2 border-[#c2b186] border-t-transparent rounded-full animate-spin"></div>
             <span>Cargando tipos...</span>
@@ -201,17 +212,17 @@ const IPHTipoFilter: React.FC<IIPHTipoFilterProps> = ({
         <div className="flex items-center justify-between text-xs text-gray-500 font-poppins">
           {/* Contador de tipos */}
           <span>
-            {tipos.length > 0 
+            {tipos && tipos.length > 0
               ? `${tipos.length} tipo${tipos.length !== 1 ? 's' : ''} disponible${tipos.length !== 1 ? 's' : ''}`
-              : loading 
-                ? 'Cargando...' 
+              : loading
+                ? 'Cargando...'
                 : 'Sin tipos disponibles'
             }
           </span>
           
           {/* Filtro activo */}
           {hasSelectedTipo && (() => {
-            const tipoSeleccionado = tipos.find(t => t.id === selectedTipoId);
+            const tipoSeleccionado = tipos?.find(t => t.id === selectedTipoId);
             const colors = tipoSeleccionado ? getTipoColors(tipoSeleccionado.nombre) : null;
             
             return (
@@ -230,7 +241,7 @@ const IPHTipoFilter: React.FC<IIPHTipoFilterProps> = ({
       </div>
 
       {/* Estado vacío */}
-      {!loading && tipos.length === 0 && (
+      {!loading && (!tipos || tipos.length === 0) && (
         <div className="text-center text-sm text-gray-500 font-poppins py-4">
           No hay tipos de IPH disponibles
         </div>

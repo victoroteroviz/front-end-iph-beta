@@ -5,14 +5,12 @@
  */
 
 import React from 'react';
-import { ShieldCheck, Scale, Clock, User } from 'lucide-react';
-import type { 
-  IIPHCardProps,
-  IPHIconType
+import { Scale, Clock, User } from 'lucide-react';
+import type {
+  IIPHCardProps
 } from '../../../../../interfaces/components/informe-policial.interface';
-import { 
-  getIPHIconType, 
-  isStatusActive, 
+import {
+  isStatusActive,
   getStatusDescription,
   formatCreationDate
 } from '../../../../../interfaces/components/informe-policial.interface';
@@ -22,39 +20,27 @@ import {
 // =====================================================
 
 /**
- * Determina los colores de una card IPH basado en el tipo
- * Incluye manejo para casos undefined/null/vacío
+ * Determina el color del borde lateral para diferenciar tipos de IPH
+ * Sistema simplificado: solo borde lateral colorido
  */
-const getCardColors = (tipoNombre?: string) => {
+const getBorderColor = (tipoNombre?: string): string => {
   // Caso corrupto: tipo undefined, null o vacío
   if (!tipoNombre || tipoNombre.trim() === '') {
-    return {
-      borderColor: '#000000',     // Negro completo para IPH corrupto
-      shadowColor: '0, 0, 0'      // RGB para usar en box-shadow
-    };
+    return '#000000'; // Negro para errores
   }
-  
-  // Justicia Cívica
+
+  // Justicia Cívica - Amber 400
   if (tipoNombre.includes('Justicia Cívica')) {
-    return {
-      borderColor: '#FDD835',     // Amarillo dorado
-      shadowColor: '253, 216, 53' // RGB equivalente para sombra
-    };
-  } 
-  
-  // Hechos Probablemente Delictivos
-  if (tipoNombre.includes('Hechos Probablemente Delictivos')) {
-    return {
-      borderColor: '#FF6F00',     // Naranja
-      shadowColor: '255, 111, 0'  // RGB equivalente para sombra
-    };
+    return '#f59e0b'; // amber-400
   }
-  
+
+  // Hechos Probablemente Delictivos - Orange 400
+  if (tipoNombre.includes('Hechos Probablemente Delictivos')) {
+    return '#f97316'; // orange-400
+  }
+
   // Fallback para otros tipos
-  return {
-    borderColor: '#c2b186',       // Color original del proyecto
-    shadowColor: '194, 177, 134'  // RGB equivalente
-  };
+  return '#c2b186'; // Color original del proyecto
 };
 
 const IPHCard: React.FC<IIPHCardProps> = ({
@@ -64,25 +50,14 @@ const IPHCard: React.FC<IIPHCardProps> = ({
   className = ''
 }) => {
 
-  const getIcon = (iconType: IPHIconType) => {
-    const iconProps = { size: 32, className: "text-[#b8ab84]" };
-    
-    switch (iconType) {
-      case 'delictivo':
-        return <ShieldCheck {...iconProps} />;
-      case 'administrativo':
-        return <Scale {...iconProps} />;
-      default:
-        return <Scale {...iconProps} />;
-    }
-  };
 
   const handleClick = () => {
     if (loading) return;
     onClick(registro);
   };
 
-  const iconType = getIPHIconType(registro.tipo?.nombre);
+  // Obtener color de borde para la card
+  const borderColor = getBorderColor(registro.tipo?.nombre);
   const isActive = isStatusActive(registro.estatus);
   const statusDescription = getStatusDescription(registro);
 
@@ -112,13 +87,16 @@ const IPHCard: React.FC<IIPHCardProps> = ({
   }
 
   return (
-    <div 
+    <div
       className={`
         bg-white rounded-lg shadow-md p-4 relative cursor-pointer
         transition-all duration-200 hover:shadow-lg hover:scale-[1.02]
-        border border-gray-100 hover:border-[#b8ab84]
+        border-l-4 border-r border-t border-b border-gray-100 hover:border-[#b8ab84]
         ${className}
       `}
+      style={{
+        borderLeftColor: borderColor
+      }}
       onClick={handleClick}
       role="button"
       tabIndex={0}
@@ -135,9 +113,9 @@ const IPHCard: React.FC<IIPHCardProps> = ({
         <h2 className="font-bold text-lg text-[#4d4725] font-poppins truncate flex-1 mr-2">
           {registro.n_referencia}
         </h2>
-        
+
         {/* Indicador de estado simplificado */}
-        <div 
+        <div
           className={`
             w-4 h-4 rounded-full flex-shrink-0
             ${isActive ? 'bg-green-500' : 'bg-red-500'}
@@ -197,7 +175,7 @@ const IPHCard: React.FC<IIPHCardProps> = ({
 
         {/* Icono */}
         <div className="flex-shrink-0 ml-2">
-          {getIcon(iconType)}
+          <Scale size={32} className="text-[#b8ab84]" />
         </div>
       </div>
 
