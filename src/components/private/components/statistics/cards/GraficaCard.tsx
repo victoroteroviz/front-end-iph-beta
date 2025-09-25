@@ -1,11 +1,10 @@
 import React, { memo, useMemo, useState, useRef, useEffect } from 'react';
 import { Bar } from "react-chartjs-2";
-import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from "chart.js";
-import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { AlertCircle, BarChart3, Calendar, ChevronDown } from 'lucide-react';
 import type { IResumenPorMes } from '../../../../../interfaces/statistics/statistics.interface';
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ChartDataLabels);
+// Chart.js se registra centralizadamente en chart.config.ts
+import '../../../../../config/chart.config';
 
 interface GraficaCardProps {
   titulo: string;
@@ -74,6 +73,11 @@ const GraficaCard: React.FC<GraficaCardProps> = ({
         formatter: (value: number) => value > 0 ? value : ''
       }
     },
+    // Configuración específica para barras
+    barThickness: 'flex',
+    maxBarThickness: 60,
+    categoryPercentage: 0.8,
+    barPercentage: 0.9,
     scales: {
       y: {
         beginAtZero: true,

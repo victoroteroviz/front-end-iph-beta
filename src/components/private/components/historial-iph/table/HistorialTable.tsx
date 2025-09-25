@@ -20,7 +20,7 @@ import type {
   RegistroHistorialIPH 
 } from '../../../../../interfaces/components/historialIph.interface';
 
-// Mock data para configuración
+// Configuración de estatus (fallback para UI)
 import { estatusConfig } from '../../../../../mock/historial-iph';
 
 // Helpers
@@ -84,6 +84,14 @@ const HistorialTable: React.FC<HistorialTableProps> = ({
   };
 
   /**
+   * Formatea la ubicación como string
+   */
+  const formatUbicacion = (ubicacion?: { latitud: number; longitud: number }): string => {
+    if (!ubicacion) return '-';
+    return `${ubicacion.latitud.toFixed(6)}, ${ubicacion.longitud.toFixed(6)}`;
+  };
+
+  /**
    * Maneja el click para ver detalle
    */
   const handleVerDetalle = (registro: RegistroHistorialIPH) => {
@@ -106,52 +114,64 @@ const HistorialTable: React.FC<HistorialTableProps> = ({
   };
 
   /**
-   * Obtiene el componente de estatus
+   * Genera colores dinámicos para un estatus basado en hash
+   */
+  const generateEstatusColors = (estatus: string) => {
+    // Generar hash simple del string
+    let hash = 0;
+    for (let i = 0; i < estatus.length; i++) {
+      const char = estatus.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convertir a 32bit integer
+    }
+
+    // Colores predefinidos para estatus comunes
+    const predefinedColors: Record<string, {color: string, bgColor: string}> = {
+      'Activo': { color: '#065f46', bgColor: '#d1fae5' },
+      'Inactivo': { color: '#7c2d12', bgColor: '#fed7aa' },
+      'Pendiente': { color: '#92400e', bgColor: '#fef3c7' },
+      'Completado': { color: '#1e40af', bgColor: '#dbeafe' },
+      'En Proceso': { color: '#7c3aed', bgColor: '#ede9fe' },
+      'Cancelado': { color: '#dc2626', bgColor: '#fee2e2' },
+      'N/D': { color: '#6b7280', bgColor: '#e5e7eb' }
+    };
+
+    // Si existe un color predefinido, usarlo
+    if (predefinedColors[estatus]) {
+      return predefinedColors[estatus];
+    }
+
+    // Generar colores basados en hash para estatus desconocidos
+    const hue = Math.abs(hash) % 360;
+    const saturation = 65; // Saturación fija para mejor legibilidad
+    const lightness = 45; // Luminosidad para el texto
+    const bgLightness = 90; // Luminosidad para el fondo
+
+    return {
+      color: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
+      bgColor: `hsl(${hue}, ${saturation}%, ${bgLightness}%)`
+    };
+  };
+
+  /**
+   * Obtiene el componente de estatus (solo lectura)
    */
   const getEstatusComponent = (registro: RegistroHistorialIPH) => {
-    const config = estatusConfig[registro.estatus];
-    
-    if (onEditarEstatus) {
-      // Selector editable
-      return (
-        <select
-          value={registro.estatus}
-          onChange={(e) => handleEstatusChange(registro, e.target.value as RegistroHistorialIPH['estatus'])}
-          disabled={loading}
-          className="
-            w-full px-2 py-1 text-xs font-medium rounded-full border-0
-            focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#4d4725]
-            disabled:opacity-50 disabled:cursor-not-allowed
-            cursor-pointer transition-all duration-200
-            min-w-[120px]
-          "
-          style={{
-            backgroundColor: config.bgColor,
-            color: config.color
-          }}
-          aria-label={`Cambiar estatus del registro ${registro.numero_reporte}`}
-        >
-          {Object.entries(estatusConfig).map(([key, statusConfig]) => (
-            <option key={key} value={key}>
-              {statusConfig.label}
-            </option>
-          ))}
-        </select>
-      );
-    } else {
-      // Badge solo lectura
-      return (
-        <span
-          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-          style={{
-            backgroundColor: config.bgColor,
-            color: config.color
-          }}
-        >
-          {config.label}
-        </span>
-      );
-    }
+    const colors = generateEstatusColors(registro.estatus);
+
+    // Siempre mostrar como badge de solo lectura
+    return (
+      <span
+        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+        style={{
+          backgroundColor: colors.bgColor,
+          color: colors.color
+        }}
+        title={`Estatus: ${registro.estatus}`}
+      >
+        {registro.estatus}
+      </span>
+    );
   };
 
   /**
@@ -159,58 +179,64 @@ const HistorialTable: React.FC<HistorialTableProps> = ({
    */
   const columns = useMemo(() => [
     {
-      key: 'numero_reporte',
-      label: 'No. Reporte',
+      key: 'numeroReferencia',
+      label: 'No. Referencia',
       width: 'w-28',
       render: (registro: RegistroHistorialIPH) => (
         <div className="font-mono text-sm text-[#4d4725]">
-          {registro.numero_reporte}
+          {registro.numeroReferencia}
         </div>
       )
     },
     {
-      key: 'fecha_hora',
+      key: 'fechaCreacion',
       label: 'Fecha/Hora',
       width: 'w-32',
-      render: (registro: RegistroHistorialIPH) => (
-        <div className="text-sm">
-          <div className="flex items-center gap-1 text-gray-900">
-            <Calendar size={12} className="text-gray-400" />
-            {formatDate(registro.fecha)}
+      render: (registro: RegistroHistorialIPH) => {
+        const fecha = new Date(registro.fechaCreacion);
+        return (
+          <div className="text-sm">
+            <div className="flex items-center gap-1 text-gray-900">
+              <Calendar size={12} className="text-gray-400" />
+              {fecha.toLocaleDateString()}
+            </div>
+            <div className="flex items-center gap-1 text-gray-500 text-xs">
+              <Clock size={12} className="text-gray-400" />
+              {fecha.toLocaleTimeString()}
+            </div>
           </div>
-          <div className="flex items-center gap-1 text-gray-500 text-xs">
-            <Clock size={12} className="text-gray-400" />
-            {formatTime(registro.hora)}
-          </div>
-        </div>
-      )
+        );
+      }
     },
     {
       key: 'ubicacion',
       label: 'Ubicación',
       width: 'w-48',
-      render: (registro: RegistroHistorialIPH) => (
-        <div className="text-sm">
-          <div className="flex items-start gap-1">
-            <MapPin size={12} className="text-gray-400 mt-0.5 flex-shrink-0" />
-            <span className="text-gray-900" title={registro.ubicacion}>
-              {truncateText(registro.ubicacion, 40)}
-            </span>
+      render: (registro: RegistroHistorialIPH) => {
+        const ubicacionString = formatUbicacion(registro.ubicacion);
+        return (
+          <div className="text-sm">
+            <div className="flex items-start gap-1">
+              <MapPin size={12} className="text-gray-400 mt-0.5 flex-shrink-0" />
+              <span className="text-gray-900" title={ubicacionString}>
+                {truncateText(ubicacionString, 40)}
+              </span>
+            </div>
           </div>
-        </div>
-      )
+        );
+      }
     },
     {
-      key: 'tipo_delito',
+      key: 'tipoDelito',
       label: 'Tipo de Delito',
       width: 'w-40',
       render: (registro: RegistroHistorialIPH) => (
         <div className="text-sm">
-          <span 
+          <span
             className="text-gray-900 font-medium"
-            title={registro.tipo_delito}
+            title={registro.tipoDelito}
           >
-            {truncateText(registro.tipo_delito, 25)}
+            {truncateText(registro.tipoDelito, 25)}
           </span>
         </div>
       )
@@ -242,9 +268,9 @@ const HistorialTable: React.FC<HistorialTableProps> = ({
     {
       key: 'acciones',
       label: 'Acciones',
-      width: 'w-24',
+      width: 'w-16',
       render: (registro: RegistroHistorialIPH) => (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-center">
           <button
             onClick={() => handleVerDetalle(registro)}
             disabled={loading}
@@ -252,36 +278,19 @@ const HistorialTable: React.FC<HistorialTableProps> = ({
               p-1.5 text-[#4d4725] hover:text-white
               hover:bg-[#4d4725] rounded-md
               transition-colors duration-200
+              cursor-pointer
               disabled:opacity-50 disabled:cursor-not-allowed
               focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-1
             "
-            title={`Ver detalle del registro ${registro.numero_reporte}`}
-            aria-label={`Ver detalle del registro ${registro.numero_reporte}`}
+            title={`Ver detalle del registro ${registro.numeroReferencia}`}
+            aria-label={`Ver detalle del registro ${registro.numeroReferencia}`}
           >
             <Eye size={16} />
           </button>
-          
-          {onEditarEstatus && (
-            <button
-              onClick={() => {}} // La edición se maneja en el selector de estatus
-              disabled={loading}
-              className="
-                p-1.5 text-gray-400 hover:text-[#4d4725]
-                hover:bg-gray-100 rounded-md
-                transition-colors duration-200
-                disabled:opacity-50 disabled:cursor-not-allowed
-                focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-1
-              "
-              title={`Editar registro ${registro.numero_reporte}`}
-              aria-label={`Editar registro ${registro.numero_reporte}`}
-            >
-              <Edit3 size={14} />
-            </button>
-          )}
         </div>
       )
     }
-  ], [loading, onEditarEstatus]);
+  ], [loading]);
 
   if (loading && registros.length === 0) {
     // Loading skeleton

@@ -6,35 +6,43 @@
 // ==================== INTERFACES BASE ====================
 
 /**
- * Interface para un registro individual de IPH
+ * Interface para la ubicación de un IPH
+ */
+export interface UbicacionHistorialIPH {
+  latitud: number;
+  longitud: number;
+}
+
+/**
+ * Interface para un registro individual de IPH (actualizada para servicio real)
  */
 export interface RegistroHistorialIPH {
-  id: number;
-  numero_reporte: string;
-  fecha: string;
-  hora: string;
-  ubicacion: string;
-  tipo_delito: string;
-  estatus: 'Activo' | 'Inactivo' | 'Pendiente' | 'Cancelado';
+  id: string;
+  numeroReferencia: string;
+  fechaCreacion: Date;
+  ubicacion?: UbicacionHistorialIPH;
+  tipoDelito: string;
+  estatus: string;
   usuario: string;
   observaciones?: string;
+  archivosAdjuntos?: string[];
 }
 
 /**
- * Interface para estadísticas del historial
+ * Interface para estadísticas del historial (adaptada para datos dinámicos del servicio)
  */
 export interface EstadisticasHistorial {
-  total_registros: number;
-  activos: number;
-  inactivos: number;
-  pendientes: number;
-  cancelados: number;
-  total_mes_actual: number;
-  promedio_diario: number;
+  total: number;
+  promedioPorDia: number;
+  registroPorMes: number;
+  estatusPorIph: Array<{
+    estatus: string;
+    cantidad: number;
+  }>;
 }
 
 /**
- * Filtros para el historial
+ * Filtros para el historial (actualizada para servicio real)
  */
 export interface FiltrosHistorial {
   fechaInicio?: string;
@@ -43,6 +51,7 @@ export interface FiltrosHistorial {
   tipoDelito?: string;
   usuario?: string;
   busqueda?: string;
+  busquedaPor?: 'estatus' | 'tipoDelito' | 'usuario';
 }
 
 /**
@@ -100,8 +109,9 @@ export interface EstadisticasCardsProps {
  */
 export interface FiltrosHistorialProps {
   filtros: FiltrosHistorial;
-  onFiltrosChange: (filtros: FiltrosHistorial) => void;
+  onFiltrosChange: (filtros: Partial<FiltrosHistorial>) => void;
   loading?: boolean;
+  estatusOptions?: string[];
   className?: string;
 }
 
@@ -143,6 +153,7 @@ export interface UseHistorialIPHState {
   filtros: FiltrosHistorial;
   paginacion: PaginacionHistorial;
   registroSeleccionado: RegistroHistorialIPH | null;
+  estatusOptions: string[];
 }
 
 /**
@@ -150,6 +161,7 @@ export interface UseHistorialIPHState {
  */
 export interface UseHistorialIPHActions {
   setFiltros: (filtros: Partial<FiltrosHistorial>) => void;
+  clearAllFilters: () => void;
   setCurrentPage: (page: number) => void;
   refetchData: () => Promise<void>;
   clearError: () => void;

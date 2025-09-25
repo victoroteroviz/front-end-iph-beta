@@ -16,7 +16,7 @@ import {
 // Interfaces
 import type { FiltrosHistorialProps } from '../../../../../interfaces/components/historialIph.interface';
 
-// Mock data
+// Configuración de opciones (fallback para UI)
 import { tiposDelitoOptions, estatusConfig } from '../../../../../mock/historial-iph';
 
 /**
@@ -29,6 +29,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
   filtros,
   onFiltrosChange,
   loading = false,
+  estatusOptions = [],
   className = ''
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -36,15 +37,25 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
-   * Opciones de estatus para el selector
+   * Opciones de estatus para el selector (usa backend si está disponible)
    */
-  const estatusOptions = useMemo(() => {
+  const estatusOptionsFormatted = useMemo(() => {
+    if (estatusOptions.length > 0) {
+      // Usar opciones del backend
+      return estatusOptions.map(option => ({
+        value: option,
+        label: option,
+        color: '#4d4725' // Color por defecto
+      }));
+    }
+
+    // Fallback a opciones estáticas si no hay del backend
     return Object.entries(estatusConfig).map(([key, config]) => ({
       value: key,
       label: config.label,
       color: config.color
     }));
-  }, []);
+  }, [estatusOptions]);
 
   /**
    * Genera fechas de rango rápido
@@ -139,16 +150,27 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
   }, [filtros, onFiltrosChange, quickDateRanges]);
 
   /**
-   * Limpia todos los filtros removiendo todas las propiedades
+   * Limpia todos los filtros estableciendo todas las propiedades como strings vacías
    */
-  const clearAllFilters = useCallback(() => {
+  const handleClearAllFilters = useCallback(() => {
     // Limpiar debounce pendiente
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
-    
+
+    // Limpiar estado local de búsqueda
     setLocalBusqueda('');
-    onFiltrosChange({}); // Objeto vacío para remover todos los filtros
+
+    // Limpiar todos los filtros estableciendo valores vacíos
+    onFiltrosChange({
+      fechaInicio: '',
+      fechaFin: '',
+      estatus: '',
+      tipoDelito: '',
+      usuario: '',
+      busqueda: '',
+      busquedaPor: undefined
+    });
   }, [onFiltrosChange]);
 
   /**
@@ -213,13 +235,13 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
         <div className="flex items-center gap-2">
           {hasActiveFilters && (
             <button
-              onClick={clearAllFilters}
+              onClick={handleClearAllFilters}
               disabled={loading}
               className="
                 flex items-center gap-1 px-3 py-1.5 text-sm
                 text-gray-600 hover:text-gray-800
                 bg-gray-100 hover:bg-gray-200
-                rounded-md transition-colors
+                rounded-md transition-colors cursor-pointer
                 disabled:opacity-50 disabled:cursor-not-allowed
               "
               title="Limpiar filtros"
@@ -235,7 +257,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
               flex items-center gap-2 px-3 py-1.5 text-sm
               text-[#4d4725] hover:text-[#3a3519]
               bg-[#f8f0e7] hover:bg-[#f0e6d7]
-              rounded-md transition-colors
+              rounded-md transition-colors cursor-pointer
             "
           >
             <span>{isExpanded ? 'Menos' : 'Más'} filtros</span>
@@ -247,34 +269,63 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
       {/* Filtros básicos (siempre visibles) */}
       <div className="p-4 space-y-4">
         {/* Búsqueda general */}
-        <div className="relative">
-          <label htmlFor="busqueda-general" className="block text-sm font-medium text-gray-700 mb-1">
-            Buscar IPH
-          </label>
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-3 text-gray-400" aria-hidden="true" />
-            <input
-              id="busqueda-general"
-              type="text"
-              value={localBusqueda}
-              onChange={(e) => handleBusquedaChange(e.target.value)}
-              disabled={loading}
-              placeholder="Buscar por número de reporte, ubicación o tipo de delito"
-              className="
-                w-full pl-10 pr-4 py-2
-                border border-gray-300 rounded-md
-                bg-white text-gray-900
-                focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
-                disabled:opacity-50 disabled:cursor-not-allowed
-                transition-colors duration-200
-              "
-            />
-            {loading && (
-              <div className="absolute right-3 top-3">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#4d4725]"></div>
-              </div>
-            )}
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="busqueda-general" className="block text-sm font-medium text-gray-700 mb-1">
+              Búsqueda General
+            </label>
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-3 text-gray-400" aria-hidden="true" />
+              <input
+                id="busqueda-general"
+                type="text"
+                value={localBusqueda}
+                onChange={(e) => handleBusquedaChange(e.target.value)}
+                disabled={loading}
+                placeholder="Término de búsqueda..."
+                className="
+                  w-full pl-10 pr-4 py-2
+                  border border-gray-300 rounded-md
+                  bg-white text-gray-900
+                  focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  transition-colors duration-200
+                "
+              />
+              {loading && (
+                <div className="absolute right-3 top-3">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#4d4725]"></div>
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Selector de campo de búsqueda */}
+          {localBusqueda && (
+            <div>
+              <label htmlFor="busqueda-por" className="block text-sm font-medium text-gray-700 mb-1">
+                Buscar en
+              </label>
+              <select
+                id="busqueda-por"
+                value={filtros.busquedaPor || 'usuario'}
+                onChange={(e) => handleFilterChange('busquedaPor', e.target.value)}
+                disabled={loading}
+                className="
+                  w-full px-3 py-2
+                  border border-gray-300 rounded-md
+                  bg-white text-gray-900
+                  focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  cursor-pointer transition-colors duration-200
+                "
+              >
+                <option value="usuario">Usuario</option>
+                <option value="estatus">Estatus</option>
+                <option value="tipoDelito">Tipo de Delito</option>
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Filtros en línea */}
@@ -299,7 +350,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
               "
             >
               <option value="">Todos los estados</option>
-              {estatusOptions.map(({ value, label }) => (
+              {estatusOptionsFormatted.map(({ value, label }) => (
                 <option key={value} value={value}>
                   {label}
                 </option>
@@ -385,7 +436,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
                     text-[#4d4725] hover:text-white
                     bg-white hover:bg-[#4d4725]
                     border border-[#4d4725] rounded-md
-                    transition-colors duration-200
+                    transition-colors duration-200 cursor-pointer
                     disabled:opacity-50 disabled:cursor-not-allowed
                   "
                 >

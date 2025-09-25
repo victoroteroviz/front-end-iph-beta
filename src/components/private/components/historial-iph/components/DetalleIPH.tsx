@@ -3,7 +3,7 @@
  * Vista dummy para mostrar el detalle completo de un registro IPH
  * 
  * @note Este es un componente dummy para futura implementación
- * Actualmente muestra información mock estructurada
+ * Muestra información detallada del registro seleccionado
  */
 
 import React, { useState } from 'react';
@@ -29,7 +29,7 @@ import {
 // Interfaces
 import type { DetalleIPHProps } from '../../../../../interfaces/components/historialIph.interface';
 
-// Mock data
+// Configuración de estatus
 import { estatusConfig } from '../../../../../mock/historial-iph';
 
 // Helpers

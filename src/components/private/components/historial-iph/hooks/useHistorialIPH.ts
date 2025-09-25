@@ -10,7 +10,7 @@
  * @author Sistema IPH Frontend
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 // Helpers
 import { logInfo, logError, logWarning } from '../../../../../helper/log/logger.helper';
@@ -23,6 +23,8 @@ import {
   getRegistroIPHById
 } from '../../../../../services/historial/historial-iph.service';
 
+import { getEstatusIph, getIphHistory, getEstatusOptions } from '../../../../../services/estatus-iph/estatus-iph.service';
+
 // Interfaces
 import type {
   UseHistorialIPHReturn,
@@ -32,6 +34,11 @@ import type {
   FiltrosHistorial,
   PaginacionHistorial
 } from '../../../../../interfaces/components/historialIph.interface';
+
+import type {
+  QueryHistorialDto,
+  ResHistorialIphResponse
+} from '../../../../../interfaces/estatus-iph';
 
 
 // ==================== CONFIGURACIÓN ====================
@@ -59,16 +66,13 @@ const INITIAL_FILTERS: FiltrosHistorial = {
 };
 
 /**
- * Estadísticas iniciales vacías
+ * Estadísticas iniciales vacías (adaptadas al nuevo formato del servicio)
  */
 const INITIAL_ESTADISTICAS: EstadisticasHistorial = {
-  total_registros: 0,
-  activos: 0,
-  inactivos: 0,
-  pendientes: 0,
-  cancelados: 0,
-  total_mes_actual: 0,
-  promedio_diario: 0
+  total: 0,
+  promedioPorDia: 0,
+  registroPorMes: 0,
+  estatusPorIph: []
 };
 
 // ==================== HOOK PRINCIPAL ====================
@@ -120,6 +124,7 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
   });
   const [registroSeleccionado, setRegistroSeleccionado] = useState<RegistroHistorialIPH | null>(null);
   const [retryCount, setRetryCount] = useState<number>(0);
+  const [estatusOptions, setEstatusOptions] = useState<string[]>([]);
 
   // ==================== VALIDACIONES DE ROLES ====================
 
@@ -158,12 +163,103 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
     }
   }, []);
 
+  // ==================== MEMOIZACIÓN ====================
+
+  /**
+   * Memoizar filtros para evitar recreación en cada render
+   */
+  const memoizedFiltros = useMemo(() => filtros, [
+    filtros.fechaInicio,
+    filtros.fechaFin,
+    filtros.estatus,
+    filtros.tipoDelito,
+    filtros.usuario,
+    filtros.busqueda
+  ]);
+
   // ==================== FUNCIONES INTERNAS ====================
 
   /**
-   * Obtiene los datos del historial
+   * Carga las opciones de estatus desde el backend
    */
-  const fetchData = useCallback(async (showLoadingState = true) => {
+  const loadEstatusOptions = useCallback(async () => {
+    try {
+      logInfo('useHistorialIPH', 'Cargando opciones de estatus desde el backend');
+      const opciones = await getEstatusOptions();
+      setEstatusOptions(opciones);
+
+      logInfo('useHistorialIPH', 'Opciones de estatus cargadas exitosamente', {
+        totalOpciones: opciones.length,
+        opciones: opciones
+      });
+    } catch (error) {
+      logError('useHistorialIPH', error, 'Error cargando opciones de estatus');
+      // Las opciones por defecto ya están en el servicio como fallback
+    }
+  }, []);
+
+  /**
+   * Convierte filtros del formato local al formato del servicio real
+   */
+  const convertirFiltrosAQuery = useCallback((filtrosLocal: FiltrosHistorial, pagina: number): QueryHistorialDto => {
+    const query: QueryHistorialDto = {
+      pagina: pagina,
+      ordernaPor: 'fecha_creacion',
+      orden: 'DESC'
+    };
+
+    if (filtrosLocal.estatus) query.estatus = filtrosLocal.estatus;
+    if (filtrosLocal.tipoDelito) query.tipoDelito = filtrosLocal.tipoDelito;
+    if (filtrosLocal.usuario) query.usuario = filtrosLocal.usuario;
+    if (filtrosLocal.fechaInicio) query.fechaInicio = filtrosLocal.fechaInicio;
+    if (filtrosLocal.fechaFin) query.fechaFin = filtrosLocal.fechaFin;
+    if (filtrosLocal.busqueda) {
+      query.busqueda = filtrosLocal.busqueda;
+      query.busquedaPor = filtrosLocal.busquedaPor || 'usuario'; // Usar el campo especificado o usuario por defecto
+    }
+
+    return query;
+  }, []);
+
+  /**
+   * Convierte la respuesta del servicio real al formato esperado por el componente
+   */
+  const convertirRespuestaALocal = useCallback((respuesta: ResHistorialIphResponse) => {
+    const registrosConvertidos: RegistroHistorialIPH[] = respuesta.data.map(item => ({
+      id: item.id,
+      numeroReferencia: item.nReferencia,
+      fechaCreacion: new Date(item.fechaCreacion),
+      ubicacion: item.ubicacion ? {
+        latitud: parseFloat(item.ubicacion.latitud),
+        longitud: parseFloat(item.ubicacion.longitud)
+      } : undefined,
+      tipoDelito: item.tipoDelito || 'N/D',
+      estatus: item.estatus,
+      usuario: item.usuario,
+      // Campos adicionales que pueden ser necesarios
+      observaciones: '',
+      archivosAdjuntos: []
+    }));
+
+    const paginacionConvertida: PaginacionHistorial = {
+      page: respuesta.meta.pagina,
+      limit: respuesta.meta.itemsPorPagina,
+      total: respuesta.meta.total,
+      totalPages: respuesta.meta.totalPaginas,
+      hasNextPage: respuesta.meta.pagina < respuesta.meta.totalPaginas,
+      hasPrevPage: respuesta.meta.pagina > 1
+    };
+
+    return {
+      registros: registrosConvertidos,
+      paginacion: paginacionConvertida
+    };
+  }, []);
+
+  /**
+   * Obtiene los datos del historial usando el servicio real
+   */
+  const fetchData = useCallback(async (showLoadingState = true, currentRetryCount = 0) => {
     if (!hasAccess) {
       setError('No tienes permisos para acceder a esta información');
       return;
@@ -175,42 +271,69 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
       }
       setError(null);
 
-      logInfo('useHistorialIPH', 'Obteniendo datos del historial', {
-        filtros,
+      logInfo('useHistorialIPH', 'Obteniendo datos del historial con servicio real', {
+        filtros: memoizedFiltros,
         paginacion: { page: paginacion.page, limit: paginacion.limit }
       });
 
-      const response = await getHistorialIPH({
-        page: paginacion.page,
-        limit: paginacion.limit,
-        filtros
-      });
+      // Convertir filtros al formato del servicio
+      const queryData = convertirFiltrosAQuery(memoizedFiltros, paginacion.page);
 
-      setRegistros(response.registros);
-      setEstadisticas(response.estadisticas);
-      setPaginacion(response.paginacion);
-      setRetryCount(0); // Reset retry count on success
+      // Obtener datos del historial y estadísticas de estatus en paralelo
+      const [historialResponse, estatusResponse] = await Promise.all([
+        getIphHistory(queryData),
+        getEstatusIph().catch(error => {
+          logWarning('useHistorialIPH', 'Error al obtener estadísticas de estatus', error.message);
+          return { status: false, data: { total: 0, promedioPorDia: 0, registroPorMes: 0, estatusPorIph: [] } };
+        })
+      ]);
 
-      logInfo('useHistorialIPH', 'Datos obtenidos exitosamente', {
-        totalRegistros: response.registros.length,
-        totalFiltrados: response.paginacion.total,
-        pagina: response.paginacion.page
+      // Convertir respuesta del servicio real al formato local
+      const { registros: registrosConvertidos, paginacion: paginacionConvertida } = convertirRespuestaALocal(historialResponse);
+
+      // Adaptar estadísticas al nuevo formato
+      const adaptedEstadisticas: EstadisticasHistorial = {
+        total: estatusResponse.data?.total || 0,
+        promedioPorDia: estatusResponse.data?.promedioPorDia || 0,
+        registroPorMes: estatusResponse.data?.registroPorMes || 0,
+        estatusPorIph: estatusResponse.data?.estatusPorIph || []
+      };
+
+      setRegistros(registrosConvertidos);
+      setEstadisticas(adaptedEstadisticas);
+      setPaginacion(paginacionConvertida);
+
+      // Reset retry count on success solo si es diferente de 0
+      if (currentRetryCount > 0) {
+        setRetryCount(0);
+      }
+
+      logInfo('useHistorialIPH', 'Datos obtenidos exitosamente con servicio real', {
+        totalRegistros: registrosConvertidos.length,
+        totalFiltrados: paginacionConvertida.total,
+        pagina: paginacionConvertida.page,
+        totalEstatus: adaptedEstadisticas.total,
+        estatusCount: adaptedEstadisticas.estatusPorIph.length
       });
 
       // Mostrar notificación solo si no hay datos
-      if (response.registros.length === 0 && Object.values(filtros).some(f => f)) {
+      if (registrosConvertidos.length === 0 && Object.values(filtros).some(f => f)) {
         showWarning('No se encontraron registros con los filtros aplicados');
       }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      logError('useHistorialIPH', error, 'Error obteniendo datos del historial');
-      
+      logError('useHistorialIPH', error, 'Error obteniendo datos del historial con servicio real');
+
       // Implementar retry logic
-      if (retryCount < DEFAULT_CONFIG.maxRetries) {
-        logInfo('useHistorialIPH', `Reintentando obtener datos (intento ${retryCount + 1}/${DEFAULT_CONFIG.maxRetries})`);
-        setRetryCount(prev => prev + 1);
-        setTimeout(() => fetchData(false), 1000 * (retryCount + 1)); // Backoff exponencial
+      if (currentRetryCount < DEFAULT_CONFIG.maxRetries) {
+        const nextRetryCount = currentRetryCount + 1;
+        logInfo('useHistorialIPH', `Reintentando obtener datos (intento ${nextRetryCount}/${DEFAULT_CONFIG.maxRetries})`);
+
+        // Usar setTimeout para evitar llamadas inmediatas que puedan crear bucles
+        setTimeout(() => {
+          fetchData(false, nextRetryCount);
+        }, 1000 * nextRetryCount);
         return;
       }
 
@@ -221,16 +344,51 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
         setLoading(false);
       }
     }
-  }, [hasAccess, filtros, paginacion.page, paginacion.limit, retryCount]);
+  }, [hasAccess, memoizedFiltros, paginacion.page, convertirFiltrosAQuery, convertirRespuestaALocal]);
 
   // ==================== EFECTOS ====================
 
   /**
-   * Efecto para cargar datos iniciales y cuando cambien filtros/página
+   * Efecto para cargar opciones de estatus al montar el componente
    */
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (hasAccess) {
+      loadEstatusOptions();
+    }
+  }, [hasAccess, loadEstatusOptions]);
+
+  /**
+   * Ref para manejar debounce de las peticiones
+   */
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  /**
+   * Efecto para cargar datos cuando cambien filtros, paginación o retry (con debounce)
+   */
+  useEffect(() => {
+    if (hasAccess) {
+      // Limpiar timeout anterior
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+
+      // Solo aplicar debounce a cambios de filtros, no a paginación
+      const isFilterChange = JSON.stringify(memoizedFiltros) !== JSON.stringify(INITIAL_FILTERS);
+      const debounceTime = isFilterChange ? 300 : 0; // 300ms para filtros, inmediato para paginación
+
+      debounceRef.current = setTimeout(() => {
+        fetchData();
+      }, debounceTime);
+
+      // Cleanup
+      return () => {
+        if (debounceRef.current) {
+          clearTimeout(debounceRef.current);
+        }
+      };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasAccess, memoizedFiltros, paginacion.page, paginacion.limit, retryCount]);
 
   /**
    * Efecto para limpiar error cuando cambien filtros
@@ -248,13 +406,36 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
    */
   const setFiltros = useCallback((nuevosFiltros: Partial<FiltrosHistorial>) => {
     logInfo('useHistorialIPH', 'Actualizando filtros', { nuevosFiltros });
-    
+
     setFiltrosState(prev => ({
       ...prev,
       ...nuevosFiltros
     }));
 
     // Resetear página al cambiar filtros
+    setPaginacion(prev => ({
+      ...prev,
+      page: 1
+    }));
+  }, []);
+
+  /**
+   * Limpia todos los filtros
+   */
+  const clearAllFilters = useCallback(() => {
+    logInfo('useHistorialIPH', 'Limpiando todos los filtros');
+
+    // Restablecer completamente el estado de filtros
+    setFiltrosState({
+      fechaInicio: '',
+      fechaFin: '',
+      estatus: '',
+      tipoDelito: '',
+      usuario: '',
+      busqueda: ''
+    });
+
+    // Resetear página al limpiar filtros
     setPaginacion(prev => ({
       ...prev,
       page: 1
@@ -411,22 +592,24 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
     filtros,
     paginacion,
     registroSeleccionado,
-    
+    estatusOptions,
+
     // Acciones
     setFiltros,
+    clearAllFilters,
     setCurrentPage,
     refetchData,
     clearError,
     verDetalle,
     cerrarDetalle,
     editarEstatus,
-    
+
     // Navegación
     canGoToNextPage,
     canGoToPreviousPage,
     goToNextPage,
     goToPreviousPage,
-    
+
     // Computed
     hasData
   };

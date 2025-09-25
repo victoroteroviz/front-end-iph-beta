@@ -1,13 +1,14 @@
 import React, { memo, useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Bar } from "react-chartjs-2";
-import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from "chart.js";
-import ChartDataLabels from 'chartjs-plugin-datalabels';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { CalendarDays, AlertCircle, BarChart3, X } from 'lucide-react';
 import type { IResumenPorSemana } from '../../../../../interfaces/statistics/statistics.interface';
 
 // Importar estilos CSS de react-datepicker
 import 'react-datepicker/dist/react-datepicker.css';
+
+// Chart.js se registra centralizadamente en chart.config.ts
+import '../../../../../config/chart.config';
 
 // Configuración de localización española
 import { es } from 'date-fns/locale';
@@ -183,7 +184,7 @@ const calendarStyles = `
   }
 `;
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ChartDataLabels);
+// Chart.js ya está registrado centralizadamente en chart.config.ts
 
 // Interfaz para rangos válidos de la API
 interface ApiWeekRange {
@@ -285,6 +286,11 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
         formatter: (value: number) => value > 0 ? value : ''
       }
     },
+    // Configuración específica para barras
+    barThickness: 'flex',
+    maxBarThickness: 60,
+    categoryPercentage: 0.8,
+    barPercentage: 0.9,
     scales: {
       y: {
         beginAtZero: true,

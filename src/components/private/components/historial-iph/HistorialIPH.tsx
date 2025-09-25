@@ -6,7 +6,7 @@
  * - Hook personalizado para lógica de negocio
  * - Componentes atómicos separados
  * - Estados de carga y error
- * - Servicios mock integrados con documentación JSDoc TODO
+ * - Servicios integrados con backend
  * - Sistema de roles (Admin/SuperAdmin only)
  * - Vista detalle dummy para futuro desarrollo
  * - Logging completo de eventos
@@ -55,7 +55,9 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
     filtros,
     paginacion,
     registroSeleccionado,
+    estatusOptions,
     setFiltros,
+    clearAllFilters,
     setCurrentPage,
     refetchData,
     clearError,
@@ -135,12 +137,6 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
         </div>
         
         <div className="flex items-center gap-3">
-          {/* Indicador de datos mock */}
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-800 rounded-md text-sm">
-            <AlertCircle size={14} />
-            <span>Datos Mock</span>
-          </div>
-          
           {/* Botón de actualización */}
           <button
             onClick={handleRefresh}
@@ -149,6 +145,7 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
               flex items-center gap-2 px-4 py-2
               bg-[#4d4725] text-white rounded-lg
               hover:bg-[#3a3519] transition-colors duration-200
+              cursor-pointer
               disabled:opacity-50 disabled:cursor-not-allowed
               focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-2
             "
@@ -178,6 +175,7 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
         filtros={filtros}
         onFiltrosChange={setFiltros}
         loading={loading}
+        estatusOptions={estatusOptions}
         className="mb-6"
       />
 
@@ -196,7 +194,7 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
                 onClick={clearError}
                 className="
                   text-sm text-red-600 hover:text-red-800
-                  underline transition-colors
+                  underline transition-colors cursor-pointer
                 "
               >
                 Ocultar error
@@ -205,7 +203,7 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
                 onClick={handleRefresh}
                 className="
                   text-sm text-red-600 hover:text-red-800
-                  underline transition-colors
+                  underline transition-colors cursor-pointer
                 "
               >
                 Reintentar
@@ -236,17 +234,17 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
               className="
                 px-6 py-2 bg-[#4d4725] text-white rounded-lg
                 hover:bg-[#3a3519] transition-colors
-                flex items-center gap-2
+                flex items-center gap-2 cursor-pointer
               "
             >
               <RefreshCw size={16} />
               Intentar nuevamente
             </button>
             <button
-              onClick={() => setFiltros({})}
+              onClick={clearAllFilters}
               className="
                 px-6 py-2 border border-gray-300 text-gray-700 rounded-lg
-                hover:bg-gray-50 transition-colors
+                hover:bg-gray-50 transition-colors cursor-pointer
               "
             >
               Limpiar filtros
@@ -293,12 +291,6 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
                 )}
               </div>
               
-              <div className="flex items-center gap-2">
-                <AlertCircle size={14} className="text-amber-500" />
-                <span className="text-amber-600">
-                  Datos de prueba - Cambiar USE_MOCK_DATA en el servicio
-                </span>
-              </div>
             </div>
           </div>
         </div>

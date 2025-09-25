@@ -114,6 +114,11 @@ export const estatusConfig = {
     color: '#ef4444', // red-500
     bgColor: '#fee2e2', // red-100
     label: 'Cancelados'
+  },
+  'N/D': {
+    color: '#6b7280', // gray-500
+    bgColor: '#e5e7eb', // gray-200
+    label: 'No Disponible'
   }
 } as const;
 
