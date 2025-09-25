@@ -67,7 +67,7 @@ fi
 # 1. Build de la imagen Docker con argumentos
 log_info "Construyendo imagen Docker con variables de entorno..."
 if sudo docker build \
-    --build-arg VITE_API_BASE_URL="http://localhost:3000" \
+    --build-arg VITE_API_BASE_URL="https://iph01.okip.com.mx" \
     --build-arg VITE_SUPERADMIN_ROLE='[{"id":1,"nombre":"SuperAdmin"}]' \
     --build-arg VITE_ADMIN_ROLE='[{"id":2,"nombre":"Administrador"}]' \
     --build-arg VITE_SUPERIOR_ROLE='[{"id":3,"nombre":"Superior"}]' \
