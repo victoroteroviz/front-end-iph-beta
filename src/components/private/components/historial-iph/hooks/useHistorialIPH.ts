@@ -245,9 +245,7 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
       page: respuesta.meta.pagina,
       limit: respuesta.meta.itemsPorPagina,
       total: respuesta.meta.total,
-      totalPages: respuesta.meta.totalPaginas,
-      hasNextPage: respuesta.meta.pagina < respuesta.meta.totalPaginas,
-      hasPrevPage: respuesta.meta.pagina > 1
+      totalPages: respuesta.meta.totalPaginas
     };
 
     return {
@@ -503,7 +501,7 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
    * Edita el estatus de un registro
    */
   const editarEstatus = useCallback(async (
-    id: number, 
+    id: string,
     nuevoEstatus: RegistroHistorialIPH['estatus']
   ): Promise<void> => {
     if (!hasAccess) {

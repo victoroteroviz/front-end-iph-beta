@@ -327,10 +327,10 @@ export const updateEstatusIPH = async (params: UpdateEstatusIPHParams): Promise<
 /**
  * Obtiene un registro específico por ID
  * 
- * @param {number} id - ID del registro
+ * @param {string} id - ID del registro
  * @returns {Promise<RegistroHistorialIPH | null>}
  */
-export const getRegistroIPHById = async (id: number): Promise<RegistroHistorialIPH | null> => {
+export const getRegistroIPHById = async (id: string): Promise<RegistroHistorialIPH | null> => {
   try {
     logInfo('HistorialIPH Service', 'Obteniendo registro por ID', { id });
     

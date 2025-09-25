@@ -91,7 +91,7 @@ export interface HistorialTableProps {
   registros: RegistroHistorialIPH[];
   loading?: boolean;
   onVerDetalle: (registro: RegistroHistorialIPH) => void;
-  onEditarEstatus?: (id: number, nuevoEstatus: RegistroHistorialIPH['estatus']) => void;
+  onEditarEstatus?: (id: string, nuevoEstatus: RegistroHistorialIPH['estatus']) => void;
   className?: string;
 }
 
@@ -167,7 +167,7 @@ export interface UseHistorialIPHActions {
   clearError: () => void;
   verDetalle: (registro: RegistroHistorialIPH) => void;
   cerrarDetalle: () => void;
-  editarEstatus: (id: number, nuevoEstatus: RegistroHistorialIPH['estatus']) => Promise<void>;
+  editarEstatus: (id: string, nuevoEstatus: RegistroHistorialIPH['estatus']) => Promise<void>;
   canGoToNextPage: boolean;
   canGoToPreviousPage: boolean;
   goToNextPage: () => void;
@@ -203,7 +203,7 @@ export interface GetHistorialIPHParams {
  * Parámetros para actualizar el estatus de un IPH
  */
 export interface UpdateEstatusIPHParams {
-  id: number;
+  id: string;
   nuevoEstatus: RegistroHistorialIPH['estatus'];
   observaciones?: string;
 }

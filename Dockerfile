@@ -1,34 +1,93 @@
-# Se usa imagen oficial de Node.js basada en Alpine Linux
-FROM node:18-alpine
+# Etapa 1: Build
+FROM node:current-alpine AS builder
 
-# Se crea un usuario no-root para mayor seguridad
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
+# Se instalan dependencias necesarias para el build
+RUN apk add --no-cache libc6-compat
 
-# Se establece el directorio de trabajo dentro del contenedor
+# Se definen argumentos de build para las variables de entorno de Vite
+ARG VITE_API_BASE_URL
+ARG VITE_SUPERADMIN_ROLE
+ARG VITE_ADMIN_ROLE
+ARG VITE_SUPERIOR_ROLE
+ARG VITE_ELEMENTO_ROLE
+ARG VITE_LOG_LEVEL
+ARG VITE_LOG_CONSOLE
+ARG VITE_LOG_STORAGE
+ARG VITE_LOG_MAX_ENTRIES
+ARG VITE_HTTP_TIMEOUT
+ARG VITE_HTTP_RETRIES
+ARG VITE_HTTP_RETRY_DELAY
+ARG VITE_AUTH_HEADER_NAME
+ARG VITE_AUTH_HEADER_PREFIX
+ARG VITE_AUTH_TOKEN_KEY
+ARG VITE_DEBUG_MODE
+ARG VITE_APP_VERSION
+ARG VITE_APP_NAME
+
+# Se convierten los argumentos a variables de entorno para Vite
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_SUPERADMIN_ROLE=$VITE_SUPERADMIN_ROLE
+ENV VITE_ADMIN_ROLE=$VITE_ADMIN_ROLE
+ENV VITE_SUPERIOR_ROLE=$VITE_SUPERIOR_ROLE
+ENV VITE_ELEMENTO_ROLE=$VITE_ELEMENTO_ROLE
+ENV VITE_LOG_LEVEL=$VITE_LOG_LEVEL
+ENV VITE_LOG_CONSOLE=$VITE_LOG_CONSOLE
+ENV VITE_LOG_STORAGE=$VITE_LOG_STORAGE
+ENV VITE_LOG_MAX_ENTRIES=$VITE_LOG_MAX_ENTRIES
+ENV VITE_HTTP_TIMEOUT=$VITE_HTTP_TIMEOUT
+ENV VITE_HTTP_RETRIES=$VITE_HTTP_RETRIES
+ENV VITE_HTTP_RETRY_DELAY=$VITE_HTTP_RETRY_DELAY
+ENV VITE_AUTH_HEADER_NAME=$VITE_AUTH_HEADER_NAME
+ENV VITE_AUTH_HEADER_PREFIX=$VITE_AUTH_HEADER_PREFIX
+ENV VITE_AUTH_TOKEN_KEY=$VITE_AUTH_TOKEN_KEY
+ENV VITE_DEBUG_MODE=$VITE_DEBUG_MODE
+ENV VITE_APP_VERSION=$VITE_APP_VERSION
+ENV VITE_APP_NAME=$VITE_APP_NAME
+
+# Se establece el directorio de trabajo
 WORKDIR /app
 
-# Se copian los archivos de configuración del proyecto al contenedor
+# Se copian archivos de configuración
 COPY package*.json ./
 
-# Se instalan las dependencias del proyecto (incluyendo dev dependencies para el build)
-RUN npm ci && npm cache clean --force
+# Se instalan todas las dependencias (incluidas las de desarrollo)
+RUN npm ci
 
-# Se copian todos los archivos del proyecto al contenedor
-COPY --chown=nextjs:nodejs . .
+# Se copian todos los archivos del proyecto
+COPY . .
 
-# Se construye la aplicación para producción
+# Se construye la aplicación con las variables de entorno
 RUN npm run build
+
+# Etapa 2: Producción
+FROM node:current-alpine AS runner
+
+# Se crea usuario no-root para seguridad
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
+
+# Se establece el directorio de trabajo
+WORKDIR /app
+
+# Se cambian permisos del directorio
+RUN chown nextjs:nodejs /app
 
 # Se cambia al usuario no-root
 USER nextjs
 
-# Se expone el puerto 4173 para Vite preview
+# Se copian solo los archivos necesarios desde la etapa de build
+COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nextjs:nodejs /app/package*.json ./
+
+# Se instalan solo dependencias de producción
+RUN npm ci --only=production && npm cache clean --force
+
+# Se expone el puerto 4173
 EXPOSE 4173
 
-# Se verifica que Node.js funcione
+# Healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node --version || exit 1
 
-# Se define el comando para iniciar la aplicación
+# Comando para iniciar la aplicación
 CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "4173"]

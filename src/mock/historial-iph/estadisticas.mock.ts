@@ -24,7 +24,7 @@ const calculateEstadisticas = (): EstadisticasHistorial => {
   const anioActual = fechaActual.getFullYear();
   
   const total_mes_actual = registrosMockData.filter(registro => {
-    const fechaRegistro = new Date(registro.fecha);
+    const fechaRegistro = new Date(registro.fechaCreacion);
     return (
       fechaRegistro.getMonth() + 1 === mesActual &&
       fechaRegistro.getFullYear() === anioActual
@@ -35,13 +35,15 @@ const calculateEstadisticas = (): EstadisticasHistorial => {
   const promedio_diario = Math.round((total_mes_actual / 30) * 10) / 10;
   
   return {
-    total_registros,
-    activos,
-    inactivos,
-    pendientes,
-    cancelados,
-    total_mes_actual,
-    promedio_diario
+    total: total_registros,
+    promedioPorDia: promedio_diario,
+    registroPorMes: total_mes_actual,
+    estatusPorIph: [
+      { estatus: 'Activo', cantidad: activos },
+      { estatus: 'Inactivo', cantidad: inactivos },
+      { estatus: 'Pendiente', cantidad: pendientes },
+      { estatus: 'Cancelado', cantidad: cancelados }
+    ]
   };
 };
 
@@ -70,7 +72,7 @@ export const getEstadisticasWithFilters = (
   const anioActual = fechaActual.getFullYear();
   
   const total_mes_actual = registrosFiltrados.filter(registro => {
-    const fechaRegistro = new Date(registro.fecha);
+    const fechaRegistro = new Date(registro.fechaCreacion);
     return (
       fechaRegistro.getMonth() + 1 === mesActual &&
       fechaRegistro.getFullYear() === anioActual
@@ -81,13 +83,15 @@ export const getEstadisticasWithFilters = (
   const promedio_diario = Math.round((total_mes_actual / 30) * 10) / 10;
   
   return {
-    total_registros,
-    activos,
-    inactivos,
-    pendientes,
-    cancelados,
-    total_mes_actual,
-    promedio_diario
+    total: total_registros,
+    promedioPorDia: promedio_diario,
+    registroPorMes: total_mes_actual,
+    estatusPorIph: [
+      { estatus: 'Activo', cantidad: activos },
+      { estatus: 'Inactivo', cantidad: inactivos },
+      { estatus: 'Pendiente', cantidad: pendientes },
+      { estatus: 'Cancelado', cantidad: cancelados }
+    ]
   };
 };
 

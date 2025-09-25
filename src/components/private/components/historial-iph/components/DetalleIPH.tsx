@@ -102,15 +102,17 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
     }
   };
 
-  const { formattedDate, formattedTime } = formatDateTime(registro.fecha, registro.hora);
-  const estatusInfo = estatusConfig[registro.estatus];
+  const { formattedDate, formattedTime } = formatDateTime(registro.fechaCreacion.toISOString().split('T')[0], registro.fechaCreacion.toTimeString().split(' ')[0]);
+  const estatusInfo = estatusConfig[registro.estatus as keyof typeof estatusConfig] || estatusConfig['N/D'];
 
   /**
    * Datos dummy para la vista detallada
    */
   const dummyData = {
     ubicacionCompleta: {
-      direccion: registro.ubicacion,
+      direccion: registro.ubicacion
+        ? `Lat: ${registro.ubicacion.latitud}, Lng: ${registro.ubicacion.longitud}`
+        : 'Sin ubicación especificada',
       colonia: 'Col. Centro',
       municipio: 'Ciudad de México',
       cp: '06000',
@@ -202,7 +204,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
             <div className="flex items-center gap-2">
               <Shield size={24} className="text-[#4d4725]" />
               <h2 className="text-xl font-bold text-[#4d4725]">
-                Detalle IPH - {registro.numero_reporte}
+                Detalle IPH - {registro.numeroReferencia}
               </h2>
             </div>
             
@@ -315,7 +317,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                     <div className="flex items-center gap-2">
                       <AlertTriangle size={16} className="text-gray-400" />
                       <span className="text-sm text-gray-600">Tipo de delito:</span>
-                      <span className="font-medium">{registro.tipo_delito}</span>
+                      <span className="font-medium">{registro.tipoDelito}</span>
                     </div>
                     
                     <div className="flex items-center gap-2">

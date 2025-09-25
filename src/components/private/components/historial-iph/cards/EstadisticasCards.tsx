@@ -22,6 +22,21 @@ import {
 import type { EstadisticasCardsProps } from '../../../../../interfaces/components/historialIph.interface';
 
 /**
+ * Interface para la configuración de las tarjetas de estadísticas
+ */
+interface CardConfig {
+  key: string;
+  label: string;
+  value: number;
+  icon: React.ComponentType<any>;
+  color: string;
+  bgColor: string;
+  description: string;
+  suffix?: string;
+  isBaseCard: boolean;
+}
+
+/**
  * Mapeo de iconos por tipo de estatus (dinámico)
  */
 const getIconForEstatus = (estatus: string) => {
@@ -88,7 +103,7 @@ const EstadisticasCards: React.FC<EstadisticasCardsProps> = ({
   /**
    * Configuración dinámica de las tarjetas de estadísticas
    */
-  const cardsConfig = useMemo(() => {
+  const cardsConfig = useMemo((): CardConfig[] => {
     const baseCards = [
       {
         key: 'total',
@@ -136,6 +151,7 @@ const EstadisticasCards: React.FC<EstadisticasCardsProps> = ({
         color: colors.color,
         bgColor: colors.bgColor,
         description: `Casos ${item.estatus.toLowerCase()}`,
+        suffix: '',
         isBaseCard: false
       };
     });
