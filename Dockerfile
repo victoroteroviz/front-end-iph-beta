@@ -62,6 +62,9 @@ RUN npm run build
 # Etapa 2: Producción
 FROM node:current-alpine AS runner
 
+# Se instala serve para servir archivos estáticos (antes de cambiar usuario)
+RUN npm install -g serve
+
 # Se crea usuario no-root para seguridad
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
@@ -75,12 +78,8 @@ RUN chown nextjs:nodejs /app
 # Se cambia al usuario no-root
 USER nextjs
 
-# Se copian solo los archivos necesarios desde la etapa de build
+# Se copian solo los archivos construidos
 COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nextjs:nodejs /app/package*.json ./
-
-# Se instalan solo dependencias de producción
-RUN npm ci --only=production && npm cache clean --force
 
 # Se expone el puerto 4173
 EXPOSE 4173
@@ -90,4 +89,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node --version || exit 1
 
 # Comando para iniciar la aplicación
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "4173"]
+CMD ["serve", "-s", "dist", "-l", "4173", "--no-port-switching", "--no-clipboard"]

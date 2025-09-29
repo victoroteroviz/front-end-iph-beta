@@ -1,17 +1,19 @@
 #!/bin/bash
 
-# Script para build, tag, push y deploy de la aplicación back-end_iph
-# Uso: ./deploy.sh <version>
-# Ejemplo: ./deploy.sh 0.14.0 o ./deploy.sh 1.0
+# ====================================================================
+# 🚀 SCRIPT DE DESPLIEGUE IPH - PRODUCCIÓN OPTIMIZADA
+# ====================================================================
 
-# Colores para output
+set -e  # Exit on any error
+
+# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Función para mostrar mensajes con colores
+# Functions
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -28,73 +30,157 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Verificar si se proporcionó la versión
-if [ $# -eq 0 ]; then
-    log_error "Debes proporcionar una versión como parámetro"
-    echo "Uso: $0 <version>"
-    echo "Ejemplo: $0 0.14.0 o $0 1.0"
+# ============================================
+# 🔧 CONFIGURACIÓN INICIAL
+# ============================================
+
+# Verificar que existe el archivo .env
+if [ ! -f .env ]; then
+    log_error "Archivo .env no encontrado. Copia .env.production.example a .env y configúralo."
     exit 1
 fi
 
-VERSION=$1
-IMAGE_NAME="front-end-iph"
-DOCKER_USERNAME="victoroteroviz"
+# Cargar variables de entorno
+source .env
 
+log_info "🚀 Iniciando despliegue de IPH..."
+log_info "📦 Dominio: ${VIRTUAL_HOST}"
+log_info "🌐 Network ID: ${DOCKER_NETWORK_ID:-iph}"
 
-# Validar que la versión no esté vacía
-if [ -z "$VERSION" ]; then
-    log_error "La versión no puede estar vacía"
+# ============================================
+# 🔍 VERIFICACIONES PREVIAS
+# ============================================
+
+log_info "🔍 Verificando dependencias..."
+
+# Verificar Docker
+if ! command -v docker &> /dev/null; then
+    log_error "Docker no está instalado"
     exit 1
 fi
 
+# Verificar Docker Compose
+if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+    log_error "Docker Compose no está instalado"
+    exit 1
+fi
 
-log_info "Iniciando deploy de $IMAGE_NAME:$VERSION"
-# 1. Build de la imagen Docker
-log_info "Construyendo imagen Docker..."
-if sudo docker build -t $IMAGE_NAME:$VERSION .; then
-    log_success "Imagen construida exitosamente: $IMAGE_NAME:$VERSION"
+# Verificar red de Traefik
+if ! docker network ls | grep -q "traefik"; then
+    log_warning "Red 'traefik' no encontrada. Asegúrate de que Traefik esté corriendo."
+fi
+
+# Verificar red de base de datos
+if ! docker network ls | grep -q "iph-vault"; then
+    log_warning "Red 'iph-vault' no encontrada. Asegúrate de que la base de datos esté disponible."
+fi
+
+log_success "✅ Verificaciones completadas"
+
+# ============================================
+# 🛑 DETENER SERVICIOS EXISTENTES
+# ============================================
+
+log_info "🛑 Deteniendo servicios existentes..."
+
+# Detener contenedores si existen
+docker stop iph-frontend iph-backend 2>/dev/null || true
+docker rm iph-frontend iph-backend 2>/dev/null || true
+
+log_success "✅ Servicios detenidos"
+
+# ============================================
+# 🌐 CREAR REDES
+# ============================================
+
+log_info "🌐 Configurando redes..."
+
+# Crear red interna si no existe
+if ! docker network ls | grep -q "iph-internal"; then
+    docker network create \
+        --driver bridge \
+        --subnet=172.22.0.0/16 \
+        --gateway=172.22.0.1 \
+        iph-internal
+    log_success "✅ Red 'iph-internal' creada"
 else
-    log_error "Error al construir la imagen Docker"
+    log_info "🔄 Red 'iph-internal' ya existe"
+fi
+
+# ============================================
+# 🚀 DESPLEGAR SERVICIOS
+# ============================================
+
+log_info "🚀 Desplegando servicios..."
+
+# Usar docker-compose unified
+if [ -f "docker-compose-unified.yaml" ]; then
+    log_info "📦 Usando configuración unificada..."
+    docker-compose -f docker-compose-unified.yaml up -d
+else
+    log_error "Archivo docker-compose-unified.yaml no encontrado"
     exit 1
 fi
 
+log_success "✅ Servicios desplegados"
 
-# 2. Tag de la imagen
-log_info "Creando tag para DockerHub..."
-if sudo docker tag $IMAGE_NAME:$VERSION $DOCKER_USERNAME/$IMAGE_NAME:$VERSION; then
-    log_success "Tag creado exitosamente: $DOCKER_USERNAME/$IMAGE_NAME:$VERSION"
-else
-    log_error "Error al crear el tag"
-    exit 1
-fi
+# ============================================
+# 🔍 VERIFICAR SALUD DE SERVICIOS
+# ============================================
 
-# 3. Push a DockerHub
-log_info "Subiendo imagen a DockerHub..."
-if sudo docker push $DOCKER_USERNAME/$IMAGE_NAME:$VERSION; then
-    log_success "Imagen subida exitosamente a DockerHub"
-else
-    log_error "Error al subir la imagen a DockerHub"
-    exit 1
-fi
+log_info "🔍 Verificando salud de servicios..."
 
-# 4. Deploy con docker-compose
-log_info "Desplegando aplicación con docker-compose..."
-if sudo docker compose -f docker-compose.yml up -d; then
-    log_success "Aplicación desplegada exitosamente"
-else
-    log_error "Error al desplegar la aplicación"
-    exit 1
-fi
+# Esperar a que los servicios estén listos
+sleep 10
 
-# 5. Mostrar logs (opcional)
-log_info "¿Deseas ver los logs en tiempo real? (y/n)"
-read -r show_logs
+# Verificar backend
+log_info "🔧 Verificando backend..."
+for i in {1..30}; do
+    if docker exec iph-backend wget --no-verbose --tries=1 --spider http://localhost:6000/api/health 2>/dev/null; then
+        log_success "✅ Backend está funcionando"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        log_error "❌ Backend no responde después de 5 minutos"
+        docker logs iph-backend --tail 50
+        exit 1
+    fi
+    log_info "⏳ Esperando backend... ($i/30)"
+    sleep 10
+done
 
-if [[ $show_logs == "y" || $show_logs == "Y" || $show_logs == "yes" || $show_logs == "YES" ]]; then
-    log_info "Mostrando logs en tiempo real... (Ctrl+C para salir)"
-    sudo docker logs -f iph-frontend
-else
-    log_success "Deploy completado. Para ver los logs usa: sudo docker logs -f <container_name>"
-fi
+# Verificar frontend
+log_info "🎨 Verificando frontend..."
+for i in {1..30}; do
+    if docker exec iph-frontend wget --no-verbose --tries=1 --spider http://localhost:4173 2>/dev/null; then
+        log_success "✅ Frontend está funcionando"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        log_error "❌ Frontend no responde después de 5 minutos"
+        docker logs iph-frontend --tail 50
+        exit 1
+    fi
+    log_info "⏳ Esperando frontend... ($i/30)"
+    sleep 10
+done
 
-log_success "¡Deploy finalizado exitosamente para la versión $VERSION!"
+# ============================================
+# 📊 RESUMEN FINAL
+# ============================================
+
+log_success "🎉 ¡Despliegue completado exitosamente!"
+echo ""
+log_info "📋 Resumen del despliegue:"
+log_info "   🌐 Frontend: https://${VIRTUAL_HOST}"
+log_info "   🔧 Backend: https://api.${VIRTUAL_HOST}"
+log_info "   🐳 Contenedores: iph-frontend, iph-backend"
+log_info "   🌐 Redes: traefik, iph-vault, iph-internal"
+echo ""
+log_info "📝 Comandos útiles:"
+log_info "   📊 Ver logs: docker logs iph-frontend -f"
+log_info "   📊 Ver logs: docker logs iph-backend -f"
+log_info "   🔍 Estado: docker ps"
+log_info "   🛑 Detener: docker-compose -f docker-compose-unified.yaml down"
+echo ""
+log_success "✨ El sistema IPH está listo para usar!"
