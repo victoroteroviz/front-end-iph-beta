@@ -11,7 +11,6 @@
 import { logInfo, logError } from '../log/logger.helper';
 import type { Token } from '../../interfaces/token/token.interface';
 import { ALLOWED_ROLES } from '../../config/env.config';
-import { STORAGE_KEYS } from '../../interfaces/auth/auth.interface';
 
 // Tipos para el helper de navegación
 export interface NavigationConfig {
@@ -115,8 +114,8 @@ class NavigationHelper {
    */
   public getUserFromStorage(): UserData | null {
     try {
-      const userData = sessionStorage.getItem(STORAGE_KEYS.USER_PROFILE);
-      const rolesData = sessionStorage.getItem(STORAGE_KEYS.USER_ROLES);
+      const userData = sessionStorage.getItem('user_data');
+      const rolesData = sessionStorage.getItem('roles');
       
       if (!userData || !rolesData) return null;
 
@@ -140,9 +139,9 @@ class NavigationHelper {
    */
   public isUserAuthenticated(): boolean {
     try {
-      const token = sessionStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-      const userData = sessionStorage.getItem(STORAGE_KEYS.USER_PROFILE);
-      const roles = sessionStorage.getItem(STORAGE_KEYS.USER_ROLES);
+      const token = sessionStorage.getItem('token');
+      const userData = sessionStorage.getItem('user_data');
+      const roles = sessionStorage.getItem('roles');
 
       return !!(token && userData && roles);
 
@@ -157,9 +156,9 @@ class NavigationHelper {
    */
   public clearNavigationData(): void {
     try {
-      sessionStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
-      sessionStorage.removeItem(STORAGE_KEYS.USER_ROLES);
-      sessionStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      sessionStorage.removeItem('user_data');
+      sessionStorage.removeItem('roles');
+      sessionStorage.removeItem('token');
       
       if (this.config.enableNavigationLogging) {
         logInfo('NavigationHelper', 'Datos de navegación limpiados');

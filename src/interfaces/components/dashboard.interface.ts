@@ -23,6 +23,8 @@ export interface SidebarItemConfig {
  */
 export interface SidebarConfig {
   title: string;
+  logo?: string;
+  isotipo?: string;
   items: SidebarItemConfig[];
 }
 
@@ -47,6 +49,7 @@ export interface SidebarProps {
   isOpen?: boolean;
   onToggle?: () => void;
   isMobile?: boolean;
+  onCollapseChange?: (isCollapsed: boolean) => void;
 }
 
 /**

@@ -6,7 +6,7 @@
 
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut, X } from 'lucide-react';
+import { LogOut, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Helpers
 import { logInfo, logError } from '../../../../helper/log/logger.helper';
@@ -106,7 +106,8 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
   className = '',
   isOpen = false,
   onToggle,
-  isMobile: _isMobile = false
+  isMobile: _isMobile = false,
+  onCollapseChange
 }) => {
   const location = useLocation();
   const { 
@@ -118,6 +119,8 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
 
   // Estado para detectar si estamos en móvil
   const [windowWidth, setWindowWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 1024);
+  const [isManuallyCollapsed, setIsManuallyCollapsed] = useState<boolean>(false);
+
   const isActuallyMobile = windowWidth < 768;
   const isTablet = windowWidth >= 768 && windowWidth < 1024;
   const isDesktop = windowWidth >= 1024;
@@ -138,7 +141,7 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
   const onLogout = propOnLogout || sessionLogout;
 
   // Determinar si debe estar colapsado
-  const shouldCollapse = isTablet;
+  const shouldCollapse = isManuallyCollapsed || isTablet;
   const shouldUseOverlay = isActuallyMobile;
 
   /**
@@ -186,6 +189,22 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
     }
   }, [onToggle]);
 
+  /**
+   * Maneja el toggle del colapso manual del sidebar
+   */
+  const handleToggleCollapse = useCallback((): void => {
+    setIsManuallyCollapsed(prev => {
+      const newCollapsedState = !prev;
+      logInfo('Sidebar', 'Manual collapse toggled', {
+        wasCollapsed: prev,
+        nowCollapsed: newCollapsedState,
+        currentPath: location.pathname,
+        userRole: userRole || 'unknown'
+      });
+      return newCollapsedState;
+    });
+  }, [location.pathname, userRole]);
+
   // Log cuando se filtra el sidebar según permisos
   React.useEffect(() => {
     if (userRole && !isLoading) {
@@ -197,6 +216,13 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
       });
     }
   }, [userRole, filteredItems, isLoading]);
+
+  // Notificar cambios de colapso al Dashboard
+  React.useEffect(() => {
+    if (onCollapseChange && !shouldUseOverlay) {
+      onCollapseChange(shouldCollapse);
+    }
+  }, [shouldCollapse, shouldUseOverlay, onCollapseChange]);
 
   // Si no está autenticado y no hay props, no renderizar
   if (!userRole && !isAuthenticated && !propUserRole) {
@@ -233,15 +259,15 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
         />
       )}
       
-      <aside 
+      <aside
         className={`
-          ${shouldUseOverlay 
+          ${shouldUseOverlay
             ? `fixed left-0 top-0 h-full z-50 transform transition-transform duration-300 ease-in-out
                ${isOpen ? 'translate-x-0' : '-translate-x-full'}
                w-64`
-            : shouldCollapse 
-              ? 'w-16 lg:w-60'
-              : 'w-60'
+            : shouldCollapse
+              ? 'w-16 transition-all duration-300 ease-in-out'
+              : 'w-60 transition-all duration-300 ease-in-out'
           }
           bg-[#948b54] text-white flex flex-col justify-between
           font-poppins shadow-lg
@@ -252,22 +278,71 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
       >
       {/* Header del sidebar */}
       <div>
-        {/* Título/Brand con botón de cierre en móvil */}
-        <div className="p-4 font-bold text-lg border-b border-white/20 relative">
+        {/* Logo/Brand con botones de control */}
+        <div className="border-b border-white/20 relative">
+          {/* Contenedor del logo con padding ajustado para el botón */}
+          <div className={`transition-all duration-200 ${
+            shouldCollapse && !shouldUseOverlay
+              ? 'p-2 pr-10'
+              : shouldUseOverlay
+                ? 'p-4 pr-12'
+                : 'p-4 pr-12'
+          } flex items-center justify-center`}>
+            {SIDEBAR_CONFIG.logo || SIDEBAR_CONFIG.isotipo ? (
+              <img
+                src={shouldCollapse && !shouldUseOverlay
+                  ? SIDEBAR_CONFIG.isotipo || SIDEBAR_CONFIG.logo
+                  : SIDEBAR_CONFIG.logo
+                }
+                alt="IPH Logo"
+                className={`transition-all duration-200 ${
+                  shouldCollapse && !shouldUseOverlay
+                    ? 'h-6 w-6 object-contain'
+                    : shouldUseOverlay
+                      ? 'h-10 w-full object-contain'
+                      : 'h-12 w-full object-contain'
+                }`}
+              />
+            ) : (
+              <h1 className={`text-white font-bold leading-tight transition-opacity duration-200 ${
+                shouldCollapse && !shouldUseOverlay ? 'lg:opacity-100 opacity-0 text-xs text-center' : 'text-lg'
+              }`}>
+                {shouldCollapse && !shouldUseOverlay ? 'IPH' : SIDEBAR_CONFIG.title}
+              </h1>
+            )}
+          </div>
+
+          {/* Botones de control posicionados fuera del contenedor del logo */}
+          {/* Botón de cierre en móvil */}
           {shouldUseOverlay && (
             <button
               onClick={handleClose}
-              className="absolute right-2 top-2 p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="absolute right-2 top-2 p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/30 cursor-pointer"
               aria-label="Cerrar menú"
             >
-              <X size={20} />
+              <X size={16} className="text-white drop-shadow-sm" />
             </button>
           )}
-          <h1 className={`text-white leading-tight transition-opacity duration-200 ${
-            shouldCollapse && !shouldUseOverlay ? 'lg:opacity-100 opacity-0 text-xs text-center' : ''
-          }`}>
-            {shouldCollapse && !shouldUseOverlay ? 'IPH' : SIDEBAR_CONFIG.title}
-          </h1>
+
+          {/* Botón de colapso en desktop/tablet */}
+          {!shouldUseOverlay && (
+            <button
+              onClick={handleToggleCollapse}
+              className={`absolute p-1.5 rounded-lg transition-all duration-200 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/30 cursor-pointer ${
+                shouldCollapse && !shouldUseOverlay
+                  ? 'right-1 top-1 bg-white/20 hover:bg-white/30 shadow-lg backdrop-blur-sm'
+                  : 'right-2 top-2 bg-white/10 hover:bg-white/20'
+              }`}
+              aria-label={isManuallyCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+              title={isManuallyCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+            >
+              {isManuallyCollapsed ? (
+                <ChevronRight size={16} className="text-white drop-shadow-sm" />
+              ) : (
+                <ChevronLeft size={16} className="text-white drop-shadow-sm" />
+              )}
+            </button>
+          )}
         </div>
 
         {/* Navegación principal */}

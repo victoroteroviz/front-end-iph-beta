@@ -53,6 +53,9 @@ const DashboardContent: React.FC<DashboardProps> = ({
   // Hook para manejo del sidebar responsive
   const sidebar = useSidebar();
 
+  // Estado para el colapso del sidebar
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+
   // Resetear scroll cuando cambia la ruta
   React.useEffect(() => {
     if (scrollContainerRef.current) {
@@ -105,13 +108,14 @@ const DashboardContent: React.FC<DashboardProps> = ({
       aria-label="Dashboard principal"
     >
       {/* Sidebar Responsive */}
-      <Sidebar 
+      <Sidebar
         userRole={userRole}
         onLogout={logout}
         className={sidebar.isMobile ? '' : 'flex-shrink-0'}
         isOpen={sidebar.isOpen}
         onToggle={sidebar.toggle}
         isMobile={sidebar.isMobile}
+        onCollapseChange={setSidebarCollapsed}
       />
 
       {/* Main Content Area */}

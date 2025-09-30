@@ -16,8 +16,6 @@ import {
 // Interfaces
 import type { FiltrosHistorialProps } from '../../../../../interfaces/components/historialIph.interface';
 
-// Configuración de opciones (fallback para UI)
-import { tiposDelitoOptions, estatusConfig } from '../../../../../mock/historial-iph';
 
 /**
  * Componente de filtros para el historial
@@ -29,33 +27,12 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
   filtros,
   onFiltrosChange,
   loading = false,
-  estatusOptions = [],
   className = ''
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [localBusqueda, setLocalBusqueda] = useState(filtros.busqueda || '');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /**
-   * Opciones de estatus para el selector (usa backend si está disponible)
-   */
-  const estatusOptionsFormatted = useMemo(() => {
-    if (estatusOptions.length > 0) {
-      // Usar opciones del backend
-      return estatusOptions.map(option => ({
-        value: option,
-        label: option,
-        color: '#4d4725' // Color por defecto
-      }));
-    }
-
-    // Fallback a opciones estáticas si no hay del backend
-    return Object.entries(estatusConfig).map(([key, config]) => ({
-      value: key,
-      label: config.label,
-      color: config.color
-    }));
-  }, [estatusOptions]);
 
   /**
    * Genera fechas de rango rápido
@@ -165,11 +142,8 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
     onFiltrosChange({
       fechaInicio: '',
       fechaFin: '',
-      estatus: '',
-      tipoDelito: '',
-      usuario: '',
       busqueda: '',
-      busquedaPor: undefined
+      busquedaPor: ''
     });
   }, [onFiltrosChange]);
 
@@ -179,24 +153,6 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
   const hasActiveFilters = useMemo(() => {
     return Object.values(filtros).some(value => value && value.trim() !== '');
   }, [filtros]);
-
-  /**
-   * Efecto para sincronizar estado local con filtros externos
-   */
-  useEffect(() => {
-    setLocalBusqueda(filtros.busqueda || '');
-  }, [filtros.busqueda]);
-
-  /**
-   * Cleanup del debounce al desmontar
-   */
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, []);
 
   /**
    * Efecto para sincronizar estado local con filtros externos
@@ -268,150 +224,68 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
 
       {/* Filtros básicos (siempre visibles) */}
       <div className="p-4 space-y-4">
-        {/* Búsqueda general */}
+        {/* Filtros de búsqueda */}
         <div className="space-y-3">
+          {/* Selector de tipo de filtro */}
           <div>
-            <label htmlFor="busqueda-general" className="block text-sm font-medium text-gray-700 mb-1">
-              Búsqueda General
+            <label htmlFor="tipo-filtro" className="block text-sm font-medium text-gray-700 mb-1">
+              Tipo de filtro
             </label>
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-3 text-gray-400" aria-hidden="true" />
-              <input
-                id="busqueda-general"
-                type="text"
-                value={localBusqueda}
-                onChange={(e) => handleBusquedaChange(e.target.value)}
-                disabled={loading}
-                placeholder="Término de búsqueda..."
-                className="
-                  w-full pl-10 pr-4 py-2
-                  border border-gray-300 rounded-md
-                  bg-white text-gray-900
-                  focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  transition-colors duration-200
-                "
-              />
-              {loading && (
-                <div className="absolute right-3 top-3">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#4d4725]"></div>
-                </div>
-              )}
-            </div>
+            <select
+              id="tipo-filtro"
+              value={filtros.busquedaPor || ''}
+              onChange={(e) => handleFilterChange('busquedaPor', e.target.value)}
+              disabled={loading}
+              className="
+                w-full px-3 py-2
+                border border-gray-300 rounded-md
+                bg-white text-gray-900
+                focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
+                disabled:opacity-50 disabled:cursor-not-allowed
+                cursor-pointer transition-colors duration-200
+              "
+            >
+              <option value="">Seleccionar tipo de filtro...</option>
+              <option value="usuario">Usuario</option>
+              <option value="estatus">Estatus</option>
+              <option value="tipoDelito">Tipo de Delito</option>
+            </select>
           </div>
 
-          {/* Selector de campo de búsqueda */}
-          {localBusqueda && (
+          {/* Input de búsqueda - solo visible cuando hay tipo seleccionado */}
+          {filtros.busquedaPor && (
             <div>
-              <label htmlFor="busqueda-por" className="block text-sm font-medium text-gray-700 mb-1">
-                Buscar en
+              <label htmlFor="busqueda-general" className="block text-sm font-medium text-gray-700 mb-1">
+                Búsqueda
               </label>
-              <select
-                id="busqueda-por"
-                value={filtros.busquedaPor || 'usuario'}
-                onChange={(e) => handleFilterChange('busquedaPor', e.target.value)}
-                disabled={loading}
-                className="
-                  w-full px-3 py-2
-                  border border-gray-300 rounded-md
-                  bg-white text-gray-900
-                  focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  cursor-pointer transition-colors duration-200
-                "
-              >
-                <option value="usuario">Usuario</option>
-                <option value="estatus">Estatus</option>
-                <option value="tipoDelito">Tipo de Delito</option>
-              </select>
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-3 text-gray-400" aria-hidden="true" />
+                <input
+                  id="busqueda-general"
+                  type="text"
+                  value={localBusqueda}
+                  onChange={(e) => handleBusquedaChange(e.target.value)}
+                  disabled={loading}
+                  placeholder={`Buscar por ${filtros.busquedaPor}...`}
+                  className="
+                    w-full pl-10 pr-4 py-2
+                    border border-gray-300 rounded-md
+                    bg-white text-gray-900
+                    focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    transition-colors duration-200
+                  "
+                />
+                {loading && (
+                  <div className="absolute right-3 top-3">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#4d4725]"></div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
 
-        {/* Filtros en línea */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Estatus */}
-          <div>
-            <label htmlFor="estatus-filter" className="block text-sm font-medium text-gray-700 mb-1">
-              Estado
-            </label>
-            <select
-              id="estatus-filter"
-              value={filtros.estatus || ''}
-              onChange={(e) => handleFilterChange('estatus', e.target.value)}
-              disabled={loading}
-              className="
-                w-full px-3 py-2
-                border border-gray-300 rounded-md
-                bg-white text-gray-900
-                focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
-                disabled:opacity-50 disabled:cursor-not-allowed
-                cursor-pointer transition-colors duration-200
-              "
-            >
-              <option value="">Todos los estados</option>
-              {estatusOptionsFormatted.map(({ value, label }) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Tipo de delito */}
-          <div>
-            <label htmlFor="tipo-delito-filter" className="block text-sm font-medium text-gray-700 mb-1">
-              Tipo de Delito
-            </label>
-            <select
-              id="tipo-delito-filter"
-              value={filtros.tipoDelito || ''}
-              onChange={(e) => handleFilterChange('tipoDelito', e.target.value)}
-              disabled={loading}
-              className="
-                w-full px-3 py-2
-                border border-gray-300 rounded-md
-                bg-white text-gray-900
-                focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
-                disabled:opacity-50 disabled:cursor-not-allowed
-                cursor-pointer transition-colors duration-200
-              "
-            >
-              <option value="">Cualquier tipo de delito</option>
-              {tiposDelitoOptions.map((tipo) => (
-                <option key={tipo} value={tipo}>
-                  {tipo}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Usuario */}
-          <div>
-            <label htmlFor="usuario-filter" className="block text-sm font-medium text-gray-700 mb-1">
-              Usuario
-            </label>
-            <div className="relative">
-              <User size={16} className="absolute left-3 top-3 text-gray-400" aria-hidden="true" />
-              <input
-                id="usuario-filter"
-                type="text"
-                value={filtros.usuario || ''}
-                onChange={(e) => handleFilterChange('usuario', e.target.value)}
-                disabled={loading}
-                placeholder="Nombre completo o usuario"
-                className="
-                  w-full pl-10 pr-4 py-2
-                  border border-gray-300 rounded-md
-                  bg-white text-gray-900
-                  focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  transition-colors duration-200
-                "
-              />
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Filtros avanzados (expandibles) */}

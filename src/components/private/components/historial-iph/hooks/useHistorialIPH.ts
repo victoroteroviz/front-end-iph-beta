@@ -19,11 +19,12 @@ import { showSuccess, showError, showWarning } from '../../../../../helper/notif
 // Services
 import {
   getHistorialIPH,
+  getHistorialIPHRaw,
   updateEstatusIPH,
   getRegistroIPHById
 } from '../../../../../services/historial/historial-iph.service';
 
-import { getEstatusIph, getIphHistory, getEstatusOptions } from '../../../../../services/estatus-iph/estatus-iph.service';
+import { getEstatusIph, getEstatusOptions } from '../../../../../services/estatus-iph/estatus-iph.service';
 
 // Interfaces
 import type {
@@ -32,13 +33,18 @@ import type {
   RegistroHistorialIPH,
   EstadisticasHistorial,
   FiltrosHistorial,
-  PaginacionHistorial
+  PaginacionHistorial,
+  // Nuevas interfaces para API
+  info,
+  ResHistory,
+  Coordenadas
 } from '../../../../../interfaces/components/historialIph.interface';
 
-import type {
-  QueryHistorialDto,
-  ResHistorialIphResponse
-} from '../../../../../interfaces/estatus-iph';
+// Comentadas temporalmente - no se usan con el servicio actualizado
+// import type {
+//   QueryHistorialDto,
+//   ResHistorialIphResponse
+// } from '../../../../../interfaces/estatus-iph';
 
 
 // ==================== CONFIGURACIÓN ====================
@@ -199,63 +205,18 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
   }, []);
 
   /**
-   * Convierte filtros del formato local al formato del servicio real
+   * Convierte filtros del formato local al formato de parámetros del servicio actualizado
    */
-  const convertirFiltrosAQuery = useCallback((filtrosLocal: FiltrosHistorial, pagina: number): QueryHistorialDto => {
-    const query: QueryHistorialDto = {
-      pagina: pagina,
-      ordernaPor: 'fecha_creacion',
-      orden: 'DESC'
-    };
-
-    if (filtrosLocal.estatus) query.estatus = filtrosLocal.estatus;
-    if (filtrosLocal.tipoDelito) query.tipoDelito = filtrosLocal.tipoDelito;
-    if (filtrosLocal.usuario) query.usuario = filtrosLocal.usuario;
-    if (filtrosLocal.fechaInicio) query.fechaInicio = filtrosLocal.fechaInicio;
-    if (filtrosLocal.fechaFin) query.fechaFin = filtrosLocal.fechaFin;
-    if (filtrosLocal.busqueda) {
-      query.busqueda = filtrosLocal.busqueda;
-      query.busquedaPor = filtrosLocal.busquedaPor || 'usuario'; // Usar el campo especificado o usuario por defecto
-    }
-
-    return query;
-  }, []);
-
-  /**
-   * Convierte la respuesta del servicio real al formato esperado por el componente
-   */
-  const convertirRespuestaALocal = useCallback((respuesta: ResHistorialIphResponse) => {
-    const registrosConvertidos: RegistroHistorialIPH[] = respuesta.data.map(item => ({
-      id: item.id,
-      numeroReferencia: item.nReferencia,
-      fechaCreacion: new Date(item.fechaCreacion),
-      ubicacion: item.ubicacion ? {
-        latitud: parseFloat(item.ubicacion.latitud),
-        longitud: parseFloat(item.ubicacion.longitud)
-      } : undefined,
-      tipoDelito: item.tipoDelito || 'N/D',
-      estatus: item.estatus,
-      usuario: item.usuario,
-      // Campos adicionales que pueden ser necesarios
-      observaciones: '',
-      archivosAdjuntos: []
-    }));
-
-    const paginacionConvertida: PaginacionHistorial = {
-      page: respuesta.meta.pagina,
-      limit: respuesta.meta.itemsPorPagina,
-      total: respuesta.meta.total,
-      totalPages: respuesta.meta.totalPaginas
-    };
-
+  const convertirFiltrosAParams = useCallback((filtrosLocal: FiltrosHistorial, pagina: number) => {
     return {
-      registros: registrosConvertidos,
-      paginacion: paginacionConvertida
+      page: pagina,
+      limit: paginacion.limit,
+      filtros: filtrosLocal
     };
-  }, []);
+  }, [paginacion.limit]);
 
   /**
-   * Obtiene los datos del historial usando el servicio real
+   * Obtiene los datos del historial usando el servicio actualizado
    */
   const fetchData = useCallback(async (showLoadingState = true, currentRetryCount = 0) => {
     if (!hasAccess) {
@@ -269,59 +230,43 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
       }
       setError(null);
 
-      logInfo('useHistorialIPH', 'Obteniendo datos del historial con servicio real', {
+      logInfo('useHistorialIPH', 'Obteniendo datos del historial con servicio actualizado', {
         filtros: memoizedFiltros,
         paginacion: { page: paginacion.page, limit: paginacion.limit }
       });
 
-      // Convertir filtros al formato del servicio
-      const queryData = convertirFiltrosAQuery(memoizedFiltros, paginacion.page);
+      // Convertir filtros al formato del servicio actualizado
+      const params = convertirFiltrosAParams(memoizedFiltros, paginacion.page);
 
-      // Obtener datos del historial y estadísticas de estatus en paralelo
-      const [historialResponse, estatusResponse] = await Promise.all([
-        getIphHistory(queryData),
-        getEstatusIph().catch(error => {
-          logWarning('useHistorialIPH', 'Error al obtener estadísticas de estatus', error.message);
-          return { status: false, data: { total: 0, promedioPorDia: 0, registroPorMes: 0, estatusPorIph: [] } };
-        })
-      ]);
+      // Obtener datos del historial usando el servicio actualizado
+      // Este servicio ya devuelve el formato interno esperado
+      const historialResponse = await getHistorialIPH(params);
 
-      // Convertir respuesta del servicio real al formato local
-      const { registros: registrosConvertidos, paginacion: paginacionConvertida } = convertirRespuestaALocal(historialResponse);
-
-      // Adaptar estadísticas al nuevo formato
-      const adaptedEstadisticas: EstadisticasHistorial = {
-        total: estatusResponse.data?.total || 0,
-        promedioPorDia: estatusResponse.data?.promedioPorDia || 0,
-        registroPorMes: estatusResponse.data?.registroPorMes || 0,
-        estatusPorIph: estatusResponse.data?.estatusPorIph || []
-      };
-
-      setRegistros(registrosConvertidos);
-      setEstadisticas(adaptedEstadisticas);
-      setPaginacion(paginacionConvertida);
+      setRegistros(historialResponse.registros);
+      setEstadisticas(historialResponse.estadisticas);
+      setPaginacion(historialResponse.paginacion);
 
       // Reset retry count on success solo si es diferente de 0
       if (currentRetryCount > 0) {
         setRetryCount(0);
       }
 
-      logInfo('useHistorialIPH', 'Datos obtenidos exitosamente con servicio real', {
-        totalRegistros: registrosConvertidos.length,
-        totalFiltrados: paginacionConvertida.total,
-        pagina: paginacionConvertida.page,
-        totalEstatus: adaptedEstadisticas.total,
-        estatusCount: adaptedEstadisticas.estatusPorIph.length
+      logInfo('useHistorialIPH', 'Datos obtenidos exitosamente con servicio actualizado', {
+        totalRegistros: historialResponse.registros.length,
+        totalFiltrados: historialResponse.paginacion.total,
+        pagina: historialResponse.paginacion.page,
+        totalEstatus: historialResponse.estadisticas.total,
+        estatusCount: historialResponse.estadisticas.estatusPorIph.length
       });
 
       // Mostrar notificación solo si no hay datos
-      if (registrosConvertidos.length === 0 && Object.values(filtros).some(f => f)) {
+      if (historialResponse.registros.length === 0 && Object.values(filtros).some(f => f)) {
         showWarning('No se encontraron registros con los filtros aplicados');
       }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      logError('useHistorialIPH', error, 'Error obteniendo datos del historial con servicio real');
+      logError('useHistorialIPH', error, 'Error obteniendo datos del historial con servicio actualizado');
 
       // Implementar retry logic
       if (currentRetryCount < DEFAULT_CONFIG.maxRetries) {
@@ -342,7 +287,7 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
         setLoading(false);
       }
     }
-  }, [hasAccess, memoizedFiltros, paginacion.page, convertirFiltrosAQuery, convertirRespuestaALocal]);
+  }, [hasAccess, memoizedFiltros, paginacion.page, paginacion.limit, convertirFiltrosAParams]);
 
   // ==================== EFECTOS ====================
 

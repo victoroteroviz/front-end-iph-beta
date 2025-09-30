@@ -207,3 +207,61 @@ export interface UpdateEstatusIPHParams {
   nuevoEstatus: RegistroHistorialIPH['estatus'];
   observaciones?: string;
 }
+
+// ==================== NUEVAS INTERFACES PARA API ====================
+
+/**
+ * Interface para las coordenadas geográficas
+ */
+export interface Coordenadas {
+  longitud: string;
+  latitud: string;
+}
+
+/**
+ * Interface principal de respuesta del servicio de historial
+ */
+export interface info {
+  paginas: number;
+  total: number;
+  iph: ResHistory[];
+}
+
+/**
+ * Interface para los datos de historial (elementos individuales)
+ */
+export interface ResHistory {
+  id: string;
+  nReferencia: string;
+  fechaCreacion: string;
+  ubicacion: Coordenadas | undefined;
+  tipoDelito: string | undefined;
+  estatus: string;
+  usuario: string;
+}
+
+/**
+ * Interface para la respuesta paginada del historial (compatibilidad)
+ */
+export interface PaginatedResHistory {
+  data: ResHistoryData[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+/**
+ * Interface para los datos de historial (alias de ResHistory para compatibilidad)
+ */
+export interface ResHistoryData {
+  id: string;
+  nReferencia: string;
+  fechaCreacion: string;
+  ubicacion: Coordenadas | undefined;
+  tipoDelito: string | undefined;
+  estatus: string;
+  usuario: string;
+}

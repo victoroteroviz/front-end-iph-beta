@@ -11,8 +11,14 @@ import type { SidebarConfig, SidebarItemConfig } from '../../../../../interfaces
 /**
  * Configuración principal del sidebar
  */
+// Import del logo y isotipo
+import logoBlanco from '../../../../../assets/iph/siriph_completo_blanco.png';
+import isotipoBlanco from '../../../../../assets/iph/IPH_Isotipo_Blanco.png';
+
 export const SIDEBAR_CONFIG: SidebarConfig = {
-  title: 'Informe Policial Homologado',
+  title: 'IPH',
+  logo: logoBlanco,
+  isotipo: isotipoBlanco,
   items: [
     {
       id: 'inicio',
