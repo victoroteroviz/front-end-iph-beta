@@ -89,9 +89,36 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
               </h1>
               <p className="text-gray-600 font-poppins">
                 {state.userCanViewAll 
-                  ? 'Vista global de todos los informes policiales'
-                  : 'Vista de mis informes policiales'
+                  ? 'Vista global de todos los informes policiales por semana'
+                  : 'Vista de mis informes policiales hechos por semana'
                 }
+              </p>
+              <p className="text-gray-600 font-poppins">
+                IPH's de la semana: {(() => {
+                  // Obtener la fecha actual
+                  const now = new Date();
+                  
+                  // Calcular el lunes de la semana actual
+                  const currentDay = now.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado
+                  const daysToMonday = currentDay === 0 ? -6 : 1 - currentDay; // Si es domingo, retroceder 6 días
+                  const monday = new Date(now);
+                  monday.setDate(now.getDate() + daysToMonday);
+                  
+                  // Calcular el domingo de la semana actual (6 días después del lunes)
+                  const sunday = new Date(monday);
+                  sunday.setDate(monday.getDate() + 6);
+                  
+                  // Formatear las fechas
+                  const formatDate = (date: Date) => {
+                    return date.toLocaleDateString('es-MX', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric'
+                    });
+                  };
+                  
+                  return `${formatDate(monday)} al ${formatDate(sunday)}`;
+                })()}
               </p>
             </div>
           </div>

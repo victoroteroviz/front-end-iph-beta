@@ -139,9 +139,9 @@ const transformResHistoryDataToRegistro = (data: ResHistoryData): RegistroHistor
  * @param {number} page - Página actual
  * @param {number} limit - Límite de registros por página
  * @param {FiltrosHistorial} filtros - Filtros aplicados
- * @returns {HistorialIPHResponse}
+ * @returns {Promise<HistorialIPHResponse>}
  */
-const transformIPHArrayToHistorialResponse = (apiResponse: any[], page: number, limit: number, filtros: FiltrosHistorial = {}): HistorialIPHResponse => {
+const transformIPHArrayToHistorialResponse = async (apiResponse: any[], page: number, limit: number, filtros: FiltrosHistorial = {}): Promise<HistorialIPHResponse> => {
   // Aplicar filtros a los datos
   let filteredData = apiResponse;
 
@@ -203,12 +203,37 @@ const transformIPHArrayToHistorialResponse = (apiResponse: any[], page: number, 
   // Transformar cada IPH a RegistroHistorialIPH
   const registros: RegistroHistorialIPH[] = paginatedData.map(item => transformIPHToRegistro(item));
 
-  // Calcular estadísticas basadas en datos filtrados
+  // Calcular estadísticas base desde los datos que tenemos (siempre confiables)
+  const totalBase = apiResponse.length;
+  const estatusPorIphBase = calcularEstatusPorIph(registros);
+
+  // Tratar de obtener estadísticas mejoradas desde el endpoint (opcional)
+  let estadisticasReales;
+  try {
+    estadisticasReales = await getEstadisticasFromAPI();
+  } catch (error) {
+    logWarning('HistorialIPH Service', 'Usando estadísticas calculadas como fallback');
+    estadisticasReales = null;
+  }
+
+  // Usar estadísticas reales si están disponibles, sino usar las calculadas
+  const totalFinal = (estadisticasReales && estadisticasReales.total > 0) ? estadisticasReales.total : totalBase;
+  const promedioDiario = (estadisticasReales && estadisticasReales.promedioPorDia > 0)
+    ? estadisticasReales.promedioPorDia
+    : Math.round(totalFinal / 30);
+  const registroMensual = (estadisticasReales && estadisticasReales.registroPorMes > 0)
+    ? estadisticasReales.registroPorMes
+    : Math.round(totalFinal / 12);
+  const estatusPorIphFinal = (estadisticasReales && estadisticasReales.estatusPorIph.length > 0)
+    ? estadisticasReales.estatusPorIph
+    : estatusPorIphBase;
+
+  // Si hay filtros aplicados, ajustar el total a los datos filtrados pero mantener otras estadísticas
   const estadisticas: EstadisticasHistorial = {
-    total: filteredData.length,
-    promedioPorDia: Math.round(filteredData.length / 30), // Estimación básica
-    registroPorMes: Math.round(filteredData.length / 12), // Estimación básica
-    estatusPorIph: calcularEstatusPorIph(registros)
+    total: Object.values(filtros).some(f => f) ? filteredData.length : totalFinal,
+    promedioPorDia: promedioDiario,
+    registroPorMes: registroMensual,
+    estatusPorIph: estatusPorIphFinal
   };
 
   // Crear paginación
@@ -250,21 +275,36 @@ const transformIPHToRegistro = (iphData: any): RegistroHistorialIPH => {
 };
 
 /**
- * Convierte info a HistorialIPHResponse
+ * Convierte info a HistorialIPHResponse con estadísticas mejoradas
  * @param {info} apiResponse - Nueva respuesta del API
  * @param {number} page - Página actual
  * @param {number} limit - Elementos por página
- * @returns {HistorialIPHResponse}
+ * @returns {Promise<HistorialIPHResponse>}
  */
-const transformInfoToHistorialResponse = (apiResponse: info, page: number = 1, limit: number = 10): HistorialIPHResponse => {
+const transformInfoToHistorialResponse = async (apiResponse: info, page: number = 1, limit: number = 10): Promise<HistorialIPHResponse> => {
   const registros = apiResponse.iph.map(transformResHistoryToRegistro);
 
-  // Calcular estadísticas básicas basadas en los datos recibidos
+  // Tratar de obtener estadísticas reales desde el endpoint
+  let estadisticasReales;
+  try {
+    estadisticasReales = await getEstadisticasFromAPI();
+  } catch (error) {
+    logWarning('HistorialIPH Service', 'Usando estadísticas básicas como fallback');
+    estadisticasReales = null;
+  }
+
+  // Usar estadísticas reales si están disponibles, sino usar las calculadas
   const estadisticas: EstadisticasHistorial = {
-    total: apiResponse.total,
-    promedioPorDia: Math.round(apiResponse.total / 30), // Aproximación
-    registroPorMes: apiResponse.total,
-    estatusPorIph: calcularEstatusPorIph(registros)
+    total: apiResponse.total, // Este valor ya viene correcto del endpoint
+    promedioPorDia: (estadisticasReales && estadisticasReales.promedioPorDia > 0)
+      ? estadisticasReales.promedioPorDia
+      : Math.round(apiResponse.total / 30),
+    registroPorMes: (estadisticasReales && estadisticasReales.registroPorMes > 0)
+      ? estadisticasReales.registroPorMes
+      : Math.round(apiResponse.total / 12),
+    estatusPorIph: (estadisticasReales && estadisticasReales.estatusPorIph.length > 0)
+      ? estadisticasReales.estatusPorIph
+      : calcularEstatusPorIph(registros)
   };
 
   const paginacion: PaginacionHistorial = {
@@ -338,6 +378,131 @@ const calcularEstatusPorIph = (registros: RegistroHistorialIPH[]): Array<{estatu
  */
 const mockDelay = (ms: number = 800): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, ms));
+};
+
+/**
+ * Obtiene opciones de estatus únicas desde el endpoint de IPH
+ * @returns {Promise<string[]>}
+ */
+const getEstatusOptionsFromAPI = async (): Promise<string[]> => {
+  try {
+    logInfo('HistorialIPH Service', 'Obteniendo opciones de estatus desde endpoint de estadísticas');
+
+    const url = `${API_BASE_URL}/${API_BASE_ROUTES.HISTORIAL}/estatus-iph`;
+
+    const response = await http.get<{
+      status: boolean;
+      message: string;
+      data: {
+        total: number;
+        registroPorMes: number;
+        promedioPorDia: number;
+        estatusPorIph: Array<{
+          estatus: string;
+          cantidad: number;
+        }>;
+      };
+    }>(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+      }
+    });
+
+    // Verificar que la respuesta sea exitosa
+    if (!response.data.status) {
+      throw new Error(response.data.message || 'Error en la respuesta del servidor');
+    }
+
+    // Extraer estatus desde las estadísticas
+    const estatusArray = response.data.data.estatusPorIph
+      .map(item => item.estatus)
+      .filter(estatus => estatus && estatus.trim() !== '')
+      .sort();
+
+    logInfo('HistorialIPH Service', 'Opciones de estatus obtenidas exitosamente desde estadísticas', {
+      totalOpciones: estatusArray.length,
+      opciones: estatusArray,
+      totalRegistros: response.data.data.total
+    });
+
+    return estatusArray;
+
+  } catch (error) {
+    logError('HistorialIPH Service', error, 'Error obteniendo opciones de estatus desde endpoint de estadísticas');
+
+    // Fallback a opciones estáticas basadas en datos reales
+    return [
+      'Maria',
+      'si lo lees',
+      'eres puto',
+      'buenas'
+    ];
+  }
+};
+
+/**
+ * Obtiene estadísticas reales desde el endpoint de estadísticas
+ * @returns {Promise<EstadisticasHistorial>}
+ */
+const getEstadisticasFromAPI = async (): Promise<EstadisticasHistorial> => {
+  try {
+    logInfo('HistorialIPH Service', 'Obteniendo estadísticas desde endpoint de estadísticas');
+
+    const url = `${API_BASE_URL}/${API_BASE_ROUTES.HISTORIAL}/estatus-iph`;
+
+    const response = await http.get<{
+      status: boolean;
+      message: string;
+      data: {
+        total: number;
+        registroPorMes: number;
+        promedioPorDia: number;
+        estatusPorIph: Array<{
+          estatus: string;
+          cantidad: number;
+        }>;
+      };
+    }>(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+      }
+    });
+
+    // Verificar que la respuesta sea exitosa
+    if (!response.data.status) {
+      throw new Error(response.data.message || 'Error en la respuesta del servidor');
+    }
+
+    const { data } = response.data;
+
+    const estadisticas: EstadisticasHistorial = {
+      total: data.total,
+      promedioPorDia: data.promedioPorDia,
+      registroPorMes: data.registroPorMes,
+      estatusPorIph: data.estatusPorIph
+    };
+
+    logInfo('HistorialIPH Service', 'Estadísticas obtenidas exitosamente desde API', {
+      total: estadisticas.total,
+      promedioPorDia: estadisticas.promedioPorDia,
+      cantidadEstatus: estadisticas.estatusPorIph.length
+    });
+
+    return estadisticas;
+
+  } catch (error) {
+    logError('HistorialIPH Service', error, 'Error obteniendo estadísticas desde endpoint');
+
+    // Fallback a estadísticas calculadas básicas
+    return {
+      total: 0,
+      promedioPorDia: 0,
+      registroPorMes: 0,
+      estatusPorIph: []
+    };
+  }
 };
 
 /**
@@ -451,30 +616,30 @@ const getHistorialFromAPI = async (params: GetHistorialIPHParams): Promise<Histo
   try {
     const { page = 1, limit = 10, filtros = {} } = params;
     
-    // Construir query parameters
+    // Construir query parameters para el endpoint correcto
     const queryParams = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-      ...(filtros.fechaInicio && { fecha_inicio: filtros.fechaInicio }),
-      ...(filtros.fechaFin && { fecha_fin: filtros.fechaFin }),
+      pagina: page.toString(),
+      ...(filtros.fechaInicio && { fechaInicio: filtros.fechaInicio }),
+      ...(filtros.fechaFin && { fechaFin: filtros.fechaFin }),
       ...(filtros.estatus && { estatus: filtros.estatus }),
-      ...(filtros.tipoDelito && { tipo_delito: filtros.tipoDelito }),
+      ...(filtros.tipoDelito && { tipoDelito: filtros.tipoDelito }),
       ...(filtros.usuario && { usuario: filtros.usuario }),
-      ...(filtros.busqueda && { busqueda: filtros.busqueda })
+      ...(filtros.busqueda && { busqueda: filtros.busqueda }),
+      ...(filtros.busquedaPor && { busquedaPor: filtros.busquedaPor })
     });
-    
-    // Usar el endpoint existente de IPH que ya funciona
-    const url = `${API_BASE_URL}/${API_BASE_ROUTES.IPH}`;
 
-    const response = await http.get<any[]>(url, {
+    // Usar el endpoint correcto de historial
+    const url = `${API_BASE_URL}/${API_BASE_ROUTES.HISTORIAL}/iph-history?${queryParams}`;
+
+    const response = await http.get<info>(url, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
       }
     });
 
-    // Transformar la respuesta del API al formato interno usando los datos del endpoint existente
-    const transformedResponse = transformIPHArrayToHistorialResponse(response.data, page, limit, filtros);
+    // Transformar la respuesta del API usando la función correcta para el formato 'info'
+    const transformedResponse = await transformInfoToHistorialResponse(response.data, page, limit);
 
     logInfo('HistorialIPH Service', 'Historial obtenido exitosamente desde API', {
       totalRegistros: transformedResponse.registros.length,
@@ -770,6 +935,27 @@ export const convertRegistroToResHistoryData = (registro: RegistroHistorialIPH):
  */
 export const convertResHistoryDataToRegistro = (data: ResHistoryData): RegistroHistorialIPH => {
   return transformResHistoryDataToRegistro(data);
+};
+
+/**
+ * Obtiene opciones de estatus desde datos reales del API
+ * @returns {Promise<string[]>}
+ */
+export const getEstatusOptions = async (): Promise<string[]> => {
+  if (USE_MOCK_DATA) {
+    // Retornar opciones mock
+    return [
+      'Activo',
+      'Inactivo',
+      'Pendiente',
+      'Completado',
+      'En Proceso',
+      'Cancelado'
+    ];
+  } else {
+    // Obtener opciones desde API real
+    return await getEstatusOptionsFromAPI();
+  }
 };
 
 // ==================== UTILIDADES EXPORT ====================

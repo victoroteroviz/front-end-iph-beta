@@ -37,8 +37,8 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       order: 2
     },
     {
-      id: 'iph',
-      label: 'IPH',
+      id: 'iphSemanal',
+      label: 'IPH\'s Semana',
       to: '/informepolicial',
       icon: React.createElement(FileText, { size: 20 }),
       requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
@@ -46,7 +46,7 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
     },
     {
       id: 'historial',
-      label: 'IPH Historial',
+      label: 'Historico IPH',
       to: '/historialiph',
       icon: React.createElement(Clock, { size: 20 }),
       requiredRoles: ['SuperAdmin', 'Administrador'],

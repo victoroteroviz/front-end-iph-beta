@@ -21,10 +21,11 @@ import {
   getHistorialIPH,
   getHistorialIPHRaw,
   updateEstatusIPH,
-  getRegistroIPHById
+  getRegistroIPHById,
+  getEstatusOptions
 } from '../../../../../services/historial/historial-iph.service';
 
-import { getEstatusIph, getEstatusOptions } from '../../../../../services/estatus-iph/estatus-iph.service';
+import { getEstatusIph } from '../../../../../services/estatus-iph/estatus-iph.service';
 
 // Interfaces
 import type {
