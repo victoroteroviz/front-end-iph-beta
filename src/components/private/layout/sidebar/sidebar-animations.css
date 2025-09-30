@@ -1,0 +1,17 @@
+/* Optimizaciones simples para el Sidebar */
+
+/* Contenedor principal del sidebar - aceleración GPU básica */
+aside[role="navigation"] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Transiciones suaves para elementos que cambian */
+aside .transition-all {
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Optimización para elementos de texto */
+aside .truncate {
+  contain: layout;
+}

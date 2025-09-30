@@ -51,7 +51,7 @@ export interface FiltrosHistorial {
   tipoDelito?: string;
   usuario?: string;
   busqueda?: string;
-  busquedaPor?: 'estatus' | 'tipoDelito' | 'usuario';
+  busquedaPor?: 'estatus' | 'tipoDelito' | 'usuario' | '';
 }
 
 /**

@@ -4,12 +4,15 @@
  * Sistema escalable de permisos y navegación
  */
 
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LogOut, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
+// Estilos optimizados para animaciones
+import './sidebar-animations.css';
+
 // Helpers
-import { logInfo, logError } from '../../../../helper/log/logger.helper';
+import { logInfo } from '../../../../helper/log/logger.helper';
 
 // Configuración
 import { SIDEBAR_CONFIG, getFilteredSidebarItems } from './config/sidebarConfig';
@@ -25,55 +28,40 @@ import type {
 } from '../../../../interfaces/components/dashboard.interface';
 
 /**
- * Componente individual para cada item del sidebar
- * Implementa Single Responsibility - solo maneja un item
- * 
- * @param props - Configuración y estado del item
- * @returns JSX.Element del item del sidebar
+ * Componente individual para cada item del sidebar - Simplificado para mejor performance
  */
-const SidebarItem: React.FC<SidebarItemProps> = ({ 
-  config, 
-  currentPath, 
+const SidebarItem: React.FC<SidebarItemProps> = React.memo(({
+  config,
+  currentPath,
   onNavigate,
   isCollapsed = false
 }) => {
   const isActive = currentPath === config.to;
-  
-  /**
-   * Maneja el click en el item del sidebar
-   */
-  const handleClick = useCallback((): void => {
-    logInfo('Sidebar', 'Navigation item clicked', {
-      itemId: config.id,
-      label: config.label,
-      path: config.to,
-      wasActive: isActive
-    });
 
+  const handleClick = useCallback(() => {
     if (onNavigate) {
       onNavigate(config.to);
     }
-  }, [config, isActive, onNavigate]);
+  }, [config.to, onNavigate]);
 
   return (
-    <Link 
-      to={config.to || '#'} 
+    <Link
+      to={config.to || '#'}
       onClick={handleClick}
       className={`
-        flex items-center gap-3 px-2 py-3 rounded transition-all duration-200
-        ${isActive 
-          ? 'bg-[#7a7246] text-white shadow-sm' 
+        flex items-center gap-3 px-2 py-3 rounded transition-all duration-150
+        ${isActive
+          ? 'bg-[#7a7246] text-white shadow-sm'
           : 'hover:bg-[#7a7246] hover:text-white cursor-pointer'
         }
         ${config.isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
         ${isCollapsed ? 'justify-center' : ''}
-        min-h-[44px] touch-manipulation
+        min-h-[44px]
       `}
       aria-label={`Navegar a ${config.label}`}
-      aria-current={isActive ? 'page' : undefined}
       title={isCollapsed ? config.label : undefined}
     >
-      <span className="flex-shrink-0" aria-hidden="true">
+      <span className="flex-shrink-0">
         {config.icon}
       </span>
       {!isCollapsed && (
@@ -83,7 +71,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       )}
     </Link>
   );
-};
+});
 
 /**
  * Componente principal del Sidebar
@@ -106,7 +94,7 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
   className = '',
   isOpen = false,
   onToggle,
-  isMobile: _isMobile = false,
+  // isMobile prop removido - se detecta automáticamente
   onCollapseChange
 }) => {
   const location = useLocation();
@@ -117,49 +105,75 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
     isLoading 
   } = useUserSession();
 
-  // Estado para detectar si estamos en móvil
+  // Estado para detectar si estamos en móvil con optimización de rendimiento
   const [windowWidth, setWindowWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 1024);
   const [isManuallyCollapsed, setIsManuallyCollapsed] = useState<boolean>(false);
 
+  // Cálculo directo de breakpoints - más simple
   const isActuallyMobile = windowWidth < 768;
   const isTablet = windowWidth >= 768 && windowWidth < 1024;
-  const isDesktop = windowWidth >= 1024;
 
-  // Detectar cambios en el tamaño de la ventana
+  // Estado inicial del collapse - solo una vez al montar
+  useEffect(() => {
+    const initialWidth = window.innerWidth;
+    if (initialWidth >= 768 && initialWidth < 1024) { // Es tablet
+      setIsManuallyCollapsed(true);
+    }
+  }, []); // Solo al montar el componente
+
+  // Detectar cambios en el tamaño de la ventana - simplificado
   useEffect(() => {
     const handleResize = () => {
-      setWindowWidth(window.innerWidth);
+      const newWidth = window.innerWidth;
+      if (Math.abs(newWidth - windowWidth) > 50) { // Umbral más alto para evitar renders excesivos
+        setWindowWidth(newWidth);
+      }
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    // Throttle simple con timeout
+    let timeoutId: NodeJS.Timeout;
+    const throttledResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleResize, 250);
+    };
+
+    window.addEventListener('resize', throttledResize, { passive: true });
+    return () => {
+      window.removeEventListener('resize', throttledResize);
+      clearTimeout(timeoutId);
+    };
+  }, [windowWidth]);
 
   // Usar props o datos de sesión
   const currentPath = propCurrentPath || location.pathname;
   const userRole = propUserRole || sessionUserRole;
   const onLogout = propOnLogout || sessionLogout;
 
-  // Determinar si debe estar colapsado
-  const shouldCollapse = isManuallyCollapsed || isTablet;
+  // Cálculo simplificado del estado del sidebar
   const shouldUseOverlay = isActuallyMobile;
+  const shouldCollapse = shouldUseOverlay ? false : (isTablet || isManuallyCollapsed);
+  const sidebarWidth = shouldUseOverlay ? '256px' : shouldCollapse ? '64px' : '240px';
 
   /**
-   * Obtiene los items filtrados según permisos del usuario
+   * Obtiene los items filtrados según permisos del usuario - Memoizado para performance
    */
   const filteredItems = useMemo(() => {
-    return userRole ? getFilteredSidebarItems(userRole) : [];
+    if (!userRole) return [];
+    return getFilteredSidebarItems(userRole);
   }, [userRole]);
 
   /**
-   * Maneja la navegación con logging
+   * Maneja la navegación - Optimizado para performance
    */
   const handleNavigation = useCallback((path: string): void => {
-    logInfo('Sidebar', 'User navigated to new route', {
-      fromPath: location.pathname,
-      toPath: path,
-      userRole: userRole || 'unknown',
-      isMobile: shouldUseOverlay
+    // Log async para no bloquear la navegación
+    requestAnimationFrame(() => {
+      logInfo('Sidebar', 'User navigated to new route', {
+        fromPath: location.pathname,
+        toPath: path,
+        userRole: userRole || 'unknown',
+        isMobile: shouldUseOverlay
+      });
     });
 
     // Cerrar sidebar en móvil después de la navegación
@@ -169,12 +183,15 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
   }, [location.pathname, userRole, shouldUseOverlay, onToggle]);
 
   /**
-   * Maneja el logout con logging
+   * Maneja el logout - Optimizado para performance
    */
   const handleLogout = useCallback((): void => {
-    logInfo('Sidebar', 'User initiated logout from sidebar', {
-      currentPath: location.pathname,
-      userRole: userRole || 'unknown'
+    // Log async para no bloquear el logout
+    requestAnimationFrame(() => {
+      logInfo('Sidebar', 'User initiated logout from sidebar', {
+        currentPath: location.pathname,
+        userRole: userRole || 'unknown'
+      });
     });
     
     onLogout();
@@ -190,35 +207,39 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
   }, [onToggle]);
 
   /**
-   * Maneja el toggle del colapso manual del sidebar
+   * Maneja el toggle del colapso manual del sidebar - Simplificado y funcional
    */
   const handleToggleCollapse = useCallback((): void => {
+    console.log('🔄 BOTÓN CLICKEADO - Iniciando toggle'); // Debug muy visible
     setIsManuallyCollapsed(prev => {
-      const newCollapsedState = !prev;
-      logInfo('Sidebar', 'Manual collapse toggled', {
-        wasCollapsed: prev,
-        nowCollapsed: newCollapsedState,
-        currentPath: location.pathname,
-        userRole: userRole || 'unknown'
-      });
-      return newCollapsedState;
+      const newState = !prev;
+      console.log('🔄 ESTADO CAMBIADO:', { era: prev, ahora: newState });
+      return newState;
     });
-  }, [location.pathname, userRole]);
+  }, []); // Sin dependencias problemáticas
 
-  // Log cuando se filtra el sidebar según permisos
+  // Log cuando se filtra el sidebar según permisos - Solo una vez
   React.useEffect(() => {
     if (userRole && !isLoading) {
-      logInfo('Sidebar', 'Sidebar items filtered by user permissions', {
-        userRole,
-        totalItems: SIDEBAR_CONFIG.items?.length || 0,
-        visibleItems: filteredItems.length,
-        visibleItemIds: filteredItems.map(item => item.id)
-      });
+      const items = getFilteredSidebarItems(userRole);
+      if (items.length > 0) {
+        // Log async para no bloquear el render
+        requestAnimationFrame(() => {
+          logInfo('Sidebar', 'Sidebar items filtered by user permissions', {
+            userRole,
+            totalItems: SIDEBAR_CONFIG.items?.length || 0,
+            visibleItems: items.length,
+            visibleItemIds: items.map(item => item.id)
+          });
+        });
+      }
     }
-  }, [userRole, filteredItems, isLoading]);
+  }, [userRole, isLoading]); // Dependencias optimizadas
+
+
 
   // Notificar cambios de colapso al Dashboard
-  React.useEffect(() => {
+  useEffect(() => {
     if (onCollapseChange && !shouldUseOverlay) {
       onCollapseChange(shouldCollapse);
     }
@@ -262,17 +283,18 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
       <aside
         className={`
           ${shouldUseOverlay
-            ? `fixed left-0 top-0 h-full z-50 transform transition-transform duration-300 ease-in-out
-               ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-               w-64`
-            : shouldCollapse
-              ? 'w-16 transition-all duration-300 ease-in-out'
-              : 'w-60 transition-all duration-300 ease-in-out'
+            ? `fixed left-0 top-0 h-full z-50 transition-transform duration-200 ease-out
+               ${isOpen ? 'translate-x-0' : '-translate-x-full'}`
+            : 'transition-all duration-200 ease-out'
           }
           bg-[#948b54] text-white flex flex-col justify-between
-          font-poppins shadow-lg
+          font-poppins shadow-lg overflow-hidden
           ${className}
         `}
+        style={{
+          width: shouldUseOverlay ? '256px' : sidebarWidth
+        }}
+        data-collapsed={shouldCollapse && !shouldUseOverlay}
         role="navigation"
         aria-label="Navegación principal"
       >
@@ -284,9 +306,7 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
           <div className={`transition-all duration-200 ${
             shouldCollapse && !shouldUseOverlay
               ? 'p-2 pr-10'
-              : shouldUseOverlay
-                ? 'p-4 pr-12'
-                : 'p-4 pr-12'
+              : 'p-4 pr-12'
           } flex items-center justify-center`}>
             {SIDEBAR_CONFIG.logo || SIDEBAR_CONFIG.isotipo ? (
               <img
@@ -304,7 +324,7 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
                 }`}
               />
             ) : (
-              <h1 className={`text-white font-bold leading-tight transition-opacity duration-200 ${
+              <h1 className={`text-white font-bold leading-tight transition-opacity duration-200 will-change-transform ${
                 shouldCollapse && !shouldUseOverlay ? 'lg:opacity-100 opacity-0 text-xs text-center' : 'text-lg'
               }`}>
                 {shouldCollapse && !shouldUseOverlay ? 'IPH' : SIDEBAR_CONFIG.title}
@@ -328,15 +348,15 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
           {!shouldUseOverlay && (
             <button
               onClick={handleToggleCollapse}
-              className={`absolute p-1.5 rounded-lg transition-all duration-200 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/30 cursor-pointer ${
+              className={`absolute p-1.5 rounded-lg transition-all duration-150 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/30 cursor-pointer ${
                 shouldCollapse && !shouldUseOverlay
                   ? 'right-1 top-1 bg-white/20 hover:bg-white/30 shadow-lg backdrop-blur-sm'
                   : 'right-2 top-2 bg-white/10 hover:bg-white/20'
               }`}
-              aria-label={isManuallyCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
-              title={isManuallyCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+              aria-label={shouldCollapse ? "Expandir sidebar" : "Colapsar sidebar"}
+              title={shouldCollapse ? "Expandir sidebar" : "Colapsar sidebar"}
             >
-              {isManuallyCollapsed ? (
+              {shouldCollapse ? (
                 <ChevronRight size={16} className="text-white drop-shadow-sm" />
               ) : (
                 <ChevronLeft size={16} className="text-white drop-shadow-sm" />
@@ -346,7 +366,7 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
         </div>
 
         {/* Navegación principal */}
-        <nav 
+        <nav
           className={`mt-4 space-y-2 transition-all duration-200 ${
             shouldCollapse && !shouldUseOverlay ? 'px-2' : 'px-4'
           }`}
@@ -365,8 +385,8 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
               </div>
             ))
           ) : (
-            <div className={`px-2 py-4 text-sm text-white/70 text-center ${
-              shouldCollapse && !shouldUseOverlay ? 'hidden' : ''
+            <div className={`px-2 py-4 text-sm text-white/70 text-center transition-opacity duration-200 ${
+              shouldCollapse && !shouldUseOverlay ? 'opacity-0 pointer-events-none' : 'opacity-100'
             }`}>
               No tienes acceso a ninguna sección
             </div>
@@ -391,9 +411,11 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
           title={shouldCollapse && !shouldUseOverlay ? 'Desconectar' : undefined}
         >
           <LogOut size={20} aria-hidden="true" />
-          {!(shouldCollapse && !shouldUseOverlay) && (
-            <span className="text-sm font-medium">Desconectar</span>
-          )}
+          <span className={`text-sm font-medium transition-opacity duration-200 ${
+            shouldCollapse && !shouldUseOverlay ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+          }`}>
+            Desconectar
+          </span>
         </button>
       </div>
     </aside>
