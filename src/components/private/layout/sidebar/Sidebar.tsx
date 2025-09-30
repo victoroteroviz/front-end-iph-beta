@@ -28,7 +28,7 @@ import type {
 } from '../../../../interfaces/components/dashboard.interface';
 
 /**
- * Componente individual para cada item del sidebar - Simplificado para mejor performance
+ * Componente individual para cada item del sidebar - Ultra optimizado
  */
 const SidebarItem: React.FC<SidebarItemProps> = React.memo(({
   config,
@@ -38,26 +38,28 @@ const SidebarItem: React.FC<SidebarItemProps> = React.memo(({
 }) => {
   const isActive = currentPath === config.to;
 
-  const handleClick = useCallback(() => {
-    if (onNavigate) {
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onNavigate && !config.isDisabled) {
       onNavigate(config.to);
     }
-  }, [config.to, onNavigate]);
+  }, [config.to, config.isDisabled, onNavigate]);
+
+  // Clases CSS pre-calculadas para evitar re-cálculos
+  const baseClasses = 'flex items-center gap-3 px-2 py-3 rounded transition-all duration-150 min-h-[44px]';
+  const stateClasses = isActive 
+    ? 'bg-[#7a7246] text-white shadow-sm'
+    : 'hover:bg-[#7a7246] hover:text-white cursor-pointer';
+  const disabledClasses = config.isDisabled ? 'opacity-50 cursor-not-allowed' : '';
+  const collapsedClasses = isCollapsed ? 'justify-center' : '';
+  
+  const className = `${baseClasses} ${stateClasses} ${disabledClasses} ${collapsedClasses}`;
 
   return (
     <Link
       to={config.to || '#'}
       onClick={handleClick}
-      className={`
-        flex items-center gap-3 px-2 py-3 rounded transition-all duration-150
-        ${isActive
-          ? 'bg-[#7a7246] text-white shadow-sm'
-          : 'hover:bg-[#7a7246] hover:text-white cursor-pointer'
-        }
-        ${config.isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
-        ${isCollapsed ? 'justify-center' : ''}
-        min-h-[44px]
-      `}
+      className={className}
       aria-label={`Navegar a ${config.label}`}
       title={isCollapsed ? config.label : undefined}
     >
@@ -70,6 +72,14 @@ const SidebarItem: React.FC<SidebarItemProps> = React.memo(({
         </span>
       )}
     </Link>
+  );
+}, (prevProps, nextProps) => {
+  // Optimización de comparación más eficiente
+  return (
+    prevProps.config.id === nextProps.config.id &&
+    prevProps.currentPath === nextProps.currentPath &&
+    prevProps.isCollapsed === nextProps.isCollapsed &&
+    prevProps.config.isDisabled === nextProps.config.isDisabled
   );
 });
 
@@ -105,13 +115,17 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
     isLoading 
   } = useUserSession();
 
-  // Estado para detectar si estamos en móvil con optimización de rendimiento
-  const [windowWidth, setWindowWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 1024);
+  // Estado optimizado con valores iniciales más inteligentes
+  const [windowWidth, setWindowWidth] = useState<number>(() => 
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  );
   const [isManuallyCollapsed, setIsManuallyCollapsed] = useState<boolean>(false);
 
-  // Cálculo directo de breakpoints - más simple
-  const isActuallyMobile = windowWidth < 768;
-  const isTablet = windowWidth >= 768 && windowWidth < 1024;
+  // Cálculo memoizado de breakpoints para evitar re-cálculos constantes
+  const { isActuallyMobile, isTablet } = useMemo(() => ({
+    isActuallyMobile: windowWidth < 768,
+    isTablet: windowWidth >= 768 && windowWidth < 1024
+  }), [windowWidth]);
 
   // Estado inicial del collapse - solo una vez al montar
   useEffect(() => {
@@ -121,38 +135,66 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
     }
   }, []); // Solo al montar el componente
 
-  // Detectar cambios en el tamaño de la ventana - simplificado
+  // Resize handler ultra-optimizado con debouncing y throttling
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    let lastExecution = 0;
+    const THROTTLE_DELAY = 150;
+    const DEBOUNCE_DELAY = 300;
+    const THRESHOLD = 100; // Umbral más alto para reducir renders
+
     const handleResize = () => {
-      const newWidth = window.innerWidth;
-      if (Math.abs(newWidth - windowWidth) > 50) { // Umbral más alto para evitar renders excesivos
-        setWindowWidth(newWidth);
+      const now = Date.now();
+      
+      // Throttling: evitar ejecuciones muy frecuentes
+      if (now - lastExecution < THROTTLE_DELAY) {
+        return;
+      }
+      
+      // Debouncing: cancelar timeout anterior y crear uno nuevo
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      timeoutId = setTimeout(() => {
+        const newWidth = window.innerWidth;
+        setWindowWidth(prev => {
+          if (Math.abs(newWidth - prev) > THRESHOLD) {
+            return newWidth;
+          }
+          return prev;
+        });
+        lastExecution = now;
+        timeoutId = null;
+      }, DEBOUNCE_DELAY);
+    };
+
+    window.addEventListener('resize', handleResize, { passive: true });
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
       }
     };
-
-    // Throttle simple con timeout
-    let timeoutId: NodeJS.Timeout;
-    const throttledResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleResize, 250);
-    };
-
-    window.addEventListener('resize', throttledResize, { passive: true });
-    return () => {
-      window.removeEventListener('resize', throttledResize);
-      clearTimeout(timeoutId);
-    };
-  }, [windowWidth]);
+  }, []); // Sin dependencias para evitar re-creación del listener
 
   // Usar props o datos de sesión
   const currentPath = propCurrentPath || location.pathname;
   const userRole = propUserRole || sessionUserRole;
   const onLogout = propOnLogout || sessionLogout;
 
-  // Cálculo simplificado del estado del sidebar
-  const shouldUseOverlay = isActuallyMobile;
-  const shouldCollapse = shouldUseOverlay ? false : (isTablet || isManuallyCollapsed);
-  const sidebarWidth = shouldUseOverlay ? '256px' : shouldCollapse ? '64px' : '240px';
+  // Cálculo memoizado del estado del sidebar para evitar re-renders
+  const sidebarState = useMemo(() => {
+    const shouldUseOverlay = isActuallyMobile;
+    const shouldCollapse = shouldUseOverlay ? false : (isTablet || isManuallyCollapsed);
+    const sidebarWidth = shouldUseOverlay ? '256px' : shouldCollapse ? '64px' : '240px';
+    
+    return { shouldUseOverlay, shouldCollapse, sidebarWidth };
+  }, [isActuallyMobile, isTablet, isManuallyCollapsed]);
+  
+  const { shouldUseOverlay, shouldCollapse, sidebarWidth } = sidebarState;
 
   /**
    * Obtiene los items filtrados según permisos del usuario - Memoizado para performance
@@ -163,85 +205,52 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
   }, [userRole]);
 
   /**
-   * Maneja la navegación - Optimizado para performance
+   * Handlers estables con referencias fijas para evitar re-renders
    */
   const handleNavigation = useCallback((path: string): void => {
-    // Log async para no bloquear la navegación
-    requestAnimationFrame(() => {
-      logInfo('Sidebar', 'User navigated to new route', {
-        fromPath: location.pathname,
-        toPath: path,
-        userRole: userRole || 'unknown',
-        isMobile: shouldUseOverlay
-      });
-    });
-
+    // Log solo si es necesario (sin bloquear)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Navigation to:', path);
+    }
+    
     // Cerrar sidebar en móvil después de la navegación
     if (shouldUseOverlay && onToggle) {
       onToggle();
     }
-  }, [location.pathname, userRole, shouldUseOverlay, onToggle]);
+  }, [shouldUseOverlay, onToggle]);
 
-  /**
-   * Maneja el logout - Optimizado para performance
-   */
   const handleLogout = useCallback((): void => {
-    // Log async para no bloquear el logout
-    requestAnimationFrame(() => {
-      logInfo('Sidebar', 'User initiated logout from sidebar', {
-        currentPath: location.pathname,
-        userRole: userRole || 'unknown'
-      });
-    });
-    
     onLogout();
-  }, [location.pathname, userRole, onLogout]);
+  }, [onLogout]);
 
-  /**
-   * Maneja el cierre del sidebar en móvil
-   */
   const handleClose = useCallback((): void => {
     if (onToggle) {
       onToggle();
     }
   }, [onToggle]);
 
-  /**
-   * Maneja el toggle del colapso manual del sidebar - Simplificado y funcional
-   */
+  // Handler del toggle ultra-optimizado
   const handleToggleCollapse = useCallback((): void => {
-    console.log('🔄 BOTÓN CLICKEADO - Iniciando toggle'); // Debug muy visible
-    setIsManuallyCollapsed(prev => {
-      const newState = !prev;
-      console.log('🔄 ESTADO CAMBIADO:', { era: prev, ahora: newState });
-      return newState;
-    });
-  }, []); // Sin dependencias problemáticas
+    setIsManuallyCollapsed(prev => !prev);
+  }, []); // Sin dependencias para máxima estabilidad
 
-  // Log cuando se filtra el sidebar según permisos - Solo una vez
-  React.useEffect(() => {
-    if (userRole && !isLoading) {
-      const items = getFilteredSidebarItems(userRole);
-      if (items.length > 0) {
-        // Log async para no bloquear el render
-        requestAnimationFrame(() => {
-          logInfo('Sidebar', 'Sidebar items filtered by user permissions', {
-            userRole,
-            totalItems: SIDEBAR_CONFIG.items?.length || 0,
-            visibleItems: items.length,
-            visibleItemIds: items.map(item => item.id)
-          });
-        });
-      }
+  // Log optimizado - solo cuando cambia el userRole
+  useEffect(() => {
+    if (userRole) {
+      logInfo('Sidebar', 'User role set for sidebar', { userRole });
     }
-  }, [userRole, isLoading]); // Dependencias optimizadas
+  }, [userRole]); // Solo dependencia del userRole
 
 
 
-  // Notificar cambios de colapso al Dashboard
+  // Notificar cambios de colapso - throttled para evitar spam
   useEffect(() => {
     if (onCollapseChange && !shouldUseOverlay) {
-      onCollapseChange(shouldCollapse);
+      const timeoutId = setTimeout(() => {
+        onCollapseChange(shouldCollapse);
+      }, 50); // Pequeño delay para throttling
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [shouldCollapse, shouldUseOverlay, onCollapseChange]);
 
