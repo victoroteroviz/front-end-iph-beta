@@ -68,7 +68,7 @@ export const login = async (loginRequest : LoginRequest)
 {
   logger.debug(login.name,'Inicio del proceso de login');
   try {
-    const response= await http.post<LoginResponse>(API_BASE_URL+'/api/auth-web/login', loginRequest);
+    const response= await http.post<LoginResponse>(`/api/auth-web/login`, loginRequest);
 
     const loginResponse: LoginResponse = response.data;
     const token: Token = decodeAndValidateToken(loginResponse.token);
