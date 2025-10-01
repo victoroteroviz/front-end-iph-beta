@@ -9,7 +9,7 @@ import '@fontsource/poppins/700.css'
 import Login from './components/public/auth/Login'
 import Dashboard from './components/private/layout/Dashboard'
 import Inicio from './components/private/components/home/Inicio'
-import EstadisticasUsuario from './components/private/components/statistics/EstadisticasUsuario'
+import Estadisticas from './components/private/components/statistics/Estadisticas'
 import HistorialIPH from './components/private/components/historial-iph/HistorialIPH'
 import IphOficial from './components/private/components/iph-oficial/IphOficial'
 import InformePolicial from './components/private/components/informe-policial/InformePolicial'
@@ -34,7 +34,7 @@ function IPHApp() {
           {/* Rutas con layout Dashboard - Componentes refactorizados */}
           <Route path="/" element={<Dashboard />}>
             <Route path="inicio" element={<Inicio />} />
-            <Route path="estadisticasusuario" element={<EstadisticasUsuario />} />
+            <Route path="estadisticasusuario" element={<Estadisticas />} />
             <Route path="historialiph" element={<HistorialIPH />} />
             <Route path="informepolicial" element={<InformePolicial />} />
             <Route path="iphoficial/:id" element={<IphOficial />} />
