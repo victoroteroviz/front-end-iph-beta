@@ -70,7 +70,7 @@ const USE_MOCK_DATA = false; // Cambiado a false para usar datos reales del API
  */
 const HISTORIAL_ENDPOINTS = {
   GET_HISTORIAL: '/historial',
-  GET_ESTADISTICAS: '/historial/estadisticas',
+  GET_ESTADISTICAS: '/historial/estatus-iph', // CORREGIDO: usar endpoint correcto para estadísticas
   UPDATE_ESTATUS: '/historial/estatus',
   GET_DETALLE: '/historial'
 } as const;
@@ -203,37 +203,13 @@ const transformIPHArrayToHistorialResponse = async (apiResponse: any[], page: nu
   // Transformar cada IPH a RegistroHistorialIPH
   const registros: RegistroHistorialIPH[] = paginatedData.map(item => transformIPHToRegistro(item));
 
-  // Calcular estadísticas base desde los datos que tenemos (siempre confiables)
-  const totalBase = apiResponse.length;
-  const estatusPorIphBase = calcularEstatusPorIph(registros);
-
-  // Tratar de obtener estadísticas mejoradas desde el endpoint (opcional)
-  let estadisticasReales;
-  try {
-    estadisticasReales = await getEstadisticasFromAPI();
-  } catch (error) {
-    logWarning('HistorialIPH Service', 'Usando estadísticas calculadas como fallback');
-    estadisticasReales = null;
-  }
-
-  // Usar estadísticas reales si están disponibles, sino usar las calculadas
-  const totalFinal = (estadisticasReales && estadisticasReales.total > 0) ? estadisticasReales.total : totalBase;
-  const promedioDiario = (estadisticasReales && estadisticasReales.promedioPorDia > 0)
-    ? estadisticasReales.promedioPorDia
-    : Math.round(totalFinal / 30);
-  const registroMensual = (estadisticasReales && estadisticasReales.registroPorMes > 0)
-    ? estadisticasReales.registroPorMes
-    : Math.round(totalFinal / 12);
-  const estatusPorIphFinal = (estadisticasReales && estadisticasReales.estatusPorIph.length > 0)
-    ? estadisticasReales.estatusPorIph
-    : estatusPorIphBase;
-
-  // Si hay filtros aplicados, ajustar el total a los datos filtrados pero mantener otras estadísticas
+  // NO calcular estadísticas aquí - se obtienen independientemente desde /estatus-iph
+  // Solo transformar datos de tabla del endpoint /iph-history
   const estadisticas: EstadisticasHistorial = {
-    total: Object.values(filtros).some(f => f) ? filteredData.length : totalFinal,
-    promedioPorDia: promedioDiario,
-    registroPorMes: registroMensual,
-    estatusPorIph: estatusPorIphFinal
+    total: 0,
+    promedioPorDia: 0,
+    registroPorMes: 0,
+    estatusPorIph: []
   };
 
   // Crear paginación
@@ -284,27 +260,13 @@ const transformIPHToRegistro = (iphData: any): RegistroHistorialIPH => {
 const transformInfoToHistorialResponse = async (apiResponse: info, page: number = 1, limit: number = 10): Promise<HistorialIPHResponse> => {
   const registros = apiResponse.iph.map(transformResHistoryToRegistro);
 
-  // Tratar de obtener estadísticas reales desde el endpoint
-  let estadisticasReales;
-  try {
-    estadisticasReales = await getEstadisticasFromAPI();
-  } catch (error) {
-    logWarning('HistorialIPH Service', 'Usando estadísticas básicas como fallback');
-    estadisticasReales = null;
-  }
-
-  // Usar estadísticas reales si están disponibles, sino usar las calculadas
+  // NO obtener estadísticas aquí - se obtienen independientemente desde /estatus-iph
+  // Solo transformar datos de tabla del endpoint /iph-history
   const estadisticas: EstadisticasHistorial = {
-    total: apiResponse.total, // Este valor ya viene correcto del endpoint
-    promedioPorDia: (estadisticasReales && estadisticasReales.promedioPorDia > 0)
-      ? estadisticasReales.promedioPorDia
-      : Math.round(apiResponse.total / 30),
-    registroPorMes: (estadisticasReales && estadisticasReales.registroPorMes > 0)
-      ? estadisticasReales.registroPorMes
-      : Math.round(apiResponse.total / 12),
-    estatusPorIph: (estadisticasReales && estadisticasReales.estatusPorIph.length > 0)
-      ? estadisticasReales.estatusPorIph
-      : calcularEstatusPorIph(registros)
+    total: 0,
+    promedioPorDia: 0,
+    registroPorMes: 0,
+    estatusPorIph: []
   };
 
   const paginacion: PaginacionHistorial = {
@@ -525,8 +487,13 @@ const getHistorialMock = async (params: GetHistorialIPHParams): Promise<Historia
   const endIndex = startIndex + limit;
   const registrosPaginados = registrosFiltrados.slice(startIndex, endIndex);
   
-  // Calcular estadísticas basadas en filtros
-  const estadisticas = getEstadisticasWithFilters(registrosFiltrados);
+  // NO calcular estadísticas aquí - se obtienen independientemente desde /estatus-iph
+  const estadisticas: EstadisticasHistorial = {
+    total: 0,
+    promedioPorDia: 0,
+    registroPorMes: 0,
+    estatusPorIph: []
+  };
   
   // Crear paginación
   const totalPages = Math.ceil(registrosFiltrados.length / limit);
@@ -802,17 +769,49 @@ export const getEstadisticasHistorial = async (): Promise<EstadisticasHistorial>
       await mockDelay(200);
       return estadisticasMockData;
     } else {
-      // TODO: Implementar llamada al API
-      const url = `${API_BASE_URL}${API_BASE_ROUTES.HISTORIAL}${HISTORIAL_ENDPOINTS.GET_ESTADISTICAS}`;
-      
-      const response = await http.get<EstadisticasHistorial>(url, {
+      // Implementar llamada al API con estructura correcta
+      const url = `${API_BASE_URL}/${API_BASE_ROUTES.HISTORIAL}/estatus-iph`;
+
+      const response = await http.get<{
+        status: boolean;
+        message: string;
+        data: {
+          total: number;
+          registroPorMes: number;
+          promedioPorDia: number;
+          estatusPorIph: Array<{
+            estatus: string;
+            cantidad: number;
+          }>;
+        };
+      }>(url, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
         }
       });
-      
-      return response.data;
+
+      // Verificar que la respuesta sea exitosa
+      if (!response.data.status) {
+        throw new Error(response.data.message || 'Error en la respuesta del servidor');
+      }
+
+      const { data } = response.data;
+
+      const estadisticas: EstadisticasHistorial = {
+        total: data.total,
+        promedioPorDia: data.promedioPorDia,
+        registroPorMes: data.registroPorMes,
+        estatusPorIph: data.estatusPorIph
+      };
+
+      logInfo('HistorialIPH Service', 'Estadísticas generales obtenidas exitosamente desde API', {
+        total: estadisticas.total,
+        promedioPorDia: estadisticas.promedioPorDia,
+        cantidadEstatus: estadisticas.estatusPorIph.length
+      });
+
+      return estadisticas;
     }
   } catch (error) {
     logError('HistorialIPH Service', error, 'Error obteniendo estadísticas');

@@ -1,12 +1,11 @@
 /**
- * Componente HistorialTable
+ * Componente HistorialTable SUPER OPTIMIZADO
  * Tabla principal para mostrar los registros del historial de IPH
  */
 
-import React, { useMemo } from 'react';
-import { 
-  Eye, 
-  Edit3, 
+import React, { useMemo, useCallback } from 'react';
+import {
+  Eye,
   Calendar,
   MapPin,
   User,
@@ -15,9 +14,9 @@ import {
 } from 'lucide-react';
 
 // Interfaces
-import type { 
-  HistorialTableProps, 
-  RegistroHistorialIPH 
+import type {
+  HistorialTableProps,
+  RegistroHistorialIPH
 } from '../../../../../interfaces/components/historialIph.interface';
 
 // Configuración de estatus (fallback para UI)
@@ -26,97 +25,105 @@ import { estatusConfig } from '../../../../../mock/historial-iph';
 // Helpers
 import { logInfo } from '../../../../../helper/log/logger.helper';
 
+// Formatters memoizados fuera del componente para mejor performance
+const formatDate = (dateString: string | undefined | null): string => {
+  if (!dateString) return '-';
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-MX', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch {
+    return dateString || '-';
+  }
+};
+
+const formatTime = (timeString: string | undefined | null): string => {
+  if (!timeString) return '-';
+  try {
+    const [hours, minutes] = timeString.split(':');
+    const date = new Date();
+    date.setHours(parseInt(hours), parseInt(minutes));
+    return date.toLocaleTimeString('es-MX', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  } catch {
+    return timeString || '-';
+  }
+};
+
 /**
- * Componente de tabla del historial
- * 
+ * Componente de tabla del historial - SUPER OPTIMIZADO
+ *
  * @param props - Props del componente de tabla
  * @returns JSX.Element de la tabla
  */
-const HistorialTable: React.FC<HistorialTableProps> = ({
+const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
   registros,
   loading = false,
   onVerDetalle,
   onEditarEstatus,
   className = ''
 }) => {
-  /**
-   * Formatea la fecha para mostrar
-   */
-  const formatDate = (dateString: string | undefined | null): string => {
-    if (!dateString) return '-';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('es-MX', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-    } catch {
-      return dateString || '-';
-    }
-  };
 
-  /**
-   * Formatea la hora para mostrar
-   */
-  const formatTime = (timeString: string | undefined | null): string => {
-    if (!timeString) return '-';
-    try {
-      const [hours, minutes] = timeString.split(':');
-      const date = new Date();
-      date.setHours(parseInt(hours), parseInt(minutes));
-      return date.toLocaleTimeString('es-MX', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
-    } catch {
-      return timeString || '-';
-    }
-  };
-
-  /**
-   * Trunca texto largo
-   */
-  const truncateText = (text: string | undefined | null, maxLength: number = 30): string => {
+  // Funciones optimizadas con useCallback
+  const truncateText = useCallback((text: string | undefined | null, maxLength: number = 30): string => {
     if (!text) return '-';
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
-  };
+  }, []);
 
-  /**
-   * Formatea la ubicación como string
-   */
-  const formatUbicacion = (ubicacion?: { latitud: number; longitud: number }): string => {
+  const formatUbicacion = useCallback((ubicacion?: { latitud: number; longitud: number }): string => {
     if (!ubicacion) return '-';
     return `${ubicacion.latitud.toFixed(6)}, ${ubicacion.longitud.toFixed(6)}`;
-  };
+  }, []);
 
-  /**
-   * Maneja el click para ver detalle
-   */
-  const handleVerDetalle = (registro: RegistroHistorialIPH) => {
+  const handleVerDetalle = useCallback((registro: RegistroHistorialIPH) => {
     logInfo('HistorialTable', 'Solicitando ver detalle de registro', { registroId: registro.id });
     onVerDetalle(registro);
-  };
+  }, [onVerDetalle]);
 
-  /**
-   * Maneja el cambio de estatus
-   */
-  const handleEstatusChange = (registro: RegistroHistorialIPH, nuevoEstatus: RegistroHistorialIPH['estatus']) => {
+  const handleEstatusChange = useCallback((registro: RegistroHistorialIPH, nuevoEstatus: RegistroHistorialIPH['estatus']) => {
     if (onEditarEstatus && nuevoEstatus !== registro.estatus) {
-      logInfo('HistorialTable', 'Cambiando estatus de registro', { 
-        registroId: registro.id, 
+      logInfo('HistorialTable', 'Cambiando estatus de registro', {
+        registroId: registro.id,
         estatusAnterior: registro.estatus,
-        nuevoEstatus 
+        nuevoEstatus
       });
       onEditarEstatus(registro.id, nuevoEstatus);
     }
-  };
+  }, [onEditarEstatus]);
 
-  /**
-   * Genera colores dinámicos para un estatus basado en hash
-   */
-  const generateEstatusColors = (estatus: string) => {
+  // Colores predefinidos memoizados con tipo explícito para índice string
+  const predefinedColors = useMemo(() => ({
+    'Activo': { color: '#065f46', bgColor: '#d1fae5' },
+    'Inactivo': { color: '#7c2d12', bgColor: '#fed7aa' },
+    'Pendiente': { color: '#92400e', bgColor: '#fef3c7' },
+    'Completado': { color: '#1e40af', bgColor: '#dbeafe' },
+    'En Proceso': { color: '#7c3aed', bgColor: '#ede9fe' },
+    'Cancelado': { color: '#dc2626', bgColor: '#fee2e2' },
+    'N/D': { color: '#6b7280', bgColor: '#e5e7eb' }
+  } as Record<string, {color: string, bgColor: string}>), []);
+
+  // Cache para colores generados
+  const colorCache = useMemo(() => new Map<string, {color: string, bgColor: string}>(), []);
+
+  const generateEstatusColors = useCallback((estatus: string) => {
+    // Verificar cache primero
+    if (colorCache.has(estatus)) {
+      return colorCache.get(estatus)!;
+    }
+
+    // Si existe un color predefinido, usarlo
+    if (predefinedColors[estatus]) {
+      const colors = predefinedColors[estatus];
+      colorCache.set(estatus, colors);
+      return colors;
+    }
+
     // Generar hash simple del string
     let hash = 0;
     for (let i = 0; i < estatus.length; i++) {
@@ -125,41 +132,26 @@ const HistorialTable: React.FC<HistorialTableProps> = ({
       hash = hash & hash; // Convertir a 32bit integer
     }
 
-    // Colores predefinidos para estatus comunes
-    const predefinedColors: Record<string, {color: string, bgColor: string}> = {
-      'Activo': { color: '#065f46', bgColor: '#d1fae5' },
-      'Inactivo': { color: '#7c2d12', bgColor: '#fed7aa' },
-      'Pendiente': { color: '#92400e', bgColor: '#fef3c7' },
-      'Completado': { color: '#1e40af', bgColor: '#dbeafe' },
-      'En Proceso': { color: '#7c3aed', bgColor: '#ede9fe' },
-      'Cancelado': { color: '#dc2626', bgColor: '#fee2e2' },
-      'N/D': { color: '#6b7280', bgColor: '#e5e7eb' }
-    };
-
-    // Si existe un color predefinido, usarlo
-    if (predefinedColors[estatus]) {
-      return predefinedColors[estatus];
-    }
-
     // Generar colores basados en hash para estatus desconocidos
     const hue = Math.abs(hash) % 360;
     const saturation = 65; // Saturación fija para mejor legibilidad
     const lightness = 45; // Luminosidad para el texto
     const bgLightness = 90; // Luminosidad para el fondo
 
-    return {
+    const colors = {
       color: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
       bgColor: `hsl(${hue}, ${saturation}%, ${bgLightness}%)`
     };
-  };
 
-  /**
-   * Obtiene el componente de estatus (solo lectura)
-   */
-  const getEstatusComponent = (registro: RegistroHistorialIPH) => {
+    // Guardar en cache
+    colorCache.set(estatus, colors);
+    return colors;
+  }, [predefinedColors, colorCache]);
+
+  // Componente de estatus memoizado
+  const EstatusComponent = React.memo<{registro: RegistroHistorialIPH}>(({ registro }) => {
     const colors = generateEstatusColors(registro.estatus);
 
-    // Siempre mostrar como badge de solo lectura
     return (
       <span
         className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
@@ -172,7 +164,16 @@ const HistorialTable: React.FC<HistorialTableProps> = ({
         {registro.estatus}
       </span>
     );
-  };
+  }, (prevProps, nextProps) => {
+    // Solo re-renderizar si cambia el estatus
+    return prevProps.registro.estatus === nextProps.registro.estatus;
+  });
+
+  EstatusComponent.displayName = 'EstatusComponent';
+
+  const getEstatusComponent = useCallback((registro: RegistroHistorialIPH) => {
+    return <EstatusComponent registro={registro} />;
+  }, []);
 
   /**
    * Columnas de la tabla
@@ -395,6 +396,26 @@ const HistorialTable: React.FC<HistorialTableProps> = ({
       )}
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Comparación optimizada para React.memo
+  return (
+    prevProps.loading === nextProps.loading &&
+    prevProps.className === nextProps.className &&
+    prevProps.onVerDetalle === nextProps.onVerDetalle &&
+    prevProps.onEditarEstatus === nextProps.onEditarEstatus &&
+    prevProps.registros.length === nextProps.registros.length &&
+    // Comparación shallow de registros por ID y estatus (campos que más cambian)
+    prevProps.registros.every((prevRegistro, index) => {
+      const nextRegistro = nextProps.registros[index];
+      return prevRegistro && nextRegistro &&
+        prevRegistro.id === nextRegistro.id &&
+        prevRegistro.estatus === nextRegistro.estatus &&
+        prevRegistro.numeroReferencia === nextRegistro.numeroReferencia;
+    })
+  );
+});
+
+// Nombre para debugging
+HistorialTable.displayName = 'HistorialTable';
 
 export default HistorialTable;

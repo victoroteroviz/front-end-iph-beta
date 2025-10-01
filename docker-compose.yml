@@ -1,11 +1,8 @@
 services:
   frontend:
-    image: victoroteroviz/front-end-iph:0.0.3Alpha
+    image: victoroteroviz/front-end-iph:0.0.8Alpha
     container_name: iph-frontend
     restart: always
-    networks:
-      - traefik
-      - iph-vault  # ✅ Red compartida con backend
     ports:
       - "5000:4173"
     environment:
@@ -28,8 +25,3 @@ services:
       VITE_APP_VERSION: "1.0.0"
       VITE_APP_NAME: "IPH Frontend"
 
-networks:
-  traefik:
-    external: true
-  iph-vault:
-    external: true

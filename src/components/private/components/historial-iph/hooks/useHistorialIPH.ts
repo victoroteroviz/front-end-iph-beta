@@ -22,10 +22,9 @@ import {
   getHistorialIPHRaw,
   updateEstatusIPH,
   getRegistroIPHById,
-  getEstatusOptions
+  getEstatusOptions,
+  getEstadisticasHistorial
 } from '../../../../../services/historial/historial-iph.service';
-
-import { getEstatusIph } from '../../../../../services/estatus-iph/estatus-iph.service';
 
 // Interfaces
 import type {
@@ -217,7 +216,30 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
   }, [paginacion.limit]);
 
   /**
-   * Obtiene los datos del historial usando el servicio actualizado
+   * Obtiene ÚNICAMENTE las estadísticas desde /estatus-iph (independiente de la tabla)
+   */
+  const fetchEstadisticas = useCallback(async () => {
+    try {
+      logInfo('useHistorialIPH', 'Obteniendo estadísticas ÚNICAMENTE desde /estatus-iph');
+
+      // Obtener estadísticas SOLO del endpoint estatus-iph (sin cruzar con iph-history)
+      const estadisticasResponse = await getEstadisticasHistorial();
+
+      setEstadisticas(estadisticasResponse);
+
+      logInfo('useHistorialIPH', 'Estadísticas obtenidas exitosamente desde /estatus-iph', {
+        total: estadisticasResponse.total,
+        estatusCount: estadisticasResponse.estatusPorIph.length
+      });
+
+    } catch (error) {
+      logError('useHistorialIPH', error, 'Error obteniendo estadísticas desde /estatus-iph');
+      // No afectar el error general, solo las estadísticas
+    }
+  }, []);
+
+  /**
+   * Obtiene ÚNICAMENTE los datos de la tabla desde /iph-history (independiente de estadísticas)
    */
   const fetchData = useCallback(async (showLoadingState = true, currentRetryCount = 0) => {
     if (!hasAccess) {
@@ -231,7 +253,7 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
       }
       setError(null);
 
-      logInfo('useHistorialIPH', 'Obteniendo datos del historial con servicio actualizado', {
+      logInfo('useHistorialIPH', 'Obteniendo ÚNICAMENTE datos de tabla desde /iph-history', {
         filtros: memoizedFiltros,
         paginacion: { page: paginacion.page, limit: paginacion.limit }
       });
@@ -239,12 +261,11 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
       // Convertir filtros al formato del servicio actualizado
       const params = convertirFiltrosAParams(memoizedFiltros, paginacion.page);
 
-      // Obtener datos del historial usando el servicio actualizado
-      // Este servicio ya devuelve el formato interno esperado
+      // Obtener SOLO datos de la tabla desde /iph-history (SIN estadísticas)
       const historialResponse = await getHistorialIPH(params);
 
       setRegistros(historialResponse.registros);
-      setEstadisticas(historialResponse.estadisticas);
+      // NO setear estadísticas aquí - se obtienen independientemente
       setPaginacion(historialResponse.paginacion);
 
       // Reset retry count on success solo si es diferente de 0
@@ -321,7 +342,9 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
       const debounceTime = isFilterChange ? 300 : 0; // 300ms para filtros, inmediato para paginación
 
       debounceRef.current = setTimeout(() => {
+        // Obtener datos de tabla y estadísticas por separado
         fetchData();
+        fetchEstadisticas();
       }, debounceTime);
 
       // Cleanup
@@ -332,7 +355,7 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasAccess, memoizedFiltros, paginacion.page, paginacion.limit, retryCount]);
+  }, [hasAccess, memoizedFiltros, paginacion.page, paginacion.limit, retryCount, fetchData, fetchEstadisticas]);
 
   /**
    * Efecto para limpiar error cuando cambien filtros
@@ -406,9 +429,13 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
   const refetchData = useCallback(async () => {
     logInfo('useHistorialIPH', 'Recarga manual solicitada');
     setRetryCount(0); // Reset retry count for manual refresh
-    await fetchData();
+    // Obtener datos de tabla y estadísticas por separado
+    await Promise.all([
+      fetchData(),
+      fetchEstadisticas()
+    ]);
     showSuccess('Datos actualizados correctamente');
-  }, [fetchData]);
+  }, [fetchData, fetchEstadisticas]);
 
   /**
    * Limpia el error actual

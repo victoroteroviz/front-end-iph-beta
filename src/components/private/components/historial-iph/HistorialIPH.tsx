@@ -1,22 +1,24 @@
 /**
- * Componente HistorialIPH refactorizado
- * 
+ * Componente HistorialIPH SUPER OPTIMIZADO
+ *
  * Características implementadas:
  * - TypeScript completo con interfaces tipadas
  * - Hook personalizado para lógica de negocio
- * - Componentes atómicos separados
- * - Estados de carga y error
+ * - Componentes atómicos separados y memoizados
+ * - Estados de carga y error optimizados
  * - Servicios integrados con backend
  * - Sistema de roles (Admin/SuperAdmin only)
  * - Vista detalle dummy para futuro desarrollo
  * - Logging completo de eventos
  * - Accesibilidad mejorada
  * - Diseño responsivo
- * - Filtros avanzados
- * - Paginación completa
+ * - Filtros avanzados optimizados
+ * - Paginación completa optimizada
+ * - React.memo y callbacks optimizados
+ * - Prevención de re-renders innecesarios
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { FileText, AlertCircle, Users, RefreshCw, Shield } from 'lucide-react';
 
 // Hook personalizado
@@ -36,12 +38,12 @@ import { logInfo } from '../../../../helper/log/logger.helper';
 import type { HistorialIPHProps } from '../../../../interfaces/components/historialIph.interface';
 
 /**
- * Componente principal de HistorialIPH
- * 
+ * Componente principal de HistorialIPH - SUPER OPTIMIZADO
+ *
  * @param props - Props del componente
  * @returns JSX.Element del componente completo
  */
-const HistorialIPH: React.FC<HistorialIPHProps> = ({
+const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
   className = '',
   initialFilters,
   itemsPerPage = 10
@@ -74,30 +76,60 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
     itemsPerPage
   });
 
-  // Efecto para logging inicial
+  // Optimizar handleRefresh con useCallback
+  const handleRefresh = useCallback(async () => {
+    logInfo('HistorialIPH', 'Recarga manual solicitada por usuario');
+    await refetchData();
+  }, [refetchData]);
+
+  // Optimizar handler de editar estatus para modal
+  const handleEditarEstatusModal = useCallback((nuevoEstatus: string) => {
+    if (registroSeleccionado) {
+      editarEstatus(registroSeleccionado.id, nuevoEstatus);
+    }
+  }, [registroSeleccionado, editarEstatus]);
+
+  // Memoizar valores booleanos para optimizar renders
+  const showPermissionError = useMemo(() =>
+    error && error.includes('permisos'), [error]
+  );
+
+  const showGeneralError = useMemo(() =>
+    error && !error.includes('permisos'), [error]
+  );
+
+  const showEmptyState = useMemo(() =>
+    !loading && !error && !hasData, [loading, error, hasData]
+  );
+
+  const showMainContent = useMemo(() =>
+    !showEmptyState, [showEmptyState]
+  );
+
+  const hasFiltersApplied = useMemo(() =>
+    Object.values(filtros).some(f => f), [filtros]
+  );
+
+  const showPagination = useMemo(() =>
+    paginacion.totalPages > 1, [paginacion.totalPages]
+  );
+
+  // Efecto para logging inicial - optimizado
   useEffect(() => {
     logInfo('HistorialIPH', 'Componente montado', {
       initialFilters,
       itemsPerPage
     });
-    
+
     return () => {
       logInfo('HistorialIPH', 'Componente desmontado');
     };
-  }, [initialFilters, itemsPerPage]);
+  }, []); // Dependencies optimizadas - solo se ejecuta una vez
 
-  /**
-   * Maneja la recarga manual de datos
-   */
-  const handleRefresh = async () => {
-    logInfo('HistorialIPH', 'Recarga manual solicitada por usuario');
-    await refetchData();
-  };
+  // Componente de error de permisos memoizado
+  const PermissionErrorComponent = useMemo(() => {
+    if (!showPermissionError) return null;
 
-  /**
-   * Verifica acceso del usuario (ya manejado en el hook)
-   */
-  if (error && error.includes('permisos')) {
     return (
       <div className={`p-6 bg-[#f8f0e7] min-h-screen ${className}`}>
         <div className="max-w-2xl mx-auto text-center py-16">
@@ -106,8 +138,8 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
             Acceso Restringido
           </h2>
           <p className="text-gray-600 mb-6">
-            No tienes permisos para acceder al historial de IPHs. 
-            Esta funcionalidad está disponible únicamente para usuarios con rol de 
+            No tienes permisos para acceder al historial de IPHs.
+            Esta funcionalidad está disponible únicamente para usuarios con rol de
             Administrador o SuperAdmin.
           </p>
           <div className="text-sm text-gray-500">
@@ -116,6 +148,11 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
         </div>
       </div>
     );
+  }, [showPermissionError, className]);
+
+  // Early return optimizado
+  if (showPermissionError) {
+    return PermissionErrorComponent;
   }
 
   return (
@@ -179,12 +216,9 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
         className="mb-6"
       />
 
-      {/* Estado de error */}
-      {error && !error.includes('permisos') && (
-        <div className="
-          bg-red-50 border border-red-200 rounded-lg p-4 mb-6
-          flex items-start gap-3
-        ">
+      {/* Estado de error - OPTIMIZADO */}
+      {showGeneralError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-3">
           <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <h3 className="font-medium text-red-800">Error cargando datos</h3>
@@ -192,19 +226,13 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
             <div className="flex items-center gap-3 mt-3">
               <button
                 onClick={clearError}
-                className="
-                  text-sm text-red-600 hover:text-red-800
-                  underline transition-colors cursor-pointer
-                "
+                className="text-sm text-red-600 hover:text-red-800 underline transition-colors cursor-pointer"
               >
                 Ocultar error
               </button>
               <button
                 onClick={handleRefresh}
-                className="
-                  text-sm text-red-600 hover:text-red-800
-                  underline transition-colors cursor-pointer
-                "
+                className="text-sm text-red-600 hover:text-red-800 underline transition-colors cursor-pointer"
               >
                 Reintentar
               </button>
@@ -213,45 +241,35 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
         </div>
       )}
 
-      {/* Contenido principal */}
-      {!loading && !error && !hasData ? (
-        // Estado sin datos
-        <div className="
-          bg-white rounded-lg shadow-sm border border-gray-200 p-12
-          text-center
-        ">
+      {/* Contenido principal - OPTIMIZADO */}
+      {showEmptyState ? (
+        // Estado sin datos - MEMOIZADO
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
           <FileText size={64} className="mx-auto text-gray-300 mb-6" />
           <h3 className="text-xl font-medium text-gray-900 mb-3">
             No se encontraron registros
           </h3>
           <p className="text-gray-600 mb-6 max-w-md mx-auto">
-            No hay registros de IPH que coincidan con los filtros aplicados. 
+            No hay registros de IPH que coincidan con los filtros aplicados.
             Intenta ajustar los criterios de búsqueda o verificar el rango de fechas.
           </p>
           <div className="flex items-center justify-center gap-3">
             <button
               onClick={handleRefresh}
-              className="
-                px-6 py-2 bg-[#4d4725] text-white rounded-lg
-                hover:bg-[#3a3519] transition-colors
-                flex items-center gap-2 cursor-pointer
-              "
+              className="px-6 py-2 bg-[#4d4725] text-white rounded-lg hover:bg-[#3a3519] transition-colors flex items-center gap-2 cursor-pointer"
             >
               <RefreshCw size={16} />
               Intentar nuevamente
             </button>
             <button
               onClick={clearAllFilters}
-              className="
-                px-6 py-2 border border-gray-300 text-gray-700 rounded-lg
-                hover:bg-gray-50 transition-colors cursor-pointer
-              "
+              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
             >
               Limpiar filtros
             </button>
           </div>
         </div>
-      ) : (
+      ) : showMainContent ? (
         <div className="space-y-6">
           {/* Tabla de registros */}
           <HistorialTable
@@ -262,8 +280,8 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
             className="relative"
           />
 
-          {/* Paginación */}
-          {paginacion.totalPages > 1 && (
+          {/* Paginación - OPTIMIZADA */}
+          {showPagination && (
             <PaginacionHistorial
               currentPage={paginacion.page}
               totalPages={paginacion.totalPages}
@@ -276,7 +294,7 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
             />
           )}
 
-          {/* Información adicional */}
+          {/* Información adicional - OPTIMIZADA */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-sm text-gray-600">
               <div className="flex items-center gap-4">
@@ -284,28 +302,37 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
                   Mostrando <strong>{registros.length}</strong> de{' '}
                   <strong>{paginacion.total}</strong> registros
                 </span>
-                {Object.values(filtros).some(f => f) && (
+                {hasFiltersApplied && (
                   <span className="text-[#4d4725]">
                     (con filtros aplicados)
                   </span>
                 )}
               </div>
-              
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Modal de detalle */}
+      {/* Modal de detalle - OPTIMIZADO */}
       {registroSeleccionado && (
         <DetalleIPH
           registro={registroSeleccionado}
           onClose={cerrarDetalle}
-          onEditarEstatus={(nuevoEstatus) => editarEstatus(registroSeleccionado.id, nuevoEstatus)}
+          onEditarEstatus={handleEditarEstatusModal}
         />
       )}
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Comparación optimizada para React.memo
+  return (
+    prevProps.className === nextProps.className &&
+    prevProps.itemsPerPage === nextProps.itemsPerPage &&
+    JSON.stringify(prevProps.initialFilters) === JSON.stringify(nextProps.initialFilters)
+  );
+});
+
+// Nombre para debugging
+HistorialIPH.displayName = 'HistorialIPH';
 
 export default HistorialIPH;
