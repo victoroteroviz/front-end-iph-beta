@@ -68,6 +68,7 @@ export const login = async (loginRequest : LoginRequest)
 {
   logger.debug(login.name,'Inicio del proceso de login');
   try {
+    // Endpoint con /api para que coincida con la ruta del backend
     const response= await http.post<LoginResponse>(`/api/auth-web/login`, loginRequest);
 
     const loginResponse: LoginResponse = response.data;

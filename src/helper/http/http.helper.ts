@@ -84,7 +84,8 @@ const DEFAULT_CONFIG: HttpHelperConfig = {
   authHeaderPrefix: 'Bearer',
   authTokenGetter: () => {
     try {
-      return sessionStorage.getItem('auth_token');
+      // Usar 'token' que es la key donde login.service.ts guarda el token
+      return sessionStorage.getItem('token');
     } catch {
       return null;
     }
@@ -131,17 +132,22 @@ class HttpHelper {
    * Construye la URL completa
    */
   private buildUrl(endpoint: string): string {
+    // Si es una URL absoluta, retornarla tal cual
     if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
       return endpoint;
     }
     
+    // Si hay baseURL configurada, combinarla con el endpoint
     if (this.config.baseURL) {
       const base = this.config.baseURL.endsWith('/') ? this.config.baseURL.slice(0, -1) : this.config.baseURL;
       const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-      return `${base}${path}`;
+      const fullUrl = `${base}${path}`;
+      return fullUrl;
     }
     
-    return endpoint;
+    // Si no hay baseURL, usar el endpoint como relativo (proxy de Vite lo manejará)
+    // Asegurar que comience con /
+    return endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   }
 
   /**
