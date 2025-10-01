@@ -1,43 +1,54 @@
 /**
- * Hook optimizado para manejar toggles rápidos sin lentitud acumulativa
- * Utiliza técnicas avanzadas de React 18 para suavizar las actualizaciones
+ * Hook super optimizado para toggle
+ * Evita re-renders innecesarios y memoiza correctamente
  */
 
-import { useCallback, useState, useDeferredValue } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 
 interface UseOptimizedToggleOptions {
   initialValue?: boolean;
-  onToggle?: (newValue: boolean) => void;
 }
 
 interface UseOptimizedToggleReturn {
   value: boolean;
-  deferredValue: boolean;
   toggle: () => void;
   setValue: (value: boolean) => void;
+  setTrue: () => void;
+  setFalse: () => void;
 }
 
-export const useOptimizedToggle = ({ 
-  initialValue = false 
+export const useOptimizedToggle = ({
+  initialValue = false
 }: UseOptimizedToggleOptions = {}): UseOptimizedToggleReturn => {
   const [value, setValue] = useState<boolean>(initialValue);
-  const deferredValue = useDeferredValue(value);
-  
-  // Toggle simplificado sin memory leaks
+
+  // Optimizar toggle con prevención de actualizaciones innecesarias
   const toggle = useCallback(() => {
     setValue(prev => !prev);
-  }, []); // Sin dependencias problemáticas
+  }, []);
 
+  // Optimizar setValue con comparación previa
   const setValueOptimized = useCallback((newValue: boolean) => {
-    setValue(newValue);
-  }, []); // Sin dependencias problemáticas
+    setValue(current => current === newValue ? current : newValue);
+  }, []);
 
-  return {
+  // Handlers específicos para casos comunes - más eficientes
+  const setTrue = useCallback(() => {
+    setValue(current => current ? current : true);
+  }, []);
+
+  const setFalse = useCallback(() => {
+    setValue(current => current ? false : current);
+  }, []);
+
+  // Memoizar el objeto de retorno para evitar re-renders
+  return useMemo(() => ({
     value,
-    deferredValue,
     toggle,
-    setValue: setValueOptimized
-  };
+    setValue: setValueOptimized,
+    setTrue,
+    setFalse
+  }), [value, toggle, setValueOptimized, setTrue, setFalse]);
 };
 
 export default useOptimizedToggle;

@@ -81,36 +81,53 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
   ]
 };
 
+// Cache para evitar recálculos innecesarios
+const filterCache = new Map<string, SidebarItemConfig[]>();
+
 /**
- * Obtiene los items del sidebar filtrados por el rol del usuario
- * 
+ * Obtiene los items del sidebar filtrados por el rol del usuario - OPTIMIZADO
+ *
  * @param userRole - Rol del usuario actual
  * @returns Array de items filtrados y ordenados
  */
 export const getFilteredSidebarItems = (userRole: string): SidebarItemConfig[] => {
   if (!userRole) return [];
 
-  // Verificar que el rol esté en ALLOWED_ROLES
-  const isValidRole = ALLOWED_ROLES.some(allowedRole => 
-    allowedRole.nombre.toLowerCase() === userRole.toLowerCase()
+  // Verificar cache primero
+  if (filterCache.has(userRole)) {
+    return filterCache.get(userRole)!;
+  }
+
+  // Optimizar verificación de rol válido
+  const userRoleLower = userRole.toLowerCase();
+  const isValidRole = ALLOWED_ROLES.some(allowedRole =>
+    allowedRole.nombre.toLowerCase() === userRoleLower
   );
 
-  if (!isValidRole) return [];
+  if (!isValidRole) {
+    filterCache.set(userRole, []);
+    return [];
+  }
 
-  // Filtrar items basado en los roles requeridos
+  // Filtrar items de manera más eficiente
   const filteredItems = SIDEBAR_CONFIG.items.filter(item => {
     if (!item.requiredRoles || item.requiredRoles.length === 0) {
-      return true; // Sin restricciones de rol
+      return true;
     }
 
-    // Verificar si el usuario tiene alguno de los roles requeridos
-    return item.requiredRoles.some(requiredRole => 
-      requiredRole.toLowerCase() === userRole.toLowerCase()
+    // Optimizar comparación de roles
+    return item.requiredRoles.some(requiredRole =>
+      requiredRole.toLowerCase() === userRoleLower
     );
   });
 
-  // Ordenar por orden especificado
-  return filteredItems.sort((a, b) => (a.order || 999) - (b.order || 999));
+  // Ordenar una sola vez
+  const sortedItems = filteredItems.sort((a, b) => (a.order || 999) - (b.order || 999));
+
+  // Guardar en cache
+  filterCache.set(userRole, sortedItems);
+
+  return sortedItems;
 };
 
 /**

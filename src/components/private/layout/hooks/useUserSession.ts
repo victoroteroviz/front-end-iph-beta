@@ -120,41 +120,24 @@ const useUserSession = (): UserSessionState => {
   }, []);
 
   /**
-   * Maneja el logout del usuario
+   * Maneja el logout del usuario - simplificado
    */
   const logout = useCallback(() => {
-    logInfo('useUserSession', 'Iniciando proceso de logout', {
-      userId: state.userData?.id,
-      userRole: state.userRole
-    });
-
     try {
-      // Limpiar datos de navegación
       clearNavigationData();
-      
-      // Actualizar estado local
       setState({
         userRole: null,
         userData: null,
         isAuthenticated: false,
         isLoading: false
       });
-
-      // Notificar al usuario
       showSuccess('Sesión cerrada correctamente');
-
-      // Redirigir al login
       navigate('/');
-
-      logInfo('useUserSession', 'Logout completado exitosamente');
-
     } catch (error) {
       logError('useUserSession', error, 'Error durante el logout');
-      
-      // Forzar redirección incluso si hay error
       navigate('/');
     }
-  }, [navigate, state.userData?.id, state.userRole]);
+  }, [navigate]);
 
   /**
    * Efecto para cargar sesión al montar el componente
