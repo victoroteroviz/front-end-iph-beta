@@ -49,10 +49,10 @@ import type {
 export interface GetHistorialIPHParamsEnhanced extends Omit<GetHistorialIPHParams, 'filtros'> {
   page?: number;
   limit?: number;
-  ordernaPor?: 'fecha_creacion' | 'estatus' | 'tipoDelito' | 'usuario';
+  ordernaPor?: 'fecha_creacion' | 'estatus' | 'tipoDelito' | 'usuario' | 'n_referencia';
   orden?: 'ASC' | 'DESC';
   busqueda?: string;
-  busquedaPor?: 'estatus' | 'tipoDelito' | 'usuario';
+  busquedaPor?: 'estatus' | 'tipoDelito' | 'usuario' | 'n_referencia';
   estatus?: string;
   tipoDelito?: string;
   usuario?: string;

@@ -17,6 +17,7 @@ import IPHTipoFilter from './components/IPHTipoFilter';
 import IPHCardsGrid from './components/IPHCardsGrid';
 import IPHPagination from './components/IPHPagination';
 import AutoRefreshIndicator from './components/AutoRefreshIndicator';
+import EstadisticasCards from './components/EstadisticasCards';
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';
@@ -151,6 +152,9 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
             />
           </div>
         )}
+
+        {/* Estadísticas */}
+        <EstadisticasCards className="mb-6" />
 
         {/* Filtros de búsqueda */}
         <IPHFilters

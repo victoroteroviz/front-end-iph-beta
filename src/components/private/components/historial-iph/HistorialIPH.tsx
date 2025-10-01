@@ -25,7 +25,6 @@ import { FileText, AlertCircle, Users, RefreshCw, Shield } from 'lucide-react';
 import useHistorialIPH from './hooks/useHistorialIPH';
 
 // Componentes atómicos
-import EstadisticasCards from './cards/EstadisticasCards';
 import FiltrosHistorial from './components/FiltrosHistorial';
 import HistorialTable from './table/HistorialTable';
 import PaginacionHistorial from './components/PaginacionHistorial';
@@ -51,7 +50,7 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
   // Hook personalizado con toda la lógica
   const {
     registros,
-    estadisticas,
+    // estadisticas, // No se usa más, el componente EstadisticasCards está en InformePolicial
     loading,
     error,
     filtros,
@@ -124,7 +123,8 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
     return () => {
       logInfo('HistorialIPH', 'Componente desmontado');
     };
-  }, []); // Dependencies optimizadas - solo se ejecuta una vez
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Solo se ejecuta una vez al montar
 
   // Componente de error de permisos memoizado
   const PermissionErrorComponent = useMemo(() => {
@@ -199,13 +199,6 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
           </button>
         </div>
       </div>
-
-      {/* Tarjetas de estadísticas */}
-      <EstadisticasCards
-        estadisticas={estadisticas}
-        loading={loading}
-        className="mb-6"
-      />
 
       {/* Filtros */}
       <FiltrosHistorial
