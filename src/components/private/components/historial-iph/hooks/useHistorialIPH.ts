@@ -19,7 +19,6 @@ import { showSuccess, showError, showWarning } from '../../../../../helper/notif
 // Services
 import {
   getHistorialIPH,
-  getHistorialIPHRaw,
   updateEstatusIPH,
   getRegistroIPHById,
   getEstatusOptions,
@@ -33,11 +32,7 @@ import type {
   RegistroHistorialIPH,
   EstadisticasHistorial,
   FiltrosHistorial,
-  PaginacionHistorial,
-  // Nuevas interfaces para API
-  info,
-  ResHistory,
-  Coordenadas
+  PaginacionHistorial
 } from '../../../../../interfaces/components/historialIph.interface';
 
 // Comentadas temporalmente - no se usan con el servicio actualizado
@@ -169,20 +164,6 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
     }
   }, []);
 
-  // ==================== MEMOIZACIÓN ====================
-
-  /**
-   * Memoizar filtros para evitar recreación en cada render
-   */
-  const memoizedFiltros = useMemo(() => filtros, [
-    filtros.fechaInicio,
-    filtros.fechaFin,
-    filtros.estatus,
-    filtros.tipoDelito,
-    filtros.usuario,
-    filtros.busqueda
-  ]);
-
   // ==================== FUNCIONES INTERNAS ====================
 
   /**
@@ -206,12 +187,40 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
 
   /**
    * Convierte filtros del formato local al formato de parámetros del servicio actualizado
+   * Limpia valores vacíos para evitar errores de validación en el backend
    */
   const convertirFiltrosAParams = useCallback((filtrosLocal: FiltrosHistorial, pagina: number) => {
+    // Limpiar filtros vacíos para evitar enviar strings vacíos al backend
+    const filtrosLimpios: FiltrosHistorial = {};
+    
+    // Solo agregar filtros con valores válidos (no vacíos)
+    if (filtrosLocal.fechaInicio && filtrosLocal.fechaInicio.trim() !== '') {
+      filtrosLimpios.fechaInicio = filtrosLocal.fechaInicio.trim();
+    }
+    if (filtrosLocal.fechaFin && filtrosLocal.fechaFin.trim() !== '') {
+      filtrosLimpios.fechaFin = filtrosLocal.fechaFin.trim();
+    }
+    if (filtrosLocal.estatus && filtrosLocal.estatus.trim() !== '') {
+      filtrosLimpios.estatus = filtrosLocal.estatus.trim();
+    }
+    if (filtrosLocal.tipoDelito && filtrosLocal.tipoDelito.trim() !== '') {
+      filtrosLimpios.tipoDelito = filtrosLocal.tipoDelito.trim();
+    }
+    if (filtrosLocal.usuario && filtrosLocal.usuario.trim() !== '') {
+      filtrosLimpios.usuario = filtrosLocal.usuario.trim();
+    }
+    if (filtrosLocal.busqueda && filtrosLocal.busqueda.trim() !== '') {
+      filtrosLimpios.busqueda = filtrosLocal.busqueda.trim();
+      // Solo incluir busquedaPor si hay búsqueda
+      if (filtrosLocal.busquedaPor) {
+        filtrosLimpios.busquedaPor = filtrosLocal.busquedaPor;
+      }
+    }
+    
     return {
       page: pagina,
       limit: paginacion.limit,
-      filtros: filtrosLocal
+      filtros: filtrosLimpios
     };
   }, [paginacion.limit]);
 
@@ -254,12 +263,12 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
       setError(null);
 
       logInfo('useHistorialIPH', 'Obteniendo ÚNICAMENTE datos de tabla desde /iph-history', {
-        filtros: memoizedFiltros,
+        filtros: filtros,
         paginacion: { page: paginacion.page, limit: paginacion.limit }
       });
 
       // Convertir filtros al formato del servicio actualizado
-      const params = convertirFiltrosAParams(memoizedFiltros, paginacion.page);
+      const params = convertirFiltrosAParams(filtros, paginacion.page);
 
       // Obtener SOLO datos de la tabla desde /iph-history (SIN estadísticas)
       const historialResponse = await getHistorialIPH(params);
@@ -309,7 +318,7 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
         setLoading(false);
       }
     }
-  }, [hasAccess, memoizedFiltros, paginacion.page, paginacion.limit, convertirFiltrosAParams]);
+  }, [hasAccess, filtros, paginacion.page, paginacion.limit, convertirFiltrosAParams]);
 
   // ==================== EFECTOS ====================
 
@@ -338,7 +347,7 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
       }
 
       // Solo aplicar debounce a cambios de filtros, no a paginación
-      const isFilterChange = JSON.stringify(memoizedFiltros) !== JSON.stringify(INITIAL_FILTERS);
+      const isFilterChange = JSON.stringify(filtros) !== JSON.stringify(INITIAL_FILTERS);
       const debounceTime = isFilterChange ? 300 : 0; // 300ms para filtros, inmediato para paginación
 
       debounceRef.current = setTimeout(() => {
@@ -354,8 +363,7 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
         }
       };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasAccess, memoizedFiltros, paginacion.page, paginacion.limit, retryCount, fetchData, fetchEstadisticas]);
+  }, [hasAccess, filtros, paginacion.page, paginacion.limit, retryCount, fetchData, fetchEstadisticas]);
 
   /**
    * Efecto para limpiar error cuando cambien filtros
