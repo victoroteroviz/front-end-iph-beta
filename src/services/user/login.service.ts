@@ -57,6 +57,12 @@ const http : HttpHelper = HttpHelper.getInstance(
   }
 );
 
+// Log de configuración para debug
+logger.debug(login.name, 'Configuración HTTP Helper', {
+  baseURL: API_BASE_URL,
+  environment: import.meta.env.VITE_APP_ENVIRONMENT || 'development'
+});
+
 /**
  * 
  * @param loginRequest 
@@ -68,10 +74,47 @@ export const login = async (loginRequest : LoginRequest)
 {
   logger.debug(login.name,'Inicio del proceso de login');
   try {
+    // Log de la petición que se va a realizar
+    const endpoint = `/api/auth-web/login`;
+    logger.debug(login.name, 'Realizando petición de login', {
+      endpoint,
+      baseURL: API_BASE_URL,
+      fullUrl: API_BASE_URL ? `${API_BASE_URL}${endpoint}` : endpoint,
+      method: 'POST',
+      hasCredentials: !!loginRequest.correo_electronico
+    });
+
     // Endpoint con /api para que coincida con la ruta del backend
-    const response= await http.post<LoginResponse>(`/api/auth-web/login`, loginRequest);
+    const response= await http.post<LoginResponse>(endpoint, loginRequest);
 
     const loginResponse: LoginResponse = response.data;
+
+    // Log de debug para analizar la respuesta del servidor
+    logger.debug(login.name, 'Respuesta del servidor recibida', {
+      status: response.status,
+      ok: response.ok,
+      hasData: !!response.data,
+      dataKeys: response.data ? Object.keys(response.data) : [],
+      tokenPresent: !!loginResponse.token,
+      tokenType: typeof loginResponse.token
+    });
+
+    // Validación defensiva del token antes de decodificar
+    if (!loginResponse.token || typeof loginResponse.token !== 'string') {
+      logger.debug(login.name, 'Token inválido recibido del servidor', {
+        tokenType: typeof loginResponse.token,
+        tokenValue: loginResponse.token,
+        tokenLength: loginResponse.token ? String(loginResponse.token).length : 0,
+        isNull: loginResponse.token === null,
+        isUndefined: loginResponse.token === undefined,
+        isEmptyString: loginResponse.token === '',
+        fullResponse: loginResponse,
+        responseKeys: Object.keys(loginResponse),
+        hasMessage: !!loginResponse.message
+      });
+      throw new Error(`Token inválido recibido del servidor - Tipo: ${typeof loginResponse.token}, Valor: ${JSON.stringify(loginResponse.token)}`);
+    }
+
     const token: Token = decodeAndValidateToken(loginResponse.token);
 
     if(token.data.user_roles.length <= 0)

@@ -1,11 +1,12 @@
 services:
   frontend:
-    image: victoroteroviz/front-end-iph:0.0.8Alpha
+    image: victoroteroviz/front-end-iph:0.0.9Alpha
     container_name: iph-frontend
     restart: always
     ports:
       - "5000:4173"
     environment:
+      VITE_APP_ENVIRONMENT: "production"
       VITE_API_BASE_URL: "http://iph-backend:6000"
       VITE_SUPERADMIN_ROLE: "[{\"id\":1,\"nombre\":\"SuperAdmin\"}]"
       VITE_ADMIN_ROLE: "[{\"id\":2,\"nombre\":\"Administrador\"}]"

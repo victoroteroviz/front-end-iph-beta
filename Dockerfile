@@ -5,6 +5,7 @@ FROM node:current-alpine AS builder
 RUN apk add --no-cache libc6-compat
 
 # Se definen argumentos de build para las variables de entorno de Vite
+ARG VITE_APP_ENVIRONMENT
 ARG VITE_API_BASE_URL
 ARG VITE_SUPERADMIN_ROLE
 ARG VITE_ADMIN_ROLE
@@ -25,6 +26,7 @@ ARG VITE_APP_VERSION
 ARG VITE_APP_NAME
 
 # Se convierten los argumentos a variables de entorno para Vite
+ENV VITE_APP_ENVIRONMENT=$VITE_APP_ENVIRONMENT
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_SUPERADMIN_ROLE=$VITE_SUPERADMIN_ROLE
 ENV VITE_ADMIN_ROLE=$VITE_ADMIN_ROLE
