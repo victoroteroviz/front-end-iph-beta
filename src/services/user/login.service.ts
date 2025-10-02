@@ -58,7 +58,7 @@ const http : HttpHelper = HttpHelper.getInstance(
 );
 
 // Log de configuración para debug
-logger.debug(login.name, 'Configuración HTTP Helper', {
+logger.debug('login.service', 'Configuración HTTP Helper', {
   baseURL: API_BASE_URL,
   environment: import.meta.env.VITE_APP_ENVIRONMENT || 'development'
 });
@@ -96,7 +96,12 @@ export const login = async (loginRequest : LoginRequest)
       hasData: !!response.data,
       dataKeys: response.data ? Object.keys(response.data) : [],
       tokenPresent: !!loginResponse.token,
-      tokenType: typeof loginResponse.token
+      tokenType: typeof loginResponse.token,
+      // Debug adicional para ver qué está devolviendo el servidor
+      responseType: typeof response.data,
+      isArray: Array.isArray(response.data),
+      firstKeys: response.data && typeof response.data === 'object' ? Object.keys(response.data).slice(0, 10) : [],
+      responsePreview: typeof response.data === 'string' ? (response.data as string).substring(0, 200) : 'No es string'
     });
 
     // Validación defensiva del token antes de decodificar

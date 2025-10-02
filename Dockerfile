@@ -90,5 +90,5 @@ EXPOSE 4173
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node --version || exit 1
 
-# Comando para iniciar la aplicación
-CMD ["serve", "-s", "dist", "-l", "4173", "--no-port-switching", "--no-clipboard"]
+# Comando para iniciar la aplicación SIN interceptar rutas /api/*
+CMD ["serve", "dist", "-l", "4173", "--no-port-switching", "--no-clipboard"]

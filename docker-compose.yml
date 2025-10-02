@@ -1,13 +1,14 @@
 services:
   frontend:
-    image: victoroteroviz/front-end-iph:0.0.9Alpha
+    image: front-end-iph:singleton-fix
     container_name: iph-frontend
     restart: always
     ports:
       - "5000:4173"
     environment:
-      VITE_APP_ENVIRONMENT: "production"
-      VITE_API_BASE_URL: "http://iph-backend:6000"
+      # VITE_API_BASE_URL: "https://iph01.okip.com.mx"
+      VITE_API_BASE_URL: "http://localhost:3000"
+
       VITE_SUPERADMIN_ROLE: "[{\"id\":1,\"nombre\":\"SuperAdmin\"}]"
       VITE_ADMIN_ROLE: "[{\"id\":2,\"nombre\":\"Administrador\"}]"
       VITE_SUPERIOR_ROLE: "[{\"id\":3,\"nombre\":\"Superior\"}]"
@@ -25,4 +26,3 @@ services:
       VITE_DEBUG_MODE: "false"
       VITE_APP_VERSION: "1.0.0"
       VITE_APP_NAME: "IPH Frontend"
-

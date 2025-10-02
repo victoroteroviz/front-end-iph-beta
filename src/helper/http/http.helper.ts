@@ -106,10 +106,16 @@ class HttpHelper {
 
   /**
    * Obtiene la instancia única del HTTP helper (Singleton)
+   * Si ya existe una instancia y se proporciona nueva configuración, se actualiza
    */
   public static getInstance(config?: Partial<HttpHelperConfig>): HttpHelper {
     if (!HttpHelper.instance) {
       HttpHelper.instance = new HttpHelper(config);
+      console.log('🆕 HTTP Helper instance created with config:', HttpHelper.instance.config);
+    } else if (config) {
+      // Actualizar configuración si se proporciona nueva
+      HttpHelper.instance.updateConfig(config);
+      console.log('🔄 HTTP Helper config updated:', HttpHelper.instance.config);
     }
     return HttpHelper.instance;
   }
@@ -132,22 +138,34 @@ class HttpHelper {
    * Construye la URL completa
    */
   private buildUrl(endpoint: string): string {
+    // Debug logging para análisis
+    console.log('🔧 DEBUG buildUrl:', {
+      endpoint,
+      hasBaseURL: !!this.config.baseURL,
+      baseURL: this.config.baseURL,
+      isAbsolute: endpoint.startsWith('http://') || endpoint.startsWith('https://')
+    });
+
     // Si es una URL absoluta, retornarla tal cual
     if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+      console.log('✅ Using absolute URL:', endpoint);
       return endpoint;
     }
-    
+
     // Si hay baseURL configurada, combinarla con el endpoint
     if (this.config.baseURL) {
       const base = this.config.baseURL.endsWith('/') ? this.config.baseURL.slice(0, -1) : this.config.baseURL;
       const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
       const fullUrl = `${base}${path}`;
+      console.log('🌐 Built URL with baseURL:', { base, path, fullUrl });
       return fullUrl;
     }
-    
+
     // Si no hay baseURL, usar el endpoint como relativo (proxy de Vite lo manejará)
     // Asegurar que comience con /
-    return endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const relativeUrl = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    console.log('📍 Using relative URL:', relativeUrl);
+    return relativeUrl;
   }
 
   /**
@@ -224,17 +242,28 @@ class HttpHelper {
    */
   private async processResponse<T>(response: Response, startTime: number): Promise<HttpResponse<T>> {
     const duration = Date.now() - startTime;
-    
+
     let data: T;
     const contentType = response.headers.get('content-type') || '';
+
+    // Debug logging para analizar el problema
+    console.log('🔍 DEBUG processResponse:', {
+      url: response.url,
+      status: response.status,
+      contentType,
+      headers: Object.fromEntries(response.headers.entries())
+    });
 
     try {
       if (contentType.includes('application/json')) {
         data = await response.json();
+        console.log('✅ Parsed as JSON:', typeof data, Object.keys(data || {}));
       } else if (contentType.includes('text/')) {
         data = await response.text() as T;
+        console.log('📝 Parsed as TEXT:', typeof data, (data as string).substring(0, 100));
       } else {
         data = await response.blob() as T;
+        console.log('📄 Parsed as BLOB:', typeof data);
       }
     } catch (error) {
       throw this.createHttpError('PARSE', 'Error parsing response', response, duration, error);

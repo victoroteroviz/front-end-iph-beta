@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 // Configuración de roles del sistema
 export const SUPERADMIN_ROLE = import.meta.env.VITE_SUPERADMIN_ROLE ? JSON.parse(import.meta.env.VITE_SUPERADMIN_ROLE) : [];
