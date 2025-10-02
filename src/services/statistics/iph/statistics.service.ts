@@ -25,7 +25,7 @@ const http = HttpHelper.getInstance({
 });
 
 export const getResumenEstadisticas = async (year: number = new Date().getFullYear()): Promise<IResumenPorTipo> => {
-  const url: string = `${API_BASE_URL}/${API_BASE_ROUTES.ESTADISTICAS}/getSummaryByType/${year}`;
+  const url: string = `/${API_BASE_ROUTES.ESTADISTICAS}/getSummaryByType/${year}`;
   try {
     const response = await http.get<IResumenPorTipo>(url);
     const resumenEstadisticas: IResumenPorTipo = response.data;
@@ -46,7 +46,7 @@ export const getResumenEstadisticas = async (year: number = new Date().getFullYe
  */
 export const getVariacionResumen = async (year: number = new Date().getFullYear(), compareTo : number = year - 1): Promise<IVariacionResumen> =>
 {
-  const url : string = `${API_BASE_URL}/${API_BASE_ROUTES.ESTADISTICAS}/getTypeVariationSummary?year=${year}&compareTo=${compareTo}`;
+  const url : string = `/${API_BASE_ROUTES.ESTADISTICAS}/getTypeVariationSummary?year=${year}&compareTo=${compareTo}`;
   
   try {
    const response = await http.get<IVariacionResumen>(url);
@@ -65,7 +65,7 @@ export const getVariacionResumen = async (year: number = new Date().getFullYear(
  * @returns 
  */
 export const getResumenPorSemana = async (offset: number = -1)=>{
-  const url : string = `${API_BASE_URL}/${API_BASE_ROUTES.ESTADISTICAS}/getIphsGroupedByWeek/${offset}`;
+  const url : string = `/${API_BASE_ROUTES.ESTADISTICAS}/getIphsGroupedByWeek/${offset}`;
   try {
    const response = await http.get<IResumenPorSemana>(url);
    const resumenPorSemana : IResumenPorSemana = response.data;
@@ -82,7 +82,7 @@ export const getResumenPorSemana = async (offset: number = -1)=>{
  * @returns 
  */
 export const getResumenPorMes = async(year: number = new Date().getFullYear())=>{
-  const url : string = `${API_BASE_URL}/${API_BASE_ROUTES.ESTADISTICAS}/getIphsGroupedByMonth/${year}`;
+  const url : string = `/${API_BASE_ROUTES.ESTADISTICAS}/getIphsGroupedByMonth/${year}`;
   try {
    const response = await http.get<IResumenPorMes>(url);
    const resumenPorMes : IResumenPorMes = response.data;
@@ -115,7 +115,7 @@ export const getIphCountByUsers = async (
   }
   
   // Usar API real
-  const url: string = `${API_BASE_URL}/${API_BASE_ROUTES.ESTADISTICAS}/getIphCountByUsers?mes=${mes}&anio=${anio}&page=${page}&limit=${limit}`;
+  const url: string = `/${API_BASE_ROUTES.ESTADISTICAS}/getIphCountByUsers?mes=${mes}&anio=${anio}&page=${page}&limit=${limit}`;
   
   try {
     const response = await http.get<IUsuarioIphCountResponse>(url);

@@ -48,30 +48,103 @@ fi
 
 log_info "Iniciando deploy de $IMAGE_NAME:$VERSION"
 
-# 1. Build de la imagen Docker
-log_info "Construyendo imagen Docker..."
-if sudo docker build -t $IMAGE_NAME:$VERSION .; then
+# Definir variables de entorno directamente con valores por defecto
+# API Configuration
+VITE_API_BASE_URL="https://iph01.okip.com.mx"
+VITE_APP_ENVIRONMENT="production"
+
+# Roles Configuration (JSON válido con comillas escapadas)
+VITE_SUPERADMIN_ROLE='[{"id":1,"nombre":"SuperAdmin"}]'
+VITE_ADMIN_ROLE='[{"id":2,"nombre":"Administrador"}]'
+VITE_SUPERIOR_ROLE='[{"id":3,"nombre":"Superior"}]'
+VITE_ELEMENTO_ROLE='[{"id":4,"nombre":"Elemento"}]'
+
+# Logging Configuration
+VITE_LOG_LEVEL="1"
+VITE_LOG_CONSOLE="true"
+VITE_LOG_STORAGE="true"
+VITE_LOG_MAX_ENTRIES="1000"
+
+# HTTP Configuration
+VITE_HTTP_TIMEOUT="30000"
+VITE_HTTP_RETRIES="3"
+VITE_HTTP_RETRY_DELAY="1000"
+
+# Auth Configuration
+VITE_AUTH_HEADER_NAME="Authorization"
+VITE_AUTH_HEADER_PREFIX="Bearer"
+VITE_AUTH_TOKEN_KEY="auth_token"
+
+# App Configuration
+VITE_DEBUG_MODE="false"
+VITE_APP_NAME="IPH Frontend"
+
+log_info "Variables de entorno configuradas para producción"
+
+# 1. Build de la imagen Docker con build arguments
+log_info "Construyendo imagen Docker con variables de entorno..."
+if sudo docker build \
+    --build-arg VITE_APP_ENVIRONMENT="$VITE_APP_ENVIRONMENT" \
+    --build-arg VITE_API_BASE_URL="$VITE_API_BASE_URL" \
+    --build-arg VITE_SUPERADMIN_ROLE="$VITE_SUPERADMIN_ROLE" \
+    --build-arg VITE_ADMIN_ROLE="$VITE_ADMIN_ROLE" \
+    --build-arg VITE_SUPERIOR_ROLE="$VITE_SUPERIOR_ROLE" \
+    --build-arg VITE_ELEMENTO_ROLE="$VITE_ELEMENTO_ROLE" \
+    --build-arg VITE_LOG_LEVEL="$VITE_LOG_LEVEL" \
+    --build-arg VITE_LOG_CONSOLE="$VITE_LOG_CONSOLE" \
+    --build-arg VITE_LOG_STORAGE="$VITE_LOG_STORAGE" \
+    --build-arg VITE_LOG_MAX_ENTRIES="$VITE_LOG_MAX_ENTRIES" \
+    --build-arg VITE_HTTP_TIMEOUT="$VITE_HTTP_TIMEOUT" \
+    --build-arg VITE_HTTP_RETRIES="$VITE_HTTP_RETRIES" \
+    --build-arg VITE_HTTP_RETRY_DELAY="$VITE_HTTP_RETRY_DELAY" \
+    --build-arg VITE_AUTH_HEADER_NAME="$VITE_AUTH_HEADER_NAME" \
+    --build-arg VITE_AUTH_HEADER_PREFIX="$VITE_AUTH_HEADER_PREFIX" \
+    --build-arg VITE_AUTH_TOKEN_KEY="$VITE_AUTH_TOKEN_KEY" \
+    --build-arg VITE_DEBUG_MODE="$VITE_DEBUG_MODE" \
+    --build-arg VITE_APP_VERSION="$VERSION" \
+    --build-arg VITE_APP_NAME="$VITE_APP_NAME" \
+    -t $IMAGE_NAME:$VERSION .; then
     log_success "Imagen construida exitosamente: $IMAGE_NAME:$VERSION"
+    log_info "Variables usadas en build:"
+    log_info "  - VITE_API_BASE_URL: $VITE_API_BASE_URL"
+    log_info "  - VITE_APP_ENVIRONMENT: $VITE_APP_ENVIRONMENT"
+    log_info "  - VITE_APP_VERSION: $VERSION"
 else
     log_error "Error al construir la imagen Docker"
     exit 1
 fi
 
-# 2. Tag de la imagen
-log_info "Creando tag para DockerHub..."
+# 2. Tag de la imagen (versión específica y latest)
+log_info "Creando tags para DockerHub..."
 if sudo docker tag $IMAGE_NAME:$VERSION $DOCKER_USERNAME/$IMAGE_NAME:$VERSION; then
     log_success "Tag creado exitosamente: $DOCKER_USERNAME/$IMAGE_NAME:$VERSION"
 else
-    log_error "Error al crear el tag"
+    log_error "Error al crear el tag de versión"
     exit 1
 fi
 
-# 3. Push a DockerHub
-log_info "Subiendo imagen a DockerHub..."
-if sudo docker push $DOCKER_USERNAME/$IMAGE_NAME:$VERSION; then
-    log_success "Imagen subida exitosamente a DockerHub"
+# Crear también tag 'latest'
+if sudo docker tag $IMAGE_NAME:$VERSION $DOCKER_USERNAME/$IMAGE_NAME:latest; then
+    log_success "Tag 'latest' creado exitosamente: $DOCKER_USERNAME/$IMAGE_NAME:latest"
 else
-    log_error "Error al subir la imagen a DockerHub"
+    log_error "Error al crear el tag 'latest'"
+    exit 1
+fi
+
+# 3. Push a DockerHub (ambas versiones)
+log_info "Subiendo imagen con versión a DockerHub..."
+if sudo docker push $DOCKER_USERNAME/$IMAGE_NAME:$VERSION; then
+    log_success "Imagen con versión subida exitosamente a DockerHub"
+else
+    log_error "Error al subir la imagen con versión a DockerHub"
+    exit 1
+fi
+
+log_info "Subiendo imagen 'latest' a DockerHub..."
+if sudo docker push $DOCKER_USERNAME/$IMAGE_NAME:latest; then
+    log_success "Imagen 'latest' subida exitosamente a DockerHub"
+else
+    log_error "Error al subir la imagen 'latest' a DockerHub"
     exit 1
 fi
 

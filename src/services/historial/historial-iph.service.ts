@@ -437,7 +437,7 @@ const getEstatusOptionsFromAPI = async (): Promise<string[]> => {
   try {
     logInfo('HistorialIPH Service', 'Obteniendo opciones de estatus desde endpoint de estadísticas');
 
-    const url = `${API_BASE_URL}/${API_BASE_ROUTES.HISTORIAL}/estatus-iph`;
+    const url = `/${API_BASE_ROUTES.HISTORIAL}/estatus-iph`;
 
     const response = await http.get<{
       status: boolean;
@@ -638,7 +638,7 @@ const getHistorialFromAPI = async (params: GetHistorialIPHParams): Promise<Histo
     const queryParams = buildQueryParams(enhancedParams);
 
     // Usar el endpoint correcto de historial
-    const url = `${API_BASE_URL}/${API_BASE_ROUTES.HISTORIAL}/iph-history?${queryParams}`;
+    const url = `/${API_BASE_ROUTES.HISTORIAL}/iph-history?${queryParams}`;
 
     logInfo('HistorialIPH Service', 'URL construida para solicitud', { 
       url,
@@ -819,7 +819,7 @@ export const getEstadisticasHistorial = async (): Promise<EstadisticasHistorial>
       return estadisticasMockData;
     } else {
       // Implementar llamada al API con estructura correcta
-      const url = `${API_BASE_URL}/${API_BASE_ROUTES.HISTORIAL}/estatus-iph`;
+      const url = `/${API_BASE_ROUTES.HISTORIAL}/estatus-iph`;
 
       const response = await http.get<{
         status: boolean;
@@ -1047,7 +1047,7 @@ export const getPaginatedHistorialIPH = async (params: GetHistorialIPHParamsEnha
     } else {
       // Llamada real al API
       const queryParams = buildQueryParams(params);
-      const url = `${API_BASE_URL}/${API_BASE_ROUTES.HISTORIAL}/paginated?${queryParams}`;
+      const url = `/${API_BASE_ROUTES.HISTORIAL}/paginated?${queryParams}`;
 
       const response = await http.get<PaginatedResHistory>(url, {
         headers: {
@@ -1094,7 +1094,7 @@ export const calculateMonthlyAverage = async (
       const { daysInMonth } = createMonthDateRange(month, year);
       return Math.round((mockTotal / daysInMonth) * 100) / 100;
     } else {
-      const url = `${API_BASE_URL}/${API_BASE_ROUTES.HISTORIAL}/monthly-stats`;
+      const url = `/${API_BASE_ROUTES.HISTORIAL}/monthly-stats`;
       const queryParams = new URLSearchParams({
         month: month.toString(),
         year: year.toString()
@@ -1146,7 +1146,7 @@ export const getMonthlyIphStatistics = async (params: EstadisticasParams = {}): 
         year: targetYear
       };
     } else {
-      const url = `${API_BASE_URL}/${API_BASE_ROUTES.HISTORIAL}/monthly-stats`;
+      const url = `/${API_BASE_ROUTES.HISTORIAL}/monthly-stats`;
       const queryParams = new URLSearchParams({
         month: targetMonth.toString(),
         year: targetYear.toString()
@@ -1207,7 +1207,7 @@ export const getTiposHistorial = async (params: EstadisticasParams = {}): Promis
         }
       };
     } else {
-      const url = `${API_BASE_URL}/${API_BASE_ROUTES.HISTORIAL}/tipos-his`;
+      const url = `/${API_BASE_ROUTES.HISTORIAL}/tipos-his`;
       const queryParams = new URLSearchParams({
         month: targetMonth.toString(),
         year: targetYear.toString()

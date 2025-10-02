@@ -39,7 +39,7 @@ const http = HttpHelper.getInstance({
  * ```
  */
 export const getTiposIph = async (): Promise<ITiposIph[]> => {
-  const url: string = `${API_BASE_URL}/api/tipos-iph`;
+  const url: string = `/api/tipos-iph`;
   const startTime = performance.now();
 
   logInfo('TiposIphService', 'Iniciando petición GET tipos de IPH', {
@@ -128,7 +128,7 @@ export const getTipoIphById = async (id: number): Promise<ITiposIph> => {
     throw new Error('ID de tipo de IPH debe ser un número positivo');
   }
 
-  const url: string = `${API_BASE_URL}/api/tipos-iph/${id}`;
+  const url: string = `/api/tipos-iph/${id}`;
   const startTime = performance.now();
 
   logInfo('TiposIphService', 'Iniciando petición GET tipo de IPH por ID', {
