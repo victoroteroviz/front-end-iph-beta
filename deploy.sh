@@ -48,38 +48,68 @@ fi
 
 log_info "Iniciando deploy de $IMAGE_NAME:$VERSION"
 
-# Definir variables de entorno directamente con valores por defecto
-# API Configuration
-VITE_API_BASE_URL="https://iph01.okip.com.mx"
-VITE_APP_ENVIRONMENT="production"
+# Función para cargar variables de entorno desde archivo .env preservando formato JSON
+load_env_file() {
+    local env_file=$1
+    
+    if [ ! -f "$env_file" ]; then
+        log_error "Archivo $env_file no encontrado"
+        return 1
+    fi
+    
+    log_info "Cargando variables desde $env_file"
+    
+    # Leer línea por línea preservando comillas y espacios
+    while IFS= read -r line || [ -n "$line" ]; do
+        # Ignorar líneas vacías y comentarios
+        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+        
+        # Extraer nombre y valor de la variable
+        if [[ $line =~ ^([A-Z_]+)=(.*)$ ]]; then
+            var_name="${BASH_REMATCH[1]}"
+            var_value="${BASH_REMATCH[2]}"
+            
+            # Exportar la variable preservando el valor exacto
+            export "$var_name=$var_value"
+            
+            # Log de variables cargadas (ocultar valores sensibles de roles por ser muy largos)
+            if [[ $var_name == *"ROLE"* ]]; then
+                log_info "  ✓ $var_name cargado"
+            else
+                log_info "  ✓ $var_name=$var_value"
+            fi
+        fi
+    done < "$env_file"
+    
+    return 0
+}
 
-# Roles Configuration (JSON válido con comillas escapadas)
-VITE_SUPERADMIN_ROLE='[{"id":1,"nombre":"SuperAdmin"}]'
-VITE_ADMIN_ROLE='[{"id":2,"nombre":"Administrador"}]'
-VITE_SUPERIOR_ROLE='[{"id":3,"nombre":"Superior"}]'
-VITE_ELEMENTO_ROLE='[{"id":4,"nombre":"Elemento"}]'
+# Cargar variables desde .env.production
+if ! load_env_file ".env.production"; then
+    log_warning "No se pudo cargar .env.production, usando valores por defecto"
+    
+    # Valores por defecto como fallback
+    export VITE_API_BASE_URL="https://iph01.okip.com.mx"
+    export VITE_APP_ENVIRONMENT="production"
+    export VITE_SUPERADMIN_ROLE='[{"id":1,"nombre":"SuperAdmin"}]'
+    export VITE_ADMIN_ROLE='[{"id":2,"nombre":"Administrador"}]'
+    export VITE_SUPERIOR_ROLE='[{"id":3,"nombre":"Superior"}]'
+    export VITE_ELEMENTO_ROLE='[{"id":4,"nombre":"Elemento"}]'
+    export VITE_LOG_LEVEL="1"
+    export VITE_LOG_CONSOLE="true"
+    export VITE_LOG_STORAGE="true"
+    export VITE_LOG_MAX_ENTRIES="1000"
+    export VITE_HTTP_TIMEOUT="30000"
+    export VITE_HTTP_RETRIES="3"
+    export VITE_HTTP_RETRY_DELAY="1000"
+    export VITE_AUTH_HEADER_NAME="Authorization"
+    export VITE_AUTH_HEADER_PREFIX="Bearer"
+    export VITE_AUTH_TOKEN_KEY="auth_token"
+    export VITE_DEBUG_MODE="false"
+    export VITE_APP_NAME="IPH Frontend"
+fi
 
-# Logging Configuration
-VITE_LOG_LEVEL="1"
-VITE_LOG_CONSOLE="true"
-VITE_LOG_STORAGE="true"
-VITE_LOG_MAX_ENTRIES="1000"
-
-# HTTP Configuration
-VITE_HTTP_TIMEOUT="30000"
-VITE_HTTP_RETRIES="3"
-VITE_HTTP_RETRY_DELAY="1000"
-
-# Auth Configuration
-VITE_AUTH_HEADER_NAME="Authorization"
-VITE_AUTH_HEADER_PREFIX="Bearer"
-VITE_AUTH_TOKEN_KEY="auth_token"
-
-# App Configuration
-VITE_DEBUG_MODE="false"
-VITE_APP_NAME="IPH Frontend"
-
-log_info "Variables de entorno configuradas para producción"
+log_success "Variables de entorno cargadas correctamente"
 
 # 1. Build de la imagen Docker con build arguments
 log_info "Construyendo imagen Docker con variables de entorno..."
