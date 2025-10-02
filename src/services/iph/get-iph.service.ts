@@ -17,7 +17,7 @@ const http: HttpHelper = HttpHelper.getInstance({
     "Content-Type": "application/json",
   },
 });
-const urlFather: string = `${API_BASE_URL}/${API_BASE_ROUTES.IPH}`;
+const urlFather: string = `/${API_BASE_ROUTES.IPH}`;
 
 // =====================================================
 // HELPERS PARA LIMPIEZA DE DATOS
