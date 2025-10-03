@@ -280,6 +280,18 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
     setFiltros(prev => ({ ...prev, limite, pagina: 1 }));
   };
 
+  const handleMesChange = (mes: number) => {
+    setFiltros(prev => ({ ...prev, mes, pagina: 1 }));
+  };
+
+  const handleSemanaChange = (semana: number) => {
+    setFiltros(prev => ({ ...prev, semana, pagina: 1 }));
+  };
+
+  const handleDiaChange = (dia: number) => {
+    setFiltros(prev => ({ ...prev, dia, pagina: 1 }));
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -294,7 +306,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
       {/* Filtros */}
       <div className="bg-[#fdf7f1] p-4 rounded-lg border border-[#c2b186]">
         <h3 className="text-lg font-semibold text-[#4d4725] mb-4">Filtros</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           {/* Período */}
           <div>
             <label className="block text-sm font-medium text-[#4d4725] mb-1">Período</label>
@@ -323,6 +335,63 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
               ))}
             </select>
           </div>
+
+          {/* Mes - Solo para mensual y diario */}
+          {(filtros.periodo === 'mensual' || filtros.periodo === 'diario') && (
+            <div>
+              <label className="block text-sm font-medium text-[#4d4725] mb-1">Mes</label>
+              <select
+                value={filtros.mes || ''}
+                onChange={(e) => handleMesChange(parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-[#c2b186] rounded-md focus:outline-none focus:ring-2 focus:ring-[#948b54] cursor-pointer"
+              >
+                <option value={1}>Enero</option>
+                <option value={2}>Febrero</option>
+                <option value={3}>Marzo</option>
+                <option value={4}>Abril</option>
+                <option value={5}>Mayo</option>
+                <option value={6}>Junio</option>
+                <option value={7}>Julio</option>
+                <option value={8}>Agosto</option>
+                <option value={9}>Septiembre</option>
+                <option value={10}>Octubre</option>
+                <option value={11}>Noviembre</option>
+                <option value={12}>Diciembre</option>
+              </select>
+            </div>
+          )}
+
+          {/* Semana - Solo para semanal */}
+          {filtros.periodo === 'semanal' && (
+            <div>
+              <label className="block text-sm font-medium text-[#4d4725] mb-1">Semana</label>
+              <select
+                value={filtros.semana || ''}
+                onChange={(e) => handleSemanaChange(parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-[#c2b186] rounded-md focus:outline-none focus:ring-2 focus:ring-[#948b54] cursor-pointer"
+              >
+                {Array.from({length: 52}, (_, i) => i + 1).map(week => (
+                  <option key={week} value={week}>Semana {week}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Día - Solo para diario */}
+          {filtros.periodo === 'diario' && (
+            <div>
+              <label className="block text-sm font-medium text-[#4d4725] mb-1">Día</label>
+              <select
+                value={filtros.dia || ''}
+                onChange={(e) => handleDiaChange(parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-[#c2b186] rounded-md focus:outline-none focus:ring-2 focus:ring-[#948b54] cursor-pointer"
+              >
+                {Array.from({length: 31}, (_, i) => i + 1).map(day => (
+                  <option key={day} value={day}>{day}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Límite */}
           <div>
