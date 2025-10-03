@@ -1,0 +1,1 @@
+export { estadisticasUsuarioIphService } from './estadisticas-usuario-iph.service';
