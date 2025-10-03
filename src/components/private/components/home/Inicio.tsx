@@ -163,7 +163,7 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
                 recargarDatos();
               }}
               disabled={loading}
-              className="px-4 py-2 bg-[#4d4725] text-white rounded-lg hover:bg-[#3a3519] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 bg-[#4d4725] text-white rounded-lg hover:bg-[#3a3519] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2"
             >
               <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -297,7 +297,7 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
         {/* Header colapsable */}
         <button
           onClick={() => setQuickAccessCollapsed(!quickAccessCollapsed)}
-          className="w-full px-4 lg:px-6 py-4 bg-[#f8f0e7] hover:bg-[#ede8d4] transition-colors flex items-center justify-between"
+          className="w-full px-4 lg:px-6 py-4 bg-[#f8f0e7] hover:bg-[#ede8d4] transition-colors flex items-center justify-between cursor-pointer"
         >
           <h2 className="text-xl lg:text-2xl font-bold text-[#4d4725]">
             Acceso Rápido

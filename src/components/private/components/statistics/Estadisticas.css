@@ -1,0 +1,175 @@
+.estadisticas-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease-in;
+  font-family: 'Poppins', sans-serif;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.estadisticas-header {
+  margin-bottom: 2rem;
+}
+
+.estadisticas-header h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #4d4725;
+  margin-bottom: 0.5rem;
+}
+
+.estadisticas-header p {
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+.estadisticas-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.estadisticas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  gap: 1rem;
+}
+
+.stat-card:hover:not(.disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #c2b186;
+  background: #fdf7f1;
+}
+
+.stat-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f9fafb;
+}
+
+.stat-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover:not(.disabled) .stat-card-icon {
+  transform: scale(1.05);
+}
+
+.stat-card.disabled .stat-card-icon {
+  background: #d1d5db !important;
+}
+
+.stat-icon {
+  width: 28px;
+  height: 28px;
+  color: white;
+}
+
+.stat-card-content {
+  flex: 1;
+}
+
+.stat-card-content h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #4d4725;
+  margin-bottom: 0.375rem;
+  line-height: 1.4;
+}
+
+.stat-card-content p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.stat-card-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: #f59e0b;
+  color: white;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .estadisticas-container {
+    padding: 1rem;
+  }
+
+  .estadisticas-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .estadisticas-header p {
+    font-size: 0.875rem;
+  }
+
+  .estadisticas-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-card-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .stat-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .stat-card-content h3 {
+    font-size: 1rem;
+  }
+
+  .stat-card-content p {
+    font-size: 0.8125rem;
+  }
+
+  .estadisticas-grid {
+    gap: 0.75rem;
+  }
+}
