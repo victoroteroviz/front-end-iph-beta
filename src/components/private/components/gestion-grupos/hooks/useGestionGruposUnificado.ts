@@ -1,7 +1,7 @@
 /**
- * @fileoverview Hook personalizado para gestión de grupos
- * @version 1.0.0
- * @description Lógica de negocio separada del componente de gestión de grupos
+ * @fileoverview Hook unificado para gestión de grupos con datos de usuario-grupo API
+ * @version 2.0.0
+ * @description Hook que usa la API de usuario-grupo para obtener grupos con información de usuarios
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -12,39 +12,29 @@ import { useDebounce } from './useDebounce';
 //+ Interfaces
 import type {
   IGrupo,
-  IResponseGrupo,
   IGrupoFormData,
   IUpdateGrupoRequest,
   IGrupoFilters
 } from '../../../../../interfaces/grupos';
 
 import type {
-  IGrupoUsuario,
-  IObtenerUsuariosPorGrupo,
-  IUsuarioGrupo,
-  IAsignarUsuarioGrupoRequest,
-  IEstadisticasUsuarioGrupo
+  IGrupoUsuario
 } from '../../../../../interfaces/usuario-grupo';
 
 //+ Servicios
 import {
-  getGrupos,
   createGrupo,
   updateGrupo,
-  deleteGrupo,
-  filterGrupos
+  deleteGrupo
 } from '../../../../../services/grupos';
 
 import {
-  obtenerUsuariosPorGrupo,
-  obtenerUsuariosGruposPorId,
-  asignarUsuarioAGrupo,
-  obtenerEstadisticasUsuarioGrupo
+  obtenerUsuariosPorGrupo
 } from '../../../../../services/usuario-grupo';
 
 //+ Helpers
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
-import { showSuccess, showError, showInfo } from '../../../../../helper/notification/notification.helper';
+import { showSuccess, showError } from '../../../../../helper/notification/notification.helper';
 
 //+ Control de roles
 import { canAccessAdmin, canAccessSuperior } from '../../../../../config/permissions.config';
@@ -72,10 +62,10 @@ interface IEstadisticasGrupos {
 /**
  * Interface para el valor de retorno del hook
  */
-interface UseGestionGruposReturn {
+interface UseGestionGruposUnificadoReturn {
   // Estados
-  grupos: IGrupo[];
-  gruposFiltrados: IGrupo[];
+  grupos: IGrupoUsuario[];
+  gruposFiltrados: IGrupoUsuario[];
   vistaActual: VistaGrupo;
   grupoSeleccionado: IGrupo | null;
   formulario: IGrupoFormState;
@@ -110,11 +100,11 @@ interface UseGestionGruposReturn {
 }
 
 /**
- * Hook personalizado para gestión de grupos
+ * Hook unificado para gestión de grupos
  */
-export const useGestionGrupos = (): UseGestionGruposReturn => {
+export const useGestionGruposUnificado = (): UseGestionGruposUnificadoReturn => {
   // Estados principales
-  const [grupos, setGrupos] = useState<IGrupo[]>([]);
+  const [grupos, setGrupos] = useState<IGrupoUsuario[]>([]);
   const [vistaActual, setVistaActual] = useState<VistaGrupo>('lista');
   const [grupoSeleccionado, setGrupoSeleccionado] = useState<IGrupo | null>(null);
 
@@ -137,10 +127,10 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
     isActive: true
   });
 
-  // Debounce para la búsqueda (optimización: evita filtrar en cada tecla)
+  // Debounce para la búsqueda
   const debouncedSearch = useDebounce(filtros.search, 300);
 
-  // Control de permisos (memoizado para evitar recálculos)
+  // Control de permisos
   const permisos = useMemo(() => {
     const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
 
@@ -152,21 +142,37 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
     };
   }, []);
 
-  // Grupos filtrados con debounce optimizado
+  // Grupos filtrados con debounce
   const gruposFiltrados = useMemo(() => {
-    return filterGrupos(grupos, { ...filtros, search: debouncedSearch });
+    let filtered = grupos;
+
+    // Filtrar por búsqueda
+    if (debouncedSearch) {
+      const searchLower = debouncedSearch.toLowerCase();
+      filtered = filtered.filter((grupo) =>
+        grupo.nombreGrupo.toLowerCase().includes(searchLower) ||
+        (grupo.descripcionGrupo && grupo.descripcionGrupo.toLowerCase().includes(searchLower))
+      );
+    }
+
+    // Filtrar por estado activo
+    if (filtros.isActive) {
+      filtered = filtered.filter((grupo) => grupo.estatus);
+    }
+
+    return filtered;
   }, [grupos, filtros.isActive, debouncedSearch]);
 
   // Estadísticas calculadas
   const estadisticas = useMemo((): IEstadisticasGrupos => {
     return {
       totalGrupos: grupos.length,
-      gruposActivos: grupos.length, // Todos los grupos del API están activos
-      gruposInactivos: 0 // Los inactivos no se retornan del API
+      gruposActivos: grupos.filter((g) => g.estatus).length,
+      gruposInactivos: grupos.filter((g) => !g.estatus).length
     };
   }, [grupos]);
 
-  // Cargar grupos desde el servicio
+  // Cargar grupos desde el servicio de usuario-grupo
   const loadGrupos = useCallback(async () => {
     if (!permisos.canView) {
       showError('No tienes permisos para ver los grupos');
@@ -174,16 +180,17 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
     }
 
     setIsLoading(true);
-    logInfo('useGestionGrupos', 'Cargando grupos');
+    logInfo('useGestionGruposUnificado', 'Cargando grupos con información de usuarios');
 
     try {
-      const gruposData = await getGrupos();
+      const gruposData = await obtenerUsuariosPorGrupo();
       setGrupos(gruposData);
-      logInfo('useGestionGrupos', 'Grupos cargados exitosamente', {
-        total: gruposData.length
+      logInfo('useGestionGruposUnificado', 'Grupos cargados exitosamente', {
+        total: gruposData.length,
+        totalUsuarios: gruposData.reduce((sum, g) => sum + g.cantidadUsuarios, 0)
       });
     } catch (error) {
-      logError('useGestionGrupos', 'Error al cargar grupos', error);
+      logError('useGestionGruposUnificado', 'Error al cargar grupos', String(error));
       showError(error instanceof Error ? error.message : 'Error al cargar los grupos');
     } finally {
       setIsLoading(false);
@@ -202,7 +209,7 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
     }
 
     setIsCreating(true);
-    logInfo('useGestionGrupos', 'Creando nuevo grupo', { nombre: formulario.nombre });
+    logInfo('useGestionGruposUnificado', 'Creando nuevo grupo', { nombre: formulario.nombre });
 
     try {
       const grupoData: IGrupoFormData = {
@@ -216,18 +223,18 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
         showSuccess(response.message);
         resetFormulario();
         setVistaActual('lista');
-        await loadGrupos(); // Recargar la lista
-        logInfo('useGestionGrupos', 'Grupo creado exitosamente');
+        await loadGrupos();
+        logInfo('useGestionGruposUnificado', 'Grupo creado exitosamente');
       } else {
         showError('Error al crear el grupo');
       }
     } catch (error) {
-      logError('useGestionGrupos', 'Error al crear grupo', error);
+      logError('useGestionGruposUnificado', 'Error al crear grupo', String(error));
       showError(error instanceof Error ? error.message : 'Error al crear el grupo');
     } finally {
       setIsCreating(false);
     }
-  }, [formulario.nombre, permisos.canCreate, loadGrupos]);
+  }, [formulario, permisos.canCreate, loadGrupos]);
 
   // Actualizar grupo existente
   const handleUpdateGrupo = useCallback(async (id: string) => {
@@ -241,7 +248,7 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
     }
 
     setIsUpdating(true);
-    logInfo('useGestionGrupos', 'Actualizando grupo', { id, nombre: formulario.nombre });
+    logInfo('useGestionGruposUnificado', 'Actualizando grupo', { id, nombre: formulario.nombre });
 
     try {
       const updateData: IUpdateGrupoRequest = {
@@ -256,21 +263,20 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
         showSuccess(response.message);
         resetFormulario();
         setVistaActual('lista');
-        await loadGrupos(); // Recargar la lista
-        logInfo('useGestionGrupos', 'Grupo actualizado exitosamente');
+        await loadGrupos();
+        logInfo('useGestionGruposUnificado', 'Grupo actualizado exitosamente');
       } else {
         showError('Error al actualizar el grupo');
       }
     } catch (error) {
-      logError('useGestionGrupos', 'Error al actualizar grupo', error);
+      logError('useGestionGruposUnificado', 'Error al actualizar grupo', String(error));
       showError(error instanceof Error ? error.message : 'Error al actualizar el grupo');
     } finally {
       setIsUpdating(false);
     }
-  }, [formulario.nombre, permisos.canEdit, loadGrupos]);
+  }, [formulario, permisos.canEdit, loadGrupos]);
 
   // Eliminar grupo
-  // Nota: La confirmación ahora debe manejarse desde el componente usando ConfirmDialog
   const handleDeleteGrupo = useCallback(async (id: string) => {
     if (!permisos.canDelete) {
       showError('No tienes permisos para eliminar grupos');
@@ -278,30 +284,29 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
     }
 
     setIsDeleting(true);
-    logInfo('useGestionGrupos', 'Eliminando grupo', { id });
+    logInfo('useGestionGruposUnificado', 'Eliminando grupo', { id });
 
     try {
       const response = await deleteGrupo(id);
 
       if (response.status) {
         showSuccess(response.message);
-        await loadGrupos(); // Recargar la lista
-        logInfo('useGestionGrupos', 'Grupo eliminado exitosamente');
+        await loadGrupos();
+        logInfo('useGestionGruposUnificado', 'Grupo eliminado exitosamente');
       } else {
         showError('Error al eliminar el grupo');
       }
     } catch (error) {
-      logError('useGestionGrupos', 'Error al eliminar grupo', error);
+      logError('useGestionGruposUnificado', 'Error al eliminar grupo', String(error));
       showError(error instanceof Error ? error.message : 'Error al eliminar el grupo');
     } finally {
       setIsDeleting(false);
     }
   }, [permisos.canDelete, loadGrupos]);
 
-  // Seleccionar grupo para vista detalle
+  // Seleccionar grupo para vista/edición
   const selectGrupo = useCallback((grupo: IGrupo) => {
     setGrupoSeleccionado(grupo);
-    // Prellenar formulario si es para edición
     setFormulario({
       nombre: grupo.nombre,
       descripcion: grupo.descripcion || '',
@@ -311,19 +316,19 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
 
   // Actualizar campo del formulario
   const updateFormulario = useCallback((field: keyof IGrupoFormState, value: string) => {
-    setFormulario(prev => ({
+    setFormulario((prev) => ({
       ...prev,
       [field]: value,
       errors: {
         ...prev.errors,
-        [field]: undefined // Limpiar error al escribir
+        [field]: undefined
       }
     }));
   }, []);
 
   // Actualizar filtros
   const updateFiltros = useCallback((newFiltros: Partial<IGrupoFilters>) => {
-    setFiltros(prev => ({
+    setFiltros((prev) => ({
       ...prev,
       ...newFiltros
     }));
@@ -336,6 +341,7 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
       descripcion: '',
       errors: {}
     });
+    setGrupoSeleccionado(null);
   }, []);
 
   // Validar formulario
@@ -350,30 +356,22 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
       errors.nombre = 'El nombre no puede exceder 50 caracteres';
     }
 
-    // Validación opcional para descripción
     if (formulario.descripcion.trim().length > 200) {
       errors.descripcion = 'La descripción no puede exceder 200 caracteres';
     }
 
-    setFormulario(prev => ({
+    setFormulario((prev) => ({
       ...prev,
       errors
     }));
 
     return Object.keys(errors).length === 0;
-  }, [formulario.nombre, formulario.descripcion]);
+  }, [formulario]);
 
   // Cargar grupos al montar el componente
   useEffect(() => {
     loadGrupos();
   }, [loadGrupos]);
-
-  // Limpiar formulario al cambiar de vista
-  useEffect(() => {
-    if (vistaActual === 'formulario') {
-      resetFormulario();
-    }
-  }, [vistaActual, resetFormulario]);
 
   return {
     // Estados

@@ -10,6 +10,7 @@
 export interface IGrupo {
   id?: string;
   nombre: string;
+  descripcion?: string;
 }
 
 /**
@@ -20,6 +21,7 @@ export interface IResponseGrupo {
   message: string;
   data: {
     nombre: string;
+    descripcion?: string;
   };
 }
 
@@ -28,6 +30,7 @@ export interface IResponseGrupo {
  */
 export interface IGrupoFormData {
   nombre: string;
+  descripcion?: string;
 }
 
 /**
@@ -36,6 +39,7 @@ export interface IGrupoFormData {
 export interface IUpdateGrupoRequest {
   id: string;
   nombre: string;
+  descripcion?: string;
 }
 
 /**

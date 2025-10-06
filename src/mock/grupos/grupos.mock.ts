@@ -12,19 +12,23 @@ import { IGrupo, IResponseGrupo } from '../../interfaces/grupos';
 export const gruposMockData: IGrupo[] = [
   {
     id: '1',
-    nombre: 'Administradores'
+    nombre: 'Administradores',
+    descripcion: 'Grupo con permisos administrativos completos'
   },
   {
     id: '2',
-    nombre: 'Supervisores'
+    nombre: 'Supervisores',
+    descripcion: 'Grupo de supervisión y control de operaciones'
   },
   {
     id: '3',
-    nombre: 'Analistas'
+    nombre: 'Analistas',
+    descripcion: 'Grupo dedicado al análisis de datos e informes'
   },
   {
     id: '4',
-    nombre: 'Consultores'
+    nombre: 'Consultores',
+    descripcion: 'Grupo de consultoría externa'
   }
 ];
 
@@ -40,19 +44,20 @@ export const getGruposMock = async (): Promise<IGrupo[]> => {
 /**
  * Simula el servicio POST /api/grupo
  */
-export const createGrupoMock = async (nombre: string): Promise<IResponseGrupo> => {
+export const createGrupoMock = async (nombre: string, descripcion?: string): Promise<IResponseGrupo> => {
   // Simular delay de red
   await new Promise(resolve => setTimeout(resolve, 800));
 
   // Simular creación exitosa
   const newId = (gruposMockData.length + 1).toString();
-  gruposMockData.push({ id: newId, nombre });
+  gruposMockData.push({ id: newId, nombre, descripcion });
 
   return {
     status: true,
     message: 'Grupo creado exitosamente',
     data: {
-      nombre
+      nombre,
+      descripcion
     }
   };
 };
@@ -60,7 +65,7 @@ export const createGrupoMock = async (nombre: string): Promise<IResponseGrupo> =
 /**
  * Simula el servicio PATCH /api/grupo/:id
  */
-export const updateGrupoMock = async (id: string, nombre: string): Promise<IResponseGrupo> => {
+export const updateGrupoMock = async (id: string, nombre: string, descripcion?: string): Promise<IResponseGrupo> => {
   // Simular delay de red
   await new Promise(resolve => setTimeout(resolve, 600));
 
@@ -73,12 +78,16 @@ export const updateGrupoMock = async (id: string, nombre: string): Promise<IResp
 
   // Actualizar el grupo
   gruposMockData[grupoIndex].nombre = nombre;
+  if (descripcion !== undefined) {
+    gruposMockData[grupoIndex].descripcion = descripcion;
+  }
 
   return {
     status: true,
     message: 'Grupo actualizado exitosamente',
     data: {
-      nombre
+      nombre,
+      descripcion: gruposMockData[grupoIndex].descripcion
     }
   };
 };

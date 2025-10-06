@@ -121,7 +121,10 @@ export const getGrupos = async (): Promise<IGrupo[]> => {
  * @returns Promise<IResponseGrupo> Respuesta de creación
  */
 export const createGrupo = async (grupoData: IGrupoFormData): Promise<IResponseGrupo> => {
-  logInfo('grupos.service', 'Iniciando creación de grupo', { nombre: grupoData.nombre });
+  logInfo('grupos.service', 'Iniciando creación de grupo', {
+    nombre: grupoData.nombre,
+    descripcion: grupoData.descripcion
+  });
 
   // Validaciones básicas
   if (!grupoData.nombre || grupoData.nombre.trim() === '') {
@@ -131,9 +134,10 @@ export const createGrupo = async (grupoData: IGrupoFormData): Promise<IResponseG
   try {
     if (USE_MOCK_DATA) {
       logDebug('grupos.service', 'Usando datos mock para createGrupo');
-      const response = await createGrupoMock(grupoData.nombre.trim());
+      const response = await createGrupoMock(grupoData.nombre.trim(), grupoData.descripcion?.trim());
       logInfo('grupos.service', 'Grupo creado exitosamente (mock)', {
-        nombre: grupoData.nombre
+        nombre: grupoData.nombre,
+        descripcion: grupoData.descripcion
       });
       return response;
     }
@@ -141,7 +145,8 @@ export const createGrupo = async (grupoData: IGrupoFormData): Promise<IResponseG
     // Código para API real
     const url = BASE_URL;
     const payload = {
-      nombre: grupoData.nombre.trim()
+      nombre: grupoData.nombre.trim(),
+      ...(grupoData.descripcion && { descripcion: grupoData.descripcion.trim() })
     };
 
     logDebug('grupos.service', 'Realizando petición POST a', { url, payload });
@@ -151,6 +156,7 @@ export const createGrupo = async (grupoData: IGrupoFormData): Promise<IResponseG
 
     logInfo('grupos.service', 'Grupo creado exitosamente desde API', {
       nombre: grupoData.nombre,
+      descripcion: grupoData.descripcion,
       response: result
     });
 
@@ -187,7 +193,8 @@ export const createGrupo = async (grupoData: IGrupoFormData): Promise<IResponseG
 export const updateGrupo = async (updateData: IUpdateGrupoRequest): Promise<IResponseGrupo> => {
   logInfo('grupos.service', 'Iniciando actualización de grupo', {
     id: updateData.id,
-    nombre: updateData.nombre
+    nombre: updateData.nombre,
+    descripcion: updateData.descripcion
   });
 
   // Validaciones básicas
@@ -201,10 +208,11 @@ export const updateGrupo = async (updateData: IUpdateGrupoRequest): Promise<IRes
   try {
     if (USE_MOCK_DATA) {
       logDebug('grupos.service', 'Usando datos mock para updateGrupo');
-      const response = await updateGrupoMock(updateData.id, updateData.nombre.trim());
+      const response = await updateGrupoMock(updateData.id, updateData.nombre.trim(), updateData.descripcion?.trim());
       logInfo('grupos.service', 'Grupo actualizado exitosamente (mock)', {
         id: updateData.id,
-        nombre: updateData.nombre
+        nombre: updateData.nombre,
+        descripcion: updateData.descripcion
       });
       return response;
     }
@@ -212,7 +220,8 @@ export const updateGrupo = async (updateData: IUpdateGrupoRequest): Promise<IRes
     // Código para API real
     const url = `${BASE_URL}/${encodeURIComponent(updateData.id)}`;
     const payload = {
-      nombre: updateData.nombre.trim()
+      nombre: updateData.nombre.trim(),
+      ...(updateData.descripcion && { descripcion: updateData.descripcion.trim() })
     };
 
     logDebug('grupos.service', 'Realizando petición PATCH a', { url, payload });
@@ -223,6 +232,7 @@ export const updateGrupo = async (updateData: IUpdateGrupoRequest): Promise<IRes
     logInfo('grupos.service', 'Grupo actualizado exitosamente desde API', {
       id: updateData.id,
       nombre: updateData.nombre,
+      descripcion: updateData.descripcion,
       response: result
     });
 

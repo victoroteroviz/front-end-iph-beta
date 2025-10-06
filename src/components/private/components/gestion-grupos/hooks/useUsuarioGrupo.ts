@@ -6,6 +6,9 @@
 
 import { useState, useCallback, useMemo } from 'react';
 
+//+ Custom Hooks
+import { useDebounce } from './useDebounce';
+
 //+ Interfaces
 import type {
   IGrupoUsuario,
@@ -118,13 +121,16 @@ export const useUsuarioGrupo = (): UseUsuarioGrupoReturn => {
     activos: true
   });
 
+  // Debounce para la búsqueda (optimización)
+  const debouncedSearch = useDebounce(filtros.search, 300);
+
   // Estados de carga
   const [isLoadingGrupos, setIsLoadingGrupos] = useState(false);
   const [isLoadingUsuarios, setIsLoadingUsuarios] = useState(false);
   const [isLoadingEstadisticas, setIsLoadingEstadisticas] = useState(false);
   const [isAsignando, setIsAsignando] = useState(false);
 
-  // Control de permisos
+  // Control de permisos (memoizado)
   const permisos = useMemo(() => {
     const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
 
@@ -135,10 +141,10 @@ export const useUsuarioGrupo = (): UseUsuarioGrupoReturn => {
     };
   }, []);
 
-  // Grupos filtrados
+  // Grupos filtrados con debounce optimizado
   const gruposFiltrados = useMemo(() => {
-    return filtrarGruposUsuarios(gruposConUsuarios, filtros);
-  }, [gruposConUsuarios, filtros]);
+    return filtrarGruposUsuarios(gruposConUsuarios, { ...filtros, search: debouncedSearch });
+  }, [gruposConUsuarios, filtros.activos, debouncedSearch]);
 
   // Cargar grupos con estadísticas de usuarios
   const loadGruposConUsuarios = useCallback(async () => {
