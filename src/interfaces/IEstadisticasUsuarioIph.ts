@@ -78,18 +78,22 @@ export interface TotalesResponse {
   };
 }
 
-// Enums
-export enum PeriodoEnum {
-  ANUAL = 'anual',
-  MENSUAL = 'mensual',
-  SEMANAL = 'semanal',
-  DIARIO = 'diario'
-}
+// Const assertions para tipos
+export const PeriodoEnum = {
+  ANUAL: 'anual',
+  MENSUAL: 'mensual',
+  SEMANAL: 'semanal',
+  DIARIO: 'diario'
+} as const;
 
-export enum OrdenamientoEnum {
-  ASC = 'ASC',
-  DESC = 'DESC'
-}
+export type PeriodoEnum = typeof PeriodoEnum[keyof typeof PeriodoEnum];
+
+export const OrdenamientoEnum = {
+  ASC: 'ASC',
+  DESC: 'DESC'
+} as const;
+
+export type OrdenamientoEnum = typeof OrdenamientoEnum[keyof typeof OrdenamientoEnum];
 
 // DTOs para las queries
 export interface EstadisticasQueryDto {
