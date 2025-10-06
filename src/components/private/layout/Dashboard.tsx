@@ -19,6 +19,7 @@ import { Menu } from 'lucide-react';
 // Componentes atómicos
 import Sidebar from './sidebar/Sidebar';
 import Topbar from './topbar/Topbar';
+import { Breadcrumbs, useBreadcrumbs } from './breadcrumbs';
 
 // Hooks
 import useUserSession from './hooks/useUserSession';
@@ -52,6 +53,9 @@ const DashboardContent: React.FC<DashboardProps> = ({
 
   // Hook para manejo del sidebar responsive
   const sidebar = useSidebar();
+
+  // Hook para breadcrumbs
+  const { breadcrumbs } = useBreadcrumbs();
 
   // Estado para el colapso del sidebar
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -151,8 +155,19 @@ const DashboardContent: React.FC<DashboardProps> = ({
           </div>
         </div>
 
+        {/* Breadcrumbs - Temporalmente desactivado */}
+        {false && breadcrumbs.length > 0 && (
+          <div className="px-6 py-3 border-b border-gray-200 bg-white/50">
+            <Breadcrumbs
+              items={breadcrumbs}
+              showHomeIcon
+              className="max-w-full"
+            />
+          </div>
+        )}
+
         {/* Content Area con scroll */}
-        <div 
+        <div
           ref={scrollContainerRef}
           className="flex-1 px-6 pb-6 overflow-y-auto"
         >
