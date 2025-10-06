@@ -29,7 +29,7 @@ import {
 } from "../../mock/grupos";
 
 // Flag para cambiar entre mock y API real
-const USE_MOCK_DATA = true; // TODO: Cambiar a false para usar API real
+const USE_MOCK_DATA = true; // Temporalmente en true para debug
 
 // Configuración del HTTP helper
 const http: HttpHelper = HttpHelper.getInstance({
@@ -65,7 +65,26 @@ export const getGrupos = async (): Promise<IGrupo[]> => {
     logDebug('grupos.service', 'Realizando petición GET a', { url });
 
     const response = await http.get<IGrupo[]>(url);
+
+    // Log detallado para debug
+    logDebug('grupos.service', 'Respuesta del servidor', {
+      status: response.status,
+      data: response.data,
+      dataType: typeof response.data,
+      isArray: Array.isArray(response.data)
+    });
+
     const grupos: IGrupo[] = response.data;
+
+    // Validar que cada grupo tenga los campos necesarios
+    grupos.forEach((grupo, index) => {
+      logDebug('grupos.service', `Grupo ${index}`, {
+        id: grupo.id,
+        nombre: grupo.nombre,
+        hasId: !!grupo.id,
+        hasNombre: !!grupo.nombre
+      });
+    });
 
     logInfo('grupos.service', 'Grupos obtenidos exitosamente desde API', {
       total: grupos.length

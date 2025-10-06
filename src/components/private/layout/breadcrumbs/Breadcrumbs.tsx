@@ -23,6 +23,8 @@ export interface BreadcrumbItem {
   icon?: React.ReactNode;
   /** Nombre del icono de Lucide React */
   iconName?: string;
+  /** Función onClick personalizada para navegación interna */
+  onClick?: () => void;
 }
 
 /**
@@ -138,7 +140,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
     );
 
     // Si es el último elemento o está marcado como activo, no es clickeable
-    if (isActive || !item.path) {
+    if (isActive || (!item.path && !item.onClick)) {
       return (
         <span
           key={index}
@@ -148,6 +150,23 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
         >
           {breadcrumbContent}
         </span>
+      );
+    }
+
+    // Si tiene onClick personalizado, usar un botón
+    if (item.onClick) {
+      return (
+        <button
+          key={index}
+          onClick={(e) => {
+            e.preventDefault();
+            item.onClick!();
+          }}
+          className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200 truncate bg-transparent border-none cursor-pointer p-0"
+          title={item.label}
+        >
+          {breadcrumbContent}
+        </button>
       );
     }
 

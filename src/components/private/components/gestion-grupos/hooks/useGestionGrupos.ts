@@ -15,6 +15,14 @@ import type {
   IGrupoFilters
 } from '../../../../../interfaces/grupos';
 
+import type {
+  IGrupoUsuario,
+  IObtenerUsuariosPorGrupo,
+  IUsuarioGrupo,
+  IAsignarUsuarioGrupoRequest,
+  IEstadisticasUsuarioGrupo
+} from '../../../../../interfaces/usuario-grupo';
+
 //+ Servicios
 import {
   getGrupos,
@@ -23,6 +31,13 @@ import {
   deleteGrupo,
   filterGrupos
 } from '../../../../../services/grupos';
+
+import {
+  obtenerUsuariosPorGrupo,
+  obtenerUsuariosGruposPorId,
+  asignarUsuarioAGrupo,
+  obtenerEstadisticasUsuarioGrupo
+} from '../../../../../services/usuario-grupo';
 
 //+ Helpers
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
