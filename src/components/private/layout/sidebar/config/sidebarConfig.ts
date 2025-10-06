@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, BarChart, FileText, Clock, Users, Settings, FileCheck } from 'lucide-react';
+import { Home, BarChart, FileText, Clock, Users, Settings, FileCheck, UserCog, UserPen, ChartNoAxesColumn, ChartNoAxesCombined } from 'lucide-react';
 import { ALLOWED_ROLES } from '../../../../../config/env.config';
 import type { SidebarConfig, SidebarItemConfig } from '../../../../../interfaces/components/dashboard.interface';
 
@@ -32,7 +32,7 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       id: 'estadisticas',
       label: 'Estadísticas',
       to: '/estadisticasusuario',
-      icon: React.createElement(BarChart, { size: 20 }),
+      icon: React.createElement(ChartNoAxesCombined, { size: 20 }),
       requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
       order: 2
     },
@@ -56,19 +56,19 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       id: 'usuarios',
       label: 'Usuarios',
       to: '/usuarios',
-      icon: React.createElement(Users, { size: 20 }),
+      icon: React.createElement(UserPen, { size: 20 }),
       requiredRoles: ['SuperAdmin', 'Administrador'],
       order: 5
     },
-    // {
-    //   id: 'informe-ejecutivo',
-    //   label: 'Informe Ejecutivo',
-    //   to: '/informeejecutivo',
-    //   icon: React.createElement(FileCheck, { size: 20 }),
-    //   requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
-    //   order: 6,
-    //   isDisabled: true // Temporarily disabled - accessed via direct links only
-    // },
+    {
+      id: 'grupos',
+      label: 'Gestión Grupos',
+      to: '/gestion-grupos',
+      requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
+      order: 6,
+      isDisabled: false,
+      icon: React.createElement(UserCog, { size: 20 })
+    },
     {
       id: 'ajustes',
       label: 'Ajustes',

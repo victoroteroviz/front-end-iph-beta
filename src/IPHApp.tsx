@@ -18,6 +18,7 @@ import Usuarios from './components/private/components/usuarios/Usuarios'
 import InformeEjecutivo from './components/private/components/informe-ejecutivo/InformeEjecutivo'
 import Ajustes from './components/private/components/ajustes/Ajustes'
 import AdministracionCatalogos from './components/private/components/ajustes/catalogos/AdministracionCatalogos'
+import GestionGrupos from './components/private/components/gestion-grupos/GestionGrupos'
 // Sistema de notificaciones
 import { NotificationContainer } from './components/shared/notifications'
 
@@ -42,6 +43,7 @@ function IPHApp() {
             <Route path="informeejecutivo/:id" element={<InformeEjecutivo />} />
             <Route path="ajustes" element={<Ajustes />} />
             <Route path="ajustes/catalogos" element={<AdministracionCatalogos />} />
+            <Route path="gestion-grupos" element={<GestionGrupos />} />
 
             {/* Rutas de gestión de usuarios refactorizadas */}
             <Route path="usuarios" element={<Usuarios />} />
