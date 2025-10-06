@@ -87,7 +87,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
       title: {
         display: true,
         text: activeTab === 'mayores' ? 'Top Usuarios - Más IPH Creados' : 'Usuarios con Menos IPH Creados',
-        font: { size: 16, weight: 'bold' },
+        font: { size: 16, weight: 'bold' as const },
         color: '#1f2937'
       },
       tooltip: {
@@ -101,11 +101,11 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
         display: true,
         color: '#ffffff',
         font: {
-          weight: 'bold',
+          weight: 'bold' as const,
           size: 14
         },
-        anchor: 'center',
-        align: 'center',
+        anchor: 'center' as const,
+        align: 'center' as const,
         formatter: (value: number) => value.toString()
       }
     },
@@ -116,7 +116,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
           stepSize: 1,
           color: '#1f2937',
           font: {
-            weight: 'bold',
+            weight: 'bold' as const,
             size: 12
           }
         },
@@ -130,7 +130,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
           minRotation: 45,
           color: '#1f2937',
           font: {
-            weight: 'bold',
+            weight: 'bold' as const,
             size: 11
           }
         },
@@ -173,7 +173,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
       title: {
         display: true,
         text: 'Comparativa: Mayor vs Menor Productividad',
-        font: { size: 16, weight: 'bold' },
+        font: { size: 16, weight: 'bold' as const },
         color: '#1f2937'
       },
       tooltip: {
@@ -187,11 +187,11 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
         display: true,
         color: '#ffffff',
         font: {
-          weight: 'bold',
+          weight: 'bold' as const,
           size: 14
         },
-        anchor: 'center',
-        align: 'center',
+        anchor: 'center' as const,
+        align: 'center' as const,
         formatter: (value: number) => value.toString()
       }
     },
@@ -202,7 +202,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
           stepSize: 1,
           color: '#1f2937',
           font: {
-            weight: 'bold',
+            weight: 'bold' as const,
             size: 12
           }
         },
@@ -214,7 +214,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
         ticks: {
           color: '#1f2937',
           font: {
-            weight: 'bold',
+            weight: 'bold' as const,
             size: 11
           }
         },
@@ -492,7 +492,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
                   </div>
                   <div className="bg-[#fdf7f1] p-4 rounded-lg border border-[#c2b186] hover:shadow-md transition-shadow">
                     <div className="text-4xl font-bold text-[#0891b2]">{totalesData.total_usuarios_creadores}</div>
-                    <div className="text-sm text-[#4d4725] font-medium">Usuarios Activos</div>
+                    <div className="text-sm text-[#4d4725] font-medium">Usuarios Creadores de IPH</div>
                   </div>
                   <div className="bg-[#fdf7f1] p-4 rounded-lg border border-[#c2b186] hover:shadow-md transition-shadow">
                     <div className="text-4xl font-bold text-[#f59e0b]">{totalesData.promedio_iphs_por_usuario}</div>

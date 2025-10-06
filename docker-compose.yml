@@ -1,6 +1,6 @@
 services:
   frontend:
-    image: victoroteroviz/front-end-iph:0.0.10Alpha
+    image: victoroteroviz/front-end-iph:0.0.11Alpha
     container_name: iph-frontend
     restart: always
     ports:

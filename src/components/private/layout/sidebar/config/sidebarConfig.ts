@@ -60,23 +60,23 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       requiredRoles: ['SuperAdmin', 'Administrador'],
       order: 5
     },
-    {
-      id: 'informe-ejecutivo',
-      label: 'Informe Ejecutivo',
-      to: '/informeejecutivo',
-      icon: React.createElement(FileCheck, { size: 20 }),
-      requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
-      order: 6,
-      isDisabled: true // Temporarily disabled - accessed via direct links only
-    },
+    // {
+    //   id: 'informe-ejecutivo',
+    //   label: 'Informe Ejecutivo',
+    //   to: '/informeejecutivo',
+    //   icon: React.createElement(FileCheck, { size: 20 }),
+    //   requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
+    //   order: 6,
+    //   isDisabled: true // Temporarily disabled - accessed via direct links only
+    // },
     {
       id: 'ajustes',
-      label: 'Ajuste',
+      label: 'Ajustes',
       to: '/ajustes',
       icon: React.createElement(Settings, { size: 20 }),
-      requiredRoles: ['SuperAdmin'],
+      requiredRoles: ['SuperAdmin', 'Administrador'],
       order: 7,
-      isDisabled: true // Temporalmente deshabilitado
+      isDisabled: false
     }
   ]
 };

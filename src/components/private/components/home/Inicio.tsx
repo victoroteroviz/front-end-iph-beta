@@ -9,7 +9,7 @@ import useUserSession from '../../layout/hooks/useUserSession';
 // Componentes atómicos separados
 import GraficaCard from '../statistics/cards/GraficaCard';
 import GraficaSemanaCard from '../statistics/cards/GraficaSemanaCard';
-import GraficaUsuarios from '../statistics/charts/GraficaUsuarios';
+import HeatmapDummy from './components/HeatmapDummy';
 
 // Componentes comunes
 import { LoadingSpinner, ErrorMessage } from '../../common';
@@ -283,13 +283,8 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
         )}
       </div>
       
-      {/* Gráfica de usuarios - EXACTO al original */}
-      <div className="mb-6 bg-white rounded shadow p-4">
-        <h3 className="font-semibold mb-4">IPH por Usuario</h3>
-        {/*! Descomentar cuando este listo el endpoint */}
-        {/* {datosUsuarios && <GraficaUsuarios data={datosUsuarios.data} />} */}
-        <GraficaUsuarios />
-      </div>
+      {/* Mapa de Calor - Componente dummy para futura implementación */}
+      <HeatmapDummy className="mb-6" />
       
 
       {/* Quick Access Section - Mantenida con estilo mejorado */}
@@ -299,9 +294,14 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
           onClick={() => setQuickAccessCollapsed(!quickAccessCollapsed)}
           className="w-full px-4 lg:px-6 py-4 bg-[#f8f0e7] hover:bg-[#ede8d4] transition-colors flex items-center justify-between cursor-pointer"
         >
-          <h2 className="text-xl lg:text-2xl font-bold text-[#4d4725]">
-            Acceso Rápido
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl lg:text-2xl font-bold text-[#4d4725]">
+              Acceso Rápido
+            </h2>
+            <div className="px-3 py-1 bg-[#fef3c7] text-[#92400e] text-xs font-medium rounded-full">
+              Próxima Actualización
+            </div>
+          </div>
           {quickAccessCollapsed ? (
             <ChevronDown className="text-[#4d4725]" size={24} />
           ) : (
@@ -312,6 +312,26 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
         {/* Quick Access Cards Grid */}
         {!quickAccessCollapsed && (
           <div className="p-4 lg:p-6">
+            {/* Nota informativa */}
+            <div className="bg-[#eff6ff] border border-[#bfdbfe] rounded-lg p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-5 h-5 bg-[#3b82f6] rounded-full flex items-center justify-center mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-[#1e40af] mb-1">
+                    Funcionalidad en Desarrollo
+                  </h4>
+                  <p className="text-sm text-[#1e40af]">
+                    Las rutas de acceso rápido serán habilitadas en la próxima actualización del sistema.
+                    Actualmente puedes acceder a estas funciones desde el menú lateral.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
               {QUICK_ACCESS_CARDS.map((card) => (
                 <Link key={card.id} to={card.route} className="group">

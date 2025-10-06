@@ -16,7 +16,8 @@ import InformePolicial from './components/private/components/informe-policial/In
 import PerfilUsuario from './components/private/components/perfil-usuario/PerfilUsuario'
 import Usuarios from './components/private/components/usuarios/Usuarios'
 import InformeEjecutivo from './components/private/components/informe-ejecutivo/InformeEjecutivo'
-
+import Ajustes from './components/private/components/ajustes/Ajustes'
+import AdministracionCatalogos from './components/private/components/ajustes/catalogos/AdministracionCatalogos'
 // Sistema de notificaciones
 import { NotificationContainer } from './components/shared/notifications'
 
@@ -39,7 +40,9 @@ function IPHApp() {
             <Route path="informepolicial" element={<InformePolicial />} />
             <Route path="iphoficial/:id" element={<IphOficial />} />
             <Route path="informeejecutivo/:id" element={<InformeEjecutivo />} />
-            
+            <Route path="ajustes" element={<Ajustes />} />
+            <Route path="ajustes/catalogos" element={<AdministracionCatalogos />} />
+
             {/* Rutas de gestión de usuarios refactorizadas */}
             <Route path="usuarios" element={<Usuarios />} />
             <Route path="usuarios/nuevo" element={<PerfilUsuario />} />
