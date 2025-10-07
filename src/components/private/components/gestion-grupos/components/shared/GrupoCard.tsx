@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Users, Edit, Eye, Loader2 } from 'lucide-react';
+import { Shield, Edit, Eye, Loader2 } from 'lucide-react';
 import { COLORS, COMMON_STYLES } from '../../constants/theme.constants';
 import type { IGrupoUsuario } from '../../../../../../interfaces/usuario-grupo';
 
@@ -32,6 +32,13 @@ export const GrupoCard: React.FC<GrupoCardProps> = React.memo(({
   isUpdating = false,
   canEdit = false,
 }) => {
+  // Función para truncar descripción a 200 caracteres
+  const truncateDescription = (text: string, maxLength: number = 200): string => {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength).trim() + '...';
+  };
+
   const handleCardClick = () => {
     if (onClick) {
       onClick(grupo);
@@ -64,7 +71,7 @@ export const GrupoCard: React.FC<GrupoCardProps> = React.memo(({
             className="w-12 h-12 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: COLORS.primaryLight20, color: COLORS.primary }}
           >
-            <Users size={20} />
+            <Shield size={20} />
           </div>
           <div>
             <h3 className="font-semibold" style={{ color: COLORS.primary }}>
@@ -79,8 +86,8 @@ export const GrupoCard: React.FC<GrupoCardProps> = React.memo(({
 
       {/* Descripción del grupo */}
       <div className="mb-4">
-        <p className="text-gray-600 text-sm line-clamp-2">
-          {grupo.descripcionGrupo || 'Sin descripción'}
+        <p className="text-gray-600 text-sm line-clamp-3">
+          {truncateDescription(grupo.descripcionGrupo) || 'Sin descripción'}
         </p>
       </div>
 
@@ -104,7 +111,7 @@ export const GrupoCard: React.FC<GrupoCardProps> = React.memo(({
             <button
               onClick={handleEdit}
               disabled={isUpdating}
-              className="p-2 text-gray-400 hover:text-green-600 disabled:opacity-50 transition-colors duration-200"
+              className="p-2 text-gray-400 hover:text-green-600 disabled:opacity-50 transition-colors duration-200 cursor-pointer disabled:cursor-not-allowed"
               title="Editar Grupo"
             >
               {isUpdating ? (
@@ -117,7 +124,7 @@ export const GrupoCard: React.FC<GrupoCardProps> = React.memo(({
           {onView && (
             <button
               onClick={handleView}
-              className="p-2 text-gray-400 hover:text-blue-600 transition-colors duration-200"
+              className="p-2 text-gray-400 hover:text-blue-600 transition-colors duration-200 cursor-pointer"
               title="Ver Usuarios del Grupo"
             >
               <Eye size={16} />

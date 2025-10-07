@@ -7,6 +7,7 @@
 import React from 'react';
 import {
   Users,
+  Shield,
   Plus,
   Loader2,
   AlertCircle,
@@ -15,6 +16,7 @@ import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
 
 //+ Hooks personalizados
 import { useGestionGruposUnificado } from './hooks/useGestionGruposUnificado';
+import { useNavigationHistory } from './hooks/useNavigationHistory';
 
 //+ Componentes
 import { SearchInput, StatsCard, GrupoCard, ConfirmDialog } from './components/shared';
@@ -54,6 +56,25 @@ const GestionGrupos: React.FC = () => {
     grupoNombre: null,
   });
 
+  // Hook de navegación para manejo del historial del navegador
+  const { pushNavigation: pushNavigationMain, goBack: goBackMain, scrollToTop: scrollToTopMain } = useNavigationHistory({
+    onNavigateBack: () => {
+      // Callback personalizado cuando se usa la flecha anterior del navegador
+      if (vistaUsuarios.mostrar) {
+        // Si estamos en vista de usuarios, volver a la lista
+        setVistaUsuarios({ mostrar: false, grupoId: null, grupoNombre: null });
+        scrollToTopMain();
+      } else {
+        // Si estamos en formulario, volver a la lista
+        setVistaActual('lista');
+        resetFormulario();
+        scrollToTopMain();
+      }
+    },
+    enableBrowserNavigation: true,
+    scrollToTopOnNavigation: true
+  });
+
   // Hook para gestión de grupos (usando API de usuario-grupo)
   const {
     // Estados
@@ -82,6 +103,12 @@ const GestionGrupos: React.FC = () => {
     updateFormulario,
     updateFiltros,
     resetFormulario,
+
+    // Navegación
+    navigateToFormulario,
+    navigateToLista,
+    goBack,
+    scrollToTop,
   } = useGestionGruposUnificado();
 
   // Función para obtener breadcrumbs dinámicos
@@ -92,7 +119,10 @@ const GestionGrupos: React.FC = () => {
       breadcrumbs.push({
         label: MESSAGES.titles.main,
         path: '#',
-        onClick: () => setVistaUsuarios({ mostrar: false, grupoId: null, grupoNombre: null })
+        onClick: () => {
+          setVistaUsuarios({ mostrar: false, grupoId: null, grupoNombre: null });
+          scrollToTopMain();
+        }
       });
       breadcrumbs.push({ 
         label: `Usuarios: ${vistaUsuarios.grupoNombre || 'Grupo'}`, 
@@ -102,7 +132,9 @@ const GestionGrupos: React.FC = () => {
       breadcrumbs.push({
         label: MESSAGES.titles.main,
         path: '#',
-        onClick: () => setVistaActual('lista')
+        onClick: () => {
+          navigateToLista();
+        }
       });
       breadcrumbs.push({
         label: grupoSeleccionado ? MESSAGES.titles.editGrupo : MESSAGES.titles.newGrupo,
@@ -132,8 +164,7 @@ const GestionGrupos: React.FC = () => {
       nombre: grupo.nombreGrupo,
       descripcion: grupo.descripcionGrupo
     };
-    selectGrupo(grupoParaEditar);
-    setVistaActual('formulario');
+    navigateToFormulario(grupoParaEditar);
   };
 
   const handleViewUsuarios = (grupo: IGrupoUsuario) => {
@@ -142,6 +173,13 @@ const GestionGrupos: React.FC = () => {
       grupoId: grupo.id,
       grupoNombre: grupo.nombreGrupo,
     });
+
+    // Agregar al historial de navegación
+    pushNavigationMain({
+      view: 'usuarios',
+      grupoId: grupo.id,
+      formData: { grupoNombre: grupo.nombreGrupo }
+    }, `Usuarios del Grupo: ${grupo.nombreGrupo}`);
   };
 
   // handleDeleteClick ya no es necesario - lo usamos directo en el botón de eliminación si fuera necesario
@@ -171,7 +209,7 @@ const GestionGrupos: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8" data-component="gestion-grupos">
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumbs */}
         <div className="mb-8">
@@ -183,7 +221,10 @@ const GestionGrupos: React.FC = () => {
           <UsuariosGrupoView
             grupoId={vistaUsuarios.grupoId}
             grupoNombre={vistaUsuarios.grupoNombre || undefined}
-            onBack={() => setVistaUsuarios({ mostrar: false, grupoId: null, grupoNombre: null })}
+            onBack={() => {
+              setVistaUsuarios({ mostrar: false, grupoId: null, grupoNombre: null });
+              scrollToTopMain();
+            }}
           />
         )}
 
@@ -195,8 +236,7 @@ const GestionGrupos: React.FC = () => {
             isSubmitting={isCreating || isUpdating}
             onSubmit={handleSubmitForm}
             onCancel={() => {
-              setVistaActual('lista');
-              resetFormulario();
+              navigateToLista();
             }}
             onFieldChange={updateFormulario}
           />
@@ -213,7 +253,7 @@ const GestionGrupos: React.FC = () => {
                     className="flex items-center justify-center w-12 h-12 rounded-lg"
                     style={{ backgroundColor: COLORS.primaryLight, color: COLORS.primary }}
                   >
-                    <Users size={24} />
+                    <Shield size={24} />
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold" style={{ color: COLORS.primary }}>
@@ -228,11 +268,10 @@ const GestionGrupos: React.FC = () => {
                   {permisos.canCreate && (
                     <button
                       onClick={() => {
-                        resetFormulario();
-                        setVistaActual('formulario');
+                        navigateToFormulario();
                       }}
                       disabled={isCreating}
-                      className="inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors duration-200 disabled:opacity-50"
+                      className="inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors duration-200 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                       style={{ backgroundColor: COLORS.primary }}
                     >
                       {isCreating ? (
@@ -301,7 +340,7 @@ const GestionGrupos: React.FC = () => {
                   </div>
                 ) : gruposFiltrados.length === 0 ? (
                   <div className="text-center py-12">
-                    <Users className="mx-auto mb-4 text-gray-400" size={48} />
+                    <Shield className="mx-auto mb-4 text-gray-400" size={48} />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
                       {MESSAGES.empty.noGrupos}
                     </h3>

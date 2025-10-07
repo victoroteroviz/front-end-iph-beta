@@ -88,16 +88,16 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = React.memo(({
           <button
             onClick={onCancel}
             disabled={isLoading}
-            className={COMMON_STYLES.button.secondary}
+            className={`${COMMON_STYLES.button.secondary} cursor-pointer disabled:cursor-not-allowed`}
           >
             {cancelText}
           </button>
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className="inline-flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors duration-200 disabled:opacity-50"
-            style={{ 
-              backgroundColor: type === 'danger' ? COLORS.error : COLORS.primary 
+            className="inline-flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: type === 'danger' ? COLORS.error : COLORS.primary
             }}
           >
             {isLoading ? (

@@ -45,6 +45,55 @@ const http: HttpHelper = HttpHelper.getInstance({
 const BASE_URL = '/api/usuario-grupo';
 
 /**
+ * @description Busca un usuario por nombre
+ * @param nombre Nombre del usuario a buscar
+ * @returns Promise<any> Información del usuario encontrado
+ */
+export const buscarUsuarioPorNombre = async (nombre: string): Promise<any> => {
+  logInfo('usuario-grupo.service', 'Iniciando búsqueda de usuario por nombre', { nombre });
+
+  // Validaciones básicas
+  if (!nombre || nombre.trim() === '') {
+    throw new Error('El nombre del usuario es requerido');
+  }
+
+  try {
+    const url = `/api/users-web/buscar-usuario-nombre/${encodeURIComponent(nombre.trim())}`;
+    logDebug('usuario-grupo.service', 'Realizando petición GET a', { url });
+
+    const response = await http.get<any>(url);
+
+    logInfo('usuario-grupo.service', 'Usuario encontrado exitosamente', {
+      nombre,
+      data: response.data
+    });
+
+    return response.data;
+  } catch (error) {
+    logError('usuario-grupo.service', 'Error al buscar usuario por nombre', error);
+
+    if (error instanceof Error) {
+      if (error.message.includes('404')) {
+        throw new Error('Usuario no encontrado');
+      }
+      if (error.message.includes('403')) {
+        throw new Error('No tienes permisos para buscar usuarios');
+      }
+      if (error.message.includes('401')) {
+        throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente');
+      }
+      if (error.message.includes('500')) {
+        throw new Error('Error interno del servidor. Intenta nuevamente más tarde');
+      }
+
+      throw new Error(error.message || 'Error al buscar el usuario');
+    }
+
+    throw new Error('Error desconocido al buscar el usuario. Contacta con soporte');
+  }
+};
+
+/**
  * @description Obtiene todos los grupos con estadísticas de usuarios
  * @returns Promise<IGrupoUsuario[]> Lista de grupos con información de usuarios
  */

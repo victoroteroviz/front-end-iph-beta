@@ -1,22 +1,18 @@
 /**
- * @fileoverview Componente para ver usuarios de un grupo
- * @version 1.0.0
- * @description Vista detallada de los usuarios asignados a un grupo específico
+ * @fileoverview Componente mejorado para ver usuarios de un grupo
+ * @version 2.0.0
+ * @description Vista detallada y optimizada de los usuarios asignados a un grupo específico
  */
 
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Loader2, AlertCircle, UserCircle } from 'lucide-react';
+import React from 'react';
+import { ArrowLeft, AlertCircle, RefreshCw } from 'lucide-react';
 import { COLORS, MESSAGES } from '../../constants';
 
-//+ Interfaces
-import type { IUsuarioGrupo, IObtenerUsuariosPorGrupo } from '../../../../../../interfaces/usuario-grupo';
+//+ Hooks personalizados
+import { useUsuariosGrupo } from './hooks/useUsuariosGrupo';
 
-//+ Servicios
-import { obtenerUsuariosGruposPorId } from '../../../../../../services/usuario-grupo';
-
-//+ Helpers
-import { logInfo, logError } from '../../../../../../helper/log/logger.helper';
-import { showError } from '../../../../../../helper/notification/notification.helper';
+//+ Componentes atómicos
+import { UserListHeader, UserGrid } from './components';
 
 interface UsuariosGrupoViewProps {
   grupoId: string;
@@ -25,45 +21,37 @@ interface UsuariosGrupoViewProps {
 }
 
 /**
- * Componente que muestra los usuarios de un grupo específico
+ * Componente que muestra los usuarios de un grupo específico con funcionalidades avanzadas
  */
 export const UsuariosGrupoView: React.FC<UsuariosGrupoViewProps> = ({
   grupoId,
   grupoNombre,
   onBack,
 }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [usuarios, setUsuarios] = useState<IUsuarioGrupo[]>([]);
-  const [grupoInfo, setGrupoInfo] = useState<IObtenerUsuariosPorGrupo | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Hook personalizado con toda la lógica
+  const {
+    // Estado
+    usuarios,
+    grupoInfo,
+    usuariosFiltrados,
+    selectedUserId,
 
-  useEffect(() => {
-    loadUsuarios();
-  }, [grupoId]);
+    // Estados UI
+    isLoading,
+    error,
+    searchTerm,
 
-  const loadUsuarios = async () => {
-    setIsLoading(true);
-    setError(null);
-    logInfo('UsuariosGrupoView', 'Cargando usuarios del grupo', { grupoId });
+    // Acciones
+    loadUsuarios,
+    setSearchTerm,
+    handleUserClick
+  } = useUsuariosGrupo({ grupoId, grupoNombre });
 
-    try {
-      const resultado = await obtenerUsuariosGruposPorId(grupoId);
-      setGrupoInfo(resultado);
-      setUsuarios(resultado.data || []);
-      
-      logInfo('UsuariosGrupoView', 'Usuarios cargados exitosamente', {
-        grupoId,
-        grupoNombre: resultado.nombre,
-        totalUsuarios: resultado.data?.length || 0
-      });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al cargar usuarios';
-      logError('UsuariosGrupoView', 'Error al cargar usuarios', err);
-      setError(errorMessage);
-      showError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
+  // Handler para agregar usuario
+  const handleAddUser = () => {
+    // TODO: Implementar lógica para agregar usuario al grupo
+    console.log('Agregar usuario al grupo:', grupoId);
+    // Aquí se puede abrir un modal o navegar a otra vista
   };
 
   return (
@@ -72,150 +60,93 @@ export const UsuariosGrupoView: React.FC<UsuariosGrupoViewProps> = ({
       <div className="flex items-center justify-between">
         <button
           onClick={onBack}
-          className="inline-flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm"
+          className="inline-flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm cursor-pointer"
         >
           <ArrowLeft size={16} />
           <span className="font-medium">Volver a la lista</span>
         </button>
+
+        {/* Botón de actualizar (solo visible si hay datos) */}
+        {!isLoading && !error && usuarios.length > 0 && (
+          <button
+            onClick={loadUsuarios}
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm cursor-pointer"
+          >
+            <RefreshCw size={16} />
+            <span className="font-medium">Actualizar</span>
+          </button>
+        )}
       </div>
 
-      {/* Tarjeta principal */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        {/* Header de la tarjeta */}
-        <div 
-          className="p-6 border-b border-gray-200"
-          style={{ backgroundColor: COLORS.background }}
-        >
-          <div className="flex items-center space-x-3">
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: COLORS.primaryLight20, color: COLORS.primary }}
+      {/* Estado de error */}
+      {!isLoading && error && (
+        <div className="bg-white rounded-xl border border-red-200 p-8">
+          <div className="flex flex-col items-center justify-center text-center">
+            <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Error al cargar usuarios</h3>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <button
+              onClick={loadUsuarios}
+              className="inline-flex items-center space-x-2 px-6 py-3 text-white rounded-lg transition-colors duration-200 cursor-pointer"
+              style={{ backgroundColor: COLORS.primary }}
             >
-              <Users size={24} />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold" style={{ color: COLORS.primary }}>
-                Usuarios del Grupo
-              </h2>
-              <p className="text-gray-600">
-                {grupoInfo?.nombre || grupoNombre || 'Cargando...'}
-              </p>
-            </div>
+              <RefreshCw size={16} />
+              <span>Reintentar</span>
+            </button>
           </div>
         </div>
+      )}
 
-        {/* Contenido */}
-        <div className="p-6">
-          {/* Estado de carga */}
-          {isLoading && (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <Loader2 
-                  className="animate-spin mx-auto mb-4" 
-                  size={48} 
-                  style={{ color: COLORS.primary }} 
-                />
-                <p className="text-gray-600">{MESSAGES.loading.usuarios}</p>
-              </div>
-            </div>
-          )}
+      {/* Contenido principal */}
+      {!error && (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          {/* Header mejorado con estadísticas y filtros */}
+          <div className="p-6 border-b border-gray-200" style={{ backgroundColor: COLORS.background }}>
+            <UserListHeader
+              usuarios={usuarios}
+              usuariosFiltrados={usuariosFiltrados}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              onAddUser={handleAddUser}
+              grupoNombre={grupoInfo?.nombre || grupoNombre}
+            />
+          </div>
 
-          {/* Estado de error */}
-          {!isLoading && error && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Error al cargar usuarios</h3>
-              <p className="text-gray-600 mb-4 text-center">{error}</p>
-              <button
-                onClick={loadUsuarios}
-                className="inline-flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors duration-200"
-                style={{ backgroundColor: COLORS.primary }}
-              >
-                <span>Reintentar</span>
-              </button>
-            </div>
-          )}
-
-          {/* Lista vacía */}
-          {!isLoading && !error && usuarios.length === 0 && (
-            <div className="text-center py-12">
-              <Users className="mx-auto mb-4 text-gray-400" size={48} />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {MESSAGES.empty.noUsuarios}
-              </h3>
-              <p className="text-gray-500">
-                {MESSAGES.empty.noUsuariosDescription}
-              </p>
-            </div>
-          )}
-
-          {/* Grid de usuarios */}
-          {!isLoading && !error && usuarios.length > 0 && (
-            <>
-              {/* Contador */}
-              <div className="mb-6">
-                <p className="text-sm text-gray-600">
-                  Se encontraron <span className="font-semibold">{usuarios.length}</span> {usuarios.length === 1 ? 'usuario' : 'usuarios'}
+          {/* Contenido del grid */}
+          <div className="p-6">
+            {/* Lista vacía */}
+            {!isLoading && usuarios.length === 0 && (
+              <div className="text-center py-12">
+                <div
+                  className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
+                  style={{ backgroundColor: COLORS.primaryLight20, color: COLORS.primary }}
+                >
+                  <AlertCircle size={32} />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {MESSAGES.empty.noUsuarios}
+                </h3>
+                <p className="text-gray-500">
+                  {MESSAGES.empty.noUsuariosDescription}
                 </p>
               </div>
+            )}
 
-              {/* Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {usuarios.map((usuario) => (
-                  <div
-                    key={usuario.id}
-                    className="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200"
-                  >
-                    {/* Header del usuario */}
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: COLORS.primaryLight40, color: COLORS.primary }}
-                      >
-                        <UserCircle size={20} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-gray-900 truncate">
-                          {usuario.nombreCompleto}
-                        </h4>
-                      </div>
-                    </div>
-
-                    {/* Información del usuario */}
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-start">
-                        <span className="text-gray-500 font-medium min-w-[60px]">ID:</span>
-                        <span className="text-gray-700 break-all">{usuario.id}</span>
-                      </div>
-                      
-                      {usuario.cuip && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 font-medium min-w-[60px]">CUIP:</span>
-                          <span className="text-gray-700">{usuario.cuip}</span>
-                        </div>
-                      )}
-                      
-                      {usuario.cup && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 font-medium min-w-[60px]">CUP:</span>
-                          <span className="text-gray-700">{usuario.cup}</span>
-                        </div>
-                      )}
-                      
-                      {usuario.telefono && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 font-medium min-w-[60px]">Teléfono:</span>
-                          <span className="text-gray-700">{usuario.telefono}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
+            {/* Grid mejorado de usuarios */}
+            {(isLoading || usuarios.length > 0) && (
+              <UserGrid
+                usuarios={usuariosFiltrados}
+                isLoading={isLoading}
+                onUserClick={handleUserClick}
+                selectedUserId={selectedUserId || undefined}
+                showActions={false}
+                enableSorting={!isLoading && usuarios.length > 1}
+                enableViewToggle={!isLoading && usuarios.length > 3}
+              />
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
