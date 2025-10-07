@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 
 //+ Custom Hooks
 import { useDebounce } from './useDebounce';
+import { useNavigationHistory } from './useNavigationHistory';
 
 //+ Interfaces
 import type {
@@ -97,6 +98,12 @@ interface UseGestionGruposUnificadoReturn {
   updateFiltros: (newFiltros: Partial<IGrupoFilters>) => void;
   resetFormulario: () => void;
   validateForm: () => boolean;
+
+  // Navegación
+  navigateToFormulario: (grupo?: IGrupo) => void;
+  navigateToLista: () => void;
+  goBack: () => void;
+  scrollToTop: (smooth?: boolean) => void;
 }
 
 /**
@@ -130,6 +137,18 @@ export const useGestionGruposUnificado = (): UseGestionGruposUnificadoReturn => 
   // Debounce para la búsqueda
   const debouncedSearch = useDebounce(filtros.search, 300);
 
+  // Hook de navegación
+  const { pushNavigation, goBack, scrollToTop } = useNavigationHistory({
+    onNavigateBack: () => {
+      // Callback personalizado cuando se usa la flecha anterior del navegador
+      setVistaActual('lista');
+      resetFormulario();
+      scrollToTop();
+    },
+    enableBrowserNavigation: true,
+    scrollToTopOnNavigation: true
+  });
+
   // Control de permisos
   const permisos = useMemo(() => {
     const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
@@ -141,6 +160,55 @@ export const useGestionGruposUnificado = (): UseGestionGruposUnificadoReturn => 
       canView: canAccessSuperior(userRoles)
     };
   }, []);
+
+  // Funciones básicas (declaradas antes de las funciones de navegación)
+  // Seleccionar grupo para vista/edición
+  const selectGrupo = useCallback((grupo: IGrupo) => {
+    setGrupoSeleccionado(grupo);
+    setFormulario({
+      nombre: grupo.nombre,
+      descripcion: grupo.descripcion || '',
+      errors: {}
+    });
+  }, []);
+
+  // Resetear formulario
+  const resetFormulario = useCallback(() => {
+    setFormulario({
+      nombre: '',
+      descripcion: '',
+      errors: {}
+    });
+    setGrupoSeleccionado(null);
+  }, []);
+
+  // Funciones de navegación mejoradas (declaradas después de las funciones básicas)
+  const navigateToFormulario = useCallback((grupo?: IGrupo) => {
+    if (grupo) {
+      selectGrupo(grupo);
+    } else {
+      resetFormulario();
+    }
+
+    setVistaActual('formulario');
+
+    // Agregar al historial de navegación
+    pushNavigation({
+      view: 'formulario',
+      grupoId: grupo?.id || null,
+      formData: grupo ? { nombre: grupo.nombre, descripcion: grupo.descripcion } : null
+    }, grupo ? `Editar Grupo: ${grupo.nombre}` : 'Nuevo Grupo');
+  }, [selectGrupo, resetFormulario, pushNavigation]);
+
+  const navigateToLista = useCallback(() => {
+    setVistaActual('lista');
+    resetFormulario();
+
+    // Agregar al historial de navegación
+    pushNavigation({
+      view: 'lista'
+    }, 'Lista de Grupos');
+  }, [resetFormulario, pushNavigation]);
 
   // Grupos filtrados con debounce
   const gruposFiltrados = useMemo(() => {
@@ -222,7 +290,7 @@ export const useGestionGruposUnificado = (): UseGestionGruposUnificadoReturn => 
       if (response.status) {
         showSuccess(response.message);
         resetFormulario();
-        setVistaActual('lista');
+        navigateToLista();
         await loadGrupos();
         logInfo('useGestionGruposUnificado', 'Grupo creado exitosamente');
       } else {
@@ -234,7 +302,7 @@ export const useGestionGruposUnificado = (): UseGestionGruposUnificadoReturn => 
     } finally {
       setIsCreating(false);
     }
-  }, [formulario, permisos.canCreate, loadGrupos]);
+  }, [formulario, permisos.canCreate, loadGrupos, navigateToLista]);
 
   // Actualizar grupo existente
   const handleUpdateGrupo = useCallback(async (id: string) => {
@@ -262,7 +330,7 @@ export const useGestionGruposUnificado = (): UseGestionGruposUnificadoReturn => 
       if (response.status) {
         showSuccess(response.message);
         resetFormulario();
-        setVistaActual('lista');
+        navigateToLista();
         await loadGrupos();
         logInfo('useGestionGruposUnificado', 'Grupo actualizado exitosamente');
       } else {
@@ -274,7 +342,7 @@ export const useGestionGruposUnificado = (): UseGestionGruposUnificadoReturn => 
     } finally {
       setIsUpdating(false);
     }
-  }, [formulario, permisos.canEdit, loadGrupos]);
+  }, [formulario, permisos.canEdit, loadGrupos, navigateToLista]);
 
   // Eliminar grupo
   const handleDeleteGrupo = useCallback(async (id: string) => {
@@ -304,16 +372,6 @@ export const useGestionGruposUnificado = (): UseGestionGruposUnificadoReturn => 
     }
   }, [permisos.canDelete, loadGrupos]);
 
-  // Seleccionar grupo para vista/edición
-  const selectGrupo = useCallback((grupo: IGrupo) => {
-    setGrupoSeleccionado(grupo);
-    setFormulario({
-      nombre: grupo.nombre,
-      descripcion: grupo.descripcion || '',
-      errors: {}
-    });
-  }, []);
-
   // Actualizar campo del formulario
   const updateFormulario = useCallback((field: keyof IGrupoFormState, value: string) => {
     setFormulario((prev) => ({
@@ -332,16 +390,6 @@ export const useGestionGruposUnificado = (): UseGestionGruposUnificadoReturn => 
       ...prev,
       ...newFiltros
     }));
-  }, []);
-
-  // Resetear formulario
-  const resetFormulario = useCallback(() => {
-    setFormulario({
-      nombre: '',
-      descripcion: '',
-      errors: {}
-    });
-    setGrupoSeleccionado(null);
   }, []);
 
   // Validar formulario
@@ -367,6 +415,7 @@ export const useGestionGruposUnificado = (): UseGestionGruposUnificadoReturn => 
 
     return Object.keys(errors).length === 0;
   }, [formulario]);
+
 
   // Cargar grupos al montar el componente
   useEffect(() => {
@@ -402,6 +451,12 @@ export const useGestionGruposUnificado = (): UseGestionGruposUnificadoReturn => 
     updateFormulario,
     updateFiltros,
     resetFormulario,
-    validateForm
+    validateForm,
+
+    // Navegación
+    navigateToFormulario,
+    navigateToLista,
+    goBack,
+    scrollToTop
   };
 };

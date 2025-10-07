@@ -29,7 +29,7 @@ import {
 } from "../../mock/grupos";
 
 // Flag para cambiar entre mock y API real
-const USE_MOCK_DATA = true; // Temporalmente en true para debug
+const USE_MOCK_DATA = false; // false = usa API real
 
 // Configuración del HTTP helper
 const http: HttpHelper = HttpHelper.getInstance({
