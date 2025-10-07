@@ -12,8 +12,13 @@ export default defineConfig(({ mode }) => {
 
   const config: UserConfig = {
     plugins: [react(), tailwindcss()],
+    resolve: {
+      alias: {
+        '@': '/src'
+      }
+    },
     optimizeDeps: {
-      include: ['pdfjs-dist/build/pdf', 'pdfjs-dist/build/pdf.worker.min.js']
+      exclude: ['pdfjs-dist']
     },
     assetsInclude: ['**/*.worker.js', '**/*.worker.min.js', '**/*.worker.mjs'],
     worker: {
