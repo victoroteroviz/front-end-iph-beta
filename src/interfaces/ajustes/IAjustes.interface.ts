@@ -4,7 +4,7 @@
  * @description Define las interfaces para la gestión de ajustes y configuraciones del sistema
  */
 
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 /**
  * @interface IAjusteSeccion
@@ -18,7 +18,7 @@ export interface IAjusteSeccion {
   /** Descripción de la sección */
   descripcion: string;
   /** Icono de la sección (componente React) */
-  icono: ReactNode;
+  icono: React.ComponentType<{ size?: number; className?: string }>;
   /** Color del tema de la sección */
   color: string;
   /** Indica si la sección está habilitada */
@@ -47,7 +47,7 @@ export interface IAjusteOpcion {
   /** Descripción de la opción */
   descripcion: string;
   /** Icono de la opción */
-  icono: ReactNode;
+  icono: React.ComponentType<{ size?: number; className?: string }>;
   /** Indica si la opción está habilitada */
   habilitado: boolean;
   /** Acción a ejecutar al seleccionar la opción */

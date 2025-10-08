@@ -92,7 +92,7 @@ export const getGrupos = async (): Promise<IGrupo[]> => {
 
     return grupos;
   } catch (error) {
-    logError('grupos.service', 'Error al obtener grupos', error);
+    logError('grupos.service', error, 'Error al obtener grupos');
 
     if (error instanceof Error) {
       if (error.message.includes('404')) {
@@ -162,7 +162,7 @@ export const createGrupo = async (grupoData: IGrupoFormData): Promise<IResponseG
 
     return result;
   } catch (error) {
-    logError('grupos.service', 'Error al crear grupo', error);
+    logError('grupos.service', error, 'Error al crear grupo');
 
     if (error instanceof Error) {
       if (error.message.includes('400')) {
@@ -238,7 +238,7 @@ export const updateGrupo = async (updateData: IUpdateGrupoRequest): Promise<IRes
 
     return result;
   } catch (error) {
-    logError('grupos.service', 'Error al actualizar grupo', error);
+    logError('grupos.service', error, 'Error al actualizar grupo');
 
     if (error instanceof Error) {
       if (error.message.includes('404')) {
@@ -300,7 +300,7 @@ export const deleteGrupo = async (id: string): Promise<IResponseGrupo> => {
 
     return result;
   } catch (error) {
-    logError('grupos.service', 'Error al eliminar grupo', error);
+    logError('grupos.service', error, 'Error al eliminar grupo');
 
     if (error instanceof Error) {
       if (error.message.includes('404')) {

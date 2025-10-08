@@ -4,7 +4,7 @@
  * @description Datos de prueba que simulan las respuestas del backend
  */
 
-import { IGrupo, IResponseGrupo } from '../../interfaces/grupos';
+import type { IGrupo, IResponseGrupo } from '../../interfaces/grupos';
 
 /**
  * Mock data para grupos - simula la respuesta de GET /api/grupo

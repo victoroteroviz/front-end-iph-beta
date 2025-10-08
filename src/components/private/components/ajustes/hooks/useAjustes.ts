@@ -120,7 +120,7 @@ export const useAjustes = (): UseAjustesReturn => {
       const rolesData = sessionStorage.getItem('roles');
       return rolesData ? JSON.parse(rolesData) : [];
     } catch (error) {
-      logError('useAjustes', 'Error al obtener roles de usuario', error);
+      logError('useAjustes', error, 'Error al obtener roles de usuario');
       return [];
     }
   }, []);
@@ -161,7 +161,7 @@ export const useAjustes = (): UseAjustesReturn => {
 
     } catch (error) {
       const errorMsg = 'Error al cargar la configuración de ajustes';
-      logError('useAjustes', errorMsg, error);
+      logError('useAjustes', error, errorMsg);
 
       setState(prev => ({
         ...prev,
@@ -197,7 +197,7 @@ export const useAjustes = (): UseAjustesReturn => {
 
     } catch (error) {
       const errorMsg = 'Error al cargar los catálogos';
-      logError('useAjustes', errorMsg, error);
+      logError('useAjustes', error, errorMsg);
 
       setState(prev => ({
         ...prev,
@@ -250,7 +250,7 @@ export const useAjustes = (): UseAjustesReturn => {
       }
 
     } catch (error) {
-      logError('useAjustes', 'Error al navegar a sección', error);
+      logError('useAjustes', error, 'Error al navegar a sección');
       showError('Error al acceder a la sección');
     } finally {
       setState(prev => ({ ...prev, loadingSeccion: null }));
@@ -313,7 +313,7 @@ export const useAjustes = (): UseAjustesReturn => {
     try {
       return await verificarPermisoSeccion(seccionId, userRoles);
     } catch (error) {
-      logError('useAjustes', 'Error al verificar acceso a sección', error);
+      logError('useAjustes', error, 'Error al verificar acceso a sección');
       return false;
     }
   }, [userRoles]);

@@ -58,7 +58,7 @@ export const getAjustesConfiguration = async (userRoles: string[]): Promise<IAju
     }
 
   } catch (error) {
-    logError('AjustesService', 'Error al obtener configuración de ajustes', error);
+    logError('AjustesService', error, 'Error al obtener configuración de ajustes');
     throw new Error('No se pudo obtener la configuración de ajustes');
   }
 };
@@ -104,7 +104,7 @@ export const getCatalogosDisponibles = async (userRoles: string[]): Promise<ICat
     }
 
   } catch (error) {
-    logError('AjustesService', 'Error al obtener catálogos', error);
+    logError('AjustesService', error, 'Error al obtener catálogos');
     throw new Error('No se pudieron obtener los catálogos disponibles');
   }
 };
@@ -160,7 +160,7 @@ export const actualizarConfiguracionSeccion = async (
     }
 
   } catch (error) {
-    logError('AjustesService', 'Error al actualizar configuración de sección', error);
+    logError('AjustesService', error, 'Error al actualizar configuración de sección');
     throw new Error('No se pudo actualizar la configuración de la sección');
   }
 };
@@ -187,7 +187,7 @@ export const verificarPermisoSeccion = async (
 
     return !!seccion && seccion.habilitado;
   } catch (error) {
-    logError('AjustesService', 'Error al verificar permisos de sección', error);
+    logError('AjustesService', error, 'Error al verificar permisos de sección');
     return false;
   }
 };

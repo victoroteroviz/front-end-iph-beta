@@ -271,10 +271,10 @@ export const getMockCatalogos = async (): Promise<ICatalogo[]> => {
 /**
  * @function filtrarSeccionesPorRol
  * @description Filtra las secciones de ajustes según el rol del usuario
- * @param {string[]} userRoles - Roles del usuario actual
+ * @param {Array<string | { nombre: string }>} userRoles - Roles del usuario actual
  * @returns {IAjusteSeccion[]} Secciones filtradas por rol
  */
-export const filtrarSeccionesPorRol = (userRoles: string[]): IAjusteSeccion[] => {
+export const filtrarSeccionesPorRol = (userRoles: Array<string | { nombre: string }>): IAjusteSeccion[] => {
   const roleNames = userRoles.map(role => typeof role === 'string' ? role : role.nombre);
 
   return MOCK_AJUSTES_SECCIONES.filter(seccion =>

@@ -175,7 +175,15 @@ export const useBreadcrumbs = (): UseBreadcrumbsReturn => {
 
         // Aplicar label dinámico si existe
         if (routeConfig.dynamicLabel && params) {
-          label = routeConfig.dynamicLabel(params);
+          // Filtrar parámetros undefined para cumplir con Record<string, string>
+          const validParams = Object.entries(params).reduce((acc, [key, value]) => {
+            if (value !== undefined) {
+              acc[key] = value;
+            }
+            return acc;
+          }, {} as Record<string, string>);
+
+          label = routeConfig.dynamicLabel(validParams);
         }
 
         items.push({

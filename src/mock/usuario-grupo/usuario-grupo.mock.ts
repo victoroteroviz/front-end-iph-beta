@@ -4,7 +4,7 @@
  * @description Datos de prueba que simulan las respuestas del backend usuario-grupo
  */
 
-import {
+import type {
   IGrupoUsuario,
   IGrupoUsuarioCreado,
   IObtenerUsuariosPorGrupo,
