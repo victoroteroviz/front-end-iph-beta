@@ -25,3 +25,10 @@ export type {
 
 // From user-search-params.enum.ts
 export * from './user-search-params.enum';
+
+// From buscar-usuario-nombre.interface.ts
+export type {
+  IBuscarUsuarioNombreParams,
+  IBuscarUsuarioNombreResponse,
+  IUsuarioBusqueda
+} from './buscar-usuario-nombre.interface';

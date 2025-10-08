@@ -18,6 +18,8 @@ interface UserGridProps {
   usuarios: IUsuarioGrupo[];
   isLoading?: boolean;
   onUserClick?: (usuario: IUsuarioGrupo) => void;
+  onUserDelete?: (usuarioId: string) => void;
+  deletingUserId?: string | null;
   selectedUserId?: string;
   showActions?: boolean;
   enableSorting?: boolean;
@@ -35,6 +37,8 @@ export const UserGrid: React.FC<UserGridProps> = ({
   usuarios,
   isLoading = false,
   onUserClick,
+  onUserDelete,
+  deletingUserId,
   selectedUserId,
   showActions = false,
   enableSorting = true,
@@ -221,6 +225,8 @@ export const UserGrid: React.FC<UserGridProps> = ({
             usuario={usuario}
             isSelected={selectedUserId === usuario.id}
             onClick={onUserClick}
+            onDelete={onUserDelete}
+            isDeleting={deletingUserId === usuario.id}
             showActions={showActions}
           />
         ))}
