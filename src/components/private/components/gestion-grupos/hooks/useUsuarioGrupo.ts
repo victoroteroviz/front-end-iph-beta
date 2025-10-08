@@ -164,7 +164,7 @@ export const useUsuarioGrupo = (): UseUsuarioGrupoReturn => {
         totalUsuarios: gruposData.reduce((sum, grupo) => sum + grupo.cantidadUsuarios, 0)
       });
     } catch (error) {
-      logError('useUsuarioGrupo', 'Error al cargar grupos con usuarios', error);
+      logError('useUsuarioGrupo', error, 'Error al cargar grupos con usuarios');
       showError(error instanceof Error ? error.message : 'Error al cargar los grupos');
     } finally {
       setIsLoadingGrupos(false);
@@ -187,7 +187,7 @@ export const useUsuarioGrupo = (): UseUsuarioGrupoReturn => {
         totalUsuarios: resultado.data?.length || 0
       });
     } catch (error) {
-      logError('useUsuarioGrupo', 'Error al cargar usuarios del grupo', error);
+      logError('useUsuarioGrupo', error, 'Error al cargar usuarios del grupo');
       showError(error instanceof Error ? error.message : 'Error al cargar los usuarios del grupo');
       setUsuariosDelGrupo([]);
     } finally {
@@ -205,7 +205,7 @@ export const useUsuarioGrupo = (): UseUsuarioGrupoReturn => {
       setEstadisticasCompletas(estadisticas);
       logInfo('useUsuarioGrupo', 'Estadísticas completas cargadas exitosamente', estadisticas);
     } catch (error) {
-      logError('useUsuarioGrupo', 'Error al cargar estadísticas', error);
+      logError('useUsuarioGrupo', error, 'Error al cargar estadísticas');
       showError(error instanceof Error ? error.message : 'Error al cargar las estadísticas');
     } finally {
       setIsLoadingEstadisticas(false);
@@ -252,7 +252,7 @@ export const useUsuarioGrupo = (): UseUsuarioGrupoReturn => {
         showError('Error al asignar el usuario al grupo');
       }
     } catch (error) {
-      logError('useUsuarioGrupo', 'Error al asignar usuario', error);
+      logError('useUsuarioGrupo', error, 'Error al asignar usuario');
       showError(error instanceof Error ? error.message : 'Error al asignar el usuario al grupo');
     } finally {
       setIsAsignando(false);

@@ -70,7 +70,7 @@ export const buscarUsuarioPorNombre = async (nombre: string): Promise<any> => {
 
     return response.data;
   } catch (error) {
-    logError('usuario-grupo.service', 'Error al buscar usuario por nombre', error);
+    logError('usuario-grupo.service', error, 'Error al buscar usuario por nombre');
 
     if (error instanceof Error) {
       if (error.message.includes('404')) {
@@ -133,7 +133,7 @@ export const obtenerUsuariosPorGrupo = async (): Promise<IGrupoUsuario[]> => {
 
     return grupos;
   } catch (error) {
-    logError('usuario-grupo.service', 'Error al obtener usuarios por grupo', error);
+    logError('usuario-grupo.service', error, 'Error al obtener usuarios por grupo');
 
     if (error instanceof Error) {
       if (error.message.includes('404')) {
@@ -196,7 +196,7 @@ export const obtenerUsuariosGruposPorId = async (id: string): Promise<IObtenerUs
 
     return resultado;
   } catch (error) {
-    logError('usuario-grupo.service', 'Error al obtener usuarios del grupo', error);
+    logError('usuario-grupo.service', error, 'Error al obtener usuarios del grupo');
 
     if (error instanceof Error) {
       if (error.message.includes('404')) {
@@ -269,7 +269,7 @@ export const asignarUsuarioAGrupo = async (request: IAsignarUsuarioGrupoRequest)
 
     return result;
   } catch (error) {
-    logError('usuario-grupo.service', 'Error al asignar usuario al grupo', error);
+    logError('usuario-grupo.service', error, 'Error al asignar usuario al grupo');
 
     if (error instanceof Error) {
       if (error.message.includes('404')) {
@@ -332,7 +332,7 @@ export const obtenerEstadisticasUsuarioGrupo = async (): Promise<IEstadisticasUs
     logInfo('usuario-grupo.service', 'Estadísticas calculadas desde API', estadisticas);
     return estadisticas;
   } catch (error) {
-    logError('usuario-grupo.service', 'Error al obtener estadísticas', error);
+    logError('usuario-grupo.service', error, 'Error al obtener estadísticas');
     throw new Error('Error al obtener las estadísticas del sistema');
   }
 };

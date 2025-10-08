@@ -171,15 +171,27 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
     }
 
     // Si tiene path y no es el último, es un link
+    if (item.path) {
+      return (
+        <Link
+          key={index}
+          to={item.path}
+          className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200 truncate"
+          title={item.label}
+        >
+          {breadcrumbContent}
+        </Link>
+      );
+    }
+
+    // Fallback: mostrar como texto si no tiene path ni onClick
     return (
-      <Link
+      <span
         key={index}
-        to={item.path}
-        className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200 truncate"
-        title={item.label}
+        className="text-sm text-gray-600 truncate"
       >
         {breadcrumbContent}
-      </Link>
+      </span>
     );
   };
 

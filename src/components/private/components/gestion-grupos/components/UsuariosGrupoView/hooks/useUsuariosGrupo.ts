@@ -89,7 +89,7 @@ export const useUsuariosGrupo = ({
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al cargar usuarios';
-      logError('useUsuariosGrupo', 'Error al cargar usuarios', err);
+      logError('useUsuariosGrupo', err, 'Error al cargar usuarios');
       setError(errorMessage);
       showError(errorMessage);
     } finally {

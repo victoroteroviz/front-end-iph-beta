@@ -92,7 +92,7 @@ export const SeccionCard: React.FC<SeccionCardProps> = ({
   `.trim();
 
   // Obtener el componente de icono
-  const IconoSeccion = seccion.icono as React.ComponentType<any>;
+  const IconoSeccion = seccion.icono;
 
   return (
     <div className={cardClasses} onClick={handleClick}>

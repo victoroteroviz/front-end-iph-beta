@@ -59,7 +59,7 @@ export const GridSecciones: React.FC<GridSeccionesProps> = ({
    * @function renderSkeletonCards
    * @description Renderiza cards skeleton durante la carga
    */
-  const renderSkeletonCards = (): JSX.Element[] => {
+  const renderSkeletonCards = (): React.ReactElement[] => {
     return Array.from({ length: skeletonCount }, (_, index) => (
       <div
         key={`skeleton-${index}`}
@@ -99,7 +99,7 @@ export const GridSecciones: React.FC<GridSeccionesProps> = ({
    * @function renderSecciones
    * @description Renderiza las secciones reales
    */
-  const renderSecciones = (): JSX.Element[] => {
+  const renderSecciones = (): React.ReactElement[] => {
     return secciones.map((seccion) => {
       const tieneAcceso = verificarAcceso ? verificarAcceso(seccion.id) : true;
       const estaCargnado = loadingSeccionId === seccion.id;

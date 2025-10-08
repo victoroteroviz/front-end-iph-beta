@@ -183,7 +183,7 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
         total: gruposData.length
       });
     } catch (error) {
-      logError('useGestionGrupos', 'Error al cargar grupos', error);
+      logError('useGestionGrupos', error, 'Error al cargar grupos');
       showError(error instanceof Error ? error.message : 'Error al cargar los grupos');
     } finally {
       setIsLoading(false);
@@ -222,7 +222,7 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
         showError('Error al crear el grupo');
       }
     } catch (error) {
-      logError('useGestionGrupos', 'Error al crear grupo', error);
+      logError('useGestionGrupos', error, 'Error al crear grupo');
       showError(error instanceof Error ? error.message : 'Error al crear el grupo');
     } finally {
       setIsCreating(false);
@@ -262,7 +262,7 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
         showError('Error al actualizar el grupo');
       }
     } catch (error) {
-      logError('useGestionGrupos', 'Error al actualizar grupo', error);
+      logError('useGestionGrupos', error, 'Error al actualizar grupo');
       showError(error instanceof Error ? error.message : 'Error al actualizar el grupo');
     } finally {
       setIsUpdating(false);
@@ -291,7 +291,7 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
         showError('Error al eliminar el grupo');
       }
     } catch (error) {
-      logError('useGestionGrupos', 'Error al eliminar grupo', error);
+      logError('useGestionGrupos', error, 'Error al eliminar grupo');
       showError(error instanceof Error ? error.message : 'Error al eliminar el grupo');
     } finally {
       setIsDeleting(false);

@@ -113,7 +113,7 @@ export const UserStats: React.FC<UserStatsProps> = React.memo(({
   if (compact) {
     return (
       <div className="flex items-center space-x-4 overflow-x-auto">
-        {statItems.slice(0, 4).map((stat, index) => (
+        {statItems.slice(0, 4).map((stat) => (
           <div
             key={stat.label}
             className="flex items-center space-x-2 px-3 py-2 bg-white rounded-lg border border-gray-200 flex-shrink-0"
@@ -136,7 +136,7 @@ export const UserStats: React.FC<UserStatsProps> = React.memo(({
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      {statItems.map((stat, index) => (
+      {statItems.map((stat) => (
         <div
           key={stat.label}
           className="bg-white p-4 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 hover:shadow-sm"

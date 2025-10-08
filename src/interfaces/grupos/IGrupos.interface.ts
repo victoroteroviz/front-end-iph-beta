@@ -4,7 +4,7 @@
  * @description Define las interfaces para CRUD de grupos y asignación de usuarios
  */
 
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 /**
  * @interface IGrupo
