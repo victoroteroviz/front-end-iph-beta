@@ -1,11 +1,11 @@
 /**
  * @fileoverview Componente atómico para tarjeta de usuario
- * @version 1.0.0
- * @description Tarjeta individual optimizada para mostrar información de usuario en el grupo
+ * @version 2.0.0
+ * @description Tarjeta individual optimizada para mostrar información de usuario con acción de eliminar
  */
 
 import React from 'react';
-import { UserCircle, Phone, Hash, IdCard } from 'lucide-react';
+import { UserCircle, Phone, Hash, IdCard, Trash2, Loader2 } from 'lucide-react';
 import { COLORS } from '../../../constants';
 
 //+ Interfaces
@@ -15,6 +15,8 @@ interface UserCardProps {
   usuario: IUsuarioGrupo;
   isSelected?: boolean;
   onClick?: (usuario: IUsuarioGrupo) => void;
+  onDelete?: (usuarioId: string) => void;
+  isDeleting?: boolean;
   showActions?: boolean;
 }
 
@@ -25,19 +27,29 @@ export const UserCard: React.FC<UserCardProps> = React.memo(({
   usuario,
   isSelected = false,
   onClick,
+  onDelete,
+  isDeleting = false,
   showActions = false
 }) => {
   const handleClick = () => {
-    if (onClick) {
+    if (onClick && !isDeleting) {
       onClick(usuario);
+    }
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Evitar que se active el onClick del card
+    if (onDelete && !isDeleting) {
+      onDelete(usuario.id);
     }
   };
 
   return (
     <div
       className={`
-        relative bg-white border-2 rounded-xl p-5 transition-all duration-300 cursor-pointer
-        hover:shadow-md hover:transform hover:scale-[1.02]
+        relative bg-white border-2 rounded-xl p-5 transition-all duration-300
+        ${!isDeleting && 'cursor-pointer hover:shadow-md hover:transform hover:scale-[1.02]'}
+        ${isDeleting && 'opacity-60 cursor-not-allowed'}
         ${isSelected
           ? 'border-blue-300 shadow-lg bg-blue-50/30'
           : 'border-gray-200 hover:border-gray-300'
@@ -124,17 +136,34 @@ export const UserCard: React.FC<UserCardProps> = React.memo(({
         </div>
       )}
 
-      {/* Acciones (opcional) */}
-      {showActions && (
-        <div className="mt-4 pt-4 border-t border-gray-100">
-          <div className="flex items-center justify-between">
-            <button className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors">
-              Ver detalles
-            </button>
-            <button className="text-xs text-red-600 hover:text-red-800 font-medium transition-colors">
-              Remover
-            </button>
-          </div>
+      {/* Botón de eliminar (siempre visible en parte inferior derecha) */}
+      {onDelete && (
+        <div className="absolute bottom-3 right-3">
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className={`
+              flex items-center justify-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium
+              transition-all duration-200 shadow-sm
+              ${isDeleting
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 cursor-pointer active:scale-95'
+              }
+            `}
+            title={isDeleting ? 'Eliminando...' : 'Eliminar del grupo'}
+          >
+            {isDeleting ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                <span>Eliminando...</span>
+              </>
+            ) : (
+              <>
+                <Trash2 size={14} />
+                <span>Eliminar</span>
+              </>
+            )}
+          </button>
         </div>
       )}
     </div>

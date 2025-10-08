@@ -219,7 +219,7 @@ const GestionGrupos: React.FC = () => {
         {/* Vista de Usuarios del Grupo */}
         {vistaUsuarios.mostrar && vistaUsuarios.grupoId && (
           <UsuariosGrupoView
-            grupoId={vistaUsuarios.grupoId}
+            grupoUuid={vistaUsuarios.grupoId}
             grupoNombre={vistaUsuarios.grupoNombre || undefined}
             onBack={() => {
               setVistaUsuarios({ mostrar: false, grupoId: null, grupoNombre: null });

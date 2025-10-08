@@ -9,3 +9,10 @@ export {
   obtenerEstadisticasUsuarioGrupo,
   filtrarGruposUsuarios
 } from './usuario-grupo.service';
+
+export {
+  eliminarUsuarioDeGrupo,
+  validarParametrosEliminacion,
+  formatearMensajeConfirmacion,
+  esEliminacionExitosa
+} from './eliminar-usuario-grupo.service';

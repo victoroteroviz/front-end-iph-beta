@@ -1,7 +1,7 @@
 /**
- * @fileoverview Componente mejorado para ver usuarios de un grupo
- * @version 2.0.0
- * @description Vista detallada y optimizada de los usuarios asignados a un grupo específico
+ * @fileoverview Componente mejorado para ver y gestionar usuarios de un grupo
+ * @version 3.0.0
+ * @description Vista detallada con búsqueda local, búsqueda por API y asignación de usuarios
  */
 
 import React from 'react';
@@ -12,22 +12,36 @@ import { COLORS, MESSAGES } from '../../constants';
 import { useUsuariosGrupo } from './hooks/useUsuariosGrupo';
 
 //+ Componentes atómicos
-import { UserListHeader, UserGrid } from './components';
+import { UserListHeader, UserGrid, ConfirmDeleteModal } from './components';
 
 interface UsuariosGrupoViewProps {
-  grupoId: string;
+  grupoUuid: string; // UUID del grupo padre
   grupoNombre?: string;
   onBack: () => void;
 }
 
 /**
- * Componente que muestra los usuarios de un grupo específico con funcionalidades avanzadas
+ * Componente que muestra y gestiona los usuarios de un grupo específico
+ * - Búsqueda local de usuarios ya asignados al grupo
+ * - Búsqueda por API para agregar nuevos usuarios
+ * - Asignación automática de usuarios al grupo
  */
 export const UsuariosGrupoView: React.FC<UsuariosGrupoViewProps> = ({
-  grupoId,
+  grupoUuid,
   grupoNombre,
   onBack,
 }) => {
+  // Estado local para el modal de confirmación
+  const [deleteModalState, setDeleteModalState] = React.useState<{
+    isOpen: boolean;
+    usuarioId: string | null;
+    usuarioNombre: string | null;
+  }>({
+    isOpen: false,
+    usuarioId: null,
+    usuarioNombre: null
+  });
+
   // Hook personalizado con toda la lógica
   const {
     // Estado
@@ -38,20 +52,43 @@ export const UsuariosGrupoView: React.FC<UsuariosGrupoViewProps> = ({
 
     // Estados UI
     isLoading,
+    isAddingUser,
+    isDeletingUser,
     error,
     searchTerm,
 
     // Acciones
     loadUsuarios,
+    addUsuarioToGrupo,
+    removeUsuarioFromGrupo,
     setSearchTerm,
     handleUserClick
-  } = useUsuariosGrupo({ grupoId, grupoNombre });
+  } = useUsuariosGrupo({ grupoUuid, grupoNombre });
 
-  // Handler para agregar usuario
-  const handleAddUser = () => {
-    // TODO: Implementar lógica para agregar usuario al grupo
-    console.log('Agregar usuario al grupo:', grupoId);
-    // Aquí se puede abrir un modal o navegar a otra vista
+  // Abrir modal de confirmación
+  const handleDeleteClick = (usuarioId: string) => {
+    const usuario = usuarios.find(u => u.id === usuarioId);
+    setDeleteModalState({
+      isOpen: true,
+      usuarioId,
+      usuarioNombre: usuario?.nombreCompleto || null
+    });
+  };
+
+  // Confirmar eliminación
+  const handleConfirmDelete = async () => {
+    if (deleteModalState.usuarioId) {
+      await removeUsuarioFromGrupo(deleteModalState.usuarioId);
+      // Cerrar modal después de la operación
+      setDeleteModalState({ isOpen: false, usuarioId: null, usuarioNombre: null });
+    }
+  };
+
+  // Cancelar eliminación
+  const handleCancelDelete = () => {
+    if (!isDeletingUser) {
+      setDeleteModalState({ isOpen: false, usuarioId: null, usuarioNombre: null });
+    }
   };
 
   return (
@@ -107,7 +144,8 @@ export const UsuariosGrupoView: React.FC<UsuariosGrupoViewProps> = ({
               usuariosFiltrados={usuariosFiltrados}
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
-              onAddUser={handleAddUser}
+              onAddUsuario={addUsuarioToGrupo}
+              isAddingUser={isAddingUser}
               grupoNombre={grupoInfo?.nombre || grupoNombre}
             />
           </div>
@@ -138,6 +176,8 @@ export const UsuariosGrupoView: React.FC<UsuariosGrupoViewProps> = ({
                 usuarios={usuariosFiltrados}
                 isLoading={isLoading}
                 onUserClick={handleUserClick}
+                onUserDelete={handleDeleteClick}
+                deletingUserId={isDeletingUser}
                 selectedUserId={selectedUserId || undefined}
                 showActions={false}
                 enableSorting={!isLoading && usuarios.length > 1}
@@ -147,6 +187,16 @@ export const UsuariosGrupoView: React.FC<UsuariosGrupoViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Modal de confirmación de eliminación */}
+      <ConfirmDeleteModal
+        isOpen={deleteModalState.isOpen}
+        userName={deleteModalState.usuarioNombre || 'Usuario'}
+        groupName={grupoInfo?.nombre || grupoNombre}
+        isDeleting={isDeletingUser === deleteModalState.usuarioId}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 };
