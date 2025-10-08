@@ -1,15 +1,54 @@
+# Dependencies
 node_modules
 npm-debug.log
+
+# Git
 .git
 .gitignore
-README.md
+.gitattributes
+
+# Environment files (se pasan como ARG)
 .env
-.env.local
-.env.production.local
-.env.test.local
-coverage
-.nyc_output
-.DS_Store
-*.log
+.env.*
+!.env.production
+
+# Build artifacts
 dist
 build
+coverage
+.nyc_output
+
+# Documentation (excluir para reducir tamaño)
+*.md
+*.MD
+README*
+CLAUDE.md
+*_README.md
+*_FIXES.md
+*_REPORT.md
+*_SUMMARY.md
+EJEMPLO_*.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs
+
+# Scripts de deploy (no necesarios dentro del contenedor)
+deploy.sh
+# scripts (COMENTADO: necesario para npm postinstall)
+
+# Docker files (no necesarios dentro del contenedor)
+Dockerfile
+docker-compose.yml
+.dockerignore
