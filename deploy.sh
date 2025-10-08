@@ -178,24 +178,7 @@ else
     exit 1
 fi
 
-# 4. Deploy con docker-compose
-log_info "Desplegando aplicación con docker-compose..."
-if sudo docker compose -f docker-compose.yml up -d; then
-    log_success "Aplicación desplegada exitosamente"
-else
-    log_error "Error al desplegar la aplicación"
-    exit 1
-fi
-
-# 5. Mostrar logs (opcional)
-log_info "¿Deseas ver los logs en tiempo real? (y/n)"
-read -r show_logs
-
-if [[ $show_logs == "y" || $show_logs == "Y" || $show_logs == "yes" || $show_logs == "YES" ]]; then
-    log_info "Mostrando logs en tiempo real... (Ctrl+C para salir)"
-    sudo docker logs -f iph-frontend
-else
-    log_success "Deploy completado. Para ver los logs usa: sudo docker logs -f <container_name>"
-fi
-
 log_success "¡Deploy finalizado exitosamente para la versión $VERSION!"
+log_info "Imágenes disponibles en DockerHub:"
+log_info "  - $DOCKER_USERNAME/$IMAGE_NAME:$VERSION"
+log_info "  - $DOCKER_USERNAME/$IMAGE_NAME:latest"

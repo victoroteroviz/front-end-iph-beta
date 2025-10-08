@@ -49,8 +49,9 @@ ENV VITE_APP_NAME=$VITE_APP_NAME
 # Se establece el directorio de trabajo
 WORKDIR /app
 
-# Se copian archivos de configuración
+# Se copian archivos de configuración y scripts necesarios para postinstall
 COPY package*.json ./
+COPY scripts ./scripts
 
 # Se instalan todas las dependencias (incluidas las de desarrollo)
 RUN npm ci
