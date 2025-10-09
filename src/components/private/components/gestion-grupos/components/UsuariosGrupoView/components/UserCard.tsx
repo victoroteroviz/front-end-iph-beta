@@ -113,8 +113,8 @@ export const UserCard: React.FC<UserCardProps> = React.memo(({
         </div>
       )}
 
-      {/* Botón de eliminar (siempre visible en parte inferior derecha) */}
-      {onDelete && (
+      {/* Botón de eliminar (visible según showActions) */}
+      {onDelete && showActions && (
         <div className="absolute bottom-3 right-3">
           <button
             onClick={handleDelete}

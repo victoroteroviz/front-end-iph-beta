@@ -33,15 +33,6 @@ const resultado = await eliminarUsuarioDeGrupo({
   grupoId: 'uuid-grupo'
 });
 
-// Resultado:
-// {
-//   status: true,
-//   message: "Usuario eliminado del grupo correctamente",
-//   data: {
-//     nombreUsuario: "Victor Javier Otero Vizcayno",
-//     nombreGrupo: "Ejemplo 1"
-//   }
-// }
 ```
 
 #### Utilidades disponibles
@@ -62,7 +53,7 @@ const validacion = validarParametrosEliminacion({
 
 // Formatear mensaje de confirmación
 const mensaje = formatearMensajeConfirmacion(resultado);
-// "Victor Javier Otero Vizcayno ha sido eliminado del grupo "Ejemplo 1" exitosamente."
+// "Cobra Okip ha sido eliminado del grupo "Ejemplo 1" exitosamente."
 
 // Verificar si la eliminación fue exitosa
 const exitoso = esEliminacionExitosa(resultado);
@@ -83,7 +74,7 @@ const USE_MOCK_DATA = false; // false = API real, true = datos mock
   "status": true,
   "message": "Usuario eliminado del grupo correctamente",
   "data": {
-    "nombreUsuario": "Victor Javier Otero Vizcayno",
+    "nombreUsuario": "Cobra Okip",
     "nombreGrupo": "Ejemplo 1"
   }
 }
@@ -289,7 +280,7 @@ El mock retorna:
   "status": true,
   "message": "Usuario eliminado del grupo correctamente",
   "data": {
-    "nombreUsuario": "Victor Javier Otero Vizcayno (MOCK)",
+    "nombreUsuario": "Cobra Okip (MOCK)",
     "nombreGrupo": "Grupo de Ejemplo (MOCK)"
   }
 }

@@ -56,15 +56,6 @@ const http: HttpHelper = HttpHelper.getInstance({
  *   grupoId: 'uuid-grupo'
  * });
  *
- * // Resultado:
- * // {
- * //   status: true,
- * //   message: "Usuario eliminado del grupo correctamente",
- * //   data: {
- * //     nombreUsuario: "Victor Javier Otero Vizcayno",
- * //     nombreGrupo: "Ejemplo 1"
- * //   }
- * // }
  * ```
  */
 export const eliminarUsuarioDeGrupo = async (
@@ -196,7 +187,7 @@ const getMockEliminar = async (
     status: true,
     message: 'Usuario eliminado del grupo correctamente',
     data: {
-      nombreUsuario: 'Victor Javier Otero Vizcayno (MOCK)',
+      nombreUsuario: 'Maria Linda (MOCK)',
       nombreGrupo: 'Grupo de Ejemplo (MOCK)'
     }
   };

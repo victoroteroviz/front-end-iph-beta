@@ -92,7 +92,6 @@ docker run --rm victoroteroviz/front-end-iph:latest cat /app/dist/assets/index-*
 
 Debe mostrar:
 ```javascript
-const It = "https://iph01.okip.com.mx/api"  // ✅ API de producción
 ```
 
 NO debe mostrar:

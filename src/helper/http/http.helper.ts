@@ -368,7 +368,11 @@ class HttpHelper {
 
         // Agregar el body del error al objeto de error
         // Esto permite que parseBackendError acceda a details.message
-        throw { ...httpError, ...errorBody };
+        if (errorBody && typeof errorBody === 'object' && !Array.isArray(errorBody)) {
+          throw { ...httpError, ...errorBody };
+        } else {
+          throw httpError;
+        }
       }
 
       return await this.processResponse<T>(response, startTime);
