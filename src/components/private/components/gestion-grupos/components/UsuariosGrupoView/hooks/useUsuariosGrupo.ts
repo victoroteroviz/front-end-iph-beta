@@ -34,12 +34,25 @@ interface BackendError {
     error?: string;
     statusCode?: number;
   };
+  details?: {
+    message?: string;
+    error?: string;
+    statusCode?: number;
+  };
   status?: number;
   message?: string;
+  timestamp?: string;
 }
 
 /**
  * Parsea errores del backend y extrae mensaje amigable
+ * Prioriza mensajes en el siguiente orden:
+ * 1. details.message (estructura más reciente del backend)
+ * 2. response.message (estructura anterior del backend)
+ * 3. message directo
+ * 4. Mapeo por código de estado HTTP
+ * 5. Mensaje por defecto
+ *
  * @param error - Error capturado del backend
  * @param defaultMessage - Mensaje por defecto si no se puede parsear
  * @returns Mensaje de error amigable para el usuario
@@ -49,19 +62,27 @@ const parseBackendError = (error: unknown, defaultMessage: string): string => {
   if (error && typeof error === 'object') {
     const backendError = error as BackendError;
 
-    // Prioridad 1: message dentro de response
+    // Prioridad 1: message dentro de details (nueva estructura)
+    if (backendError.details?.message) {
+      return backendError.details.message;
+    }
+
+    // Prioridad 2: message dentro de response (estructura anterior)
     if (backendError.response?.message) {
       return backendError.response.message;
     }
 
-    // Prioridad 2: message directo
+    // Prioridad 3: message directo
     if (backendError.message) {
       return backendError.message;
     }
 
-    // Prioridad 3: error genérico basado en statusCode
-    if (backendError.response?.statusCode || backendError.status) {
-      const statusCode = backendError.response?.statusCode || backendError.status;
+    // Prioridad 4: error genérico basado en statusCode
+    const statusCode = backendError.details?.statusCode ??
+                      backendError.response?.statusCode ??
+                      backendError.status;
+
+    if (statusCode) {
       return getErrorMessageByStatus(statusCode, defaultMessage);
     }
   }
@@ -110,7 +131,6 @@ interface UseUsuariosGrupoReturn {
   usuarios: IUsuarioGrupo[];
   grupoInfo: IObtenerUsuariosPorGrupo | null;
   usuariosFiltrados: IUsuarioGrupo[];
-  selectedUserId: string | null;
 
   // Estados UI
   isLoading: boolean;
@@ -124,8 +144,6 @@ interface UseUsuariosGrupoReturn {
   addUsuarioToGrupo: (usuario: IUsuarioBusqueda) => Promise<void>;
   removeUsuarioFromGrupo: (usuarioId: string) => Promise<void>;
   setSearchTerm: (term: string) => void;
-  selectUser: (userId: string | null) => void;
-  handleUserClick: (usuario: IUsuarioGrupo) => void;
 
   // Estadísticas
   stats: {
@@ -155,7 +173,6 @@ export const useUsuariosGrupo = ({
 
   // Estados de UI
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   // Cargar usuarios del grupo
   const loadUsuarios = useCallback(async () => {
@@ -297,20 +314,6 @@ export const useUsuariosGrupo = ({
     };
   }, [usuarios, usuariosFiltrados.length]);
 
-  // Manejar selección de usuario
-  const selectUser = useCallback((userId: string | null) => {
-    setSelectedUserId(userId);
-    if (userId) {
-      logInfo('useUsuariosGrupo', 'Usuario seleccionado', { userId, grupoUuid });
-    }
-  }, [grupoUuid]);
-
-  // Manejar clic en usuario (toggle selección)
-  const handleUserClick = useCallback((usuario: IUsuarioGrupo) => {
-    const newSelectedId = selectedUserId === usuario.id ? null : usuario.id;
-    selectUser(newSelectedId);
-  }, [selectedUserId, selectUser]);
-
   // Cargar usuarios al montar o cambiar grupoUuid
   useEffect(() => {
     if (grupoUuid) {
@@ -318,17 +321,11 @@ export const useUsuariosGrupo = ({
     }
   }, [grupoUuid, loadUsuarios]);
 
-  // Limpiar selección al cambiar búsqueda
-  useEffect(() => {
-    setSelectedUserId(null);
-  }, [searchTerm]);
-
   return {
     // Estado
     usuarios,
     grupoInfo,
     usuariosFiltrados,
-    selectedUserId,
 
     // Estados UI
     isLoading,
@@ -342,8 +339,6 @@ export const useUsuariosGrupo = ({
     addUsuarioToGrupo,
     removeUsuarioFromGrupo,
     setSearchTerm,
-    selectUser,
-    handleUserClick,
 
     // Estadísticas
     stats

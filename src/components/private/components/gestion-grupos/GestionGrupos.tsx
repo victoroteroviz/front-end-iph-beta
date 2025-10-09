@@ -56,25 +56,6 @@ const GestionGrupos: React.FC = () => {
     grupoNombre: null,
   });
 
-  // Hook de navegación para manejo del historial del navegador
-  const { pushNavigation: pushNavigationMain, goBack: goBackMain, scrollToTop: scrollToTopMain } = useNavigationHistory({
-    onNavigateBack: () => {
-      // Callback personalizado cuando se usa la flecha anterior del navegador
-      if (vistaUsuarios.mostrar) {
-        // Si estamos en vista de usuarios, volver a la lista
-        setVistaUsuarios({ mostrar: false, grupoId: null, grupoNombre: null });
-        scrollToTopMain();
-      } else {
-        // Si estamos en formulario, volver a la lista
-        setVistaActual('lista');
-        resetFormulario();
-        scrollToTopMain();
-      }
-    },
-    enableBrowserNavigation: true,
-    scrollToTopOnNavigation: true
-  });
-
   // Hook para gestión de grupos (usando API de usuario-grupo)
   const {
     // Estados
@@ -103,6 +84,7 @@ const GestionGrupos: React.FC = () => {
     updateFormulario,
     updateFiltros,
     resetFormulario,
+    loadGrupos,
 
     // Navegación
     navigateToFormulario,
@@ -110,6 +92,26 @@ const GestionGrupos: React.FC = () => {
     goBack,
     scrollToTop,
   } = useGestionGruposUnificado();
+
+  // Hook de navegación para manejo del historial del navegador
+  const { pushNavigation: pushNavigationMain, goBack: goBackMain, scrollToTop: scrollToTopMain } = useNavigationHistory({
+    onNavigateBack: async () => {
+      // Callback personalizado cuando se usa la flecha anterior del navegador
+      if (vistaUsuarios.mostrar) {
+        // Si estamos en vista de usuarios, volver a la lista y recargar grupos
+        setVistaUsuarios({ mostrar: false, grupoId: null, grupoNombre: null });
+        await loadGrupos();
+        scrollToTopMain();
+      } else {
+        // Si estamos en formulario, volver a la lista
+        setVistaActual('lista');
+        resetFormulario();
+        scrollToTopMain();
+      }
+    },
+    enableBrowserNavigation: true,
+    scrollToTopOnNavigation: true
+  });
 
   // Función para obtener breadcrumbs dinámicos
   const getBreadcrumbs = (): BreadcrumbItem[] => {
@@ -221,8 +223,10 @@ const GestionGrupos: React.FC = () => {
           <UsuariosGrupoView
             grupoUuid={vistaUsuarios.grupoId}
             grupoNombre={vistaUsuarios.grupoNombre || undefined}
-            onBack={() => {
+            onBack={async () => {
               setVistaUsuarios({ mostrar: false, grupoId: null, grupoNombre: null });
+              // Recargar grupos para actualizar el contador de usuarios
+              await loadGrupos();
               scrollToTopMain();
             }}
           />

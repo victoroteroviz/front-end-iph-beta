@@ -17,10 +17,8 @@ import type { IUsuarioGrupo } from '../../../../../../../interfaces/usuario-grup
 interface UserGridProps {
   usuarios: IUsuarioGrupo[];
   isLoading?: boolean;
-  onUserClick?: (usuario: IUsuarioGrupo) => void;
   onUserDelete?: (usuarioId: string) => void;
   deletingUserId?: string | null;
-  selectedUserId?: string;
   showActions?: boolean;
   enableSorting?: boolean;
   enableViewToggle?: boolean;
@@ -36,10 +34,8 @@ type ViewMode = 'grid' | 'list';
 export const UserGrid: React.FC<UserGridProps> = ({
   usuarios,
   isLoading = false,
-  onUserClick,
   onUserDelete,
   deletingUserId,
-  selectedUserId,
   showActions = false,
   enableSorting = true,
   enableViewToggle = true
@@ -223,8 +219,6 @@ export const UserGrid: React.FC<UserGridProps> = ({
           <UserCard
             key={usuario.id}
             usuario={usuario}
-            isSelected={selectedUserId === usuario.id}
-            onClick={onUserClick}
             onDelete={onUserDelete}
             isDeleting={deletingUserId === usuario.id}
             showActions={showActions}

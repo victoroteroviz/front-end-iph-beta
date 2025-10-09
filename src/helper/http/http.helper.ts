@@ -349,9 +349,26 @@ class HttpHelper {
       logHttp(fetchOptions.method || 'GET', url, response.status, duration);
 
       if (!response.ok) {
+        // Intentar extraer el body del error para obtener detalles del backend
+        let errorBody: unknown = null;
+        try {
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            errorBody = await response.clone().json();
+          } else {
+            errorBody = await response.clone().text();
+          }
+        } catch (parseError) {
+          console.warn('⚠️ No se pudo parsear el body del error:', parseError);
+        }
+
         const errorType = this.getErrorType(response.status);
         const errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        throw this.createHttpError(errorType, errorMessage, response, duration);
+        const httpError = this.createHttpError(errorType, errorMessage, response, duration);
+
+        // Agregar el body del error al objeto de error
+        // Esto permite que parseBackendError acceda a details.message
+        throw { ...httpError, ...errorBody };
       }
 
       return await this.processResponse<T>(response, startTime);

@@ -48,7 +48,6 @@ export const UsuariosGrupoView: React.FC<UsuariosGrupoViewProps> = ({
     usuarios,
     grupoInfo,
     usuariosFiltrados,
-    selectedUserId,
 
     // Estados UI
     isLoading,
@@ -61,8 +60,7 @@ export const UsuariosGrupoView: React.FC<UsuariosGrupoViewProps> = ({
     loadUsuarios,
     addUsuarioToGrupo,
     removeUsuarioFromGrupo,
-    setSearchTerm,
-    handleUserClick
+    setSearchTerm
   } = useUsuariosGrupo({ grupoUuid, grupoNombre });
 
   // Abrir modal de confirmación
@@ -175,10 +173,8 @@ export const UsuariosGrupoView: React.FC<UsuariosGrupoViewProps> = ({
               <UserGrid
                 usuarios={usuariosFiltrados}
                 isLoading={isLoading}
-                onUserClick={handleUserClick}
                 onUserDelete={handleDeleteClick}
                 deletingUserId={isDeletingUser}
-                selectedUserId={selectedUserId || undefined}
                 showActions={false}
                 enableSorting={!isLoading && usuarios.length > 1}
                 enableViewToggle={!isLoading && usuarios.length > 3}
