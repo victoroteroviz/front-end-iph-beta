@@ -30,12 +30,25 @@ interface BackendError {
     error?: string;
     statusCode?: number;
   };
+  details?: {
+    message?: string;
+    error?: string;
+    statusCode?: number;
+  };
   status?: number;
   message?: string;
+  timestamp?: string;
 }
 
 /**
  * Parsea errores del backend y extrae mensaje amigable
+ * Prioriza mensajes en el siguiente orden:
+ * 1. details.message (estructura más reciente del backend)
+ * 2. response.message (estructura anterior del backend)
+ * 3. message directo
+ * 4. Mapeo por código de estado HTTP
+ * 5. Mensaje por defecto
+ *
  * @param error - Error capturado del backend
  * @param defaultMessage - Mensaje por defecto si no se puede parsear
  * @returns Mensaje de error amigable para el usuario
@@ -45,18 +58,26 @@ const parseBackendError = (error: unknown, defaultMessage: string): string => {
   if (error && typeof error === 'object') {
     const backendError = error as BackendError;
 
-    // Prioridad 1: message dentro de response
+    // Prioridad 1: message dentro de details (nueva estructura)
+    if (backendError.details?.message) {
+      return backendError.details.message;
+    }
+
+    // Prioridad 2: message dentro de response (estructura anterior)
     if (backendError.response?.message) {
       return backendError.response.message;
     }
 
-    // Prioridad 2: message directo
+    // Prioridad 3: message directo
     if (backendError.message) {
       return backendError.message;
     }
 
-    // Prioridad 3: error genérico basado en statusCode
-    const statusCode = backendError.response?.statusCode ?? backendError.status;
+    // Prioridad 4: error genérico basado en statusCode
+    const statusCode = backendError.details?.statusCode ??
+                      backendError.response?.statusCode ??
+                      backendError.status;
+
     if (statusCode) {
       return getErrorMessageByStatus(statusCode, defaultMessage);
     }

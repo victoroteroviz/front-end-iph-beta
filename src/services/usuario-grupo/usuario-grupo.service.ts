@@ -271,29 +271,9 @@ export const asignarUsuarioAGrupo = async (request: IAsignarUsuarioGrupoRequest)
   } catch (error) {
     logError('usuario-grupo.service', error, 'Error al asignar usuario al grupo');
 
-    if (error instanceof Error) {
-      if (error.message.includes('404')) {
-        if (error.message.includes('Usuario')) {
-          throw new Error('Usuario no encontrado');
-        } else if (error.message.includes('Grupo')) {
-          throw new Error('Grupo no encontrado');
-        }
-        throw new Error('Usuario o grupo no encontrado');
-      }
-      if (error.message.includes('409') || error.message.includes('ya está asignado')) {
-        throw new Error('El usuario ya está asignado a un grupo');
-      }
-      if (error.message.includes('403')) {
-        throw new Error('No tienes permisos para asignar usuarios a grupos');
-      }
-      if (error.message.includes('401')) {
-        throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente');
-      }
-
-      throw new Error(error.message || 'Error al asignar el usuario al grupo');
-    }
-
-    throw new Error('Error desconocido al asignar el usuario al grupo. Contacta con soporte');
+    // Re-lanzar el error original sin transformarlo
+    // Esto permite que el componente use parseBackendError para extraer el mensaje correcto
+    throw error;
   }
 };
 

@@ -63,17 +63,21 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop con animación */}
+      {/* Backdrop con desenfoque gaussiano y animación */}
       <div
-        className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300"
+        className="absolute inset-0 bg-black/40 backdrop-blur-md transition-all duration-300"
         onClick={!isDeleting ? onCancel : undefined}
+        style={{
+          animation: 'backdropFadeIn 0.3s ease-out'
+        }}
       />
 
       {/* Modal con animación */}
       <div
-        className="relative bg-white rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all duration-300 scale-100 opacity-100"
+        className="relative bg-white rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all duration-300 scale-100 opacity-100 ring-1 ring-black/5"
         style={{
-          animation: 'modalFadeIn 0.3s ease-out'
+          animation: 'modalFadeIn 0.3s ease-out',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)'
         }}
       >
         {/* Botón cerrar */}
@@ -179,15 +183,32 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
 
       {/* Estilos de animación */}
       <style>{`
-        @keyframes modalFadeIn {
+        @keyframes backdropFadeIn {
           from {
             opacity: 0;
-            transform: scale(0.95);
+            backdrop-filter: blur(0px);
           }
           to {
             opacity: 1;
-            transform: scale(1);
+            backdrop-filter: blur(12px);
           }
+        }
+
+        @keyframes modalFadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95) translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        /* Asegurar que el backdrop blur funcione en todos los navegadores */
+        .backdrop-blur-md {
+          -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(12px);
         }
       `}</style>
     </div>

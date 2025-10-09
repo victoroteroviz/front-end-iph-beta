@@ -13,8 +13,6 @@ import type { IUsuarioGrupo } from '../../../../../../../interfaces/usuario-grup
 
 interface UserCardProps {
   usuario: IUsuarioGrupo;
-  isSelected?: boolean;
-  onClick?: (usuario: IUsuarioGrupo) => void;
   onDelete?: (usuarioId: string) => void;
   isDeleting?: boolean;
   showActions?: boolean;
@@ -25,20 +23,12 @@ interface UserCardProps {
  */
 export const UserCard: React.FC<UserCardProps> = React.memo(({
   usuario,
-  isSelected = false,
-  onClick,
   onDelete,
   isDeleting = false,
   showActions = false
 }) => {
-  const handleClick = () => {
-    if (onClick && !isDeleting) {
-      onClick(usuario);
-    }
-  };
-
   const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Evitar que se active el onClick del card
+    e.stopPropagation();
     if (onDelete && !isDeleting) {
       onDelete(usuario.id);
     }
@@ -48,23 +38,10 @@ export const UserCard: React.FC<UserCardProps> = React.memo(({
     <div
       className={`
         relative bg-white border-2 rounded-xl p-5 transition-all duration-300
-        ${!isDeleting && 'cursor-pointer hover:shadow-md hover:transform hover:scale-[1.02]'}
-        ${isDeleting && 'opacity-60 cursor-not-allowed'}
-        ${isSelected
-          ? 'border-blue-300 shadow-lg bg-blue-50/30'
-          : 'border-gray-200 hover:border-gray-300'
-        }
+        border-gray-200
+        ${isDeleting && 'opacity-60'}
       `}
-      onClick={handleClick}
     >
-      {/* Indicador de selección */}
-      {isSelected && (
-        <div
-          className="absolute -top-1 -right-1 w-4 h-4 rounded-full"
-          style={{ backgroundColor: COLORS.primary }}
-        />
-      )}
-
       {/* Header del usuario */}
       <div className="flex items-start space-x-4 mb-4">
         <div
