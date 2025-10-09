@@ -24,8 +24,8 @@ export const MESSAGES = {
   // Placeholders
   placeholders: {
     searchGrupos: 'Buscar grupos por nombre...',
-    nombreGrupo: 'Ej: Administradores de Sistema',
-    descripcionGrupo: 'Ej: Grupo con permisos administrativos completos',
+    nombreGrupo: 'Ej: Grupo Táctico Operativo',
+    descripcionGrupo: 'Ej: Unidad especializada en operaciones de alto riesgo y respuesta inmediata',
     usuarioId: 'Ingresa el ID del usuario',
     selectGrupo: 'Selecciona un grupo',
   },

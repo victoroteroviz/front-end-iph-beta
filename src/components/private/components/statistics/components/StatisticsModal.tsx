@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import type { IStatisticCard } from '../../../../../interfaces/IStatistic';
 import UsuariosIphStats from './UsuariosIphStats';
+import EstadisticasJC from '../EstadisticasJC';
 import './StatisticsModal.css';
 
 interface StatisticsModalProps {
@@ -53,6 +54,9 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, on
     switch (statistic.id) {
       case 'usuarios-iph':
         return <UsuariosIphStats onError={handleError} />;
+
+      case 'justicia-civica':
+        return <EstadisticasJC />;
 
       // Aquí puedes agregar más casos para otros tipos de estadísticas
       default:

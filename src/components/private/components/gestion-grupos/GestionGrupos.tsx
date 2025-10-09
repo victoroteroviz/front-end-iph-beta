@@ -19,7 +19,7 @@ import { useGestionGruposUnificado } from './hooks/useGestionGruposUnificado';
 import { useNavigationHistory } from './hooks/useNavigationHistory';
 
 //+ Componentes
-import { SearchInput, StatsCard, GrupoCard, ConfirmDialog } from './components/shared';
+import { SearchInput, GrupoCard, ConfirmDialog } from './components/shared';
 import { GrupoForm } from './components/GrupoForm';
 import { UsuariosGrupoView } from './components/UsuariosGrupoView';
 
@@ -64,7 +64,6 @@ const GestionGrupos: React.FC = () => {
     grupoSeleccionado,
     formulario,
     filtros,
-    estadisticas,
 
     // Estados de carga
     isLoading,
@@ -287,28 +286,6 @@ const GestionGrupos: React.FC = () => {
                     </button>
                   )}
                 </div>
-              </div>
-
-              {/* Estadísticas */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <StatsCard
-                  label={MESSAGES.labels.totalGrupos}
-                  value={estadisticas.totalGrupos}
-                  valueColor="primary"
-                  isLoading={isLoading}
-                />
-                <StatsCard
-                  label={MESSAGES.labels.gruposActivos}
-                  value={estadisticas.gruposActivos}
-                  valueColor="success"
-                  isLoading={isLoading}
-                />
-                <StatsCard
-                  label={MESSAGES.labels.gruposInactivos}
-                  value={estadisticas.gruposInactivos}
-                  valueColor="error"
-                  isLoading={isLoading}
-                />
               </div>
             </div>
 
