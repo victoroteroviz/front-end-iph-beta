@@ -93,34 +93,17 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
   const hasActiveFilters = (filters.search && filters.search.length > 0);
 
   return (
-    <div className={`bg-gradient-to-br from-white via-[#fdf7f1] to-white rounded-xl shadow-lg border border-gray-100 p-6 mb-8 backdrop-blur-sm ${className}`}>
-      {/* Título con diseño mejorado */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-[#c2b186] to-[#4d4725] rounded-lg shadow-md">
-            <Filter className="h-5 w-5 text-white" />
+    <div className={className}>
+      {/* Indicador de búsqueda activa mejorado */}
+      {hasActiveFilters && (
+        <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-full shadow-sm mb-6 w-fit">
+          <div className="relative">
+            <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
+            <div className="absolute inset-0 w-3 h-3 bg-blue-400 rounded-full animate-ping opacity-75" />
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-[#4d4725] font-poppins">
-              Filtros de Búsqueda
-            </h2>
-            <p className="text-sm text-gray-600 font-poppins">
-              Encuentra informes policiales específicos
-            </p>
-          </div>
+          <span className="text-sm font-medium text-blue-700 font-poppins">Filtros aplicados</span>
         </div>
-
-        {/* Indicador de búsqueda activa mejorado */}
-        {hasActiveFilters && (
-          <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-full shadow-sm">
-            <div className="relative">
-              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
-              <div className="absolute inset-0 w-3 h-3 bg-blue-400 rounded-full animate-ping opacity-75" />
-            </div>
-            <span className="text-sm font-medium text-blue-700 font-poppins">Filtros aplicados</span>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Controles de filtro mejorados */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
@@ -261,7 +244,7 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
 
 
       {/* Botones de acción mejorados */}
-      <div className="flex flex-col sm:flex-row gap-4 mt-8 justify-between items-stretch sm:items-center">
+      <div className="flex flex-col sm:flex-row gap-4 mt-6 justify-between items-stretch sm:items-center">
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Botón Buscar */}
           <button
@@ -335,7 +318,7 @@ const IPHFilters: React.FC<IIPHFiltersProps> = ({
 
       {/* Indicadores de filtros activos mejorados */}
       {hasActiveFilters && (
-        <div className="mt-6 pt-6 border-t border-gradient-to-r from-transparent via-gray-200 to-transparent">
+        <div className="mt-6 pt-6 border-t border-gray-200">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />

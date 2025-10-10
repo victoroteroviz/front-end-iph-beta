@@ -347,7 +347,7 @@ const EstadisticasCards: React.FC<EstadisticasCardsProps> = React.memo(({
   ], [baseCardsConfig, statusCardsConfig]);
 
   return (
-    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 ${className}`}>
+    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 pt-2 ${className}`}>
       {cardsConfig.map((cardConfig) => (
         <StatCard
           key={cardConfig.key}

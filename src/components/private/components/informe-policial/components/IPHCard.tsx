@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Scale, Clock, User } from 'lucide-react';
+import { Scale, Clock, User, Fingerprint, FileText, Shield } from 'lucide-react';
 import type {
   IIPHCardProps
 } from '../../../../../interfaces/components/informe-policial.interface';
@@ -43,6 +43,29 @@ const getBorderColor = (tipoNombre?: string): string => {
   return '#c2b186'; // Color original del proyecto
 };
 
+/**
+ * Determina el icono correcto según el tipo de IPH
+ */
+const getIconByType = (tipoNombre?: string): React.ComponentType<{ size?: number; className?: string }> => {
+  // Caso corrupto: tipo undefined, null o vacío
+  if (!tipoNombre || tipoNombre.trim() === '') {
+    return FileText; // Icono genérico para errores
+  }
+
+  // Justicia Cívica - Balanza de justicia
+  if (tipoNombre.includes('Justicia Cívica')) {
+    return Scale;
+  }
+
+  // Hechos Probablemente Delictivos - Huella digital
+  if (tipoNombre.includes('Hechos Probablemente Delictivos')) {
+    return Fingerprint;
+  }
+
+  // Fallback: Balanza de justicia
+  return Scale;
+};
+
 const IPHCard: React.FC<IIPHCardProps> = ({
   registro,
   onClick,
@@ -56,8 +79,9 @@ const IPHCard: React.FC<IIPHCardProps> = ({
     onClick(registro);
   };
 
-  // Obtener color de borde para la card
+  // Obtener color de borde e icono para la card
   const borderColor = getBorderColor(registro.tipo?.nombre);
+  const CardIcon = getIconByType(registro.tipo?.nombre);
   const isActive = isStatusActive(registro.estatus);
   const statusDescription = getStatusDescription(registro);
 
@@ -127,15 +151,21 @@ const IPHCard: React.FC<IIPHCardProps> = ({
 
       {/* Contenido principal */}
       <div className="space-y-2 mb-3">
-        {/* Tipo */}
-        <p className="text-sm font-poppins text-gray-600 truncate">
-          <span className="font-medium">Tipo:</span> {registro.tipo?.nombre || 'No especificado'}
-        </p>
-        
-        {/* Folio */}
-        <p className="text-sm font-poppins text-gray-600 truncate">
-          <span className="font-medium">Folio:</span> {registro.n_folio_sist}
-        </p>
+        {/* Tipo con icono */}
+        <div className="flex items-center gap-2 text-sm font-poppins text-gray-600">
+          <Shield className="h-4 w-4 flex-shrink-0 text-[#4d4725]" />
+          <span className="truncate">
+            <span className="font-medium">Tipo:</span> {registro.tipo?.nombre || 'No especificado'}
+          </span>
+        </div>
+
+        {/* Folio con icono */}
+        <div className="flex items-center gap-2 text-sm font-poppins text-gray-600">
+          <FileText className="h-4 w-4 flex-shrink-0 text-[#4d4725]" />
+          <span className="truncate">
+            <span className="font-medium">Folio:</span> {registro.n_folio_sist}
+          </span>
+        </div>
 
         {/* Información adicional */}
         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
@@ -145,7 +175,7 @@ const IPHCard: React.FC<IIPHCardProps> = ({
               <span className="truncate">{formatCreationDate(registro.fecha_creacion)}</span>
             </div>
           )}
-          
+
           {registro.usuario_id && (
             <div className="flex items-center gap-1">
               <User className="h-3 w-3 flex-shrink-0" />
@@ -158,24 +188,27 @@ const IPHCard: React.FC<IIPHCardProps> = ({
       {/* Footer con badge e ícono */}
       <div className="flex justify-between items-center">
         {/* Badge de estatus */}
-        <span 
+        <span
           className={`
             inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-            ${isActive 
-              ? 'bg-green-100 text-green-800 border border-green-200' 
+            ${isActive
+              ? 'bg-green-100 text-green-800 border border-green-200'
               : 'bg-red-100 text-red-800 border border-red-200'
             }
           `}
         >
-          <div 
-            className={`w-1.5 h-1.5 rounded-full mr-1 ${isActive ? 'bg-green-500' : 'bg-red-500'}`} 
+          <div
+            className={`w-1.5 h-1.5 rounded-full mr-1 ${isActive ? 'bg-green-500' : 'bg-red-500'}`}
           />
           <span className="truncate max-w-20">{registro.estatus?.nombre || 'Sin estado'}</span>
         </span>
 
-        {/* Icono */}
-        <div className="flex-shrink-0 ml-2">
-          <Scale size={32} className="text-[#b8ab84]" />
+        {/* Icono dinámico según tipo */}
+        <div
+          className="flex-shrink-0 ml-2 p-2 rounded-lg bg-gradient-to-br from-[#f8f0e7] to-white border border-gray-200"
+          style={{ borderColor: borderColor }}
+        >
+          <CardIcon size={24} className="text-[#4d4725]" />
         </div>
       </div>
 
