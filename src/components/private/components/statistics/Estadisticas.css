@@ -56,6 +56,7 @@
   overflow: hidden;
   display: flex;
   gap: 1rem;
+  outline: none;
 }
 
 .stat-card:hover:not(.disabled) {
@@ -63,6 +64,11 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border-color: #c2b186;
   background: #fdf7f1;
+}
+
+.stat-card:focus-visible {
+  outline: 2px solid #4d4725;
+  outline-offset: 2px;
 }
 
 .stat-card.disabled {

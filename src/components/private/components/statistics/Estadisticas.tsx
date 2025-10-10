@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import type { IStatisticCard } from '../../../../interfaces/IStatistic';
 import { statisticsCardsConfig } from './config';
 import StatisticsModal from './components/StatisticsModal';
@@ -10,27 +10,35 @@ const Estadisticas: React.FC = () => {
   const [selectedStat, setSelectedStat] = useState<IStatisticCard | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleCardClick = (stat: IStatisticCard) => {
+  /**
+   * Manejar clic en tarjeta de estadística
+   */
+  const handleCardClick = useCallback((stat: IStatisticCard) => {
     if (stat.habilitado) {
       setSelectedStat(stat);
       setIsModalOpen(true);
       console.log(`Abriendo modal de: ${stat.titulo}`);
+    } else {
+      console.log(`La estadística "${stat.titulo}" está deshabilitada`);
     }
-  };
+  }, []);
 
-  const handleCloseModal = () => {
+  /**
+   * Cerrar modal de estadística
+   */
+  const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     // Pequeño delay antes de limpiar la estadística seleccionada para que la animación se vea bien
     setTimeout(() => {
       setSelectedStat(null);
     }, 300);
-  };
+  }, []);
 
   return (
     <div className="estadisticas-container">
       <div className="estadisticas-header">
         <h1>Panel de Estadísticas</h1>
-        <p>Explora y analiza diferentes métricas de tu negocio</p>
+        <p>Explora y analiza diferentes métricas del sistema IPH</p>
       </div>
 
       <div className="estadisticas-content">
@@ -40,6 +48,16 @@ const Estadisticas: React.FC = () => {
               key={stat.id}
               className={`stat-card ${!stat.habilitado ? 'disabled' : ''}`}
               onClick={() => handleCardClick(stat)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleCardClick(stat);
+                }
+              }}
+              role="button"
+              tabIndex={stat.habilitado ? 0 : -1}
+              aria-label={`${stat.titulo}: ${stat.descripcion}`}
+              aria-disabled={!stat.habilitado}
               style={{ borderColor: stat.habilitado ? stat.color : undefined }}
             >
               <div className="stat-card-icon" style={{ backgroundColor: stat.habilitado ? stat.color : undefined }}>

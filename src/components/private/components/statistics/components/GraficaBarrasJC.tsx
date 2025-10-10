@@ -102,6 +102,10 @@ export const GraficaBarrasJC: React.FC<GraficaBarrasJCProps> = ({
   const options: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+      duration: 750,
+      easing: 'easeInOutQuart'
+    },
     plugins: {
       legend: {
         display: false
@@ -161,7 +165,7 @@ export const GraficaBarrasJC: React.FC<GraficaBarrasJCProps> = ({
         ticks: {
           stepSize: 1,
           callback: (value) => {
-            return Number.isInteger(value) ? value : '';
+            return Number.isInteger(value) ? value.toLocaleString() : '';
           },
           font: {
             size: 12
@@ -170,6 +174,9 @@ export const GraficaBarrasJC: React.FC<GraficaBarrasJCProps> = ({
         },
         grid: {
           color: 'rgba(0, 0, 0, 0.05)'
+        },
+        border: {
+          display: false
         }
       },
       x: {
@@ -181,6 +188,9 @@ export const GraficaBarrasJC: React.FC<GraficaBarrasJCProps> = ({
           color: '#1a202c'
         },
         grid: {
+          display: false
+        },
+        border: {
           display: false
         }
       }

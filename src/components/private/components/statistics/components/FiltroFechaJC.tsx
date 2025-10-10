@@ -1,9 +1,11 @@
 /**
  * Componente de filtros de fecha para estadísticas JC
  * Permite seleccionar año, mes y día
+ *
+ * @optimized Usa React.memo y useCallback para evitar re-renders innecesarios
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 interface FiltroFechaJCProps {
   /** Año inicial */
@@ -21,7 +23,7 @@ interface FiltroFechaJCProps {
 /**
  * Filtros de fecha para estadísticas JC
  */
-export const FiltroFechaJC: React.FC<FiltroFechaJCProps> = ({
+const FiltroFechaJCComponent: React.FC<FiltroFechaJCProps> = ({
   anioInicial,
   mesInicial,
   diaInicial,
@@ -39,12 +41,14 @@ export const FiltroFechaJC: React.FC<FiltroFechaJCProps> = ({
     setDia(diaInicial);
   }, [anioInicial, mesInicial, diaInicial]);
 
-  // Generar opciones de años (últimos 5 años)
-  const anioActual = new Date().getFullYear();
-  const anios = Array.from({ length: 5 }, (_, i) => anioActual - i);
+  // Generar opciones de años (últimos 5 años) - memoizado para evitar recalcular
+  const anios = useMemo(() => {
+    const anioActual = new Date().getFullYear();
+    return Array.from({ length: 5 }, (_, i) => anioActual - i);
+  }, []);
 
-  // Meses del año
-  const meses = [
+  // Meses del año - memoizado para evitar recrear en cada render
+  const meses = useMemo(() => [
     { value: 1, label: 'Enero' },
     { value: 2, label: 'Febrero' },
     { value: 3, label: 'Marzo' },
@@ -57,25 +61,28 @@ export const FiltroFechaJC: React.FC<FiltroFechaJCProps> = ({
     { value: 10, label: 'Octubre' },
     { value: 11, label: 'Noviembre' },
     { value: 12, label: 'Diciembre' }
-  ];
+  ], []);
 
-  // Calcular días del mes
-  const obtenerDiasDelMes = (anio: number, mes: number): number => {
+  // Calcular días del mes - memoizado
+  const obtenerDiasDelMes = useCallback((anio: number, mes: number): number => {
     return new Date(anio, mes, 0).getDate();
-  };
+  }, []);
 
-  const diasDelMes = obtenerDiasDelMes(anio, mes);
-  const dias = Array.from({ length: diasDelMes }, (_, i) => i + 1);
+  // Días disponibles según el mes seleccionado
+  const dias = useMemo(() => {
+    const diasDelMes = obtenerDiasDelMes(anio, mes);
+    return Array.from({ length: diasDelMes }, (_, i) => i + 1);
+  }, [anio, mes, obtenerDiasDelMes]);
 
-  // Manejar cambio de año
-  const handleAnioChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  // Manejar cambio de año - useCallback para evitar recrear la función
+  const handleAnioChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const nuevoAnio = parseInt(e.target.value);
     setAnio(nuevoAnio);
     onFechaChange(nuevoAnio, mes, dia);
-  };
+  }, [mes, dia, onFechaChange]);
 
-  // Manejar cambio de mes
-  const handleMesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  // Manejar cambio de mes - useCallback
+  const handleMesChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const nuevoMes = parseInt(e.target.value);
     setMes(nuevoMes);
 
@@ -85,17 +92,17 @@ export const FiltroFechaJC: React.FC<FiltroFechaJCProps> = ({
     setDia(nuevoDia);
 
     onFechaChange(anio, nuevoMes, nuevoDia);
-  };
+  }, [anio, dia, onFechaChange, obtenerDiasDelMes]);
 
-  // Manejar cambio de día
-  const handleDiaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  // Manejar cambio de día - useCallback
+  const handleDiaChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const nuevoDia = parseInt(e.target.value);
     setDia(nuevoDia);
     onFechaChange(anio, mes, nuevoDia);
-  };
+  }, [anio, mes, onFechaChange]);
 
-  // Establecer fecha de hoy
-  const establecerHoy = () => {
+  // Establecer fecha de hoy - useCallback
+  const establecerHoy = useCallback(() => {
     const hoy = new Date();
     const nuevoAnio = hoy.getFullYear();
     const nuevoMes = hoy.getMonth() + 1;
@@ -106,7 +113,17 @@ export const FiltroFechaJC: React.FC<FiltroFechaJCProps> = ({
     setDia(nuevoDia);
 
     onFechaChange(nuevoAnio, nuevoMes, nuevoDia);
-  };
+  }, [onFechaChange]);
+
+  // Verificar si la fecha seleccionada es hoy - memoizado
+  const esHoy = useMemo(() => {
+    const hoy = new Date();
+    return (
+      anio === hoy.getFullYear() &&
+      mes === hoy.getMonth() + 1 &&
+      dia === hoy.getDate()
+    );
+  }, [anio, mes, dia]);
 
   return (
     <div className="filtro-fecha-jc">
@@ -115,7 +132,8 @@ export const FiltroFechaJC: React.FC<FiltroFechaJCProps> = ({
         <button
           className="btn-hoy"
           onClick={establecerHoy}
-          disabled={loading}
+          disabled={loading || esHoy}
+          title={esHoy ? 'Ya está seleccionada la fecha de hoy' : 'Seleccionar fecha de hoy'}
         >
           Hoy
         </button>
@@ -182,5 +200,9 @@ export const FiltroFechaJC: React.FC<FiltroFechaJCProps> = ({
     </div>
   );
 };
+
+// Memoizar el componente para evitar re-renders innecesarios
+// Solo se re-renderizará si cambian las props
+export const FiltroFechaJC = React.memo(FiltroFechaJCComponent);
 
 export default FiltroFechaJC;

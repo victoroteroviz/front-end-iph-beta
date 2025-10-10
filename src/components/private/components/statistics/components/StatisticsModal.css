@@ -139,14 +139,15 @@
 /* Modal Body */
 .statistics-modal-body {
   flex: 1;
-  padding: 2rem;
+  padding: 0;
   overflow-y: auto;
   min-height: 300px;
+  position: relative;
 }
 
 /* Scrollbar personalizado para el body del modal */
 .statistics-modal-body::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .statistics-modal-body::-webkit-scrollbar-track {

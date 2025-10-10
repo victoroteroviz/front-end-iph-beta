@@ -8,9 +8,8 @@
  * @uses FiltroFechaJC - Componente atómico de filtros
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useEstadisticasJC } from './hooks/useEstadisticasJC';
-import EstadisticaJCCard from './components/EstadisticaJCCard';
 import FiltroFechaJC from './components/FiltroFechaJC';
 import GraficaBarrasJC from './components/GraficaBarrasJC';
 import GraficaPromedioJC from './components/GraficaPromedioJC';
@@ -29,6 +28,18 @@ export const EstadisticasJC: React.FC = () => {
     obtenerTodasLasEstadisticas,
     actualizarFecha
   } = useEstadisticasJC();
+
+  // Estado para controlar si hay errores críticos
+  const [hayErrorCritico, setHayErrorCritico] = useState(false);
+
+  // Detectar errores críticos
+  useEffect(() => {
+    const tieneErrores = error.diaria || error.mensual || error.anual;
+    setHayErrorCritico(!!tieneErrores);
+  }, [error]);
+
+  // NOTA: El modo compacto ahora se maneja 100% con CSS
+  // No hay lógica de JavaScript para evitar bucles de scroll
 
   /**
    * Manejar cambio de fecha en los filtros
@@ -62,11 +73,35 @@ export const EstadisticasJC: React.FC = () => {
           className="btn-refresh"
           onClick={handleRefresh}
           disabled={loading.diaria || loading.mensual || loading.anual}
+          title="Actualizar estadísticas"
+          aria-label="Actualizar estadísticas"
         >
           <span className="refresh-icon">🔄</span>
           Actualizar
         </button>
       </div>
+
+      {/* Mensaje de error crítico */}
+      {hayErrorCritico && (
+        <div className="estadisticas-jc-error">
+          <div className="error-content">
+            <span className="error-icon">⚠️</span>
+            <div className="error-text">
+              <strong>Error al cargar estadísticas</strong>
+              <p>
+                {error.diaria || error.mensual || error.anual}
+              </p>
+            </div>
+          </div>
+          <button
+            className="error-retry-btn"
+            onClick={handleRefresh}
+            disabled={loading.diaria || loading.mensual || loading.anual}
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
 
       {/* Filtros de Fecha */}
       <div className="estadisticas-jc-filtros">

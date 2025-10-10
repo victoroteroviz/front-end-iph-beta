@@ -24,8 +24,88 @@
   display: none; /* Ocultar header porque el modal ya tiene su propio header */
 }
 
+/* Filtros sticky dentro del modal */
+.statistics-modal-body .estadisticas-jc-filtros {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin-bottom: 2rem; /* Aumentado de 1.5rem a 2rem */
+  padding: 1.25rem 2rem 1rem 2rem;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  /* Transición más suave y natural */
+  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              margin-bottom 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sombra más pronunciada cuando el filtro está pegado */
+.statistics-modal-body .estadisticas-jc-filtros.is-stuck {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* MODO COMPACTO - Ocultar elementos cuando está sticky */
+.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-header {
+  display: none; /* Ocultar completamente para evitar reflow */
+}
+
+.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada {
+  display: none; /* Ocultar completamente para evitar reflow */
+}
+
+/* Ocultar labels en modo compacto */
+.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-campo label {
+  display: none;
+}
+
+/* Reducir padding cuando está compacto */
+.statistics-modal-body .estadisticas-jc-filtros.is-compact {
+  padding: 0.5rem 2rem;
+  margin-bottom: 1.5rem; /* Reducir margin en modo compacto */
+  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              margin-bottom 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hacer los selects más compactos */
+.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-select {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              font-size 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reducir gap entre selects en modo compacto */
+.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-controls {
+  gap: 0.5rem;
+  transition: gap 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animación suave para los controles */
+.statistics-modal-body .filtro-controls {
+  transition: gap 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.statistics-modal-body .filtro-fecha-jc {
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
+  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Contenido con padding dentro del modal */
+.statistics-modal-body .estadisticas-jc-graficas,
+.statistics-modal-body .estadisticas-jc-resumen {
+  margin-left: 2rem;
+  margin-right: 2rem;
+}
+
 .statistics-modal-body .estadisticas-jc-footer {
-  margin-top: 1.5rem;
+  margin: 1.5rem 2rem 2rem 2rem;
+}
+
+/* Error dentro del modal */
+.statistics-modal-body .estadisticas-jc-error {
+  margin: 1.5rem 2rem;
 }
 
 /* ===================================
@@ -97,11 +177,126 @@
 }
 
 /* ===================================
+   MENSAJE DE ERROR
+   =================================== */
+
+.estadisticas-jc-error {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.5rem;
+  background: #fee;
+  border: 2px solid #fcc;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
+}
+
+.error-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1;
+}
+
+.error-icon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.error-text strong {
+  display: block;
+  color: #991b1b;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.error-text p {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.error-retry-btn {
+  padding: 0.625rem 1.25rem;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.error-retry-btn:hover:not(:disabled) {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.error-retry-btn:disabled {
+  background: #fca5a5;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* ===================================
    FILTROS
    =================================== */
 
 .estadisticas-jc-filtros {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
   margin-bottom: 2rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%);
+  padding: 1rem 0;
+  /* Transición optimizada sin 'all' */
+  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sombra cuando el filtro está sticky (pegado al top) */
+.estadisticas-jc-filtros.is-stuck {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.estadisticas-jc-filtros.is-stuck .filtro-fecha-jc {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* MODO COMPACTO - Cuando el filtro está sticky */
+.estadisticas-jc-filtros.is-compact .filtro-header {
+  display: none !important;
+}
+
+.estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada {
+  display: none !important;
+}
+
+/* Ocultar labels en modo compacto */
+.estadisticas-jc-filtros.is-compact .filtro-campo label {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Reducir espacio en modo compacto */
+.estadisticas-jc-filtros.is-compact .filtro-fecha-jc {
+  padding: 0.75rem 1.5rem !important;
+}
+
+/* Selects más compactos */
+.estadisticas-jc-filtros.is-compact .filtro-select {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+}
+
+/* Reducir gap en modo compacto */
+.estadisticas-jc-filtros.is-compact .filtro-controls {
+  gap: 0.75rem !important;
 }
 
 .filtro-fecha-jc {
@@ -109,6 +304,8 @@
   padding: 1.5rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .filtro-header {
@@ -146,17 +343,10 @@
 }
 
 .filtro-controls {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: white;
-  padding: 1rem;
-  margin: -1rem -1.5rem 1rem -1.5rem;
-  border-radius: 12px 12px 0 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1rem;
+  padding: 0;
 }
 
 .filtro-campo {
@@ -482,6 +672,81 @@
     padding: 1rem;
   }
 
+  /* Ajustar sticky en móviles */
+  .estadisticas-jc-filtros {
+    top: 0;
+    padding: 0.25rem 0;
+  }
+
+  .filtro-fecha-jc {
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  /* Modo compacto en móviles */
+  .estadisticas-jc-filtros.is-compact .filtro-fecha-jc {
+    padding: 0.5rem 1rem !important;
+  }
+
+  .estadisticas-jc-filtros.is-compact .filtro-campo label {
+    display: none !important; /* Asegurar que los labels estén ocultos en móvil también */
+    visibility: hidden !important;
+  }
+
+  .estadisticas-jc-filtros.is-compact .filtro-select {
+    padding: 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .estadisticas-jc-filtros.is-compact .filtro-controls {
+    gap: 0.5rem !important;
+  }
+
+  .estadisticas-jc-filtros.is-compact .filtro-header {
+    display: none !important;
+  }
+
+  .estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada {
+    display: none !important;
+  }
+
+  /* Ajustes para el modal en móvil */
+  .statistics-modal-body .estadisticas-jc-filtros {
+    padding: 1rem 1rem 0.75rem 1rem;
+  }
+
+  .statistics-modal-body .estadisticas-jc-filtros.is-compact {
+    padding: 0.5rem 1rem !important;
+  }
+
+  .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-campo label {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-select {
+    padding: 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-controls {
+    gap: 0.5rem !important;
+  }
+
+  .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-header {
+    display: none !important;
+  }
+
+  .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada {
+    display: none !important;
+  }
+
+  .statistics-modal-body .estadisticas-jc-graficas,
+  .statistics-modal-body .estadisticas-jc-resumen {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+
   .estadisticas-jc-header {
     flex-direction: column;
     gap: 1rem;
@@ -500,6 +765,16 @@
     grid-template-columns: 1fr;
   }
 
+  .filtro-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+
+  .btn-hoy {
+    width: 100%;
+  }
+
   .estadisticas-jc-grid {
     grid-template-columns: 1fr;
   }
@@ -509,6 +784,25 @@
   }
 
   .promedio-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .graficas-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tablet responsiveness */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .estadisticas-jc-filtros {
+    padding: 0.35rem 0;
+  }
+
+  .filtro-controls {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .graficas-grid {
     grid-template-columns: 1fr;
   }
 }
