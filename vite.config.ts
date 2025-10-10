@@ -27,6 +27,44 @@ export default defineConfig(({ mode }) => {
     preview: {
       host: '0.0.0.0',
       port: 4173
+    },
+    build: {
+      // Optimización de chunks para mejor code splitting
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Vendor chunks - librerías principales
+            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+
+            // Charts y visualización
+            'charts-vendor': ['chart.js', 'react-chartjs-2', 'chartjs-plugin-datalabels'],
+
+            // UI y utilidades
+            'ui-vendor': ['lucide-react', 'react-select', 'react-window'],
+
+            // Mapas (si InformeEjecutivo usa leaflet)
+            'maps-vendor': ['leaflet', 'react-leaflet'],
+
+            // Validación y forms
+            'forms-vendor': ['zod', 'react-hook-form']
+          },
+          // Nombres de chunks más descriptivos
+          chunkFileNames: (chunkInfo) => {
+            const facadeModuleId = chunkInfo.facadeModuleId
+              ? chunkInfo.facadeModuleId.split('/').pop()
+              : 'chunk';
+            return `assets/js/${facadeModuleId}-[hash].js`;
+          },
+          entryFileNames: 'assets/js/[name]-[hash].js',
+          assetFileNames: 'assets/[ext]/[name]-[hash].[ext]'
+        }
+      },
+      // Aumentar límite de warnings de chunk size (opcional)
+      chunkSizeWarningLimit: 1000,
+      // Minificación optimizada
+      minify: 'esbuild',
+      // Source maps solo en desarrollo
+      sourcemap: isDevelopment
     }
   };
 
