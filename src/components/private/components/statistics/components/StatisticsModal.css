@@ -141,27 +141,37 @@
   flex: 1;
   padding: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   min-height: 300px;
   position: relative;
+  /* Scroll suave y optimizado */
+  scroll-behavior: smooth;
+  /* Evitar overscroll bounce en navegadores webkit */
+  overscroll-behavior-y: contain;
+  /* Optimización de rendimiento */
+  contain: layout style;
 }
 
 /* Scrollbar personalizado para el body del modal */
 .statistics-modal-body::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 .statistics-modal-body::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f8f9fa;
   border-radius: 10px;
+  margin: 4px 0;
 }
 
 .statistics-modal-body::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: #c2b186;
   border-radius: 10px;
+  border: 2px solid #f8f9fa;
+  transition: background 0.2s ease;
 }
 
 .statistics-modal-body::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #948b54;
 }
 
 /* Placeholder Content */
