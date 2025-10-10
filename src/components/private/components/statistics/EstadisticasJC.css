@@ -18,78 +18,67 @@
   min-height: auto;
   padding: 0;
   background: transparent;
+  /* Prevenir problemas de layout */
+  overflow: visible;
 }
 
 .statistics-modal-body .estadisticas-jc-header {
   display: none; /* Ocultar header porque el modal ya tiene su propio header */
 }
 
-/* Filtros sticky dentro del modal */
+/* Filtros sticky dentro del modal - OPTIMIZADO */
 .statistics-modal-body .estadisticas-jc-filtros {
   position: sticky;
   top: 0;
   z-index: 100;
-  margin-bottom: 2rem; /* Aumentado de 1.5rem a 2rem */
-  padding: 1.25rem 2rem 1rem 2rem;
+  margin: 0 0 1.5rem 0;
+  padding: 1.25rem 2rem;
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  /* Transición más suave y natural */
-  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-              margin-bottom 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-bottom: 1px solid #e5e7eb;
+  /* Transición suave solo en padding */
+  transition: padding 0.2s ease-out, box-shadow 0.2s ease-out;
+  /* Optimización de rendimiento */
+  contain: layout style;
 }
 
-/* Sombra más pronunciada cuando el filtro está pegado */
-.statistics-modal-body .estadisticas-jc-filtros.is-stuck {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+/* Modo compacto al hacer scroll */
+.statistics-modal-body .estadisticas-jc-filtros.is-compact {
+  padding: 0.5rem 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-/* MODO COMPACTO - Ocultar elementos cuando está sticky */
-.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-header {
-  display: none; /* Ocultar completamente para evitar reflow */
-}
-
-.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada {
-  display: none; /* Ocultar completamente para evitar reflow */
-}
-
-/* Ocultar labels en modo compacto */
+/* Ocultar elementos en modo compacto */
+.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-header,
+.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada,
 .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-campo label {
   display: none;
 }
 
-/* Reducir padding cuando está compacto */
-.statistics-modal-body .estadisticas-jc-filtros.is-compact {
-  padding: 0.5rem 2rem;
-  margin-bottom: 1.5rem; /* Reducir margin en modo compacto */
-  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-              margin-bottom 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+/* Ajustar controles en modo compacto */
+.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-campo {
+  margin-bottom: 0;
 }
 
-/* Hacer los selects más compactos */
 .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-select {
-  padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
-  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-              font-size 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.5rem 0.625rem;
 }
 
-/* Reducir gap entre selects en modo compacto */
 .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-controls {
   gap: 0.5rem;
-  transition: gap 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 0;
 }
 
-/* Animación suave para los controles */
-.statistics-modal-body .filtro-controls {
-  transition: gap 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-fecha-jc {
+  padding: 0;
 }
 
 .statistics-modal-body .filtro-fecha-jc {
   box-shadow: none;
   padding: 0;
   background: transparent;
-  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: padding 0.2s ease-out;
 }
 
 /* Contenido con padding dentro del modal */
@@ -97,8 +86,11 @@
 .statistics-modal-body .estadisticas-jc-resumen {
   margin-left: 2rem;
   margin-right: 2rem;
+  /* Prevenir colapso de márgenes */
+  padding-top: 0.1px;
 }
 
+/* Espaciado del último elemento */
 .statistics-modal-body .estadisticas-jc-footer {
   margin: 1.5rem 2rem 2rem 2rem;
 }
@@ -254,49 +246,40 @@
   margin-bottom: 2rem;
   background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%);
   padding: 1rem 0;
-  /* Transición optimizada sin 'all' */
-  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Transición suave optimizada */
+  transition: padding 0.2s ease-out, box-shadow 0.2s ease-out;
+  /* Optimización de rendimiento */
+  contain: layout style;
 }
 
-/* Sombra cuando el filtro está sticky (pegado al top) */
-.estadisticas-jc-filtros.is-stuck {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+/* Modo compacto al hacer scroll - Vista normal (fuera del modal) */
+.estadisticas-jc-filtros.is-compact {
+  padding: 0.25rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.estadisticas-jc-filtros.is-stuck .filtro-fecha-jc {
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-}
-
-/* MODO COMPACTO - Cuando el filtro está sticky */
-.estadisticas-jc-filtros.is-compact .filtro-header {
-  display: none !important;
-}
-
-.estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada {
-  display: none !important;
-}
-
-/* Ocultar labels en modo compacto */
-.estadisticas-jc-filtros.is-compact .filtro-campo label {
-  display: none !important;
-  visibility: hidden !important;
-}
-
-/* Reducir espacio en modo compacto */
 .estadisticas-jc-filtros.is-compact .filtro-fecha-jc {
-  padding: 0.75rem 1.5rem !important;
+  padding: 0.5rem 1.5rem;
 }
 
-/* Selects más compactos */
+.estadisticas-jc-filtros.is-compact .filtro-header,
+.estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada,
+.estadisticas-jc-filtros.is-compact .filtro-campo label {
+  display: none;
+}
+
+.estadisticas-jc-filtros.is-compact .filtro-campo {
+  margin-bottom: 0;
+}
+
 .estadisticas-jc-filtros.is-compact .filtro-select {
-  padding: 0.5rem 0.75rem !important;
-  font-size: 0.875rem !important;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.625rem;
 }
 
-/* Reducir gap en modo compacto */
 .estadisticas-jc-filtros.is-compact .filtro-controls {
-  gap: 0.75rem !important;
+  gap: 0.5rem;
+  margin: 0;
 }
 
 .filtro-fecha-jc {
@@ -304,8 +287,7 @@
   padding: 1.5rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: padding 0.2s ease-out, box-shadow 0.2s ease-out;
 }
 
 .filtro-header {
@@ -675,7 +657,7 @@
   /* Ajustar sticky en móviles */
   .estadisticas-jc-filtros {
     top: 0;
-    padding: 0.25rem 0;
+    padding: 0.5rem 0;
   }
 
   .filtro-fecha-jc {
@@ -683,68 +665,26 @@
     border-radius: 8px;
   }
 
-  /* Modo compacto en móviles */
-  .estadisticas-jc-filtros.is-compact .filtro-fecha-jc {
-    padding: 0.5rem 1rem !important;
-  }
-
-  .estadisticas-jc-filtros.is-compact .filtro-campo label {
-    display: none !important; /* Asegurar que los labels estén ocultos en móvil también */
-    visibility: hidden !important;
-  }
-
-  .estadisticas-jc-filtros.is-compact .filtro-select {
-    padding: 0.5rem !important;
-    font-size: 0.875rem !important;
-  }
-
-  .estadisticas-jc-filtros.is-compact .filtro-controls {
-    gap: 0.5rem !important;
-  }
-
-  .estadisticas-jc-filtros.is-compact .filtro-header {
-    display: none !important;
-  }
-
-  .estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada {
-    display: none !important;
-  }
-
   /* Ajustes para el modal en móvil */
   .statistics-modal-body .estadisticas-jc-filtros {
-    padding: 1rem 1rem 0.75rem 1rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    position: sticky;
+    top: 0;
   }
 
   .statistics-modal-body .estadisticas-jc-filtros.is-compact {
-    padding: 0.5rem 1rem !important;
-  }
-
-  .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-campo label {
-    display: none !important;
-    visibility: hidden !important;
-  }
-
-  .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-select {
-    padding: 0.5rem !important;
-    font-size: 0.875rem !important;
-  }
-
-  .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-controls {
-    gap: 0.5rem !important;
-  }
-
-  .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-header {
-    display: none !important;
-  }
-
-  .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada {
-    display: none !important;
+    padding: 0.5rem 1rem;
   }
 
   .statistics-modal-body .estadisticas-jc-graficas,
   .statistics-modal-body .estadisticas-jc-resumen {
     margin-left: 1rem;
     margin-right: 1rem;
+  }
+
+  .statistics-modal-body .estadisticas-jc-footer {
+    margin: 1rem 1rem 1.5rem 1rem;
   }
 
   .estadisticas-jc-header {
