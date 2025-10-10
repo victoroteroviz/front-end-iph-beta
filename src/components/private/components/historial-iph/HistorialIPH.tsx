@@ -29,6 +29,7 @@ import FiltrosHistorial from './components/FiltrosHistorial';
 import HistorialTable from './table/HistorialTable';
 import PaginacionHistorial from './components/PaginacionHistorial';
 import DetalleIPH from './components/DetalleIPH';
+import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';
@@ -126,12 +127,17 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Solo se ejecuta una vez al montar
 
+  // Breadcrumbs items
+  const breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Historial de IPH', isActive: true }
+  ];
+
   // Componente de error de permisos memoizado
   const PermissionErrorComponent = useMemo(() => {
     if (!showPermissionError) return null;
 
     return (
-      <div className={`p-6 bg-[#f8f0e7] min-h-screen ${className}`}>
+      <div className="min-h-screen p-4 md:p-6 lg:p-8">
         <div className="max-w-2xl mx-auto text-center py-16">
           <Shield size={64} className="mx-auto text-red-400 mb-6" />
           <h2 className="text-2xl font-bold text-red-600 mb-4">
@@ -148,7 +154,7 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
         </div>
       </div>
     );
-  }, [showPermissionError, className]);
+  }, [showPermissionError]);
 
   // Early return optimizado
   if (showPermissionError) {
@@ -156,164 +162,189 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
   }
 
   return (
-    <div className={`p-6 bg-[#f8f0e7] min-h-screen text-[#4d4725] ${className}`}>
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-[#4d4725] flex items-center gap-3">
-            <FileText size={32} aria-hidden="true" />
-            Historial de IPH
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Gestión y seguimiento de Informes Policiales Homologados
-          </p>
-          <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-            <Users size={14} />
-            <span>Solo para Administradores y SuperAdmin</span>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          {/* Botón de actualización */}
-          <button
-            onClick={handleRefresh}
-            disabled={loading}
-            className="
-              flex items-center gap-2 px-4 py-2
-              bg-[#4d4725] text-white rounded-lg
-              hover:bg-[#3a3519] transition-colors duration-200
-              cursor-pointer
-              disabled:opacity-50 disabled:cursor-not-allowed
-              focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-2
-            "
-            aria-label="Actualizar datos del historial"
-          >
-            <RefreshCw 
-              size={16} 
-              className={loading ? 'animate-spin' : ''} 
-              aria-hidden="true" 
-            />
-            <span className="hidden sm:inline">
-              {loading ? 'Actualizando...' : 'Actualizar'}
-            </span>
-          </button>
-        </div>
-      </div>
+    <div className="min-h-screen p-4 md:p-6 lg:p-8">
+      <div className={`max-w-7xl mx-auto ${className}`}>
 
-      {/* Filtros */}
-      <FiltrosHistorial
-        filtros={filtros}
-        onFiltrosChange={setFiltros}
-        loading={loading}
-        estatusOptions={estatusOptions}
-        className="mb-6"
-      />
+        {/* Breadcrumbs */}
+        <div className="mb-8">
+          <Breadcrumbs items={breadcrumbItems} />
+        </div>
 
-      {/* Estado de error - OPTIMIZADO */}
-      {showGeneralError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-3">
-          <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <h3 className="font-medium text-red-800">Error cargando datos</h3>
-            <p className="text-red-700 text-sm mt-1">{error}</p>
-            <div className="flex items-center gap-3 mt-3">
-              <button
-                onClick={clearError}
-                className="text-sm text-red-600 hover:text-red-800 underline transition-colors cursor-pointer"
-              >
-                Ocultar error
-              </button>
-              <button
-                onClick={handleRefresh}
-                className="text-sm text-red-600 hover:text-red-800 underline transition-colors cursor-pointer"
-              >
-                Reintentar
-              </button>
+        {/* Header principal */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-[#4d4725] rounded-lg">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-[#4d4725] font-poppins">
+                  Historial de IPH
+                </h1>
+                <p className="text-gray-600 font-poppins">
+                  Gestión y seguimiento de Informes Policiales Homologados
+                </p>
+                <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 font-poppins">
+                  <Users size={14} />
+                  <span>Solo para Administradores y SuperAdmin</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* Contenido principal - OPTIMIZADO */}
-      {showEmptyState ? (
-        // Estado sin datos - MEMOIZADO
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <FileText size={64} className="mx-auto text-gray-300 mb-6" />
-          <h3 className="text-xl font-medium text-gray-900 mb-3">
-            No se encontraron registros
-          </h3>
-          <p className="text-gray-600 mb-6 max-w-md mx-auto">
-            No hay registros de IPH que coincidan con los filtros aplicados.
-            Intenta ajustar los criterios de búsqueda o verificar el rango de fechas.
-          </p>
-          <div className="flex items-center justify-center gap-3">
+            {/* Botón de actualización */}
             <button
               onClick={handleRefresh}
-              className="px-6 py-2 bg-[#4d4725] text-white rounded-lg hover:bg-[#3a3519] transition-colors flex items-center gap-2 cursor-pointer"
+              disabled={loading}
+              className="
+                flex items-center gap-2 px-4 py-2 text-sm font-medium
+                text-white bg-[#4d4725] rounded-lg
+                hover:bg-[#3a3519] disabled:opacity-50 disabled:cursor-not-allowed
+                transition-colors duration-200 font-poppins
+              "
+              aria-label="Actualizar datos del historial"
             >
-              <RefreshCw size={16} />
-              Intentar nuevamente
-            </button>
-            <button
-              onClick={clearAllFilters}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-            >
-              Limpiar filtros
+              <RefreshCw
+                size={16}
+                className={loading ? 'animate-spin' : ''}
+                aria-hidden="true"
+              />
+              <span className="hidden sm:inline">
+                {loading ? 'Actualizando...' : 'Actualizar'}
+              </span>
             </button>
           </div>
         </div>
-      ) : showMainContent ? (
-        <div className="space-y-6">
-          {/* Tabla de registros */}
-          <HistorialTable
-            registros={registros}
-            loading={loading}
-            onVerDetalle={verDetalle}
-            onEditarEstatus={editarEstatus}
-            className="relative"
-          />
+
+        {/* Contenedor principal con fondo blanco */}
+        <div className="bg-white rounded-xl border border-gray-200 mb-6">
+          {/* Filtros */}
+          <div className="p-6 border-b border-gray-200">
+            <FiltrosHistorial
+              filtros={filtros}
+              onFiltrosChange={setFiltros}
+              loading={loading}
+              estatusOptions={estatusOptions}
+            />
+          </div>
+
+          {/* Mensajes de estado */}
+          <div className="px-6">
+            {/* Estado de error - OPTIMIZADO */}
+            {showGeneralError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4 flex items-start gap-3">
+                <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-medium text-red-800 font-poppins">Error cargando datos</h3>
+                  <p className="text-red-700 text-sm mt-1 font-poppins">{error}</p>
+                  <div className="flex items-center gap-3 mt-3">
+                    <button
+                      onClick={clearError}
+                      className="text-sm text-red-600 hover:text-red-800 underline transition-colors cursor-pointer font-poppins"
+                    >
+                      Ocultar error
+                    </button>
+                    <button
+                      onClick={handleRefresh}
+                      className="text-sm text-red-600 hover:text-red-800 underline transition-colors cursor-pointer font-poppins"
+                    >
+                      Reintentar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Contenido principal - OPTIMIZADO */}
+          <div className="p-6">
+            {showEmptyState ? (
+              // Estado sin datos - MEMOIZADO
+              <div className="text-center py-12">
+                <FileText size={64} className="mx-auto text-gray-300 mb-6" />
+                <h3 className="text-xl font-medium text-gray-900 mb-3 font-poppins">
+                  No se encontraron registros
+                </h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto font-poppins">
+                  No hay registros de IPH que coincidan con los filtros aplicados.
+                  Intenta ajustar los criterios de búsqueda o verificar el rango de fechas.
+                </p>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    onClick={handleRefresh}
+                    className="px-6 py-2 bg-[#4d4725] text-white rounded-lg hover:bg-[#3a3519] transition-colors flex items-center gap-2 cursor-pointer font-poppins"
+                  >
+                    <RefreshCw size={16} />
+                    Intentar nuevamente
+                  </button>
+                  <button
+                    onClick={clearAllFilters}
+                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer font-poppins"
+                  >
+                    Limpiar filtros
+                  </button>
+                </div>
+              </div>
+            ) : showMainContent ? (
+              <>
+                {/* Tabla de registros */}
+                <HistorialTable
+                  registros={registros}
+                  loading={loading}
+                  onVerDetalle={verDetalle}
+                  onEditarEstatus={editarEstatus}
+                  className="relative"
+                />
+              </>
+            ) : null}
+          </div>
 
           {/* Paginación - OPTIMIZADA */}
           {showPagination && (
-            <PaginacionHistorial
-              currentPage={paginacion.page}
-              totalPages={paginacion.totalPages}
-              canGoToNext={canGoToNextPage}
-              canGoToPrevious={canGoToPreviousPage}
-              onPageChange={setCurrentPage}
-              onNext={goToNextPage}
-              onPrevious={goToPreviousPage}
-              loading={loading}
-            />
+            <div className="px-6 pb-6 border-t border-gray-200 pt-4">
+              <PaginacionHistorial
+                currentPage={paginacion.page}
+                totalPages={paginacion.totalPages}
+                canGoToNext={canGoToNextPage}
+                canGoToPrevious={canGoToPreviousPage}
+                onPageChange={setCurrentPage}
+                onNext={goToNextPage}
+                onPrevious={goToPreviousPage}
+                loading={loading}
+              />
+            </div>
           )}
 
           {/* Información adicional - OPTIMIZADA */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-sm text-gray-600">
-              <div className="flex items-center gap-4">
-                <span>
-                  Mostrando <strong>{registros.length}</strong> de{' '}
-                  <strong>{paginacion.total}</strong> registros
-                </span>
-                {hasFiltersApplied && (
-                  <span className="text-[#4d4725]">
-                    (con filtros aplicados)
-                  </span>
-                )}
+          {showMainContent && (
+            <div className="px-6 pb-6">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-sm text-gray-600 font-poppins">
+                  <div className="flex items-center gap-4">
+                    <span>
+                      Mostrando <strong>{registros.length}</strong> de{' '}
+                      <strong>{paginacion.total}</strong> registros
+                    </span>
+                    {hasFiltersApplied && (
+                      <span className="text-[#4d4725]">
+                        (con filtros aplicados)
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
-      ) : null}
 
-      {/* Modal de detalle - OPTIMIZADO */}
-      {registroSeleccionado && (
-        <DetalleIPH
-          registro={registroSeleccionado}
-          onClose={cerrarDetalle}
-          onEditarEstatus={handleEditarEstatusModal}
-        />
-      )}
+        {/* Modal de detalle - OPTIMIZADO */}
+        {registroSeleccionado && (
+          <DetalleIPH
+            registro={registroSeleccionado}
+            onClose={cerrarDetalle}
+            onEditarEstatus={handleEditarEstatusModal}
+          />
+        )}
+      </div>
     </div>
   );
 }, (prevProps, nextProps) => {

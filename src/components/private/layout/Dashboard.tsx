@@ -127,13 +127,13 @@ const DashboardContent: React.FC<DashboardProps> = ({
         
         {/* Header con botón hamburger y Topbar */}
         <div className="flex-shrink-0">
-          {/* Botón hamburger para móvil */}
+          {/* Botón hamburger para móvil - dentro del Topbar */}
           {sidebar.isMobile && (
-            <div className="p-4 pb-2">
+            <div className="px-4 pt-4 pb-2" style={{ backgroundColor: 'rgb(148, 139, 84)' }}>
               <button
                 onClick={sidebar.toggle}
                 className="
-                  flex items-center justify-center w-10 h-10 
+                  flex items-center justify-center w-10 h-10
                   bg-[#4d4725] text-white rounded-lg
                   hover:bg-[#3a3419] transition-colors duration-200
                   focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-2
@@ -145,14 +145,9 @@ const DashboardContent: React.FC<DashboardProps> = ({
               </button>
             </div>
           )}
+
+          {/* Topbar sin padding lateral para que se pegue al sidebar */}
           
-          {/* Topbar */}
-          <div className="px-6 pb-0">
-            <Topbar 
-              userRole={userRole}
-              onLogout={logout}
-            />
-          </div>
         </div>
 
         {/* Breadcrumbs - Temporalmente desactivado */}

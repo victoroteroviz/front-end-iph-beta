@@ -235,7 +235,7 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
         {/* Header */}
         <div>
           {/* Logo con controles - OPTIMIZADO */}
-          <div className="border-b border-white/20 relative">
+          <div className="relative">
             <div className={`transition-all duration-300 ease-in-out ${
               shouldCollapse ? 'p-2 pr-10' : 'p-4 pr-12'
             } flex items-center justify-center`}>
