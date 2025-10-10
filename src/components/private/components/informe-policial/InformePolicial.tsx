@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { AlertCircle, RefreshCw, FileText, Users, Loader2 } from 'lucide-react';
+import { AlertCircle, RefreshCw, FileText, Users, Loader2, SquareChartGantt, Filter } from 'lucide-react';
 
 // Hook personalizado
 import useInformePolicial from './hooks/useInformePolicial';
@@ -18,6 +18,7 @@ import IPHCardsGrid from './components/IPHCardsGrid';
 import IPHPagination from './components/IPHPagination';
 import AutoRefreshIndicator from './components/AutoRefreshIndicator';
 import EstadisticasCards from './components/EstadisticasCards';
+import Accordion from './components/Accordion';
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';
@@ -153,26 +154,32 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
           </div>
         )}
 
-        {/* Estadísticas */}
-        <EstadisticasCards className="mb-6" />
+        {/* Acordeón de Filtros */}
+        <Accordion
+          title="Filtros de Búsqueda"
+          subtitle="Encuentra informes policiales específicos"
+          icon={<Filter className="h-5 w-5 text-white" />}
+          defaultOpen={false}
+        >
+          <div className="space-y-4">
+            <IPHFilters
+              filters={state.filters}
+              loading={isAnyLoading}
+              onFiltersChange={updateFilters}
+              onSearch={handleSearch}
+              onClear={handleClearFilters}
+              onRefresh={handleManualRefresh}
+            />
 
-        {/* Filtros de búsqueda */}
-        <IPHFilters
-          filters={state.filters}
-          loading={isAnyLoading}
-          onFiltersChange={updateFilters}
-          onSearch={handleSearch}
-          onClear={handleClearFilters}
-          onRefresh={handleManualRefresh}
-        />
-
-        {/* Filtro por tipo de IPH */}
-        <IPHTipoFilter
-          tipos={state.tiposIPH}
-          selectedTipoId={state.filters.tipoId || ''}
-          loading={state.tiposLoading}
-          onTipoChange={(tipoId) => updateFilters({ tipoId })}
-        />
+            {/* Filtro por tipo de IPH */}
+            <IPHTipoFilter
+              tipos={state.tiposIPH}
+              selectedTipoId={state.filters.tipoId || ''}
+              loading={state.tiposLoading}
+              onTipoChange={(tipoId) => updateFilters({ tipoId })}
+            />
+          </div>
+        </Accordion>
 
         {/* Indicador de actualización */}
         {state.isRefreshing && (
@@ -225,6 +232,16 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
           loading={state.isLoading}
           onCardClick={handleCardClick}
         />
+
+        {/* Acordeón de Estadísticas */}
+        <Accordion
+          title="Datos de Registro"
+          subtitle="Estadísticas generales del sistema"
+          icon={<SquareChartGantt className="h-5 w-5 text-white" />}
+          defaultOpen={false}
+        >
+          <EstadisticasCards />
+        </Accordion>
 
         {/* Paginación */}
         {state.pagination.totalPages > 1 && (
