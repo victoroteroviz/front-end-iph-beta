@@ -18,6 +18,7 @@ interface BreadcrumbsProps {
   items: IBreadcrumbItem[];
   showHome?: boolean;
   className?: string;
+  backgroundColor?: string;
 }
 
 /**
@@ -26,17 +27,20 @@ interface BreadcrumbsProps {
  * @param items - Array de elementos del breadcrumb
  * @param showHome - Si mostrar el icono de inicio al principio
  * @param className - Clases CSS adicionales
+ * @param backgroundColor - Color de fondo personalizado
  */
 const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   items,
   showHome = true,
-  className = ''
+  className = '',
+  backgroundColor
 }) => {
   if (!items || items.length === 0) return null;
 
   return (
     <nav
-      className={`flex items-center space-x-2 text-sm mb-6 ${className}`}
+      className={`flex items-center space-x-2 text-sm py-3 px-4 rounded-lg mb-6 ${className}`}
+      style={backgroundColor ? { backgroundColor } : undefined}
       aria-label="Breadcrumb"
     >
       {showHome && (

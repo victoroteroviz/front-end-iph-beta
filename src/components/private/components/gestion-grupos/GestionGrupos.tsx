@@ -195,7 +195,7 @@ const GestionGrupos: React.FC = () => {
   // Verificar permisos de acceso
   if (!permisos.canView) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8 flex items-center justify-center">
+      <div className="min-h-screen  p-4 md:p-6 lg:p-8 flex items-center justify-center">
         <div className="bg-white rounded-xl border border-gray-200 p-8 max-w-md text-center">
           <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
@@ -210,7 +210,7 @@ const GestionGrupos: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8" data-component="gestion-grupos">
+    <div className="min-h-screen p-4 md:p-6 lg:p-8" data-component="gestion-grupos">
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumbs */}
         <div className="mb-8">
