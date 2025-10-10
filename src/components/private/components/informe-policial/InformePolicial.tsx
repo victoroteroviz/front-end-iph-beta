@@ -159,7 +159,7 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
           title="Filtros de Búsqueda"
           subtitle="Encuentra informes policiales específicos"
           icon={<Filter className="h-5 w-5 text-white" />}
-          defaultOpen={false}
+          defaultOpen={true}
         >
           <div className="space-y-4">
             <IPHFilters
@@ -238,7 +238,7 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
           title="Datos de Registro"
           subtitle="Estadísticas generales del sistema"
           icon={<SquareChartGantt className="h-5 w-5 text-white" />}
-          defaultOpen={false}
+          defaultOpen={true}
         >
           <EstadisticasCards />
         </Accordion>
