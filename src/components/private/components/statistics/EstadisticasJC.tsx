@@ -46,54 +46,7 @@ export const EstadisticasJC: React.FC = () => {
     setHayErrorCritico(!!tieneErrores);
   }, [error]);
 
-  // Monitorear estilos computados del filtro para debug
-  useEffect(() => {
-    const filtrosElement = filtrosRef.current;
-    if (!filtrosElement) {
-      console.warn('⚠️ [EstadisticasJC] filtrosRef.current es null en el useEffect de estilos');
-      return;
-    }
-
-    console.log('✅ [EstadisticasJC] filtrosRef asignado correctamente:', filtrosElement);
-
-    // Esperar un poco para que el DOM se renderice completamente
-    const timeoutId = setTimeout(() => {
-      const computedStyle = window.getComputedStyle(filtrosElement);
-      
-      console.log('🎨 [EstadisticasJC] Estilos computados del filtro:');
-      console.log(`   - position: ${computedStyle.position}`);
-      console.log(`   - top: ${computedStyle.top}`);
-      console.log(`   - z-index: ${computedStyle.zIndex}`);
-      console.log(`   - padding: ${computedStyle.padding}`);
-      console.log(`   - display: ${computedStyle.display}`);
-      console.log(`   - transition: ${computedStyle.transition}`);
-      console.log(`   - contain: ${computedStyle.contain}`);
-      
-      // Verificar elementos hijos visibles
-      const header = filtrosElement.querySelector('.filtro-header');
-      const controls = filtrosElement.querySelector('.filtro-controls');
-      const fechaSeleccionada = filtrosElement.querySelector('.filtro-fecha-seleccionada');
-      
-      console.log('🔍 [EstadisticasJC] Elementos hijos del filtro:');
-      console.log(`   - .filtro-header: ${header ? 'Encontrado' : 'No encontrado'}`);
-      console.log(`   - .filtro-controls: ${controls ? 'Encontrado' : 'No encontrado'}`);
-      console.log(`   - .filtro-fecha-seleccionada: ${fechaSeleccionada ? 'Encontrado' : 'No encontrado'}`);
-      
-      if (header) {
-        const headerStyle = window.getComputedStyle(header);
-        console.log(`     → .filtro-header display: ${headerStyle.display}, visibility: ${headerStyle.visibility}, height: ${headerStyle.height}`);
-      }
-
-      if (controls) {
-        const controlsStyle = window.getComputedStyle(controls);
-        console.log(`     → .filtro-controls display: ${controlsStyle.display}, gap: ${controlsStyle.gap}`);
-      }
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
-  }, []);
-
-  // Sistema de scroll optimizado para filtros sticky
+  // Sistema de scroll sticky con compensación dinámica de altura
   useEffect(() => {
     console.log('🎬 [EstadisticasJC] Inicializando scroll sticky');
     
@@ -106,17 +59,12 @@ export const EstadisticasJC: React.FC = () => {
     // Estado del scroll
     let isCompact = false;
     let lastScrollTop = 0;
-    let isTransitioning = false; // Flag para prevenir cambios durante transiciones
-    const COMPACT_THRESHOLD = 50;  // Compactar después de 50px
-    const EXPAND_THRESHOLD = 30;   // Expandir antes de 30px
-    const TRANSITION_COOLDOWN = 250; // Esperar 250ms entre cambios de estado
-    
-    // ⚡ COMPENSACIÓN DE ALTURA: Diferencia entre expandido y compactado
-    const EXPANDED_HEIGHT = 142; // Altura aproximada expandida
-    const COMPACT_HEIGHT = 52;   // Altura aproximada compactada
-    const HEIGHT_DIFF = EXPANDED_HEIGHT - COMPACT_HEIGHT; // ~90px
+    let isTransitioning = false;
+    const COMPACT_THRESHOLD = 80;  // Aumentado para dar más margen
+    const EXPAND_THRESHOLD = 20;   // Reducido para expandir antes
+    const TRANSITION_COOLDOWN = 300; // Más tiempo para transiciones
 
-    console.log('✅ Sticky configurado: COMPACT=50px, EXPAND=30px, COMPENSATION=90px');
+    console.log('✅ Sticky configurado: COMPACT=80px, EXPAND=20px');
 
     const handleScroll = () => {
       const scrollTop = scrollContainer.scrollTop;
@@ -124,12 +72,13 @@ export const EstadisticasJC: React.FC = () => {
       
       // Prevenir cambios durante transiciones activas
       if (isTransitioning) {
-        return; // Silencioso durante transición
+        return;
       }
       
-      // 🔥 PREVENIR LOOPS: Detectar saltos extremos (> 100px) que indican compensación
-      if (scrollDiff > 100) {
-        console.log(`⚠️ Salto detectado (${scrollDiff.toFixed(0)}px) - Compensación browser, ignorando`);
+      // 🔥 PREVENIR LOOPS: Detectar saltos causados por cambios de altura del sticky
+      // Aumentado a 60px para ser más conservador
+      if (scrollDiff > 60) {
+        console.log(`⚠️ Salto grande detectado (${scrollDiff.toFixed(0)}px) - ignorando`);
         lastScrollTop = scrollTop;
         return;
       }
@@ -144,17 +93,18 @@ export const EstadisticasJC: React.FC = () => {
       if (scrollTop >= COMPACT_THRESHOLD && !isCompact && scrollingDown) {
         console.log(`🔽 Compactando en ${scrollTop.toFixed(0)}px`);
         
-        const currentScrollTop = scrollContainer.scrollTop;
         isTransitioning = true;
         isCompact = true;
+        
+        // Guardar scroll actual ANTES del cambio
+        const scrollBefore = scrollContainer.scrollTop;
+        
         filtrosElement.classList.add('is-compact');
         
-        // ⚡ COMPENSACIÓN: Ajustar scroll para que el contenido no "brinque"
+        // Restaurar posición exacta DESPUÉS del cambio para evitar saltos
         requestAnimationFrame(() => {
-          const newScrollTop = currentScrollTop + HEIGHT_DIFF;
-          scrollContainer.scrollTop = newScrollTop;
-          lastScrollTop = newScrollTop;
-          console.log(`   → Compensado +${HEIGHT_DIFF}px: ${currentScrollTop.toFixed(0)}px → ${newScrollTop.toFixed(0)}px`);
+          scrollContainer.scrollTop = scrollBefore;
+          lastScrollTop = scrollBefore;
         });
         
         setTimeout(() => {
@@ -167,17 +117,15 @@ export const EstadisticasJC: React.FC = () => {
         if (scrollTop < EXPAND_THRESHOLD && isCompact && scrollingUp) {
           console.log(`🔼 Expandiendo en ${scrollTop.toFixed(0)}px`);
           
-          const currentScrollTop = scrollContainer.scrollTop;
           isTransitioning = true;
           isCompact = false;
+          
           filtrosElement.classList.remove('is-compact');
           
-          // ⚡ COMPENSACIÓN: Ajustar scroll para que el contenido no "brinque"
+          // Restaurar posición a 0 cuando expandimos cerca del top
           requestAnimationFrame(() => {
-            const newScrollTop = Math.max(0, currentScrollTop - HEIGHT_DIFF);
-            scrollContainer.scrollTop = newScrollTop;
-            lastScrollTop = newScrollTop;
-            console.log(`   → Compensado -${HEIGHT_DIFF}px: ${currentScrollTop.toFixed(0)}px → ${newScrollTop.toFixed(0)}px`);
+            scrollContainer.scrollTop = 0;
+            lastScrollTop = 0;
           });
           
           setTimeout(() => {
