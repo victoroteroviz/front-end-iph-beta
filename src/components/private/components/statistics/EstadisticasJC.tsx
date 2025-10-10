@@ -19,7 +19,10 @@ import './EstadisticasJC.css';
  * Componente de Estadísticas de Justicia Cívica
  */
 export const EstadisticasJC: React.FC = () => {
-  console.log('🎬 [EstadisticasJC] Componente renderizando');
+  // Log solo en la primera carga, no en cada render
+  useEffect(() => {
+    console.log('📊 EstadisticasJC montado');
+  }, []);
 
   // Hook personalizado con toda la lógica de negocio
   const {
@@ -37,30 +40,10 @@ export const EstadisticasJC: React.FC = () => {
   // Ref para el contenedor de filtros (sticky)
   const filtrosRef = useRef<HTMLDivElement>(null);
 
-  // Log del estado inicial
-  console.log('📊 [EstadisticasJC] Estado actual:', {
-    hayEstadisticas: {
-      diaria: !!estadisticas.diaria,
-      mensual: !!estadisticas.mensual,
-      anual: !!estadisticas.anual
-    },
-    loading,
-    hayErrorCritico,
-    fechaSeleccionada
-  });
-
   // Detectar errores críticos
   useEffect(() => {
     const tieneErrores = error.diaria || error.mensual || error.anual;
     setHayErrorCritico(!!tieneErrores);
-    
-    if (tieneErrores) {
-      console.error('❌ [EstadisticasJC] Errores detectados:', {
-        diaria: error.diaria,
-        mensual: error.mensual,
-        anual: error.anual
-      });
-    }
   }, [error]);
 
   // Monitorear estilos computados del filtro para debug
@@ -112,25 +95,13 @@ export const EstadisticasJC: React.FC = () => {
 
   // Sistema de scroll optimizado para filtros sticky
   useEffect(() => {
-    console.log('🔧 [EstadisticasJC] Inicializando sistema de scroll sticky');
+    console.log('🎬 [EstadisticasJC] Inicializando scroll sticky');
     
     const filtrosElement = filtrosRef.current;
-    if (!filtrosElement) {
-      console.warn('⚠️ [EstadisticasJC] No se encontró filtrosElement (ref)');
-      return;
-    }
+    if (!filtrosElement) return;
 
-    console.log('✅ [EstadisticasJC] filtrosElement encontrado:', filtrosElement);
-
-    // Buscar el contenedor con scroll (modal o ventana)
     const scrollContainer = filtrosElement.closest('.statistics-modal-body') as HTMLElement | null;
-    if (!scrollContainer) {
-      console.warn('⚠️ [EstadisticasJC] No se encontró scrollContainer (.statistics-modal-body)');
-      console.log('📍 [EstadisticasJC] Contexto: El componente no está dentro de un modal');
-      return; // Solo funciona dentro del modal
-    }
-
-    console.log('✅ [EstadisticasJC] scrollContainer encontrado:', scrollContainer);
+    if (!scrollContainer) return;
 
     // Estado del scroll
     let isCompact = false;
@@ -139,81 +110,78 @@ export const EstadisticasJC: React.FC = () => {
     const COMPACT_THRESHOLD = 50;  // Compactar después de 50px
     const EXPAND_THRESHOLD = 30;   // Expandir antes de 30px
     const TRANSITION_COOLDOWN = 250; // Esperar 250ms entre cambios de estado
+    
+    // ⚡ COMPENSACIÓN DE ALTURA: Diferencia entre expandido y compactado
+    const EXPANDED_HEIGHT = 142; // Altura aproximada expandida
+    const COMPACT_HEIGHT = 52;   // Altura aproximada compactada
+    const HEIGHT_DIFF = EXPANDED_HEIGHT - COMPACT_HEIGHT; // ~90px
 
-    console.log('📊 [EstadisticasJC] Configuración de thresholds:');
-    console.log(`   - COMPACT_THRESHOLD: ${COMPACT_THRESHOLD}px`);
-    console.log(`   - EXPAND_THRESHOLD: ${EXPAND_THRESHOLD}px`);
-    console.log(`   - TRANSITION_COOLDOWN: ${TRANSITION_COOLDOWN}ms`);
+    console.log('✅ Sticky configurado: COMPACT=50px, EXPAND=30px, COMPENSATION=90px');
 
     const handleScroll = () => {
       const scrollTop = scrollContainer.scrollTop;
       const scrollDiff = Math.abs(scrollTop - lastScrollTop);
       
-      // Log detallado cada 10 scrolls para no saturar la consola
-      if (Math.floor(scrollTop / 10) !== Math.floor(lastScrollTop / 10)) {
-        console.log(`📜 [Scroll] scrollTop: ${scrollTop.toFixed(1)}px | diff: ${scrollDiff.toFixed(1)}px | isCompact: ${isCompact} | transitioning: ${isTransitioning}`);
-      }
-      
       // Prevenir cambios durante transiciones activas
       if (isTransitioning) {
-        console.log(`⏸️ [Scroll] Transición en progreso, ignorando evento de scroll`);
-        return;
+        return; // Silencioso durante transición
       }
       
-      // 🔥 PREVENIR LOOPS: Detectar saltos extremos (> 100px) que indican cambio de altura
+      // 🔥 PREVENIR LOOPS: Detectar saltos extremos (> 100px) que indican compensación
       if (scrollDiff > 100) {
-        console.warn(`⚠️ [Scroll] Salto extremo detectado (${scrollDiff.toFixed(1)}px) - Probablemente causado por cambio de altura del sticky. IGNORANDO.`);
-        lastScrollTop = scrollTop; // Actualizar para próxima comparación
+        console.log(`⚠️ Salto detectado (${scrollDiff.toFixed(0)}px) - Compensación browser, ignorando`);
+        lastScrollTop = scrollTop;
         return;
       }
       
-      // Ignorar cambios mínimos (< 1px) para evitar loops
+      // Ignorar cambios mínimos
       if (scrollDiff < 1) {
-        console.log(`⏭️ [Scroll] Cambio ignorado (< 1px): ${scrollDiff.toFixed(2)}px`);
         return;
       }
 
       // Compactar al bajar (solo si estamos scrolleando hacia abajo)
       const scrollingDown = scrollTop > lastScrollTop;
       if (scrollTop >= COMPACT_THRESHOLD && !isCompact && scrollingDown) {
-        console.log(`🔽 [Scroll] COMPACTANDO filtros (scrollTop: ${scrollTop.toFixed(1)}px >= ${COMPACT_THRESHOLD}px, scrollingDown: ${scrollingDown})`);
+        console.log(`🔽 Compactando en ${scrollTop.toFixed(0)}px`);
         
-        // Activar flag de transición
+        const currentScrollTop = scrollContainer.scrollTop;
         isTransitioning = true;
         isCompact = true;
         filtrosElement.classList.add('is-compact');
         
-        // Verificar que la clase se aplicó correctamente
-        const hasClass = filtrosElement.classList.contains('is-compact');
-        console.log(`   ✓ Clase 'is-compact' aplicada: ${hasClass}`);
-        console.log(`   ✓ Classes actuales:`, Array.from(filtrosElement.classList));
+        // ⚡ COMPENSACIÓN: Ajustar scroll para que el contenido no "brinque"
+        requestAnimationFrame(() => {
+          const newScrollTop = currentScrollTop + HEIGHT_DIFF;
+          scrollContainer.scrollTop = newScrollTop;
+          lastScrollTop = newScrollTop;
+          console.log(`   → Compensado +${HEIGHT_DIFF}px: ${currentScrollTop.toFixed(0)}px → ${newScrollTop.toFixed(0)}px`);
+        });
         
-        // Desactivar flag después del cooldown
         setTimeout(() => {
           isTransitioning = false;
-          console.log(`   ✓ Transición completada, eventos de scroll permitidos nuevamente`);
         }, TRANSITION_COOLDOWN);
       }
       // Expandir al subir (solo si estamos scrolleando hacia arriba)
       else {
         const scrollingUp = scrollTop < lastScrollTop;
         if (scrollTop < EXPAND_THRESHOLD && isCompact && scrollingUp) {
-          console.log(`🔼 [Scroll] EXPANDIENDO filtros (scrollTop: ${scrollTop.toFixed(1)}px < ${EXPAND_THRESHOLD}px, scrollingUp: ${scrollingUp})`);
+          console.log(`🔼 Expandiendo en ${scrollTop.toFixed(0)}px`);
           
-          // Activar flag de transición
+          const currentScrollTop = scrollContainer.scrollTop;
           isTransitioning = true;
           isCompact = false;
           filtrosElement.classList.remove('is-compact');
           
-          // Verificar que la clase se removió correctamente
-          const hasClass = filtrosElement.classList.contains('is-compact');
-          console.log(`   ✓ Clase 'is-compact' removida: ${!hasClass}`);
-          console.log(`   ✓ Classes actuales:`, Array.from(filtrosElement.classList));
+          // ⚡ COMPENSACIÓN: Ajustar scroll para que el contenido no "brinque"
+          requestAnimationFrame(() => {
+            const newScrollTop = Math.max(0, currentScrollTop - HEIGHT_DIFF);
+            scrollContainer.scrollTop = newScrollTop;
+            lastScrollTop = newScrollTop;
+            console.log(`   → Compensado -${HEIGHT_DIFF}px: ${currentScrollTop.toFixed(0)}px → ${newScrollTop.toFixed(0)}px`);
+          });
           
-          // Desactivar flag después del cooldown
           setTimeout(() => {
             isTransitioning = false;
-            console.log(`   ✓ Transición completada, eventos de scroll permitidos nuevamente`);
           }, TRANSITION_COOLDOWN);
         }
       }
