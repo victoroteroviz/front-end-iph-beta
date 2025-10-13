@@ -1,6 +1,6 @@
 /**
  * Componente EstadisticasFilters
- * Filtros para seleccionar mes y año en estadísticas
+ * Filtros para seleccionar día, mes y año en estadísticas
  */
 
 import React, { useMemo } from 'react';
@@ -18,10 +18,13 @@ import type { EstadisticasFiltersProps } from '../../../../../interfaces/compone
 const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
   mes,
   anio,
+  dia,
   onMesChange,
   onAnioChange,
+  onDiaChange,
   loading = false,
-  className = ''
+  className = '',
+  inline = false
 }) => {
   /**
    * Genera array de meses para el selector
@@ -54,6 +57,14 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
   }, []);
 
   /**
+   * Calcula los días disponibles según el mes y año seleccionados
+   */
+  const dias = useMemo(() => {
+    const diasEnMes = new Date(anio, mes, 0).getDate();
+    return Array.from({ length: diasEnMes }, (_, i) => i + 1);
+  }, [anio, mes]);
+
+  /**
    * Maneja el cambio de mes
    */
   const handleMesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -68,6 +79,92 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
     const nuevoAnio = Number(e.target.value);
     onAnioChange(nuevoAnio);
   };
+
+  /**
+   * Maneja el cambio de día
+   */
+  const handleDiaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (onDiaChange) {
+      const nuevoDia = Number(e.target.value);
+      onDiaChange(nuevoDia);
+    }
+  };
+
+  // Si es modo inline, renderizar versión compacta
+  if (inline) {
+    return (
+      <div className={`flex items-center gap-4 flex-wrap ${className}`}>
+        {/* Selector de Año */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="anio-selector-inline" className="text-sm font-semibold text-gray-700">
+            Año:
+          </label>
+          <select
+            id="anio-selector-inline"
+            value={anio}
+            onChange={handleAnioChange}
+            disabled={loading}
+            className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725] hover:border-[#4d4725]/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
+            aria-label="Seleccionar año"
+          >
+            {anios.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Selector de Mes */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="mes-selector-inline" className="text-sm font-semibold text-gray-700">
+            Mes:
+          </label>
+          <select
+            id="mes-selector-inline"
+            value={mes}
+            onChange={handleMesChange}
+            disabled={loading}
+            className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725] hover:border-[#4d4725]/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
+            aria-label="Seleccionar mes"
+          >
+            {meses.map(({ value, label }) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Selector de Día (solo si dia y onDiaChange están definidos) */}
+        {dia !== undefined && onDiaChange && (
+          <div className="flex items-center gap-2">
+            <label htmlFor="dia-selector-inline" className="text-sm font-semibold text-gray-700">
+              Día:
+            </label>
+            <select
+              id="dia-selector-inline"
+              value={dia}
+              onChange={handleDiaChange}
+              disabled={loading}
+              className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725] hover:border-[#4d4725]/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
+              aria-label="Seleccionar día"
+            >
+              {dias.map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Indicador de carga inline */}
+        {loading && (
+          <div className="flex items-center gap-2 text-sm text-[#4d4725]">
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#4d4725]/30 border-t-[#4d4725]"></div>
+            <span>Actualizando...</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Renderizado normal (no inline)
 
   return (
     <div className={`

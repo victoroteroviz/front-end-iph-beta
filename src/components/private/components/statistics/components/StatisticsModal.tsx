@@ -3,7 +3,7 @@ import type { IStatisticCard } from '../../../../../interfaces/IStatistic';
 import UsuariosIphStats from './UsuariosIphStats';
 import EstadisticasJC from '../EstadisticasJC';
 import EstadisticasProbableDelictivo from '../EstadisticasProbableDelictivo';
-import FiltroFechaJC from './FiltroFechaJC';
+import EstadisticasFilters from './EstadisticasFilters';
 import './StatisticsModal.css';
 
 interface StatisticsModalProps {
@@ -21,9 +21,6 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, on
     mes: number;
     dia: number;
   } | null>(null);
-
-  // Estado para colapsar/expandir filtros
-  const [filtersExpanded, setFiltersExpanded] = useState<boolean>(true);
 
   // Limpiar errores cuando cambie la estadística o se abra el modal
   useEffect(() => {
@@ -49,64 +46,42 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, on
   };
 
   // Manejador de cambio de filtros de JC
-  const handleJcFechaChange = (anio: number, mes: number, dia: number) => {
-    console.log('📅 [StatisticsModal] Cambio de fecha JC:', { anio, mes, dia });
-    setJcFiltros({ anio, mes, dia });
+  const handleJcAnioChange = (anio: number) => {
+    if (jcFiltros) {
+      console.log('📅 [StatisticsModal] Cambio de año JC:', anio);
+      setJcFiltros({ ...jcFiltros, anio });
+    }
   };
 
-  // Toggle para expandir/colapsar filtros
-  const toggleFilters = () => {
-    setFiltersExpanded(prev => !prev);
-    console.log('🔄 [StatisticsModal] Filtros:', filtersExpanded ? 'colapsando' : 'expandiendo');
+  const handleJcMesChange = (mes: number) => {
+    if (jcFiltros) {
+      console.log('📅 [StatisticsModal] Cambio de mes JC:', mes);
+      setJcFiltros({ ...jcFiltros, mes });
+    }
   };
 
-  // Renderizar filtros fuera del body (solo para JC)
+  const handleJcDiaChange = (dia: number) => {
+    if (jcFiltros) {
+      console.log('📅 [StatisticsModal] Cambio de día JC:', dia);
+      setJcFiltros({ ...jcFiltros, dia });
+    }
+  };
+
+  // Renderizar filtros en línea (solo para JC)
   const renderFilters = () => {
     if (statistic.id === 'justicia-civica' && jcFiltros) {
       return (
-        <div className={`statistics-modal-filters ${filtersExpanded ? 'expanded' : 'collapsed'}`}>
-          {/* Header de filtros con botón toggle - Todo el header es clickeable */}
-          <div className="filters-header" onClick={toggleFilters}>
-            <div className="filters-header-content">
-              <span className="filters-icon">📅</span>
-              <h3 className="filters-title">Filtros de Fecha</h3>
-              <span className="filters-date-display">
-                {jcFiltros.dia}/{jcFiltros.mes}/{jcFiltros.anio}
-              </span>
-            </div>
-            <button
-              className="filters-toggle-btn"
-              aria-label={filtersExpanded ? 'Colapsar filtros' : 'Expandir filtros'}
-              title={filtersExpanded ? 'Colapsar filtros' : 'Expandir filtros'}
-              onClick={(e) => e.stopPropagation()} // Evitar doble toggle
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className={`filters-toggle-icon ${filtersExpanded ? 'expanded' : 'collapsed'}`}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* Contenido de filtros (colapsable) */}
-          <div className="filters-content">
-            <FiltroFechaJC
-              anioInicial={jcFiltros.anio}
-              mesInicial={jcFiltros.mes}
-              diaInicial={jcFiltros.dia}
-              onFechaChange={handleJcFechaChange}
-              loading={false}
-            />
-          </div>
+        <div className="statistics-modal-filters-inline">
+          <EstadisticasFilters
+            anio={jcFiltros.anio}
+            mes={jcFiltros.mes}
+            dia={jcFiltros.dia}
+            onAnioChange={handleJcAnioChange}
+            onMesChange={handleJcMesChange}
+            onDiaChange={handleJcDiaChange}
+            inline={true}
+            loading={false}
+          />
         </div>
       );
     }

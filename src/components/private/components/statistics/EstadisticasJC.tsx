@@ -13,7 +13,6 @@ import { useEstadisticasJC } from './hooks/useEstadisticasJC';
 import FiltroFechaJC from './components/FiltroFechaJC';
 import GraficaBarrasJC from './components/GraficaBarrasJC';
 import GraficaPromedioJC from './components/GraficaPromedioJC';
-import { debugScrollBehavior, trackScrollEvents, compareStyles } from './debug-scroll';
 import './EstadisticasJC.css';
 
 interface EstadisticasJCProps {
@@ -94,23 +93,6 @@ export const EstadisticasJC: React.FC<EstadisticasJCProps> = ({ externalFilters 
       containerScrollHeight: scrollContainer.scrollHeight,
       containerClientHeight: scrollContainer.clientHeight
     });
-
-    // 🔍 ACTIVAR MONITORES DE DEBUG
-    const cleanupDebug = debugScrollBehavior(filtrosElement, scrollContainer, 50);
-    const cleanupTracker = trackScrollEvents(scrollContainer, 100);
-    
-    // 🔬 COMPARAR ESTILOS EN MODO NORMAL vs COMPACT
-    console.group('🔬 [STYLE ANALYSIS] Comparación de estilos');
-    setTimeout(() => {
-      compareStyles(filtrosElement, 'is-compact', [
-        'height',
-        'padding',
-        'margin',
-        'font-size',
-        'gap'
-      ]);
-    }, 1000);
-    console.groupEnd();
 
     let lastScrollTop = 0;
     let lastState = '';
@@ -203,8 +185,6 @@ export const EstadisticasJC: React.FC<EstadisticasJCProps> = ({ externalFilters 
       console.log('🔚 [SCROLL] Limpiando listeners', { scrollCallCount });
       scrollContainer.removeEventListener('scroll', handleScroll);
       clearInterval(statusInterval);
-      cleanupDebug();
-      cleanupTracker();
       filtrosElement.classList.remove('is-compact');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
