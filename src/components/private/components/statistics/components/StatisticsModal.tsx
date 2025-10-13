@@ -15,8 +15,15 @@ interface StatisticsModalProps {
 const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, onClose }) => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   
-  // Estado para los filtros de Justicia Cívica (fuera del scroll)
+  // Estado para los filtros de Justicia Cívica
   const [jcFiltros, setJcFiltros] = useState<{
+    anio: number;
+    mes: number;
+    dia: number;
+  } | null>(null);
+
+  // Estado para los filtros de Probable Delictivo
+  const [pdFiltros, setPdFiltros] = useState<{
     anio: number;
     mes: number;
     dia: number;
@@ -27,14 +34,21 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, on
     if (isOpen) {
       setErrorMessage('');
       
+      const hoy = new Date();
+      const fechaInicial = {
+        anio: hoy.getFullYear(),
+        mes: hoy.getMonth() + 1,
+        dia: hoy.getDate()
+      };
+
       // Inicializar filtros de JC si es necesario
       if (statistic.id === 'justicia-civica' && !jcFiltros) {
-        const hoy = new Date();
-        setJcFiltros({
-          anio: hoy.getFullYear(),
-          mes: hoy.getMonth() + 1,
-          dia: hoy.getDate()
-        });
+        setJcFiltros(fechaInicial);
+      }
+
+      // Inicializar filtros de Probable Delictivo si es necesario
+      if (statistic.id === 'hecho-delictivo' && !pdFiltros) {
+        setPdFiltros(fechaInicial);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -45,7 +59,7 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, on
     setErrorMessage(message);
   };
 
-  // Manejador de cambio de filtros de JC
+  // Manejadores de cambio de filtros de JC
   const handleJcAnioChange = (anio: number) => {
     if (jcFiltros) {
       console.log('📅 [StatisticsModal] Cambio de año JC:', anio);
@@ -67,8 +81,31 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, on
     }
   };
 
-  // Renderizar filtros en línea (solo para JC)
+  // Manejadores de cambio de filtros de Probable Delictivo
+  const handlePdAnioChange = (anio: number) => {
+    if (pdFiltros) {
+      console.log('📅 [StatisticsModal] Cambio de año PD:', anio);
+      setPdFiltros({ ...pdFiltros, anio });
+    }
+  };
+
+  const handlePdMesChange = (mes: number) => {
+    if (pdFiltros) {
+      console.log('📅 [StatisticsModal] Cambio de mes PD:', mes);
+      setPdFiltros({ ...pdFiltros, mes });
+    }
+  };
+
+  const handlePdDiaChange = (dia: number) => {
+    if (pdFiltros) {
+      console.log('📅 [StatisticsModal] Cambio de día PD:', dia);
+      setPdFiltros({ ...pdFiltros, dia });
+    }
+  };
+
+  // Renderizar filtros en línea (para JC y Probable Delictivo)
   const renderFilters = () => {
+    // Filtros para Justicia Cívica
     if (statistic.id === 'justicia-civica' && jcFiltros) {
       return (
         <div className="statistics-modal-filters-inline">
@@ -85,6 +122,25 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, on
         </div>
       );
     }
+
+    // Filtros para Probable Delictivo
+    if (statistic.id === 'hecho-delictivo' && pdFiltros) {
+      return (
+        <div className="statistics-modal-filters-inline">
+          <EstadisticasFilters
+            anio={pdFiltros.anio}
+            mes={pdFiltros.mes}
+            dia={pdFiltros.dia}
+            onAnioChange={handlePdAnioChange}
+            onMesChange={handlePdMesChange}
+            onDiaChange={handlePdDiaChange}
+            inline={true}
+            loading={false}
+          />
+        </div>
+      );
+    }
+
     return null;
   };
 
@@ -132,7 +188,16 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, on
           ) : null;
 
         case 'hecho-delictivo':
-          return <EstadisticasProbableDelictivo />;
+          // Pasar los filtros como props para que solo renderice las gráficas
+          return pdFiltros ? (
+            <EstadisticasProbableDelictivo 
+              externalFilters={{
+                anio: pdFiltros.anio,
+                mes: pdFiltros.mes,
+                dia: pdFiltros.dia
+              }}
+            />
+          ) : null;
 
         // Aquí puedes agregar más casos para otros tipos de estadísticas
         default:
