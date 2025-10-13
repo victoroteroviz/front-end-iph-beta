@@ -91,10 +91,13 @@ export interface UsuarioCardProps {
 export interface EstadisticasFiltersProps {
   mes: number;
   anio: number;
+  dia?: number;
   onMesChange: (mes: number) => void;
   onAnioChange: (anio: number) => void;
+  onDiaChange?: (dia: number) => void;
   loading?: boolean;
   className?: string;
+  inline?: boolean;
 }
 
 /**
