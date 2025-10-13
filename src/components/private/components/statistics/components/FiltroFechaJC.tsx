@@ -101,44 +101,20 @@ const FiltroFechaJCComponent: React.FC<FiltroFechaJCProps> = ({
     onFechaChange(anio, mes, nuevoDia);
   }, [anio, mes, onFechaChange]);
 
-  // Establecer fecha de hoy - useCallback
-  const establecerHoy = useCallback(() => {
-    const hoy = new Date();
-    const nuevoAnio = hoy.getFullYear();
-    const nuevoMes = hoy.getMonth() + 1;
-    const nuevoDia = hoy.getDate();
-
-    setAnio(nuevoAnio);
-    setMes(nuevoMes);
-    setDia(nuevoDia);
-
-    onFechaChange(nuevoAnio, nuevoMes, nuevoDia);
-  }, [onFechaChange]);
-
-  // Verificar si la fecha seleccionada es hoy - memoizado
-  const esHoy = useMemo(() => {
-    const hoy = new Date();
-    return (
-      anio === hoy.getFullYear() &&
-      mes === hoy.getMonth() + 1 &&
-      dia === hoy.getDate()
-    );
-  }, [anio, mes, dia]);
-
   return (
-    <div className="filtro-fecha-jc">
+    <div
+      className="filtro-fecha-jc"
+      data-component="filtro-fecha-jc"
+    >
+      {/* Header - Se oculta en modo compacto */}
       <div className="filtro-header">
-        <h3 className="filtro-title">📅 Seleccionar Fecha</h3>
-        <button
-          className="btn-hoy"
-          onClick={establecerHoy}
-          disabled={loading || esHoy}
-          title={esHoy ? 'Ya está seleccionada la fecha de hoy' : 'Seleccionar fecha de hoy'}
-        >
-          Hoy
-        </button>
+        <h3 className="filtro-title flex items-center gap-2">
+          <span>📅</span>
+          <span>Seleccionar Fecha</span>
+        </h3>
       </div>
 
+      {/* Controles - Los labels se ocultan en modo compacto */}
       <div className="filtro-controls">
         {/* Selector de año */}
         <div className="filtro-campo">
@@ -191,6 +167,7 @@ const FiltroFechaJCComponent: React.FC<FiltroFechaJCProps> = ({
         </div>
       </div>
 
+      {/* Fecha Seleccionada - Se oculta en modo compacto */}
       <div className="filtro-fecha-seleccionada">
         <span className="fecha-label">Fecha seleccionada:</span>
         <span className="fecha-valor">

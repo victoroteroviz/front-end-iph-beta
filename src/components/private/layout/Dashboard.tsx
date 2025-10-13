@@ -18,7 +18,7 @@ import { Menu } from 'lucide-react';
 
 // Componentes atómicos
 import Sidebar from './sidebar/Sidebar';
-import Topbar from './topbar/Topbar';
+// import Topbar from './topbar/Topbar'; // Desactivado temporalmente
 import { Breadcrumbs, useBreadcrumbs } from './breadcrumbs';
 
 // Hooks
@@ -125,17 +125,17 @@ const DashboardContent: React.FC<DashboardProps> = ({
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col overflow-hidden">
         
-        {/* Header con botón hamburger y Topbar */}
+        {/* Header con botón hamburger */}
         <div className="flex-shrink-0">
-          {/* Botón hamburger para móvil - dentro del Topbar */}
+          {/* Botón hamburger para móvil */}
           {sidebar.isMobile && (
-            <div className="px-4 pt-4 pb-2" style={{ backgroundColor: 'rgb(148, 139, 84)' }}>
+            <div className="px-4 pt-4 pb-2 bg-[#948b54]">
               <button
                 onClick={sidebar.toggle}
                 className="
                   flex items-center justify-center w-10 h-10
                   bg-[#4d4725] text-white rounded-lg
-                  hover:bg-[#3a3419] transition-colors duration-200
+                  hover:bg-[#3a3519] transition-colors duration-200
                   focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-2
                 "
                 aria-label="Abrir menú de navegación"
@@ -146,8 +146,8 @@ const DashboardContent: React.FC<DashboardProps> = ({
             </div>
           )}
 
-          {/* Topbar sin padding lateral para que se pegue al sidebar */}
-          
+          {/* Topbar desactivado temporalmente */}
+          {/* <Topbar userRole={userRole} onLogout={logout} /> */}
         </div>
 
         {/* Breadcrumbs - Temporalmente desactivado */}
@@ -164,12 +164,10 @@ const DashboardContent: React.FC<DashboardProps> = ({
         {/* Content Area con scroll */}
         <div
           ref={scrollContainerRef}
-          className="flex-1 px-6 pb-6 overflow-y-auto"
+          className="flex-1 overflow-y-auto"
         >
-          <div className="h-full">
-            {/* Renderizar children o Outlet */}
-            {children || <Outlet />}
-          </div>
+          {/* Renderizar children o Outlet */}
+          {children || <Outlet />}
         </div>
       </main>
     </div>

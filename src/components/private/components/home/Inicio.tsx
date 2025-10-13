@@ -10,6 +10,7 @@ import useUserSession from '../../layout/hooks/useUserSession';
 import GraficaCard from '../statistics/cards/GraficaCard';
 import GraficaSemanaCard from '../statistics/cards/GraficaSemanaCard';
 import HeatmapDummy from './components/HeatmapDummy';
+import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
 
 // Componentes comunes
 import { LoadingSpinner, ErrorMessage } from '../../common';
@@ -135,10 +136,20 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
     );
   }
 
+  // Breadcrumbs - Solo mostrar el icono de inicio con label vacío para evitar redundancia
+  const breadcrumbItems: BreadcrumbItem[] = [
+    { label: '', isActive: true }
+  ];
+
   return (
-    <div className={`font-poppins pt-6 ${className}`}>
-      {/* Welcome Header - Con botón Actualizar */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div className={`min-h-screen p-4 md:p-6 lg:p-8 font-poppins ${className}`}>
+      <div className="max-w-7xl mx-auto">
+        {/* Breadcrumbs */}
+        <div className="mb-8">
+          <Breadcrumbs items={breadcrumbItems} />
+        </div>
+        {/* Welcome Header - Con botón Actualizar */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-[#4d4725]">
@@ -358,6 +369,7 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

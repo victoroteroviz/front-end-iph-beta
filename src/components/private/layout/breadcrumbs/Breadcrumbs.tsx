@@ -212,7 +212,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
           >
             <Home size={16} />
           </Link>
-          {items.length > 0 && renderSeparator()}
+          {items.length > 0 && items[0].label.trim() !== '' && renderSeparator()}
         </>
       )}
 
