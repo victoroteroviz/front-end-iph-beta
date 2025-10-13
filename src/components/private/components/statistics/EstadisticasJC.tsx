@@ -13,12 +13,22 @@ import { useEstadisticasJC } from './hooks/useEstadisticasJC';
 import FiltroFechaJC from './components/FiltroFechaJC';
 import GraficaBarrasJC from './components/GraficaBarrasJC';
 import GraficaPromedioJC from './components/GraficaPromedioJC';
+import { debugScrollBehavior, trackScrollEvents, compareStyles } from './debug-scroll';
 import './EstadisticasJC.css';
+
+interface EstadisticasJCProps {
+  /** Filtros externos (cuando se renderizan fuera del componente) */
+  externalFilters?: {
+    anio: number;
+    mes: number;
+    dia: number;
+  };
+}
 
 /**
  * Componente de Estadísticas de Justicia Cívica
  */
-export const EstadisticasJC: React.FC = () => {
+export const EstadisticasJC: React.FC<EstadisticasJCProps> = ({ externalFilters }) => {
   // Log solo en la primera carga, no en cada render
   useEffect(() => {
     console.log('📊 EstadisticasJC montado');
@@ -34,11 +44,22 @@ export const EstadisticasJC: React.FC = () => {
     actualizarFecha
   } = useEstadisticasJC();
 
+  // Sincronizar con filtros externos si existen
+  useEffect(() => {
+    if (externalFilters) {
+      console.log('🔄 [EstadisticasJC] Sincronizando con filtros externos:', externalFilters);
+      actualizarFecha(externalFilters.anio, externalFilters.mes, externalFilters.dia);
+    }
+  }, [externalFilters, actualizarFecha]);
+
   // Estado para controlar si hay errores críticos
   const [hayErrorCritico, setHayErrorCritico] = useState(false);
 
-  // Ref para el contenedor de filtros (sticky)
+  // Ref para el contenedor de filtros (solo si son internos)
   const filtrosRef = useRef<HTMLDivElement>(null);
+
+  // Determinar si los filtros están externos (renderizados fuera del componente)
+  const hasExternalFilters = !!externalFilters;
 
   // Detectar errores críticos
   useEffect(() => {
@@ -46,112 +67,148 @@ export const EstadisticasJC: React.FC = () => {
     setHayErrorCritico(!!tieneErrores);
   }, [error]);
 
-  // Sistema de scroll sticky con compensación dinámica de altura
+  // Sistema de scroll sticky - SOLO si los filtros son INTERNOS
   useEffect(() => {
-    console.log('🎬 [EstadisticasJC] Inicializando scroll sticky');
-    
+    // Si los filtros son externos, no necesitamos sticky
+    if (hasExternalFilters) {
+      console.log('⏩ [SCROLL] Filtros externos detectados, sistema sticky deshabilitado');
+      return;
+    }
+
     const filtrosElement = filtrosRef.current;
-    if (!filtrosElement) return;
+    if (!filtrosElement) {
+      console.warn('🔴 [SCROLL] filtrosRef.current es null');
+      return;
+    }
 
     const scrollContainer = filtrosElement.closest('.statistics-modal-body') as HTMLElement | null;
-    if (!scrollContainer) return;
+    if (!scrollContainer) {
+      console.warn('🔴 [SCROLL] No se encontró .statistics-modal-body');
+      return;
+    }
 
-    // Estado del scroll
-    let isCompact = false;
+    console.log('✅ [SCROLL] Sistema inicializado', {
+      filtrosElement,
+      scrollContainer,
+      filtrosHeight: filtrosElement.offsetHeight,
+      containerScrollHeight: scrollContainer.scrollHeight,
+      containerClientHeight: scrollContainer.clientHeight
+    });
+
+    // 🔍 ACTIVAR MONITORES DE DEBUG
+    const cleanupDebug = debugScrollBehavior(filtrosElement, scrollContainer, 50);
+    const cleanupTracker = trackScrollEvents(scrollContainer, 100);
+    
+    // 🔬 COMPARAR ESTILOS EN MODO NORMAL vs COMPACT
+    console.group('🔬 [STYLE ANALYSIS] Comparación de estilos');
+    setTimeout(() => {
+      compareStyles(filtrosElement, 'is-compact', [
+        'height',
+        'padding',
+        'margin',
+        'font-size',
+        'gap'
+      ]);
+    }, 1000);
+    console.groupEnd();
+
     let lastScrollTop = 0;
-    let isTransitioning = false;
-    const COMPACT_THRESHOLD = 80;  // Aumentado para dar más margen
-    const EXPAND_THRESHOLD = 20;   // Reducido para expandir antes
-    const TRANSITION_COOLDOWN = 300; // Más tiempo para transiciones
-
-    console.log('✅ Sticky configurado: COMPACT=80px, EXPAND=20px');
+    let lastState = '';
+    let scrollCallCount = 0;
+    let lastLogTime = Date.now();
 
     const handleScroll = () => {
+      scrollCallCount++;
       const scrollTop = scrollContainer.scrollTop;
-      const scrollDiff = Math.abs(scrollTop - lastScrollTop);
+      const currentTime = Date.now();
+      const timeSinceLastLog = currentTime - lastLogTime;
       
-      // Prevenir cambios durante transiciones activas
-      if (isTransitioning) {
-        return;
-      }
+      // Medir dimensiones ANTES del cambio
+      const heightBefore = filtrosElement.offsetHeight;
+      const wasCompact = filtrosElement.classList.contains('is-compact');
       
-      // 🔥 PREVENIR LOOPS: Detectar saltos causados por cambios de altura del sticky
-      // Aumentado a 60px para ser más conservador
-      if (scrollDiff > 60) {
-        console.log(`⚠️ Salto grande detectado (${scrollDiff.toFixed(0)}px) - ignorando`);
-        lastScrollTop = scrollTop;
-        return;
-      }
+      // Determinar nuevo estado
+      const shouldBeCompact = scrollTop > 100;
+      const newState = shouldBeCompact ? 'compact' : 'normal';
       
-      // Ignorar cambios mínimos
-      if (scrollDiff < 1) {
-        return;
-      }
-
-      // Compactar al bajar (solo si estamos scrolleando hacia abajo)
-      const scrollingDown = scrollTop > lastScrollTop;
-      if (scrollTop >= COMPACT_THRESHOLD && !isCompact && scrollingDown) {
-        console.log(`🔽 Compactando en ${scrollTop.toFixed(0)}px`);
-        
-        isTransitioning = true;
-        isCompact = true;
-        
-        // Guardar scroll actual ANTES del cambio
-        const scrollBefore = scrollContainer.scrollTop;
-        
-        filtrosElement.classList.add('is-compact');
-        
-        // Restaurar posición exacta DESPUÉS del cambio para evitar saltos
-        requestAnimationFrame(() => {
-          scrollContainer.scrollTop = scrollBefore;
-          lastScrollTop = scrollBefore;
-        });
-        
-        setTimeout(() => {
-          isTransitioning = false;
-        }, TRANSITION_COOLDOWN);
-      }
-      // Expandir al subir (solo si estamos scrolleando hacia arriba)
-      else {
-        const scrollingUp = scrollTop < lastScrollTop;
-        if (scrollTop < EXPAND_THRESHOLD && isCompact && scrollingUp) {
-          console.log(`🔼 Expandiendo en ${scrollTop.toFixed(0)}px`);
-          
-          isTransitioning = true;
-          isCompact = false;
-          
+      // Solo hacer cambios si el estado cambió
+      if (wasCompact !== shouldBeCompact) {
+        if (shouldBeCompact) {
+          filtrosElement.classList.add('is-compact');
+        } else {
           filtrosElement.classList.remove('is-compact');
-          
-          // Restaurar posición a 0 cuando expandimos cerca del top
-          requestAnimationFrame(() => {
-            scrollContainer.scrollTop = 0;
-            lastScrollTop = 0;
-          });
-          
-          setTimeout(() => {
-            isTransitioning = false;
-          }, TRANSITION_COOLDOWN);
         }
+
+        // Medir dimensiones DESPUÉS del cambio
+        const heightAfter = filtrosElement.offsetHeight;
+        const heightDiff = heightAfter - heightBefore;
+
+        // LOG DETALLADO del cambio de estado
+        console.log(`🔄 [SCROLL CAMBIO] ${wasCompact ? 'compact→normal' : 'normal→compact'}`, {
+          scrollCallCount,
+          timeSinceLastLog: `${timeSinceLastLog}ms`,
+          scrollTop: scrollTop.toFixed(2),
+          scrollDelta: (scrollTop - lastScrollTop).toFixed(2),
+          heightBefore: `${heightBefore}px`,
+          heightAfter: `${heightAfter}px`,
+          heightDiff: `${heightDiff}px`,
+          wasCompact,
+          nowCompact: filtrosElement.classList.contains('is-compact'),
+          containerScrollTop: scrollContainer.scrollTop.toFixed(2)
+        });
+
+        // ALERTA si hay cambio de altura (causa del loop)
+        if (Math.abs(heightDiff) > 1) {
+          console.warn('⚠️ [SCROLL LOOP WARNING] Cambio de altura detectado!', {
+            heightDiff: `${heightDiff}px`,
+            mensaje: 'Esto puede causar loop infinito si cambia scrollTop',
+            scrollTopAntes: scrollTop.toFixed(2),
+            scrollTopDespues: scrollContainer.scrollTop.toFixed(2)
+          });
+        }
+
+        lastLogTime = currentTime;
+      }
+      
+      // Detectar loops rápidos (múltiples llamadas en poco tiempo)
+      if (timeSinceLastLog < 100 && lastState !== newState && lastState !== '') {
+        console.error('🔴 [SCROLL LOOP] Posible loop infinito detectado!', {
+          timeSinceLastLog: `${timeSinceLastLog}ms`,
+          scrollCallCount,
+          lastState,
+          newState,
+          scrollTop: scrollTop.toFixed(2),
+          height: filtrosElement.offsetHeight
+        });
       }
 
       lastScrollTop = scrollTop;
+      lastState = newState;
     };
 
-    console.log('🎧 [EstadisticasJC] Agregando event listener de scroll');
-    
-    // Agregar listener con passive para mejor performance
     scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
 
-    console.log('✅ [EstadisticasJC] Sistema de scroll inicializado correctamente');
+    // Log periódico del estado
+    const statusInterval = setInterval(() => {
+      console.log('📊 [SCROLL STATUS]', {
+        scrollCallCount,
+        currentScrollTop: scrollContainer.scrollTop.toFixed(2),
+        isCompact: filtrosElement.classList.contains('is-compact'),
+        filtrosHeight: filtrosElement.offsetHeight,
+        containerScrollHeight: scrollContainer.scrollHeight
+      });
+    }, 5000);
 
-    // Cleanup
     return () => {
-      console.log('🧹 [EstadisticasJC] Limpiando sistema de scroll');
+      console.log('🔚 [SCROLL] Limpiando listeners', { scrollCallCount });
       scrollContainer.removeEventListener('scroll', handleScroll);
+      clearInterval(statusInterval);
+      cleanupDebug();
+      cleanupTracker();
       filtrosElement.classList.remove('is-compact');
-      console.log('✅ [EstadisticasJC] Sistema de scroll limpiado');
     };
-  }, []); // Solo ejecutar una vez al montar
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * Manejar cambio de fecha en los filtros
@@ -218,16 +275,18 @@ export const EstadisticasJC: React.FC = () => {
         </div>
       )}
 
-      {/* Filtros de Fecha */}
-      <div className="estadisticas-jc-filtros" ref={filtrosRef}>
-        <FiltroFechaJC
-          anioInicial={fechaSeleccionada.anio}
-          mesInicial={fechaSeleccionada.mes}
-          diaInicial={fechaSeleccionada.dia}
-          onFechaChange={handleFechaChange}
-          loading={loading.diaria || loading.mensual || loading.anual}
-        />
-      </div>
+      {/* Filtros de Fecha - SOLO si NO son externos */}
+      {!hasExternalFilters && (
+        <div className="estadisticas-jc-filtros" ref={filtrosRef}>
+          <FiltroFechaJC
+            anioInicial={fechaSeleccionada.anio}
+            mesInicial={fechaSeleccionada.mes}
+            diaInicial={fechaSeleccionada.dia}
+            onFechaChange={handleFechaChange}
+            loading={loading.diaria || loading.mensual || loading.anual}
+          />
+        </div>
+      )}
 
       {/* Gráficas de Barras */}
       {(estadisticas.diaria || estadisticas.mensual || estadisticas.anual) && (

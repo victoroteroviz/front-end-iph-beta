@@ -136,6 +136,131 @@
   height: 20px;
 }
 
+/* Modal Filters (entre header y body) - CON COLAPSAR/EXPANDIR */
+.statistics-modal-filters {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  overflow: visible;
+  position: relative;
+  z-index: 10;
+  transition: all 0.3s ease-out;
+}
+
+/* Header de filtros con toggle */
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.filters-header:hover {
+  background-color: #f8f9fa;
+}
+
+.filters-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.filters-icon {
+  font-size: 1.25rem;
+}
+
+.filters-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0;
+}
+
+.filters-date-display {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #4d4725;
+  background: #f8f9fa;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  margin-left: auto;
+}
+
+.filters-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.filters-toggle-btn:hover {
+  background: #f8f9fa;
+  border-color: #cbd5e0;
+}
+
+.filters-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.filters-toggle-icon {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.3s ease-out;
+  color: #4a5568;
+}
+
+.filters-toggle-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.filters-toggle-icon.collapsed {
+  transform: rotate(0deg);
+}
+
+/* Contenido de filtros (colapsable) */
+.filters-content {
+  max-height: 500px;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, opacity 0.3s ease-out, padding 0.3s ease-out;
+  opacity: 1;
+  padding: 0 2rem 1.25rem 2rem;
+}
+
+/* Estado colapsado */
+.statistics-modal-filters.collapsed .filters-content {
+  max-height: 0;
+  opacity: 0;
+  padding: 0 2rem;
+}
+
+/* Cambiar color del borde cuando está colapsado */
+.statistics-modal-filters.collapsed {
+  border-bottom-color: transparent;
+}
+
+/* Efecto en el header cuando está colapsado */
+.statistics-modal-filters.collapsed .filters-header {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Asegurar que el filtro dentro no tenga sombra ni estilos extra */
+.statistics-modal-filters .filtro-fecha-jc {
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
 /* Modal Body */
 .statistics-modal-body {
   flex: 1;
@@ -273,6 +398,28 @@
   .statistics-modal-header-content {
     flex-direction: column;
     gap: 0.75rem;
+  }
+
+  .filters-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .filters-header-content {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .filters-date-display {
+    width: 100%;
+    text-align: center;
+  }
+
+  .filters-content {
+    padding: 0 1rem 1rem 1rem;
+  }
+
+  .statistics-modal-filters.collapsed .filters-content {
+    padding: 0 1rem;
   }
 
   .statistics-modal-icon {

@@ -3,6 +3,7 @@ import type { IStatisticCard } from '../../../../../interfaces/IStatistic';
 import UsuariosIphStats from './UsuariosIphStats';
 import EstadisticasJC from '../EstadisticasJC';
 import EstadisticasProbableDelictivo from '../EstadisticasProbableDelictivo';
+import FiltroFechaJC from './FiltroFechaJC';
 import './StatisticsModal.css';
 
 interface StatisticsModalProps {
@@ -13,17 +14,103 @@ interface StatisticsModalProps {
 
 const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, onClose }) => {
   const [errorMessage, setErrorMessage] = useState<string>('');
+  
+  // Estado para los filtros de Justicia Cívica (fuera del scroll)
+  const [jcFiltros, setJcFiltros] = useState<{
+    anio: number;
+    mes: number;
+    dia: number;
+  } | null>(null);
+
+  // Estado para colapsar/expandir filtros
+  const [filtersExpanded, setFiltersExpanded] = useState<boolean>(true);
 
   // Limpiar errores cuando cambie la estadística o se abra el modal
   useEffect(() => {
     if (isOpen) {
       setErrorMessage('');
+      
+      // Inicializar filtros de JC si es necesario
+      if (statistic.id === 'justicia-civica' && !jcFiltros) {
+        const hoy = new Date();
+        setJcFiltros({
+          anio: hoy.getFullYear(),
+          mes: hoy.getMonth() + 1,
+          dia: hoy.getDate()
+        });
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, statistic.id]);
 
   // Manejador de errores del componente anidado
   const handleError = (message: string) => {
     setErrorMessage(message);
+  };
+
+  // Manejador de cambio de filtros de JC
+  const handleJcFechaChange = (anio: number, mes: number, dia: number) => {
+    console.log('📅 [StatisticsModal] Cambio de fecha JC:', { anio, mes, dia });
+    setJcFiltros({ anio, mes, dia });
+  };
+
+  // Toggle para expandir/colapsar filtros
+  const toggleFilters = () => {
+    setFiltersExpanded(prev => !prev);
+    console.log('🔄 [StatisticsModal] Filtros:', filtersExpanded ? 'colapsando' : 'expandiendo');
+  };
+
+  // Renderizar filtros fuera del body (solo para JC)
+  const renderFilters = () => {
+    if (statistic.id === 'justicia-civica' && jcFiltros) {
+      return (
+        <div className={`statistics-modal-filters ${filtersExpanded ? 'expanded' : 'collapsed'}`}>
+          {/* Header de filtros con botón toggle - Todo el header es clickeable */}
+          <div className="filters-header" onClick={toggleFilters}>
+            <div className="filters-header-content">
+              <span className="filters-icon">📅</span>
+              <h3 className="filters-title">Filtros de Fecha</h3>
+              <span className="filters-date-display">
+                {jcFiltros.dia}/{jcFiltros.mes}/{jcFiltros.anio}
+              </span>
+            </div>
+            <button
+              className="filters-toggle-btn"
+              aria-label={filtersExpanded ? 'Colapsar filtros' : 'Expandir filtros'}
+              title={filtersExpanded ? 'Colapsar filtros' : 'Expandir filtros'}
+              onClick={(e) => e.stopPropagation()} // Evitar doble toggle
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className={`filters-toggle-icon ${filtersExpanded ? 'expanded' : 'collapsed'}`}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* Contenido de filtros (colapsable) */}
+          <div className="filters-content">
+            <FiltroFechaJC
+              anioInicial={jcFiltros.anio}
+              mesInicial={jcFiltros.mes}
+              diaInicial={jcFiltros.dia}
+              onFechaChange={handleJcFechaChange}
+              loading={false}
+            />
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
 
   // Función para renderizar el contenido específico según el tipo de estadística
@@ -58,7 +145,16 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, on
           return <UsuariosIphStats onError={handleError} />;
 
         case 'justicia-civica':
-          return <EstadisticasJC />;
+          // Pasar los filtros como props para que solo renderice las gráficas
+          return jcFiltros ? (
+            <EstadisticasJC 
+              externalFilters={{
+                anio: jcFiltros.anio,
+                mes: jcFiltros.mes,
+                dia: jcFiltros.dia
+              }}
+            />
+          ) : null;
 
         case 'hecho-delictivo':
           return <EstadisticasProbableDelictivo />;
@@ -175,6 +271,9 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, on
               </svg>
             </button>
           </div>
+
+          {/* Filtros (fuera del body scrolleable) */}
+          {renderFilters()}
 
           {/* Body */}
           <div className="statistics-modal-body">

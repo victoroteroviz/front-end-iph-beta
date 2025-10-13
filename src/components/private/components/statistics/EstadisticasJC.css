@@ -18,77 +18,62 @@
   min-height: auto;
   padding: 0;
   background: transparent;
-  /* Prevenir problemas de layout */
+  /* CRÍTICO: visible para que sticky funcione correctamente */
   overflow: visible;
+  /* Asegurar contexto de posicionamiento */
+  position: relative;
+  /* NOTA: No usar "contain: layout style" aquí porque rompe position: sticky
+     CSS Containment crea un nuevo contexto que hace que el sticky busque 
+     el scroll en este contenedor (que tiene overflow: visible) en lugar de
+     en .statistics-modal-body (que tiene overflow-y: auto).
+     Ver: SCROLL_FILTROS_JC_DIAGNOSTIC.md para más detalles */
 }
 
 .statistics-modal-body .estadisticas-jc-header {
   display: none; /* Ocultar header porque el modal ya tiene su propio header */
 }
 
-/* Filtros sticky dentro del modal - OPTIMIZADO */
+/* Filtros sticky - Simple */
 .statistics-modal-body .estadisticas-jc-filtros {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 10;
   margin: 0 0 1.5rem 0;
   padding: 1.25rem 2rem;
   background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border-bottom: 1px solid #e5e7eb;
-  /* Transición suave solo en padding */
-  transition: padding 0.2s ease-out, box-shadow 0.2s ease-out;
-  /* Optimización de rendimiento */
-  contain: layout style;
+  transition: box-shadow 0.2s;
 }
 
-/* Modo compacto al hacer scroll */
+/* Sombra en modo compacto */
 .statistics-modal-body .estadisticas-jc-filtros.is-compact {
-  padding: 0.5rem 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  /* DEBUG: Agregar borde para visualizar cuando está en modo compacto */
+  border-left: 4px solid #4d4725;
 }
 
-/* Ocultar elementos en modo compacto */
+/* Ocultar elementos en modo compacto - SIMPLE */
 .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-header,
 .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada,
 .statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-campo label {
   display: none;
-}
-
-/* Ajustar controles en modo compacto */
-.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-campo {
-  margin-bottom: 0;
-}
-
-.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-select {
-  font-size: 0.875rem;
-  padding: 0.5rem 0.625rem;
-}
-
-.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-controls {
-  gap: 0.5rem;
-  margin: 0;
-}
-
-.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-fecha-jc {
-  padding: 0;
+  /* DEBUG: Estos elementos NO deben cambiar de tamaño, solo ocultarse */
 }
 
 .statistics-modal-body .filtro-fecha-jc {
   box-shadow: none;
-  padding: 0;
   background: transparent;
-  transition: padding 0.2s ease-out;
 }
 
-/* Contenido con padding dentro del modal */
+/* Contenido con margen dentro del modal - SIMPLIFICADO */
 .statistics-modal-body .estadisticas-jc-graficas,
 .statistics-modal-body .estadisticas-jc-resumen {
-  margin-left: 2rem;
-  margin-right: 2rem;
-  margin-top: 1.5rem; /* Agregado margen superior adicional */
-  /* Prevenir colapso de márgenes */
-  padding-top: 0.1px;
+  margin: 1.5rem 2rem 0 2rem;
+}
+
+/* Primera sección necesita más margen superior */
+.statistics-modal-body .estadisticas-jc-graficas:first-of-type {
+  margin-top: 2rem;
 }
 
 /* Espaciado del último elemento */
@@ -237,50 +222,58 @@
 }
 
 /* ===================================
-   FILTROS
+   FILTROS - Vista Normal (fuera del modal)
    =================================== */
 
 .estadisticas-jc-filtros {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+  /* Solo sticky cuando NO está en modal */
+  position: relative;
   margin-bottom: 2rem;
   background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%);
   padding: 1rem 0;
-  /* Transición suave optimizada */
-  transition: padding 0.2s ease-out, box-shadow 0.2s ease-out;
+  /* Transición optimizada */
+  transition: padding 0.25s ease-out;
   /* Optimización de rendimiento */
   contain: layout style;
 }
 
+/* Vista normal en página standalone */
+body:not(.in-modal) .estadisticas-jc-filtros {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
 /* Modo compacto al hacer scroll - Vista normal (fuera del modal) */
-.estadisticas-jc-filtros.is-compact {
-  padding: 0.25rem 0;
+/* ⚠️ DEBUG: ESTAS REGLAS CAMBIAN TAMAÑOS - POSIBLE CAUSA DE LOOP */
+body:not(.in-modal) .estadisticas-jc-filtros.is-compact {
+  padding: 0.25rem 0;  /* ⚠️ CAMBIA TAMAÑO - REDUCE PADDING */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid orange; /* 🔶 DEBUG: Indicador visual de modo compacto */
 }
 
-.estadisticas-jc-filtros.is-compact .filtro-fecha-jc {
-  padding: 0.5rem 1.5rem;
+body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-fecha-jc {
+  padding: 0.5rem 1.5rem;  /* ⚠️ CAMBIA TAMAÑO - REDUCE PADDING VERTICAL */
 }
 
-.estadisticas-jc-filtros.is-compact .filtro-header,
-.estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada,
-.estadisticas-jc-filtros.is-compact .filtro-campo label {
-  display: none;
+body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-header,
+body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada,
+body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-campo label {
+  display: none;  /* ✅ CORRECTO - Solo oculta */
 }
 
-.estadisticas-jc-filtros.is-compact .filtro-campo {
-  margin-bottom: 0;
+body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-campo {
+  margin-bottom: 0;  /* ⚠️ CAMBIA TAMAÑO - ELIMINA MARGIN */
 }
 
-.estadisticas-jc-filtros.is-compact .filtro-select {
-  font-size: 0.875rem;
-  padding: 0.5rem 0.625rem;
+body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-select {
+  font-size: 0.875rem;  /* ⚠️ CAMBIA TAMAÑO - REDUCE FONT-SIZE */
+  padding: 0.5rem 0.625rem;  /* ⚠️ CAMBIA TAMAÑO - REDUCE PADDING */
 }
 
-.estadisticas-jc-filtros.is-compact .filtro-controls {
-  gap: 0.5rem;
-  margin: 0;
+body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
+  gap: 0.5rem;  /* ⚠️ CAMBIA TAMAÑO - REDUCE GAP */
+  margin: 0;  /* ⚠️ CAMBIA TAMAÑO - ELIMINA MARGIN */
 }
 
 .filtro-fecha-jc {
@@ -288,7 +281,7 @@
   padding: 1.5rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: padding 0.2s ease-out, box-shadow 0.2s ease-out;
+  transition: padding 0.25s ease-out;
 }
 
 .filtro-header {
