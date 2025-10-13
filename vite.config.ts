@@ -46,7 +46,7 @@ export default defineConfig(({ mode }) => {
             'maps-vendor': ['leaflet', 'react-leaflet'],
 
             // Validación y forms
-            'forms-vendor': ['zod', 'react-hook-form']
+            'forms-vendor': ['zod']
           },
           // Nombres de chunks más descriptivos
           chunkFileNames: (chunkInfo) => {

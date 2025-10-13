@@ -24,7 +24,7 @@ import { GrupoForm } from './components/GrupoForm';
 import { UsuariosGrupoView } from './components/UsuariosGrupoView';
 
 //+ Constantes
-import { COLORS, MESSAGES } from './constants';
+import { MESSAGES } from './constants';
 
 //+ Interfaces
 import type { IGrupoUsuario } from '../../../../interfaces/usuario-grupo';
@@ -252,17 +252,14 @@ const GestionGrupos: React.FC = () => {
             <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <div
-                    className="flex items-center justify-center w-12 h-12 rounded-lg"
-                    style={{ backgroundColor: COLORS.primaryLight, color: COLORS.primary }}
-                  >
-                    <Shield size={24} />
+                  <div className="p-3 bg-[#948b54] rounded-lg">
+                    <Shield className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold" style={{ color: COLORS.primary }}>
+                    <h1 className="text-2xl font-bold text-[#4d4725] font-poppins">
                       {MESSAGES.titles.main}
                     </h1>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 font-poppins">
                       {MESSAGES.descriptions.main}
                     </p>
                   </div>
@@ -274,8 +271,12 @@ const GestionGrupos: React.FC = () => {
                         navigateToFormulario();
                       }}
                       disabled={isCreating}
-                      className="inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors duration-200 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-                      style={{ backgroundColor: COLORS.primary }}
+                      className="
+                        flex items-center gap-2 px-4 py-2 text-sm font-medium
+                        text-white bg-[#4d4725] rounded-lg
+                        hover:bg-[#3a3519] disabled:opacity-50 disabled:cursor-not-allowed
+                        transition-colors duration-200 font-poppins
+                      "
                     >
                       {isCreating ? (
                         <Loader2 className="animate-spin" size={16} />
@@ -294,7 +295,7 @@ const GestionGrupos: React.FC = () => {
               {/* Header de búsqueda */}
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold" style={{ color: COLORS.primary }}>
+                  <h2 className="text-xl font-semibold text-[#4d4725] font-poppins">
                     Lista de Grupos ({gruposFiltrados.length})
                   </h2>
                 </div>
@@ -311,21 +312,20 @@ const GestionGrupos: React.FC = () => {
                 {isLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="text-center">
-                      <Loader2 
-                        className="animate-spin mx-auto mb-4" 
-                        size={48} 
-                        style={{ color: COLORS.primary }} 
+                      <Loader2
+                        className="animate-spin mx-auto mb-4 text-[#4d4725]"
+                        size={48}
                       />
-                      <p className="text-gray-600">{MESSAGES.loading.grupos}</p>
+                      <p className="text-gray-600 font-poppins">{MESSAGES.loading.grupos}</p>
                     </div>
                   </div>
                 ) : gruposFiltrados.length === 0 ? (
                   <div className="text-center py-12">
                     <Shield className="mx-auto mb-4 text-gray-400" size={48} />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2 font-poppins">
                       {MESSAGES.empty.noGrupos}
                     </h3>
-                    <p className="text-gray-500">
+                    <p className="text-gray-500 font-poppins">
                       {filtros.search
                         ? MESSAGES.empty.noResults
                         : MESSAGES.empty.noGruposDescription

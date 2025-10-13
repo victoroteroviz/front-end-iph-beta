@@ -19,7 +19,7 @@
  */
 
 import React, { useEffect, useCallback, useMemo } from 'react';
-import { FileText, AlertCircle, Users, RefreshCw, Shield } from 'lucide-react';
+import { FileText, RefreshCw, Shield } from 'lucide-react';
 
 // Hook personalizado
 import useHistorialIPH from './hooks/useHistorialIPH';
@@ -62,7 +62,6 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
     clearAllFilters,
     setCurrentPage,
     refetchData,
-    clearError,
     verDetalle,
     cerrarDetalle,
     editarEstatus,
@@ -92,10 +91,6 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
   // Memoizar valores booleanos para optimizar renders
   const showPermissionError = useMemo(() =>
     error && error.includes('permisos'), [error]
-  );
-
-  const showGeneralError = useMemo(() =>
-    error && !error.includes('permisos'), [error]
   );
 
   const showEmptyState = useMemo(() =>
@@ -162,7 +157,7 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen p-4 md:p-6 lg:p-8" data-component="historial-iph">
       <div className={`max-w-7xl mx-auto ${className}`}>
 
         {/* Breadcrumbs */}
@@ -174,7 +169,7 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-[#4d4725] rounded-lg">
+              <div className="p-3 bg-[#948b54] rounded-lg">
                 <FileText className="h-6 w-6 text-white" />
               </div>
               <div>
@@ -184,13 +179,8 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
                 <p className="text-gray-600 font-poppins">
                   Gestión y seguimiento de Informes Policiales Homologados
                 </p>
-                <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 font-poppins">
-                  <Users size={14} />
-                  <span>Solo para Administradores y SuperAdmin</span>
-                </div>
               </div>
             </div>
-
             {/* Botón de actualización */}
             <button
               onClick={handleRefresh}
@@ -215,10 +205,15 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
           </div>
         </div>
 
-        {/* Contenedor principal con fondo blanco */}
-        <div className="bg-white rounded-xl border border-gray-200 mb-6">
-          {/* Filtros */}
+        {/* Búsqueda y Lista */}
+        <div className="bg-white rounded-xl border border-gray-200">
+          {/* Header de filtros */}
           <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-[#4d4725] font-poppins">
+                Filtros de Búsqueda
+              </h2>
+            </div>
             <FiltrosHistorial
               filtros={filtros}
               onFiltrosChange={setFiltros}
@@ -227,35 +222,7 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
             />
           </div>
 
-          {/* Mensajes de estado */}
-          <div className="px-6">
-            {/* Estado de error - OPTIMIZADO */}
-            {showGeneralError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4 flex items-start gap-3">
-                <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <h3 className="font-medium text-red-800 font-poppins">Error cargando datos</h3>
-                  <p className="text-red-700 text-sm mt-1 font-poppins">{error}</p>
-                  <div className="flex items-center gap-3 mt-3">
-                    <button
-                      onClick={clearError}
-                      className="text-sm text-red-600 hover:text-red-800 underline transition-colors cursor-pointer font-poppins"
-                    >
-                      Ocultar error
-                    </button>
-                    <button
-                      onClick={handleRefresh}
-                      className="text-sm text-red-600 hover:text-red-800 underline transition-colors cursor-pointer font-poppins"
-                    >
-                      Reintentar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Contenido principal - OPTIMIZADO */}
+          {/* Contenido de la lista */}
           <div className="p-6">
             {showEmptyState ? (
               // Estado sin datos - MEMOIZADO

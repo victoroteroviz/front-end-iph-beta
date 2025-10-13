@@ -62,7 +62,7 @@ const Usuarios: React.FC<UsuariosProps> = ({
   ];
 
   return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen p-4 md:p-6 lg:p-8" data-component="usuarios">
       <div className={`max-w-7xl mx-auto ${className}`}>
 
         {/* Breadcrumbs */}
@@ -72,8 +72,8 @@ const Usuarios: React.FC<UsuariosProps> = ({
 
         {/* Header principal */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
               <div className="p-3 bg-[#948b54] rounded-lg">
                 <Users className="h-6 w-6 text-white" />
               </div>
@@ -86,29 +86,34 @@ const Usuarios: React.FC<UsuariosProps> = ({
                 </p>
               </div>
             </div>
-
-            {/* Botón de refrescar */}
-            <button
-              onClick={refreshData}
-              disabled={state.isLoading}
-              className="
-                flex items-center gap-2 px-4 py-2 text-sm font-medium
-                text-white bg-[#4d4725] rounded-lg
-                hover:bg-[#3a3519] disabled:opacity-50 disabled:cursor-not-allowed
-                transition-colors duration-200 font-poppins
-              "
-            >
-              <RefreshCw className={`h-4 w-4 ${state.isLoading ? 'animate-spin' : ''}`} />
-              Actualizar
-            </button>
+            <div className="flex items-center space-x-3">
+              {/* Botón de refrescar */}
+              <button
+                onClick={refreshData}
+                disabled={state.isLoading}
+                className="
+                  flex items-center gap-2 px-4 py-2 text-sm font-medium
+                  text-white bg-[#4d4725] rounded-lg
+                  hover:bg-[#3a3519] disabled:opacity-50 disabled:cursor-not-allowed
+                  transition-colors duration-200 font-poppins
+                "
+              >
+                <RefreshCw className={`h-4 w-4 ${state.isLoading ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Actualizar</span>
+              </button>
+            </div>
           </div>
         </div>
 
-
-        {/* Contenedor principal con fondo blanco */}
-        <div className="bg-white rounded-xl border border-gray-200 mb-6">
-          {/* Filtros de búsqueda */}
+        {/* Búsqueda y Lista */}
+        <div className="bg-white rounded-xl border border-gray-200">
+          {/* Header de filtros */}
           <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-[#4d4725] font-poppins">
+                Lista de Usuarios ({state.totalUsers})
+              </h2>
+            </div>
             <UsuariosFilters
               filters={state.filters}
               loading={state.isLoading}
@@ -120,11 +125,11 @@ const Usuarios: React.FC<UsuariosProps> = ({
             />
           </div>
 
-          {/* Mensajes de estado */}
-          <div className="px-6">
-            {/* Indicador de estado de eliminación */}
+          {/* Contenido de la lista */}
+          <div className="p-6">
+            {/* Mensajes de estado inline */}
             {state.isDeleting && (
-              <div className="flex items-center gap-2 p-4 bg-blue-50 border border-blue-200 rounded-lg mt-4">
+              <div className="flex items-center gap-2 p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
                 <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
                 <span className="text-sm text-blue-800 font-poppins">
                   Eliminando usuario...
@@ -132,9 +137,8 @@ const Usuarios: React.FC<UsuariosProps> = ({
               </div>
             )}
 
-            {/* Error de eliminación */}
             {state.deleteError && (
-              <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg mt-4">
+              <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
                 <AlertCircle className="h-4 w-4 text-red-600" />
                 <span className="text-sm text-red-800 font-poppins">
                   Error al eliminar: {state.deleteError}
@@ -142,9 +146,8 @@ const Usuarios: React.FC<UsuariosProps> = ({
               </div>
             )}
 
-            {/* Error general */}
             {state.error && (
-              <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg mt-4">
+              <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
                 <AlertCircle className="h-4 w-4 text-red-600" />
                 <div>
                   <p className="text-sm font-medium text-red-800 font-poppins">
@@ -156,10 +159,8 @@ const Usuarios: React.FC<UsuariosProps> = ({
                 </div>
               </div>
             )}
-          </div>
 
-          {/* Tabla de usuarios */}
-          <div className="p-6">
+            {/* Tabla de usuarios */}
             <TableComponent
               usuarios={state.usuarios}
               loading={state.isLoading}
@@ -184,27 +185,6 @@ const Usuarios: React.FC<UsuariosProps> = ({
               />
             </div>
           )}
-        </div>
-
-
-        {/* Información adicional */}
-        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-gray-500 mt-0.5" />
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 font-poppins">
-                Información del Sistema
-              </h3>
-              <ul className="mt-2 text-xs text-gray-600 space-y-1 font-poppins">
-                <li>• La paginación se adapta automáticamente al número de usuarios</li>
-                <li>• Los permisos se basan en el rol del usuario actual</li>
-                {shouldUseVirtualization && (
-                  <li>• Usando tabla virtualizada para mejor rendimiento con muchos usuarios</li>
-                )}
-                <li>• Todos los filtros y ordenamientos funcionan en tiempo real</li>
-              </ul>
-            </div>
-          </div>
         </div>
       </div>
     </div>
