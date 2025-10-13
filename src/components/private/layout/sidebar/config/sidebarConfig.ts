@@ -76,7 +76,7 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       icon: React.createElement(Settings, { size: 20 }),
       requiredRoles: ['SuperAdmin', 'Administrador'],
       order: 7,
-      isDisabled: false
+      isDisabled: true
     }
   ]
 };
