@@ -10,19 +10,27 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useEstadisticasProbableDelictivo } from './hooks/useEstadisticasProbableDelictivo';
-import FiltroFechaJC from './components/FiltroFechaJC';
 import GraficaBarrasJC from './components/GraficaBarrasJC';
 import GraficaPromedioJC from './components/GraficaPromedioJC';
 import './EstadisticasJC.css';
 
+interface EstadisticasProbableDelictivoProps {
+  /** Filtros externos (cuando se renderizan fuera del componente) */
+  externalFilters?: {
+    anio: number;
+    mes: number;
+    dia: number;
+  };
+}
+
 /**
  * Componente de Estadísticas de Probable Delictivo
  */
-export const EstadisticasProbableDelictivo: React.FC = () => {
+export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelictivoProps> = ({ externalFilters }) => {
   // Log solo en la primera carga, no en cada render
   useEffect(() => {
-    console.log('📊 EstadisticasProbableDelictivo montado');
-  }, []);
+    console.log('📊 EstadisticasProbableDelictivo montado', { externalFilters });
+  }, [externalFilters]);
 
   // Hook personalizado con toda la lógica de negocio
   const {
@@ -33,6 +41,14 @@ export const EstadisticasProbableDelictivo: React.FC = () => {
     obtenerTodasLasEstadisticas,
     actualizarFecha
   } = useEstadisticasProbableDelictivo();
+
+  // Sincronizar con filtros externos si existen
+  useEffect(() => {
+    if (externalFilters) {
+      console.log('🔄 [EstadisticasProbableDelictivo] Sincronizando con filtros externos:', externalFilters);
+      actualizarFecha(externalFilters.anio, externalFilters.mes, externalFilters.dia);
+    }
+  }, [externalFilters, actualizarFecha]);
 
   // Estado para controlar si hay errores críticos
   const [hayErrorCritico, setHayErrorCritico] = useState(false);
@@ -47,7 +63,13 @@ export const EstadisticasProbableDelictivo: React.FC = () => {
   }, [error]);
 
   // Sistema de scroll sticky con compensación dinámica de altura
+  // Solo se activa si NO hay filtros externos
   useEffect(() => {
+    if (externalFilters) {
+      console.log('⏭️ [EstadisticasProbableDelictivo] Scroll sticky deshabilitado (filtros externos)');
+      return;
+    }
+
     console.log('🎬 [EstadisticasProbableDelictivo] Inicializando scroll sticky');
 
     const filtrosElement = filtrosRef.current;
@@ -218,16 +240,15 @@ export const EstadisticasProbableDelictivo: React.FC = () => {
         </div>
       )}
 
-      {/* Filtros de Fecha */}
-      <div className="estadisticas-jc-filtros" ref={filtrosRef}>
-        <FiltroFechaJC
-          anioInicial={fechaSeleccionada.anio}
-          mesInicial={fechaSeleccionada.mes}
-          diaInicial={fechaSeleccionada.dia}
-          onFechaChange={handleFechaChange}
-          loading={loading.diaria || loading.mensual || loading.anual}
-        />
-      </div>
+      {/* Filtros de Fecha - Solo mostrar si NO hay filtros externos */}
+      {!externalFilters && (
+        <div className="estadisticas-jc-filtros" ref={filtrosRef}>
+          {/* Nota: Este filtro se mantiene para compatibilidad, pero será removido gradualmente */}
+          <div className="filtro-fecha-placeholder">
+            <p>Filtros internos deshabilitados - Use EstadisticasFilters en el modal</p>
+          </div>
+        </div>
+      )}
 
       {/* Gráficas de Barras */}
       {(estadisticas.diaria || estadisticas.mensual || estadisticas.anual) && (
