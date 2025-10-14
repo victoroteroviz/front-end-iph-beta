@@ -27,7 +27,7 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
   inline = false
 }) => {
   /**
-   * Genera array de meses para el selector
+   * Genera array de meses para el selector (solo para el mensaje de información)
    */
   const meses = useMemo(() => {
     const nombresMeses = [
@@ -42,51 +42,38 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
   }, []);
 
   /**
-   * Genera array de años para el selector
-   */
-  const anios = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    const years = [];
-    
-    // Incluir años desde 2020 hasta el año actual + 2
-    for (let year = 2020; year <= currentYear + 2; year++) {
-      years.push(year);
-    }
-    
-    return years;
-  }, []);
-
-  /**
-   * Calcula los días disponibles según el mes y año seleccionados
-   */
-  const dias = useMemo(() => {
-    const diasEnMes = new Date(anio, mes, 0).getDate();
-    return Array.from({ length: diasEnMes }, (_, i) => i + 1);
-  }, [anio, mes]);
-
-  /**
    * Maneja el cambio de mes
    */
-  const handleMesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleMesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nuevoMes = Number(e.target.value);
-    onMesChange(nuevoMes);
+    // Validar que el mes esté entre 1 y 12
+    if (nuevoMes >= 1 && nuevoMes <= 12) {
+      onMesChange(nuevoMes);
+    }
   };
 
   /**
    * Maneja el cambio de año
    */
-  const handleAnioChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleAnioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nuevoAnio = Number(e.target.value);
-    onAnioChange(nuevoAnio);
+    // Validar que el año sea razonable (desde 2000)
+    if (nuevoAnio >= 2000) {
+      onAnioChange(nuevoAnio);
+    }
   };
 
   /**
    * Maneja el cambio de día
    */
-  const handleDiaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleDiaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (onDiaChange) {
       const nuevoDia = Number(e.target.value);
-      onDiaChange(nuevoDia);
+      const diasEnMes = new Date(anio, mes, 0).getDate();
+      // Validar que el día esté dentro del rango del mes
+      if (nuevoDia >= 1 && nuevoDia <= diasEnMes) {
+        onDiaChange(nuevoDia);
+      }
     }
   };
 
@@ -94,62 +81,61 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
   if (inline) {
     return (
       <div className={`flex items-center gap-4 flex-wrap ${className}`}>
-        {/* Selector de Año */}
+        {/* Input de Año */}
         <div className="flex items-center gap-2">
-          <label htmlFor="anio-selector-inline" className="text-sm font-semibold text-gray-700">
+          <label htmlFor="anio-input-inline" className="text-sm font-semibold text-gray-700">
             Año:
           </label>
-          <select
-            id="anio-selector-inline"
+          <input
+            id="anio-input-inline"
+            type="number"
             value={anio}
             onChange={handleAnioChange}
             disabled={loading}
-            className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725] hover:border-[#4d4725]/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
-            aria-label="Seleccionar año"
-          >
-            {anios.map(year => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-          </select>
+            min={2000}
+            placeholder="Año"
+            className="w-24 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725] hover:border-[#4d4725]/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            aria-label="Ingresar año"
+          />
         </div>
 
-        {/* Selector de Mes */}
+        {/* Input de Mes */}
         <div className="flex items-center gap-2">
-          <label htmlFor="mes-selector-inline" className="text-sm font-semibold text-gray-700">
+          <label htmlFor="mes-input-inline" className="text-sm font-semibold text-gray-700">
             Mes:
           </label>
-          <select
-            id="mes-selector-inline"
+          <input
+            id="mes-input-inline"
+            type="number"
             value={mes}
             onChange={handleMesChange}
             disabled={loading}
-            className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725] hover:border-[#4d4725]/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
-            aria-label="Seleccionar mes"
-          >
-            {meses.map(({ value, label }) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
+            min={1}
+            max={12}
+            placeholder="Mes"
+            className="w-20 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725] hover:border-[#4d4725]/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            aria-label="Ingresar mes (1-12)"
+          />
         </div>
 
-        {/* Selector de Día (solo si dia y onDiaChange están definidos) */}
+        {/* Input de Día (solo si dia y onDiaChange están definidos) */}
         {dia !== undefined && onDiaChange && (
           <div className="flex items-center gap-2">
-            <label htmlFor="dia-selector-inline" className="text-sm font-semibold text-gray-700">
+            <label htmlFor="dia-input-inline" className="text-sm font-semibold text-gray-700">
               Día:
             </label>
-            <select
-              id="dia-selector-inline"
+            <input
+              id="dia-input-inline"
+              type="number"
               value={dia}
               onChange={handleDiaChange}
               disabled={loading}
-              className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725] hover:border-[#4d4725]/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
-              aria-label="Seleccionar día"
-            >
-              {dias.map(d => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
+              min={1}
+              max={new Date(anio, mes, 0).getDate()}
+              placeholder="Día"
+              className="w-20 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725] hover:border-[#4d4725]/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              aria-label="Ingresar día"
+            />
           </div>
         )}
 
@@ -183,90 +169,69 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
       <div className="space-y-6">
         {/* Contenedor principal de filtros */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Selector de Mes */}
+          {/* Input de Mes */}
           <div className="group">
             <label 
-              htmlFor="mes-selector" 
+              htmlFor="mes-input" 
               className="block text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2"
             >
               <Calendar size={16} className="text-[#4d4725]" />
-              Seleccionar Mes
+              Mes (1-12)
             </label>
-            <div className="relative">
-              <select
-                id="mes-selector"
-                value={mes}
-                onChange={handleMesChange}
-                disabled={loading}
-                className="
-                  w-full px-4 py-3 pr-10
-                  border-2 border-gray-200 rounded-xl
-                  bg-gradient-to-r from-white to-gray-50
-                  text-gray-900 font-medium
-                  focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725]
-                  hover:border-[#4d4725]/40 hover:shadow-lg
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  cursor-pointer transition-all duration-300 ease-out
-                  appearance-none text-center
-                  group-hover:shadow-md
-                "
-                aria-label="Seleccionar mes"
-              >
-                {meses.map(({ value, label }) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+            <input
+              id="mes-input"
+              type="number"
+              value={mes}
+              onChange={handleMesChange}
+              disabled={loading}
+              min={1}
+              max={12}
+              placeholder="Ingresa el mes"
+              className="
+                w-full px-4 py-3
+                border-2 border-gray-200 rounded-xl
+                bg-gradient-to-r from-white to-gray-50
+                text-gray-900 font-medium text-center
+                focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725]
+                hover:border-[#4d4725]/40 hover:shadow-lg
+                disabled:opacity-50 disabled:cursor-not-allowed
+                transition-all duration-300 ease-out
+                group-hover:shadow-md
+              "
+              aria-label="Ingresar mes (1-12)"
+            />
           </div>
 
-          {/* Selector de Año */}
+          {/* Input de Año */}
           <div className="group">
             <label 
-              htmlFor="anio-selector" 
+              htmlFor="anio-input" 
               className="block text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2"
             >
               <Calendar size={16} className="text-[#4d4725]" />
-              Seleccionar Año
+              Año
             </label>
-            <div className="relative">
-              <select
-                id="anio-selector"
-                value={anio}
-                onChange={handleAnioChange}
-                disabled={loading}
-                className="
-                  w-full px-4 py-3 pr-10
-                  border-2 border-gray-200 rounded-xl
-                  bg-gradient-to-r from-white to-gray-50
-                  text-gray-900 font-medium
-                  focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725]
-                  hover:border-[#4d4725]/40 hover:shadow-lg
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  cursor-pointer transition-all duration-300 ease-out
-                  appearance-none text-center
-                  group-hover:shadow-md
-                "
-                aria-label="Seleccionar año"
-              >
-                {anios.map(year => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+            <input
+              id="anio-input"
+              type="number"
+              value={anio}
+              onChange={handleAnioChange}
+              disabled={loading}
+              min={2000}
+              placeholder="Ingresa el año"
+              className="
+                w-full px-4 py-3
+                border-2 border-gray-200 rounded-xl
+                bg-gradient-to-r from-white to-gray-50
+                text-gray-900 font-medium text-center
+                focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725]
+                hover:border-[#4d4725]/40 hover:shadow-lg
+                disabled:opacity-50 disabled:cursor-not-allowed
+                transition-all duration-300 ease-out
+                group-hover:shadow-md
+              "
+              aria-label="Ingresar año"
+            />
           </div>
         </div>
 

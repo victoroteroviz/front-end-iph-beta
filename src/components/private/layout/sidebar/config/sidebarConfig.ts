@@ -37,8 +37,8 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       order: 2
     },
     {
-      id: 'iphSemanal',
-      label: 'IPH\'s Semana',
+      id: 'iphActivo',
+      label: 'IPH\'s Activos',
       to: '/informepolicial',
       icon: React.createElement(FileText, { size: 20 }),
       requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
