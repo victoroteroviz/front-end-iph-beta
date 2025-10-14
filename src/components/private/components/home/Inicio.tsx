@@ -9,7 +9,7 @@ import useUserSession from '../../layout/hooks/useUserSession';
 // Componentes atómicos separados
 import GraficaCard from '../statistics/cards/GraficaCard';
 import GraficaSemanaCard from '../statistics/cards/GraficaSemanaCard';
-import HeatmapDummy from './components/HeatmapDummy';
+import Heatmap from './components/Heatmap';
 import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
 
 // Componentes comunes
@@ -294,8 +294,8 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
         )}
       </div>
       
-      {/* Mapa de Calor - Componente dummy para futura implementación */}
-      <HeatmapDummy className="mb-6" />
+      {/* Mapa de Calor - Integrado con API real */}
+      <Heatmap className="mb-6" />
       
 
       {/* Quick Access Section - Mantenida con estilo mejorado */}

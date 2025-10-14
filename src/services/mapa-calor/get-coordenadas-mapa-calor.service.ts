@@ -6,13 +6,13 @@
  * @description Obtiene coordenadas clustered según el nivel de zoom para mapa de calor
  */
 
-import { httpHelper } from '@/helper/http/http.helper';
-import { logInfo, logError } from '@/helper/log/logger.helper';
+import { httpHelper } from '../../helper/http/http.helper';
+import { logInfo, logError } from '../../helper/log/logger.helper';
 import type {
   I_CoordenadaCluster,
   I_GetCoordenadasQuery,
   I_MapaCalorResponse
-} from '@/interfaces/mapa-calor';
+} from '../../interfaces/mapa-calor';
 
 /**
  * Obtiene coordenadas de lugar de intervención con clustering dinámico
@@ -66,7 +66,7 @@ export const getCoordenadasMapaCalor = async (
 
     // Realizar petición GET con query params
     const response = await httpHelper.get<I_CoordenadaCluster[]>(
-      `/mapa-calor/lugar-intervencion?${queryParams.toString()}`
+      `/api/mapa-calor/lugar-intervencion?${queryParams.toString()}`
     );
 
     logInfo(
