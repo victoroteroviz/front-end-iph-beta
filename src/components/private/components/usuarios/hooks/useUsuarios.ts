@@ -10,16 +10,14 @@ import { useNavigate } from 'react-router-dom';
 import { getUsuarios, deleteUsuario } from '../../../../../services/user/crud-user.service';
 
 // Helpers
-import { showSuccess, showError, showWarning, showConfirmation } from '../../../../../helper/notification/notification.helper';
+import { showSuccess, showError, showWarning } from '../../../../../helper/notification/notification.helper';
 import { logInfo, logError, logAuth } from '../../../../../helper/log/logger.helper';
-import { ALLOWED_ROLES } from '../../../../../config/env.config';
 
 // Interfaces
 import type {
   IUsuariosState,
   IUsuariosFilters,
   IUseUsuariosReturn,
-  UsuariosPermission,
   SortableColumn
 } from '../../../../../interfaces/components/usuarios.interface';
 import { DEFAULT_USUARIOS_FILTERS } from '../../../../../interfaces/components/usuarios.interface';
@@ -42,7 +40,9 @@ const initialState: IUsuariosState = {
   canCreateUsers: false,
   canEditUsers: false,
   canDeleteUsers: false,
-  canViewAllUsers: false
+  canViewAllUsers: false,
+  deleteModalOpen: false,
+  usuarioToDelete: null
 };
 
 // =====================================================
@@ -231,18 +231,60 @@ const useUsuarios = (): IUseUsuariosReturn => {
     navigate(`/usuarios/editar/${usuario.id}`);
   }, [state.canEditUsers, navigate]);
 
-  const handleDeleteUser = useCallback(async (usuario: IPaginatedUsers) => {
+  const handleDeleteUser = useCallback((usuario: IPaginatedUsers) => {
     if (!state.canDeleteUsers) {
       showWarning('No tienes permisos para eliminar usuarios', 'Acceso Denegado');
       return;
     }
 
-    const confirmed = await showConfirmation(
-      '¿Eliminar usuario?',
-      `¿Estás seguro de que quieres eliminar a ${usuario.nombre} ${usuario.primer_apellido}? Esta acción no se puede deshacer.`
-    );
+    // Abrir el modal de confirmación
+    setState(prev => ({
+      ...prev,
+      deleteModalOpen: true,
+      usuarioToDelete: usuario,
+      deleteError: null
+    }));
 
-    if (!confirmed) return;
+    logInfo('UsuariosHook', 'Modal de eliminación abierto', { userId: usuario.id });
+  }, [state.canDeleteUsers]);
+
+  // Abrir modal de eliminación
+  const openDeleteModal = useCallback((usuario: IPaginatedUsers) => {
+    if (!state.canDeleteUsers) {
+      showWarning('No tienes permisos para eliminar usuarios', 'Acceso Denegado');
+      return;
+    }
+
+    setState(prev => ({
+      ...prev,
+      deleteModalOpen: true,
+      usuarioToDelete: usuario,
+      deleteError: null
+    }));
+
+    logInfo('UsuariosHook', 'Modal de eliminación abierto', { userId: usuario.id });
+  }, [state.canDeleteUsers]);
+
+  // Cerrar modal de eliminación
+  const closeDeleteModal = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      deleteModalOpen: false,
+      usuarioToDelete: null,
+      deleteError: null
+    }));
+
+    logInfo('UsuariosHook', 'Modal de eliminación cerrado');
+  }, []);
+
+  // Confirmar eliminación desde el modal
+  const confirmDelete = useCallback(async () => {
+    const usuario = state.usuarioToDelete;
+    
+    if (!usuario) {
+      logError('UsuariosHook', new Error('No hay usuario para eliminar'), 'confirmDelete');
+      return;
+    }
 
     setState(prev => ({ ...prev, isDeleting: usuario.id, deleteError: null }));
 
@@ -255,6 +297,14 @@ const useUsuarios = (): IUseUsuariosReturn => {
         deletedUserId: usuario.id,
         deletedUserName: `${usuario.nombre} ${usuario.primer_apellido}`
       });
+
+      // Cerrar modal
+      setState(prev => ({
+        ...prev,
+        deleteModalOpen: false,
+        usuarioToDelete: null,
+        isDeleting: null
+      }));
 
       // Recargar lista
       await loadUsuarios();
@@ -272,7 +322,7 @@ const useUsuarios = (): IUseUsuariosReturn => {
       
       logError('UsuariosHook', error, `Error al eliminar usuario ID: ${usuario.id}`);
     }
-  }, [state.canDeleteUsers, loadUsuarios]);
+  }, [state.usuarioToDelete, loadUsuarios]);
 
 
   // =====================================================
@@ -326,6 +376,9 @@ const useUsuarios = (): IUseUsuariosReturn => {
     handleCreateUser,
     handleEditUser,
     handleDeleteUser,
+    openDeleteModal,
+    closeDeleteModal,
+    confirmDelete,
     refreshData,
     canPerformAction
   };

@@ -83,6 +83,10 @@ export interface IUsuariosState {
   canEditUsers: boolean;
   canDeleteUsers: boolean;
   canViewAllUsers: boolean;
+
+  // Modal de eliminación
+  deleteModalOpen: boolean;
+  usuarioToDelete: IPaginatedUsers | null;
 }
 
 // =====================================================
@@ -185,6 +189,11 @@ export interface IUseUsuariosReturn {
   handleCreateUser: () => void;
   handleEditUser: (usuario: IPaginatedUsers) => void;
   handleDeleteUser: (usuario: IPaginatedUsers) => void;
+  
+  // Funciones del modal de eliminación
+  openDeleteModal: (usuario: IPaginatedUsers) => void;
+  closeDeleteModal: () => void;
+  confirmDelete: () => Promise<void>;
   
   // Utilidades
   refreshData: () => Promise<void>;

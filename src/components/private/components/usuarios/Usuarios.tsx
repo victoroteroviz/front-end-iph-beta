@@ -15,6 +15,7 @@ import UsuariosFilters from './components/UsuariosFilters';
 import UsuariosTable from './components/UsuariosTable';
 import VirtualizedTable from './components/VirtualizedTable';
 import Pagination from './components/Pagination';
+import DeleteConfirmModal from './components/DeleteConfirmModal';
 import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
 
 // Helpers
@@ -40,6 +41,8 @@ const Usuarios: React.FC<UsuariosProps> = ({
     handleCreateUser,
     handleEditUser,
     handleDeleteUser,
+    closeDeleteModal,
+    confirmDelete,
     refreshData
   } = useUsuarios();
 
@@ -186,6 +189,15 @@ const Usuarios: React.FC<UsuariosProps> = ({
             </div>
           )}
         </div>
+
+        {/* Modal de Confirmación de Eliminación */}
+        <DeleteConfirmModal
+          isOpen={state.deleteModalOpen}
+          usuario={state.usuarioToDelete}
+          isDeleting={state.isDeleting !== null}
+          onConfirm={confirmDelete}
+          onCancel={closeDeleteModal}
+        />
       </div>
     </div>
   );
