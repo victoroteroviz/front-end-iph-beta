@@ -7,7 +7,7 @@
  */
 
 import { httpHelper } from '../../helper/http/http.helper';
-import { logInfo, logError } from '../../helper/log/logger.helper';
+import { logInfo, logError, logDebug } from '../../helper/log/logger.helper';
 import type {
   I_CoordenadaCluster,
   I_GetCoordenadasQuery,
@@ -54,6 +54,22 @@ export const getCoordenadasMapaCalor = async (
       { zoom: query.zoom, hasBounds: !!(query.north && query.south && query.east && query.west) }
     );
 
+    // Log de debug con parámetros de entrada detallados
+    logDebug(MODULE_NAME, 'Parámetros de entrada completos', {
+      query: {
+        zoom: query.zoom,
+        north: query.north,
+        south: query.south,
+        east: query.east,
+        west: query.west
+      },
+      queryValidation: {
+        hasAllBounds: !!(query.north && query.south && query.east && query.west),
+        hasPartialBounds: !!(query.north || query.south || query.east || query.west),
+        zoomValid: query.zoom >= 1 && query.zoom <= 20
+      }
+    });
+
     // Construir query params
     const queryParams = new URLSearchParams();
     queryParams.append('zoom', query.zoom.toString());
@@ -64,10 +80,100 @@ export const getCoordenadasMapaCalor = async (
     if (query.east !== undefined) queryParams.append('east', query.east.toString());
     if (query.west !== undefined) queryParams.append('west', query.west.toString());
 
+    const finalUrl = `/api/mapa-calor/lugar-intervencion?${queryParams.toString()}`;
+
+    // Log de debug con URL y parámetros finales
+    logDebug(MODULE_NAME, 'URL de petición construida', {
+      url: finalUrl,
+      queryString: queryParams.toString(),
+      parametersCount: Array.from(queryParams.entries()).length,
+      parameters: Object.fromEntries(queryParams.entries())
+    });
+
     // Realizar petición GET con query params
-    const response = await httpHelper.get<I_CoordenadaCluster[]>(
-      `/api/mapa-calor/lugar-intervencion?${queryParams.toString()}`
-    );
+    const response = await httpHelper.get<I_CoordenadaCluster[]>(finalUrl);
+
+    // Log de debug con análisis detallado de coordenadas recibidas
+    logDebug(MODULE_NAME, 'Respuesta HTTP recibida', {
+      httpStatus: response.status || 'unknown',
+      duration: response.duration,
+      dataType: typeof response.data,
+      isArray: Array.isArray(response.data),
+      rawDataLength: response.data?.length || 0
+    });
+
+    // Análisis detallado de las coordenadas
+    if (Array.isArray(response.data) && response.data.length > 0) {
+      const coordenadas = response.data;
+      
+      // Estadísticas de las coordenadas
+      const stats = {
+        total: coordenadas.length,
+        firstCoordinate: coordenadas[0],
+        lastCoordinate: coordenadas[coordenadas.length - 1],
+        countRange: {
+          min: Math.min(...coordenadas.map(c => c.count)),
+          max: Math.max(...coordenadas.map(c => c.count)),
+          avg: coordenadas.reduce((sum, c) => sum + c.count, 0) / coordenadas.length
+        },
+        latitudeRange: {
+          min: Math.min(...coordenadas.map(c => c.latitud)),
+          max: Math.max(...coordenadas.map(c => c.latitud))
+        },
+        longitudeRange: {
+          min: Math.min(...coordenadas.map(c => c.longitud)),
+          max: Math.max(...coordenadas.map(c => c.longitud))
+        }
+      };
+
+      logDebug(MODULE_NAME, 'Estadísticas de coordenadas recibidas', stats);
+
+      // Log de las primeras 5 coordenadas para inspección
+      const sampleCoordinates = coordenadas.slice(0, 5).map((coord, index) => ({
+        index,
+        latitud: coord.latitud,
+        longitud: coord.longitud,
+        count: coord.count,
+        dataTypes: {
+          latitud: typeof coord.latitud,
+          longitud: typeof coord.longitud,
+          count: typeof coord.count
+        },
+        validation: {
+          latitudValid: typeof coord.latitud === 'number' && coord.latitud >= -90 && coord.latitud <= 90,
+          longitudValid: typeof coord.longitud === 'number' && coord.longitud >= -180 && coord.longitud <= 180,
+          countValid: typeof coord.count === 'number' && coord.count >= 0
+        }
+      }));
+
+      logDebug(MODULE_NAME, 'Muestra de coordenadas (primeras 5)', {
+        sampleSize: sampleCoordinates.length,
+        coordinates: sampleCoordinates
+      });
+
+      // Validar integridad de datos
+      const invalidCoordinates = coordenadas.filter((coord) => {
+        const latValid = typeof coord.latitud === 'number' && coord.latitud >= -90 && coord.latitud <= 90;
+        const lngValid = typeof coord.longitud === 'number' && coord.longitud >= -180 && coord.longitud <= 180;
+        const countValid = typeof coord.count === 'number' && coord.count >= 0;
+        return !latValid || !lngValid || !countValid;
+      });
+
+      if (invalidCoordinates.length > 0) {
+        logDebug(MODULE_NAME, 'Coordenadas inválidas detectadas', {
+          invalidCount: invalidCoordinates.length,
+          invalidCoordinates: invalidCoordinates.slice(0, 3), // Solo las primeras 3
+          percentage: ((invalidCoordinates.length / coordenadas.length) * 100).toFixed(2) + '%'
+        });
+      }
+
+    } else {
+      logDebug(MODULE_NAME, 'Respuesta vacía o inválida', {
+        dataReceived: response.data,
+        isEmpty: !response.data || response.data.length === 0,
+        dataStructure: response.data ? Object.keys(response.data) : 'no keys'
+      });
+    }
 
     logInfo(
       MODULE_NAME,
@@ -82,6 +188,32 @@ export const getCoordenadasMapaCalor = async (
     return response.data;
 
   } catch (error) {
+    // Log de debug con detalles del error
+    logDebug(MODULE_NAME, 'Error detallado en petición de coordenadas', {
+      error: {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        name: error instanceof Error ? error.name : 'Unknown',
+        stack: error instanceof Error ? error.stack : undefined
+      },
+      request: {
+        zoom: query.zoom,
+        bounds: {
+          north: query.north,
+          south: query.south,
+          east: query.east,
+          west: query.west
+        },
+        queryString: new URLSearchParams({
+          zoom: query.zoom.toString(),
+          ...(query.north !== undefined && { north: query.north.toString() }),
+          ...(query.south !== undefined && { south: query.south.toString() }),
+          ...(query.east !== undefined && { east: query.east.toString() }),
+          ...(query.west !== undefined && { west: query.west.toString() })
+        }).toString()
+      },
+      timestamp: new Date().toISOString()
+    });
+
     logError(MODULE_NAME, error, 'Error al obtener coordenadas de mapa de calor');
     throw error;
   }
@@ -103,6 +235,13 @@ export const getCoordenadasMapaCalor = async (
 export const getCoordenadasMapaCalorEnriquecido = async (
   query: I_GetCoordenadasQuery
 ): Promise<I_MapaCalorResponse> => {
+  const MODULE_NAME = 'MapaCalorService';
+  
+  logDebug(MODULE_NAME, 'Iniciando getCoordenadasMapaCalorEnriquecido', {
+    query,
+    timestamp: new Date().toISOString()
+  });
+
   const coordenadas = await getCoordenadasMapaCalor(query);
 
   const response: I_MapaCalorResponse = {
@@ -121,6 +260,17 @@ export const getCoordenadasMapaCalorEnriquecido = async (
       west: query.west
     };
   }
+
+  logDebug(MODULE_NAME, 'Respuesta enriquecida construida', {
+    response: {
+      coordenadasCount: response.coordenadas.length,
+      zoom: response.zoom,
+      total: response.total,
+      hasBounds: !!response.bounds
+    },
+    bounds: response.bounds,
+    timestamp: new Date().toISOString()
+  });
 
   return response;
 };
