@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { logInfo, logError } from '@/helper/log/logger.helper';
+import { logInfo, logError } from '../../../../..//helper/log/logger.helper';
 
 interface GeolocationState {
   /** Coordenadas actuales del usuario */

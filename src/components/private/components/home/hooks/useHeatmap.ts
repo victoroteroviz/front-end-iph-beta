@@ -12,6 +12,7 @@ import { showError } from '../../../../../helper/notification/notification.helpe
 import type { I_CoordenadaCluster, I_GetCoordenadasQuery } from '../../../../../interfaces/mapa-calor';
 import type { Map as LeafletMap } from 'leaflet';
 import { useGeolocation } from './useGeolocation';
+import { getSimpleAddress } from '../../../../../services/geocoding/reverse-geocoding.service';
 
 interface HeatmapStats {
   totalIPH: number;
@@ -23,14 +24,15 @@ interface HeatmapStats {
 interface UseHeatmapReturn {
   coordenadas: I_CoordenadaCluster[];
   loading: boolean;
+  silentLoading: boolean; // Nueva propiedad para carga silenciosa
   error: string | null;
   stats: HeatmapStats;
-  selectedZone: { lat: number; lng: number; count: number } | null;
-  setSelectedZone: (zone: { lat: number; lng: number; count: number } | null) => void;
-  fetchCoordenadas: (query: I_GetCoordenadasQuery) => Promise<void>;
+  fetchCoordenadas: (query: I_GetCoordenadasQuery, silent?: boolean) => Promise<void>;
   handleMapMove: (map: LeafletMap) => void;
   userLocation: { lat: number; lng: number } | null;
   geolocationLoading: boolean;
+  centerAddress: string | null;
+  centerAddressLoading: boolean;
 }
 
 const MODULE_NAME = 'useHeatmap';
@@ -40,15 +42,17 @@ const MODULE_NAME = 'useHeatmap';
  */
 export const useHeatmap = (): UseHeatmapReturn => {
   const [coordenadas, setCoordenadas] = useState<I_CoordenadaCluster[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true); // Solo para carga inicial
+  const [silentLoading, setSilentLoading] = useState<boolean>(false); // Para actualizaciones
   const [error, setError] = useState<string | null>(null);
-  const [selectedZone, setSelectedZone] = useState<{ lat: number; lng: number; count: number } | null>(null);
   const [stats, setStats] = useState<HeatmapStats>({
     totalIPH: 0,
     highActivity: 0,
     mediumActivity: 0,
     lowActivity: 0
   });
+  const [centerAddress, setCenterAddress] = useState<string | null>(null);
+  const [centerAddressLoading, setCenterAddressLoading] = useState<boolean>(false);
 
   // Hook de geolocalización
   const { coordinates: geoCoords, loading: geoLoading } = useGeolocation();
@@ -57,6 +61,7 @@ export const useHeatmap = (): UseHeatmapReturn => {
   const fetchingRef = useRef<boolean>(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const initialLoadRef = useRef<boolean>(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
    * Calcula estadísticas de actividad basadas en coordenadas
@@ -78,7 +83,7 @@ export const useHeatmap = (): UseHeatmapReturn => {
   /**
    * Obtiene coordenadas del servicio
    */
-  const fetchCoordenadas = useCallback(async (query: I_GetCoordenadasQuery) => {
+  const fetchCoordenadas = useCallback(async (query: I_GetCoordenadasQuery, silent: boolean = false) => {
     // Evitar llamadas múltiples simultáneas
     if (fetchingRef.current) {
       logInfo(MODULE_NAME, 'Fetch en progreso, ignorando nueva solicitud');
@@ -87,7 +92,14 @@ export const useHeatmap = (): UseHeatmapReturn => {
 
     try {
       fetchingRef.current = true;
-      setLoading(true);
+      
+      // Usar loading normal solo para carga inicial, silent para actualizaciones
+      if (silent) {
+        setSilentLoading(true);
+      } else {
+        setLoading(true);
+      }
+      
       setError(null);
 
       // Cancelar request anterior si existe
@@ -103,20 +115,6 @@ export const useHeatmap = (): UseHeatmapReturn => {
 
       const data = await getCoordenadasMapaCalor(query);
 
-      // Debug: Log para ver estructura de datos del backend
-      if (data && data.length > 0) {
-        console.log('🗺️ DEBUG Mapa de Calor - Datos recibidos:', {
-          total: data.length,
-          primerElemento: data[0],
-          keysDelPrimerElemento: Object.keys(data[0]),
-          tiposDePropiedades: {
-            latitud: typeof data[0]?.latitud,
-            longitud: typeof data[0]?.longitud,
-            count: typeof data[0]?.count
-          }
-        });
-      }
-
       setCoordenadas(data);
       setStats(calculateStats(data));
 
@@ -124,9 +122,10 @@ export const useHeatmap = (): UseHeatmapReturn => {
         total: data.length
       });
 
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Error al cargar coordenadas del mapa';
-      logError(MODULE_NAME, err, 'Error en fetchCoordenadas');
+    } catch (err: unknown) {
+      const error = err as Error;
+      const errorMessage = error?.message || 'Error al cargar coordenadas del mapa';
+      logError(MODULE_NAME, error, 'Error en fetchCoordenadas');
       setError(errorMessage);
       showError(errorMessage);
       setCoordenadas([]);
@@ -137,29 +136,68 @@ export const useHeatmap = (): UseHeatmapReturn => {
         lowActivity: 0
       });
     } finally {
-      setLoading(false);
+      if (silent) {
+        setSilentLoading(false);
+      } else {
+        setLoading(false);
+      }
       fetchingRef.current = false;
     }
   }, [calculateStats]);
 
   /**
-   * Maneja eventos de movimiento del mapa (zoom/pan)
-   * Debounced automáticamente por Leaflet's moveend event
+   * Obtiene la dirección del centro del mapa
+   */
+  const fetchCenterAddress = useCallback(async (lat: number, lng: number) => {
+    try {
+      setCenterAddressLoading(true);
+      const address = await getSimpleAddress(lat, lng);
+      setCenterAddress(address);
+      
+      logInfo(MODULE_NAME, 'Dirección del centro obtenida', { lat, lng, address });
+    } catch (error) {
+      logError(MODULE_NAME, error as Error, 'Error obteniendo dirección del centro');
+      setCenterAddress(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+    } finally {
+      setCenterAddressLoading(false);
+    }
+  }, []);
+
+  /**
+   * Maneja eventos de movimiento del mapa (zoom/pan) con debounce
+   * Debounce de 300ms para evitar llamadas excesivas al mover el mapa
    */
   const handleMapMove = useCallback((map: LeafletMap) => {
-    const bounds = map.getBounds();
-    const zoom = map.getZoom();
+    // Limpiar timer anterior si existe
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
 
-    const query: I_GetCoordenadasQuery = {
-      zoom,
-      north: bounds.getNorth(),
-      south: bounds.getSouth(),
-      east: bounds.getEast(),
-      west: bounds.getWest()
-    };
+    // Crear nuevo timer con debounce de 300ms
+    debounceTimerRef.current = setTimeout(() => {
+      const bounds = map.getBounds();
+      const zoom = map.getZoom();
+      const center = map.getCenter();
 
-    fetchCoordenadas(query);
-  }, [fetchCoordenadas]);
+      const query: I_GetCoordenadasQuery = {
+        zoom,
+        north: bounds.getNorth(),
+        south: bounds.getSouth(),
+        east: bounds.getEast(),
+        west: bounds.getWest()
+      };
+
+      logInfo(MODULE_NAME, 'Ejecutando fetchCoordenadas después de debounce', {
+        zoom,
+        center: { lat: center.lat, lng: center.lng }
+      });
+
+      // Obtener coordenadas y dirección del centro en paralelo
+      // Usar carga silenciosa para no mostrar overlay
+      fetchCoordenadas(query, true);
+      fetchCenterAddress(center.lat, center.lng);
+    }, 300);
+  }, [fetchCoordenadas, fetchCenterAddress]);
 
   /**
    * Carga inicial con geolocalización del usuario
@@ -194,27 +232,34 @@ export const useHeatmap = (): UseHeatmapReturn => {
       center: { lat: userLat, lng: userLng }
     });
 
-    fetchCoordenadas(initialQuery);
+    // Obtener coordenadas y dirección del centro en paralelo
+    // Carga inicial con overlay visible
+    fetchCoordenadas(initialQuery, false);
+    fetchCenterAddress(userLat, userLng);
 
     // Cleanup
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geoLoading, geoCoords]); // Solo depender de geoLoading y geoCoords
+  }, [geoLoading, geoCoords, fetchCenterAddress]); // Solo depender de geoLoading, geoCoords y fetchCenterAddress
 
   return {
     coordenadas,
     loading,
+    silentLoading,
     error,
     stats,
-    selectedZone,
-    setSelectedZone,
     fetchCoordenadas,
     handleMapMove,
     userLocation: geoCoords ? { lat: geoCoords.latitude, lng: geoCoords.longitude } : null,
-    geolocationLoading: geoLoading
+    geolocationLoading: geoLoading,
+    centerAddress,
+    centerAddressLoading
   };
 };
