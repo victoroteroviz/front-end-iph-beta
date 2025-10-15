@@ -454,19 +454,18 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
 
   /**
    * Muestra el detalle de un registro
+   * @note La carga de datos básicos se maneja en el componente DetalleIPH con useDetalleIPH
    */
   const verDetalle = useCallback(async (registro: RegistroHistorialIPH) => {
     try {
       logInfo('useHistorialIPH', 'Abriendo detalle de registro', { registroId: registro.id });
-      
-      // Obtener datos completos del registro si es necesario
-      const registroCompleto = await getRegistroIPHById(registro.id);
-      setRegistroSeleccionado(registroCompleto || registro);
-      
+
+      // Abrir modal con el registro - los datos básicos se cargan en el componente DetalleIPH
+      setRegistroSeleccionado(registro);
+
     } catch (error) {
-      logError('useHistorialIPH', error, `Error obteniendo detalle del registro ID: ${registro.id}`);
-      showError('No se pudo cargar el detalle del registro');
-      setRegistroSeleccionado(registro); // Fallback al registro original
+      logError('useHistorialIPH', error, `Error abriendo detalle del registro ID: ${registro.id}`);
+      showError('No se pudo abrir el detalle del registro');
     }
   }, []);
 

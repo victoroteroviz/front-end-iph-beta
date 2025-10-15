@@ -13,7 +13,8 @@ El componente **HistorialIPH** es una aplicación completa para la gestión y vi
 - ✅ **Control de acceso basado en roles** (Admin/SuperAdmin únicamente)
 - ✅ **Filtros avanzados** con rangos de fecha, estatus, tipos de delito
 - ✅ **Paginación completa** con navegación intuitiva
-- ✅ **Vista de detalle dummy** preparada para futura implementación
+- ✅ **Vista de detalle integrada con servicio real** (`getBasicDataByIphId`)
+- ✅ **Hook useDetalleIPH** para carga de datos básicos de IPH en modal
 - ✅ **Sistema de estadísticas** en tiempo real
 - ✅ **Estados de carga y error** con UI apropiada
 - ✅ **Accesibilidad mejorada** con ARIA labels y navegación por teclado
@@ -29,12 +30,13 @@ src/components/private/components/historial-iph/
 ├── README.md                        # Esta documentación
 │
 ├── hooks/
-│   └── useHistorialIPH.ts          # Hook personalizado con lógica de negocio
+│   ├── useHistorialIPH.ts          # Hook personalizado con lógica de negocio
+│   └── useDetalleIPH.ts            # Hook para carga de datos básicos del IPH
 │
 ├── components/
 │   ├── FiltrosHistorial.tsx        # Filtros avanzados
 │   ├── PaginacionHistorial.tsx     # Paginación específica
-│   └── DetalleIPH.tsx              # Vista detalle dummy
+│   └── DetalleIPH.tsx              # Modal de detalle con servicio real integrado
 │
 ├── cards/
 │   └── EstadisticasCards.tsx       # Tarjetas de estadísticas
@@ -199,6 +201,82 @@ La vista de detalle incluye pestañas con información completa:
 - Documentos oficiales adjuntos
 - Reportes generados
 - Archivos de soporte
+
+### 5. Modal de Detalle - Integración con Servicio Real
+
+El componente `DetalleIPH` ahora está integrado con el servicio `getBasicDataByIphId` para cargar datos reales del IPH seleccionado.
+
+**Características de la integración:**
+
+- ✅ **Hook personalizado `useDetalleIPH`**: Maneja la carga de datos básicos del IPH
+- ✅ **Carga automática**: Los datos se cargan al abrir el modal (clic en icono del ojo)
+- ✅ **Estados visuales**: Indicadores de carga, error y éxito
+- ✅ **Fallback inteligente**: Si falla el servicio, muestra datos locales del registro
+- ✅ **Logging completo**: Todos los eventos se registran con helpers de log
+
+**Flujo de datos:**
+
+```typescript
+1. Usuario hace clic en icono del ojo (Eye) en HistorialTable
+2. Hook useHistorialIPH llama a verDetalle(registro)
+3. Se abre modal DetalleIPH con el registro
+4. Hook useDetalleIPH se activa automáticamente
+5. Llama a getBasicDataByIphId(registro.id)
+6. Servicio consulta API real o datos mock (según USE_MOCK_DATA)
+7. Datos se muestran en el modal con indicador de origen
+```
+
+**Estados del modal:**
+
+- **Cargando**: Muestra spinner y mensaje "Cargando datos..."
+- **Éxito**: Muestra datos con badge verde "Datos básicos cargados desde el servidor"
+- **Error**: Muestra datos locales con badge amarillo y mensaje de error
+- **Fallback**: Si no hay conexión, usa datos del registro original
+
+**Datos integrados con el servicio:**
+
+- Número de referencia del IPH
+- Tipo de IPH (Accidente, Robo, etc.)
+- Delito asociado
+- Estatus actual
+- Ubicación completa (calle, colonia, municipio, estado)
+- Primer respondiente (nombre completo)
+- Observaciones
+- Evidencias (URLs de fotos)
+- Fecha de creación
+
+**Ejemplo de uso del hook:**
+
+```typescript
+// En DetalleIPH.tsx
+const {
+  datosBasicos,
+  loading: loadingDatosBasicos,
+  error: errorDatosBasicos,
+  refetch,
+  clear
+} = useDetalleIPH({
+  iphId: registro.id,
+  autoLoad: true
+});
+
+// Los datos se cargan automáticamente y se usan para renderizar el modal
+const datosActuales = datosBasicos || registroFallback;
+```
+
+**Configuración del servicio:**
+
+```typescript
+// En get-basic-iph-data.service.ts
+const USE_MOCK_DATA = false; // Cambiar a true para usar mocks
+
+// El servicio maneja automáticamente:
+// - Validación de ID
+// - Transformación de fechas
+// - Manejo de errores 404, 409
+// - Logging de operaciones
+// - Timeout y reintentos
+```
 
 ## Uso del Componente
 

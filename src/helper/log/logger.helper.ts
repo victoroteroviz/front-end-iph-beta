@@ -9,11 +9,12 @@ import { APP_ENVIRONMENT } from '../../config/env.config';
  * Niveles de logging disponibles
  */
 export const LogLevel = {
-  DEBUG: 0,
-  INFO: 1,
-  WARN: 2,
-  ERROR: 3,
-  CRITICAL: 4
+  VERBOSE: 0,
+  DEBUG: 1,
+  INFO: 2,
+  WARN: 3,
+  ERROR: 4,
+  CRITICAL: 5
 } as const;
 
 export type LogLevel = typeof LogLevel[keyof typeof LogLevel];
@@ -172,7 +173,7 @@ class Logger {
    * Obtiene el nombre del nivel de log
    */
   private getLevelName(level: LogLevel): string {
-    const levels = ['DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL'];
+    const levels = ['VERBOSE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL'];
     return levels[level] || 'UNKNOWN';
   }
 
@@ -181,6 +182,7 @@ class Logger {
    */
   private logToConsole(entry: LogEntry): void {
     const colors = {
+      [LogLevel.VERBOSE]: 'color: #9CA3AF; font-size: 10px',
       [LogLevel.DEBUG]: 'color: #6B7280',
       [LogLevel.INFO]: 'color: #3B82F6',
       [LogLevel.WARN]: 'color: #F59E0B',
@@ -244,6 +246,10 @@ class Logger {
   /**
    * Métodos públicos para diferentes niveles de log
    */
+  public verbose(module: string, message: string, data?: unknown): void {
+    this.log(LogLevel.VERBOSE, module, message, data);
+  }
+
   public debug(module: string, message: string, data?: unknown): void {
     this.log(LogLevel.DEBUG, module, message, data);
   }
@@ -316,4 +322,8 @@ export const logDebug = (module: string, message: string, data?: unknown) => {
 
 export const logWarning = (module: string, message: string, data?: unknown) => {
   logger.warn(module, message, data);
+};
+
+export const logVerbose = (module: string, message: string, data?: unknown) => {
+  logger.verbose(module, message, data);
 };

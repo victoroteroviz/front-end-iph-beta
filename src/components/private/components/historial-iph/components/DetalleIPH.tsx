@@ -1,29 +1,29 @@
 /**
  * Componente DetalleIPH
- * Vista dummy para mostrar el detalle completo de un registro IPH
- * 
- * @note Este es un componente dummy para futura implementación
+ * Vista para mostrar el detalle completo de un registro IPH
+ * Integrado con el servicio getBasicDataByIphId para datos reales
+ *
+ * @note Integrado con servicio real de datos básicos de IPH
  * Muestra información detallada del registro seleccionado
  */
 
-import React, { useState } from 'react';
-import { 
-  X, 
-  FileText, 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  User, 
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import {
+  X,
+  FileText,
+  Calendar,
+  Clock,
+  MapPin,
+  User,
   AlertTriangle,
   CheckCircle,
-  Edit3,
-  Save,
   Camera,
-  Paperclip,
   MessageSquare,
   Shield,
-  Eye,
-  Download
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn
 } from 'lucide-react';
 
 // Interfaces
@@ -32,12 +32,18 @@ import type { DetalleIPHProps } from '../../../../../interfaces/components/histo
 // Configuración de estatus
 import { estatusConfig } from '../../../../../mock/historial-iph';
 
+// Hooks
+import { useDetalleIPH } from '../hooks/useDetalleIPH';
+
 // Helpers
-import { logInfo } from '../../../../../helper/log/logger.helper';
+import { logInfo, logDebug, logError } from '../../../../../helper/log/logger.helper';
+
+// Config
+import { API_BASE_URL } from '../../../../../config/env.config';
 
 /**
- * Componente de detalle de IPH (dummy)
- * 
+ * Componente de detalle de IPH integrado con servicio real
+ *
  * @param props - Props del componente
  * @returns JSX.Element del detalle completo
  */
@@ -47,32 +53,91 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
   onEditarEstatus,
   className = ''
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedObservaciones, setEditedObservaciones] = useState(registro.observaciones || '');
-  const [selectedTab, setSelectedTab] = useState<'general' | 'evidencias' | 'seguimiento' | 'documentos'>('general');
+  const [selectedTab, setSelectedTab] = useState<'general' | 'evidencias' | 'seguimiento'>('general');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
+
+  // Hook para cargar datos básicos del IPH
+  const {
+    datosBasicos,
+    loading: loadingDatosBasicos,
+    error: errorDatosBasicos
+  } = useDetalleIPH({
+    iphId: registro.id,
+    autoLoad: true
+  });
+
+  // Log cuando se carga el componente
+  useEffect(() => {
+    logInfo('DetalleIPH', 'Componente montado', { registroId: registro.id });
+    return () => {
+      logInfo('DetalleIPH', 'Componente desmontado', { registroId: registro.id });
+    };
+  }, [registro.id]);
 
   /**
-   * Maneja el guardado de cambios
+   * Construye la URL completa de una evidencia
+   * Maneja tanto URLs completas como rutas relativas
    */
-  const handleSaveChanges = () => {
-    logInfo('DetalleIPH', 'Guardando cambios en observaciones', { registroId: registro.id });
-    // TODO: Implementar guardado real cuando esté el API
-    setIsEditing(false);
-    // Aquí se llamaría a un servicio para actualizar las observaciones
-  };
+  const buildEvidenciaUrl = useCallback((url: string): string => {
+    if (!url) return '';
 
-  /**
-   * Maneja el cambio de estatus
-   */
-  const handleEstatusChange = (nuevoEstatus: typeof registro.estatus) => {
-    if (onEditarEstatus && nuevoEstatus !== registro.estatus) {
-      logInfo('DetalleIPH', 'Cambiando estatus desde detalle', { 
-        registroId: registro.id, 
-        nuevoEstatus 
-      });
-      onEditarEstatus(nuevoEstatus);
+    // Si ya es una URL completa (http:// o https://), retornarla tal cual
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
     }
-  };
+
+    // Si empieza con /, agregar solo la base URL
+    if (url.startsWith('/')) {
+      return `${API_BASE_URL}${url}`;
+    }
+
+    // Si no empieza con /, agregar base URL con /
+    return `${API_BASE_URL}/${url}`;
+  }, []);
+
+  /**
+   * Abre el modal de imagen
+   */
+  const handleImageClick = useCallback((url: string, index: number) => {
+    const fullUrl = buildEvidenciaUrl(url);
+    setSelectedImage(fullUrl);
+    setSelectedImageIndex(index);
+    logDebug('DetalleIPH', 'Abriendo modal de imagen', { url: fullUrl, index });
+  }, [buildEvidenciaUrl]);
+
+  /**
+   * Cierra el modal de imagen
+   */
+  const handleCloseImageModal = useCallback(() => {
+    setSelectedImage(null);
+    setSelectedImageIndex(0);
+    logDebug('DetalleIPH', 'Cerrando modal de imagen');
+  }, []);
+
+  /**
+   * Navega a la imagen anterior
+   */
+  const handlePreviousImage = useCallback((evidencias: string[]) => {
+    if (selectedImageIndex > 0) {
+      const newIndex = selectedImageIndex - 1;
+      const fullUrl = buildEvidenciaUrl(evidencias[newIndex]);
+      setSelectedImageIndex(newIndex);
+      setSelectedImage(fullUrl);
+    }
+  }, [selectedImageIndex, buildEvidenciaUrl]);
+
+  /**
+   * Navega a la siguiente imagen
+   */
+  const handleNextImage = useCallback((evidencias: string[]) => {
+    if (selectedImageIndex < evidencias.length - 1) {
+      const newIndex = selectedImageIndex + 1;
+      const fullUrl = buildEvidenciaUrl(evidencias[newIndex]);
+      setSelectedImageIndex(newIndex);
+      setSelectedImage(fullUrl);
+    }
+  }, [selectedImageIndex, buildEvidenciaUrl]);
 
   /**
    * Formatea fecha y hora
@@ -102,111 +167,143 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
     }
   };
 
+  // Usar datos básicos del servicio si están disponibles, fallback a registro
+  const datosActuales = datosBasicos || {
+    numero: registro.numeroReferencia,
+    tipoIph: registro.tipoDelito,
+    delito: registro.tipoDelito,
+    estatus: registro.estatus,
+    fechaCreacion: registro.fechaCreacion,
+    ubicacion: registro.ubicacion ? {
+      calle: `Lat: ${registro.ubicacion.latitud}, Lng: ${registro.ubicacion.longitud}`,
+      colonia: '',
+      estado: '',
+      municipio: '',
+      ciudad: ''
+    } : undefined,
+    observaciones: registro.observaciones || '',
+    primerRespondiente: {
+      nombre: registro.usuario.split(' ')[0] || '',
+      apellidoPaterno: registro.usuario.split(' ')[1] || '',
+      apellidoMaterno: registro.usuario.split(' ')[2] || ''
+    },
+    evidencias: [],
+    tipoDelito: registro.tipoDelito
+  };
+
   const { formattedDate, formattedTime } = formatDateTime(registro.fechaCreacion.toISOString().split('T')[0], registro.fechaCreacion.toTimeString().split(' ')[0]);
-  const estatusInfo = estatusConfig[registro.estatus as keyof typeof estatusConfig] || estatusConfig['N/D'];
+  const estatusInfo = estatusConfig[datosActuales.estatus as keyof typeof estatusConfig] || estatusConfig['N/D'];
 
   /**
-   * Datos dummy para la vista detallada
+   * Datos para la vista detallada (mezcla de reales y dummy)
    */
-  const dummyData = {
+  const dummyData = useMemo(() => ({
     ubicacionCompleta: {
-      direccion: registro.ubicacion
-        ? `Lat: ${registro.ubicacion.latitud}, Lng: ${registro.ubicacion.longitud}`
-        : 'Sin ubicación especificada',
-      colonia: 'Col. Centro',
-      municipio: 'Ciudad de México',
+      direccion: datosActuales.ubicacion?.calle || 'Sin ubicación especificada',
+      colonia: datosActuales.ubicacion?.colonia || 'Col. Centro',
+      municipio: datosActuales.ubicacion?.municipio || 'Ciudad de México',
+      ciudad: datosActuales.ubicacion?.ciudad || '',
+      estado: datosActuales.ubicacion?.estado || '',
       cp: '06000',
-      referencias: 'Frente al Oxxo, edificio de color azul'
+      referencias: 'Información detallada disponible próximamente'
     },
     involucrados: [
       {
         id: 1,
-        tipo: 'Víctima',
-        nombre: 'Ana María González López',
-        edad: 28,
-        telefono: '55-1234-5678',
-        domicilio: 'Calle Reforma #123'
-      },
-      {
-        id: 2,
-        tipo: 'Testigo',
-        nombre: 'Carlos Rodríguez Méndez',
-        edad: 35,
-        telefono: '55-8765-4321',
-        domicilio: 'Av. Insurgentes #456'
+        tipo: 'Primer Respondiente',
+        nombre: datosActuales.primerRespondiente
+          ? `${datosActuales.primerRespondiente.nombre} ${datosActuales.primerRespondiente.apellidoPaterno} ${datosActuales.primerRespondiente.apellidoMaterno}`.trim()
+          : registro.usuario,
+        edad: 0,
+        telefono: 'No disponible',
+        domicilio: 'No disponible'
       }
     ],
-    evidencias: [
-      {
-        id: 1,
-        tipo: 'Fotografía',
-        descripcion: 'Foto del lugar de los hechos',
-        archivo: 'evidencia_001.jpg',
-        fechaCaptura: '2024-01-15 08:35:00'
-      },
-      {
-        id: 2,
-        tipo: 'Video',
-        descripcion: 'Video de cámara de seguridad',
-        archivo: 'video_001.mp4',
-        fechaCaptura: '2024-01-15 08:30:00'
-      },
-      {
-        id: 3,
-        tipo: 'Documento',
-        descripcion: 'Declaración de testigo',
-        archivo: 'declaracion_001.pdf',
-        fechaCaptura: '2024-01-15 10:00:00'
-      }
-    ],
+    // Las evidencias ahora solo manejan URLs de imágenes
+    evidenciasUrls: datosActuales.evidencias || [],
     seguimiento: [
       {
         id: 1,
-        fecha: '2024-01-15 08:30:00',
+        fecha: new Date(datosActuales.fechaCreacion).toLocaleString(),
         accion: 'Registro inicial del caso',
-        usuario: registro.usuario,
-        descripcion: 'Se registra el caso con evidencia inicial'
+        usuario: datosActuales.primerRespondiente
+          ? `${datosActuales.primerRespondiente.nombre} ${datosActuales.primerRespondiente.apellidoPaterno}`.trim()
+          : registro.usuario,
+        descripcion: `Se registra el IPH tipo ${datosActuales.tipoIph} con estatus ${datosActuales.estatus}`
       },
       {
         id: 2,
-        fecha: '2024-01-15 10:00:00',
-        accion: 'Toma de declaración',
-        usuario: registro.usuario,
-        descripcion: 'Se toma declaración de testigo principal'
-      },
-      {
-        id: 3,
-        fecha: '2024-01-16 14:30:00',
-        accion: 'Revisión de evidencias',
-        usuario: 'Supervisor García',
-        descripcion: 'Revisión y validación de evidencias recopiladas'
+        fecha: new Date(datosActuales.fechaCreacion).toLocaleString(),
+        accion: 'Datos básicos registrados',
+        usuario: 'Sistema',
+        descripcion: `Número de referencia: ${datosActuales.numero || registro.numeroReferencia}`
       }
     ]
-  };
+  }), [datosActuales, registro.usuario, registro.numeroReferencia]);
 
   /**
-   * Configuración de tabs
+   * Configuración de tabs - Condicional según evidencias disponibles
    */
-  const tabs = [
-    { id: 'general', label: 'Información General', icon: FileText },
-    { id: 'evidencias', label: 'Evidencias', icon: Camera },
-    { id: 'seguimiento', label: 'Seguimiento', icon: MessageSquare },
-    { id: 'documentos', label: 'Documentos', icon: Paperclip }
-  ] as const;
+  const tabs = useMemo(() => {
+    const baseTabs = [
+      { id: 'general' as const, label: 'Información General', icon: FileText }
+    ];
+
+    // Solo mostrar pestaña de evidencias si hay evidencias
+    if (dummyData.evidenciasUrls && dummyData.evidenciasUrls.length > 0) {
+      baseTabs.push({
+        id: 'evidencias' as const,
+        label: `Evidencias (${dummyData.evidenciasUrls.length})`,
+        icon: Camera
+      });
+    }
+
+    // Pestaña de seguimiento siempre visible
+    baseTabs.push({
+      id: 'seguimiento' as const,
+      label: 'Seguimiento',
+      icon: MessageSquare
+    });
+
+    return baseTabs;
+  }, [dummyData.evidenciasUrls]);
 
   return (
-    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 ${className}`}>
+    <div
+      className={`fixed inset-0 flex items-center justify-center z-50 p-4 ${className}`}
+      style={{
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)'
+      }}
+    >
       <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-[#f8f0e7]">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Shield size={24} className="text-[#4d4725]" />
               <h2 className="text-xl font-bold text-[#4d4725]">
-                Detalle IPH - {registro.numeroReferencia}
+                Detalle IPH - {datosActuales.numero || registro.numeroReferencia}
               </h2>
             </div>
+
+            {/* Indicador de carga */}
+            {loadingDatosBasicos && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Loader2 size={16} className="animate-spin" />
+                <span>Cargando datos...</span>
+              </div>
+            )}
+
+            {/* Indicador de error */}
+            {errorDatosBasicos && (
+              <div className="flex items-center gap-2 text-sm text-red-600">
+                <AlertTriangle size={16} />
+                <span>Error al cargar datos completos</span>
+              </div>
+            )}
             
             <div
               className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
@@ -220,24 +317,6 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {onEditarEstatus && (
-              <select
-                value={registro.estatus}
-                onChange={(e) => handleEstatusChange(e.target.value as typeof registro.estatus)}
-                className="
-                  px-3 py-1.5 border border-gray-300 rounded-md text-sm
-                  focus:outline-none focus:ring-2 focus:ring-[#4d4725]
-                  cursor-pointer
-                "
-              >
-                {Object.entries(estatusConfig).map(([key, config]) => (
-                  <option key={key} value={key}>
-                    {config.label}
-                  </option>
-                ))}
-              </select>
-            )}
-            
             <button
               onClick={onClose}
               className="
@@ -317,13 +396,23 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                     <div className="flex items-center gap-2">
                       <AlertTriangle size={16} className="text-gray-400" />
                       <span className="text-sm text-gray-600">Tipo de delito:</span>
-                      <span className="font-medium">{registro.tipoDelito}</span>
+                      <span className="font-medium">{datosActuales.tipoDelito || datosActuales.delito}</span>
                     </div>
-                    
+
+                    <div className="flex items-center gap-2">
+                      <FileText size={16} className="text-gray-400" />
+                      <span className="text-sm text-gray-600">Tipo de IPH:</span>
+                      <span className="font-medium">{datosActuales.tipoIph}</span>
+                    </div>
+
                     <div className="flex items-center gap-2">
                       <User size={16} className="text-gray-400" />
-                      <span className="text-sm text-gray-600">Usuario responsable:</span>
-                      <span className="font-medium">{registro.usuario}</span>
+                      <span className="text-sm text-gray-600">Primer Respondiente:</span>
+                      <span className="font-medium">
+                        {datosActuales.primerRespondiente
+                          ? `${datosActuales.primerRespondiente.nombre} ${datosActuales.primerRespondiente.apellidoPaterno} ${datosActuales.primerRespondiente.apellidoMaterno}`.trim()
+                          : registro.usuario}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -363,42 +452,16 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
 
               {/* Observaciones */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <MessageSquare size={20} className="text-[#4d4725]" />
-                    Observaciones
-                  </h3>
-                  
-                  <button
-                    onClick={() => isEditing ? handleSaveChanges() : setIsEditing(true)}
-                    className="
-                      flex items-center gap-2 px-3 py-1.5 text-sm
-                      bg-[#4d4725] text-white rounded-md
-                      hover:bg-[#3a3519] transition-colors
-                    "
-                  >
-                    {isEditing ? <Save size={14} /> : <Edit3 size={14} />}
-                    {isEditing ? 'Guardar' : 'Editar'}
-                  </button>
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <MessageSquare size={20} className="text-[#4d4725]" />
+                  Observaciones
+                </h3>
+
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-gray-900 whitespace-pre-wrap">
+                    {datosActuales.observaciones || 'Sin observaciones registradas'}
+                  </p>
                 </div>
-                
-                {isEditing ? (
-                  <textarea
-                    value={editedObservaciones}
-                    onChange={(e) => setEditedObservaciones(e.target.value)}
-                    className="
-                      w-full h-24 p-3 border border-gray-300 rounded-md
-                      focus:outline-none focus:ring-2 focus:ring-[#4d4725]
-                    "
-                    placeholder="Agregar observaciones..."
-                  />
-                ) : (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-gray-900 whitespace-pre-wrap">
-                      {registro.observaciones || 'Sin observaciones registradas'}
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -407,46 +470,128 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <Camera size={20} className="text-[#4d4725]" />
-                Evidencias del Caso (Dummy)
+                Evidencias Fotográficas
               </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {dummyData.evidencias.map((evidencia) => (
-                  <div key={evidencia.id} className="bg-gray-50 rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-900">{evidencia.tipo}</span>
-                      <div className="flex items-center gap-2">
-                        <button className="text-[#4d4725] hover:text-[#3a3519]">
-                          <Eye size={16} />
-                        </button>
-                        <button className="text-gray-600 hover:text-gray-800">
-                          <Download size={16} />
-                        </button>
+
+              {dummyData.evidenciasUrls.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {dummyData.evidenciasUrls.map((url, index) => {
+                    const fullUrl = buildEvidenciaUrl(url);
+                    logDebug('DetalleIPH', 'Renderizando miniatura', { index, url: fullUrl });
+
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => handleImageClick(url, index)}
+                        style={{
+                          position: 'relative',
+                          width: '100%',
+                          paddingBottom: '100%',
+                          cursor: 'pointer',
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          border: '2px solid #e5e7eb',
+                          backgroundColor: '#f3f4f6'
+                        }}
+                      >
+                        <img
+                          src={fullUrl}
+                          alt={`Evidencia ${index + 1}`}
+                          style={{
+                            position: 'absolute',
+                            top: '0',
+                            left: '0',
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            display: 'block'
+                          }}
+                          onLoad={() => {
+                            logDebug('DetalleIPH', '✅ Imagen cargada y renderizada', {
+                              index,
+                              url: fullUrl,
+                              timestamp: new Date().toISOString()
+                            });
+                          }}
+                          onError={() => {
+                            logError('DetalleIPH', 'Imagen no disponible', `Error al cargar imagen ${index + 1}: ${fullUrl}`);
+                          }}
+                        />
+
+                        <div
+                          className="opacity-0 hover:opacity-100 transition-opacity duration-200"
+                          style={{
+                            position: 'absolute',
+                            top: '0',
+                            left: '0',
+                            width: '100%',
+                            height: '100%',
+                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            pointerEvents: 'none'
+                          }}
+                        >
+                          <div style={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            borderRadius: '50%',
+                            padding: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <ZoomIn
+                              size={28}
+                              className="text-[#4d4725]"
+                            />
+                          </div>
+                        </div>
+
+                        <div style={{
+                          position: 'absolute',
+                          top: '8px',
+                          left: '8px',
+                          backgroundColor: '#4d4725',
+                          color: 'white',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+                        }}>
+                          {index + 1}
+                        </div>
                       </div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <div className="text-sm text-gray-600">{evidencia.descripcion}</div>
-                      <div className="text-xs text-gray-500">Archivo: {evidencia.archivo}</div>
-                      <div className="text-xs text-gray-500">Capturado: {evidencia.fechaCaptura}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="text-center py-8 text-gray-500">
-                <Camera size={48} className="mx-auto mb-4 text-gray-300" />
-                <p className="text-sm">Vista dummy - Las evidencias se implementarán con el API real</p>
-              </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <Camera size={64} className="mx-auto mb-4 text-gray-300" />
+                  <h4 className="text-lg font-medium mb-2">No hay evidencias disponibles</h4>
+                  <p className="text-sm">
+                    No se encontraron evidencias fotográficas para este IPH.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
           {selectedTab === 'seguimiento' && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <MessageSquare size={20} className="text-[#4d4725]" />
-                Historial de Seguimiento (Dummy)
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <MessageSquare size={20} className="text-[#4d4725]" />
+                  Historial de Seguimiento
+                </h3>
+                <span className="
+                  px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium
+                  rounded-full border border-yellow-300
+                ">
+                  Próximamente
+                </span>
+              </div>
               
               <div className="space-y-4">
                 {dummyData.seguimiento.map((evento, index) => (
@@ -478,34 +623,34 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
               </div>
             </div>
           )}
-
-          {selectedTab === 'documentos' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Paperclip size={20} className="text-[#4d4725]" />
-                Documentos Adjuntos (Dummy)
-              </h3>
-              
-              <div className="text-center py-16 text-gray-500">
-                <Paperclip size={64} className="mx-auto mb-4 text-gray-300" />
-                <h4 className="text-lg font-medium mb-2">Documentos por implementar</h4>
-                <p className="text-sm">
-                  Esta sección mostrará documentos oficiales, reportes y archivos adjuntos
-                  cuando se implemente la integración con el API real.
-                </p>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Footer */}
         <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-500">
-              <strong>Nota:</strong> Esta es una vista dummy para desarrollo. 
-              Los datos reales se cargarán cuando esté disponible la integración con el API.
+              {datosBasicos ? (
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={16} className="text-green-600" />
+                  <span>
+                    <strong>Datos básicos cargados desde el servidor.</strong> Algunos datos detallados aún son de demostración.
+                  </span>
+                </div>
+              ) : loadingDatosBasicos ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 size={16} className="animate-spin text-blue-600" />
+                  <span>Cargando datos del servidor...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <AlertTriangle size={16} className="text-yellow-600" />
+                  <span>
+                    <strong>Mostrando datos locales.</strong> {errorDatosBasicos ? `Error: ${errorDatosBasicos}` : 'Datos del servidor no disponibles.'}
+                  </span>
+                </div>
+              )}
             </div>
-            
+
             <div className="flex items-center gap-2">
               <button
                 onClick={onClose}
@@ -521,6 +666,92 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Modal de visualización de imagen */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)'
+          }}
+        >
+          <div className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center p-4">
+            {/* Botón cerrar */}
+            <button
+              onClick={handleCloseImageModal}
+              className="
+                absolute top-4 right-4 p-3 bg-white hover:bg-gray-100
+                rounded-full text-gray-900 transition-all z-10
+                shadow-lg hover:shadow-xl
+              "
+              aria-label="Cerrar imagen"
+            >
+              <X size={24} />
+            </button>
+
+            {/* Contador de imágenes */}
+            <div className="
+              absolute top-4 left-4 px-4 py-2 bg-white
+              rounded-full text-gray-900 text-sm font-semibold z-10
+              shadow-lg
+            ">
+              {selectedImageIndex + 1} / {dummyData.evidenciasUrls.length}
+            </div>
+
+            {/* Botón anterior */}
+            {selectedImageIndex > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePreviousImage(dummyData.evidenciasUrls);
+                }}
+                className="
+                  absolute left-4 p-4 bg-white hover:bg-gray-100
+                  rounded-full text-gray-900 transition-all
+                  shadow-lg hover:shadow-xl
+                "
+                aria-label="Imagen anterior"
+              >
+                <ChevronLeft size={32} />
+              </button>
+            )}
+
+            {/* Imagen */}
+            <div className="flex items-center justify-center max-w-full max-h-full">
+              <img
+                src={selectedImage}
+                alt={`Evidencia ${selectedImageIndex + 1}`}
+                className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl bg-gray-800"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  logError('DetalleIPH', 'Error en modal de imagen', `No se pudo cargar: ${selectedImage}`);
+                  target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="600" height="600"%3E%3Crect fill="%23374151" width="600" height="600"/%3E%3Cg%3E%3Ccircle cx="300" cy="280" r="60" fill="%239ca3af" opacity="0.5"/%3E%3Crect x="270" y="250" width="60" height="60" fill="%239ca3af" opacity="0.5" rx="8"/%3E%3C/g%3E%3Ctext fill="%23e5e7eb" x="50%25" y="65%25" dominant-baseline="middle" text-anchor="middle" font-size="20" font-family="system-ui"%3EImagen no disponible%3C/text%3E%3Ctext fill="%239ca3af" x="50%25" y="72%25" dominant-baseline="middle" text-anchor="middle" font-size="14" font-family="system-ui"%3EVerifique la URL de la evidencia%3C/text%3E%3C/svg%3E';
+                }}
+              />
+            </div>
+
+            {/* Botón siguiente */}
+            {selectedImageIndex < dummyData.evidenciasUrls.length - 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNextImage(dummyData.evidenciasUrls);
+                }}
+                className="
+                  absolute right-4 p-4 bg-white hover:bg-gray-100
+                  rounded-full text-gray-900 transition-all
+                  shadow-lg hover:shadow-xl
+                "
+                aria-label="Imagen siguiente"
+              >
+                <ChevronRight size={32} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
