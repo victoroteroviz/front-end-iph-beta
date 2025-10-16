@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Shield, Edit, Eye, Loader2 } from 'lucide-react';
+import { Shield, Edit, Eye, Loader2, Trash2 } from 'lucide-react';
 import { COLORS, COMMON_STYLES } from '../../constants/theme.constants';
 import type { IGrupoUsuario } from '../../../../../../interfaces/usuario-grupo';
 
@@ -13,10 +13,13 @@ interface GrupoCardProps {
   grupo: IGrupoUsuario;
   onEdit?: (grupo: IGrupoUsuario) => void;
   onView?: (grupo: IGrupoUsuario) => void;
+  onDelete?: (grupo: IGrupoUsuario) => void;
   onClick?: (grupo: IGrupoUsuario) => void;
   showActions?: boolean;
   isUpdating?: boolean;
+  isDeleting?: boolean;
   canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 /**
@@ -27,10 +30,13 @@ export const GrupoCard: React.FC<GrupoCardProps> = React.memo(({
   grupo,
   onEdit,
   onView,
+  onDelete,
   onClick,
   showActions = true,
   isUpdating = false,
+  isDeleting = false,
   canEdit = false,
+  canDelete = false,
 }) => {
   // Función para truncar descripción a 200 caracteres
   const truncateDescription = (text: string, maxLength: number = 200): string => {
@@ -40,6 +46,11 @@ export const GrupoCard: React.FC<GrupoCardProps> = React.memo(({
   };
 
   const handleCardClick = () => {
+    // Si hay onView, ejecutar ver usuarios (misma acción que el ojo)
+    if (onView) {
+      onView(grupo);
+    }
+    // Si hay onClick personalizado, también ejecutarlo
     if (onClick) {
       onClick(grupo);
     }
@@ -59,13 +70,39 @@ export const GrupoCard: React.FC<GrupoCardProps> = React.memo(({
     }
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(grupo);
+    }
+  };
+
   return (
     <div
       onClick={handleCardClick}
-      className={`${COMMON_STYLES.card} ${onClick ? 'cursor-pointer' : ''}`}
+      className={`${COMMON_STYLES.card} ${(onClick || onView) ? 'cursor-pointer' : ''} relative`}
     >
+      {/* Botón de eliminar en la esquina superior derecha */}
+      {canDelete && onDelete && (
+        <button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="absolute top-3 right-3 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed z-10 hover:scale-125 hover:rotate-6 active:scale-110"
+          style={{
+            transition: 'all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+          }}
+          title="Eliminar Grupo"
+        >
+          {isDeleting ? (
+            <Loader2 className="animate-spin" size={18} />
+          ) : (
+            <Trash2 className="cursor-pointer" size={18} />
+          )}
+        </button>
+      )}
+
       {/* Header del grupo */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-4 pr-8">
         <div className="flex items-center space-x-3">
           <div
             className="w-12 h-12 rounded-lg flex items-center justify-center"
@@ -141,7 +178,8 @@ export const GrupoCard: React.FC<GrupoCardProps> = React.memo(({
     prevProps.grupo.nombreGrupo === nextProps.grupo.nombreGrupo &&
     prevProps.grupo.cantidadUsuarios === nextProps.grupo.cantidadUsuarios &&
     prevProps.grupo.estatus === nextProps.grupo.estatus &&
-    prevProps.isUpdating === nextProps.isUpdating
+    prevProps.isUpdating === nextProps.isUpdating &&
+    prevProps.isDeleting === nextProps.isDeleting
   );
 });
 

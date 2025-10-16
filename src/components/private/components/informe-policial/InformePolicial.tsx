@@ -260,7 +260,23 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
           </div>
         </div>
 
-        {/* Estadísticas */}
+        
+
+        {/* Paginación */}
+        {state.pagination.totalPages > 1 && (
+          <div className="bg-white rounded-xl border border-gray-200 mb-6 p-4">
+            <IPHPagination
+              pagination={{
+                ...state.pagination,
+                currentPage: state.filters.page // Usar la página de los filtros, no del servidor
+              }}
+              loading={isAnyLoading}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
+
+{/* Estadísticas */}
         <div className="bg-white rounded-xl border border-gray-200 mb-6">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center gap-2">
@@ -277,20 +293,6 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
             <EstadisticasCards />
           </div>
         </div>
-
-        {/* Paginación */}
-        {state.pagination.totalPages > 1 && (
-          <div className="bg-white rounded-xl border border-gray-200 mb-6 p-4">
-            <IPHPagination
-              pagination={{
-                ...state.pagination,
-                currentPage: state.filters.page // Usar la página de los filtros, no del servidor
-              }}
-              loading={isAnyLoading}
-              onPageChange={handlePageChange}
-            />
-          </div>
-        )}
 
         {/* Información de la sesión */}
         <div className="bg-white rounded-xl border border-gray-200 p-4">

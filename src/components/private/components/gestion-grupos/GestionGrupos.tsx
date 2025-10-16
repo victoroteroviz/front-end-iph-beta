@@ -6,7 +6,6 @@
 
 import React from 'react';
 import {
-  Users,
   Shield,
   Plus,
   Loader2,
@@ -79,7 +78,6 @@ const GestionGrupos: React.FC = () => {
     handleUpdateGrupo,
     handleDeleteGrupo,
     setVistaActual,
-    selectGrupo,
     updateFormulario,
     updateFiltros,
     resetFormulario,
@@ -88,12 +86,10 @@ const GestionGrupos: React.FC = () => {
     // Navegación
     navigateToFormulario,
     navigateToLista,
-    goBack,
-    scrollToTop,
   } = useGestionGruposUnificado();
 
   // Hook de navegación para manejo del historial del navegador
-  const { pushNavigation: pushNavigationMain, goBack: goBackMain, scrollToTop: scrollToTopMain } = useNavigationHistory({
+  const { pushNavigation: pushNavigationMain, scrollToTop: scrollToTopMain } = useNavigationHistory({
     onNavigateBack: async () => {
       // Callback personalizado cuando se usa la flecha anterior del navegador
       if (vistaUsuarios.mostrar) {
@@ -183,7 +179,13 @@ const GestionGrupos: React.FC = () => {
     }, `Usuarios del Grupo: ${grupo.nombreGrupo}`);
   };
 
-  // handleDeleteClick ya no es necesario - lo usamos directo en el botón de eliminación si fuera necesario
+  const handleDeleteClick = (grupo: IGrupoUsuario) => {
+    setDeleteDialog({
+      isOpen: true,
+      grupoId: grupo.id,
+      grupoNombre: grupo.nombreGrupo
+    });
+  };
 
   const handleConfirmDelete = async () => {
     if (deleteDialog.grupoId) {
@@ -340,8 +342,11 @@ const GestionGrupos: React.FC = () => {
                         grupo={grupo}
                         onEdit={() => handleEditGrupo(grupo)}
                         onView={() => handleViewUsuarios(grupo)}
+                        onDelete={() => handleDeleteClick(grupo)}
                         canEdit={permisos.canEdit}
+                        canDelete={permisos.canDelete}
                         isUpdating={isUpdating}
+                        isDeleting={isDeleting}
                       />
                     ))}
                   </div>

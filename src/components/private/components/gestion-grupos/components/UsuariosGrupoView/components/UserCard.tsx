@@ -42,8 +42,27 @@ export const UserCard: React.FC<UserCardProps> = React.memo(({
         ${isDeleting && 'opacity-60'}
       `}
     >
+      {/* Botón de eliminar en la esquina superior derecha */}
+      {onDelete && showActions && (
+        <button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="absolute top-3 right-3 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed z-10 hover:scale-125 hover:rotate-6 active:scale-110"
+          style={{
+            transition: 'all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+          }}
+          title="Eliminar Usuario del Grupo"
+        >
+          {isDeleting ? (
+            <Loader2 className="animate-spin cursor-pointer" size={18} />
+          ) : (
+            <Trash2 className="cursor-pointer" size={18} />
+          )}
+        </button>
+      )}
+
       {/* Header del usuario */}
-      <div className="flex items-start space-x-4 mb-4">
+      <div className="flex items-start space-x-4 mb-4 pr-8">{/* Agregado pr-8 para espacio del botón */}
         <div
           className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm"
           style={{ backgroundColor: COLORS.primaryLight20, color: COLORS.primary }}
@@ -110,37 +129,6 @@ export const UserCard: React.FC<UserCardProps> = React.memo(({
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
             Información limitada
           </span>
-        </div>
-      )}
-
-      {/* Botón de eliminar (visible según showActions) */}
-      {onDelete && showActions && (
-        <div className="absolute bottom-3 right-3">
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className={`
-              flex items-center justify-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium
-              transition-all duration-200 shadow-sm
-              ${isDeleting
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 cursor-pointer active:scale-95'
-              }
-            `}
-            title={isDeleting ? 'Eliminando...' : 'Eliminar del grupo'}
-          >
-            {isDeleting ? (
-              <>
-                <Loader2 size={14} className="animate-spin" />
-                <span>Eliminando...</span>
-              </>
-            ) : (
-              <>
-                <Trash2 size={14} />
-                <span>Eliminar</span>
-              </>
-            )}
-          </button>
         </div>
       )}
     </div>

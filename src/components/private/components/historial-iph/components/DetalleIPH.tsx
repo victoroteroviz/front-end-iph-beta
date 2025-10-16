@@ -140,6 +140,27 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
   }, [selectedImageIndex, buildEvidenciaUrl]);
 
   /**
+   * Maneja el evento de la tecla Escape para cerrar el modal de imagen
+   */
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && selectedImage) {
+        handleCloseImageModal();
+      }
+    };
+
+    // Agregar listener solo si hay imagen seleccionada
+    if (selectedImage) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedImage, handleCloseImageModal]);
+
+  /**
    * Formatea fecha y hora
    */
   const formatDateTime = (fecha: string, hora: string) => {
@@ -322,7 +343,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
               className="
                 p-2 text-gray-400 hover:text-gray-600
                 hover:bg-gray-100 rounded-full
-                transition-colors duration-200
+                transition-colors duration-200 cursor-pointer
               "
               aria-label="Cerrar detalle"
             >
@@ -339,7 +360,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                 key={id}
                 onClick={() => setSelectedTab(id)}
                 className={`
-                  flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer
                   ${selectedTab === id
                     ? 'border-[#4d4725] text-[#4d4725]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -482,6 +503,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                     return (
                       <div
                         key={index}
+                        className="group"
                         onClick={() => handleImageClick(url, index)}
                         style={{
                           position: 'relative',
@@ -491,12 +513,14 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                           borderRadius: '8px',
                           overflow: 'hidden',
                           border: '2px solid #e5e7eb',
-                          backgroundColor: '#f3f4f6'
+                          backgroundColor: '#f3f4f6',
+                          transition: 'all 0.3s ease'
                         }}
                       >
                         <img
                           src={fullUrl}
                           alt={`Evidencia ${index + 1}`}
+                          className="group-hover:scale-110 transition-transform duration-300"
                           style={{
                             position: 'absolute',
                             top: '0',
@@ -518,36 +542,43 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                           }}
                         />
 
+                        {/* Overlay con efecto hover */}
                         <div
-                          className="opacity-0 hover:opacity-100 transition-opacity duration-200"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                           style={{
                             position: 'absolute',
                             top: '0',
                             left: '0',
                             width: '100%',
                             height: '100%',
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            backgroundColor: 'rgba(0, 0, 0, 0.6)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             pointerEvents: 'none'
                           }}
                         >
-                          <div style={{
-                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                            borderRadius: '50%',
-                            padding: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}>
+                          <div
+                            className="group-hover:scale-110 transition-transform duration-300"
+                            style={{
+                              backgroundColor: 'white',
+                              borderRadius: '50%',
+                              padding: '16px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)'
+                            }}
+                          >
                             <ZoomIn
-                              size={28}
+                              size={32}
                               className="text-[#4d4725]"
+                              strokeWidth={2.5}
                             />
                           </div>
                         </div>
 
+                        {/* Número de evidencia */}
                         <div style={{
                           position: 'absolute',
                           top: '8px',
@@ -558,10 +589,24 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                           fontWeight: '600',
                           padding: '4px 10px',
                           borderRadius: '6px',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                          zIndex: 10
                         }}>
                           {index + 1}
                         </div>
+
+                        {/* Sombra adicional en hover */}
+                        <div
+                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                          style={{
+                            position: 'absolute',
+                            inset: '-4px',
+                            borderRadius: '12px',
+                            boxShadow: '0 12px 32px rgba(77, 71, 37, 0.4)',
+                            pointerEvents: 'none',
+                            zIndex: -1
+                          }}
+                        />
                       </div>
                     );
                   })}
@@ -657,7 +702,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                 className="
                   px-4 py-2 border border-gray-300 rounded-md
                   text-gray-700 bg-white hover:bg-gray-50
-                  transition-colors
+                  transition-colors cursor-pointer
                 "
               >
                 Cerrar
@@ -684,7 +729,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
               className="
                 absolute top-4 right-4 p-3 bg-white hover:bg-gray-100
                 rounded-full text-gray-900 transition-all z-10
-                shadow-lg hover:shadow-xl
+                shadow-lg hover:shadow-xl cursor-pointer
               "
               aria-label="Cerrar imagen"
             >
@@ -710,7 +755,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                 className="
                   absolute left-4 p-4 bg-white hover:bg-gray-100
                   rounded-full text-gray-900 transition-all
-                  shadow-lg hover:shadow-xl
+                  shadow-lg hover:shadow-xl cursor-pointer
                 "
                 aria-label="Imagen anterior"
               >
@@ -742,7 +787,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                 className="
                   absolute right-4 p-4 bg-white hover:bg-gray-100
                   rounded-full text-gray-900 transition-all
-                  shadow-lg hover:shadow-xl
+                  shadow-lg hover:shadow-xl cursor-pointer
                 "
                 aria-label="Imagen siguiente"
               >

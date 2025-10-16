@@ -47,11 +47,12 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = React.memo(({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop-blur"
       onClick={onCancel}
     >
       <div 
-        className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+        className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-scale-in"
+        style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -95,7 +96,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = React.memo(({
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className="inline-flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+            className={`inline-flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed ${type === 'danger' ? 'btn-delete-tremble' : ''}`}
             style={{
               backgroundColor: type === 'danger' ? COLORS.error : COLORS.primary
             }}
