@@ -175,7 +175,7 @@ export const UsuariosGrupoView: React.FC<UsuariosGrupoViewProps> = ({
                 isLoading={isLoading}
                 onUserDelete={handleDeleteClick}
                 deletingUserId={isDeletingUser}
-                showActions={false}
+                showActions={true}
                 enableSorting={!isLoading && usuarios.length > 1}
                 enableViewToggle={!isLoading && usuarios.length > 3}
               />

@@ -113,3 +113,65 @@
 .react-datepicker__triangle {
   display: none !important;
 }
+
+/* Animación de scale-in para modales */
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+/* Animación de bounce-scale para botones de eliminar */
+@keyframes bounce-scale {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.3) rotate(8deg);
+  }
+  100% {
+    transform: scale(1.25) rotate(6deg);
+  }
+}
+
+/* Desenfoque gaussiano agresivo para modales */
+.modal-backdrop-blur {
+  backdrop-filter: blur(30px) saturate(180%) brightness(80%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%) brightness(80%);
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+/* Soporte para navegadores que no soportan backdrop-filter */
+@supports not (backdrop-filter: blur(30px)) {
+  .modal-backdrop-blur {
+    background-color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Animación de temblor/miedo para botón de eliminar */
+@keyframes tremble {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  10% { transform: translateX(-2px) rotate(-1deg); }
+  20% { transform: translateX(2px) rotate(1deg); }
+  30% { transform: translateX(-2px) rotate(-1deg); }
+  40% { transform: translateX(2px) rotate(1deg); }
+  50% { transform: translateX(-2px) rotate(-1deg); }
+  60% { transform: translateX(2px) rotate(1deg); }
+  70% { transform: translateX(-2px) rotate(-1deg); }
+  80% { transform: translateX(2px) rotate(1deg); }
+  90% { transform: translateX(-1px) rotate(-0.5deg); }
+}
+
+.btn-delete-tremble:hover {
+  animation: tremble 0.6s ease-in-out infinite;
+}
+
