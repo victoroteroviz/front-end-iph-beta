@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 // Hook personalizado
@@ -344,10 +343,10 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
               {QUICK_ACCESS_CARDS.map((card) => (
-                <Link key={card.id} to={card.route} className="group">
-                  <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6 hover:shadow-md hover:border-[#c2b186] transition-all group-hover:bg-[#fdf7f1] h-40 flex flex-col">
+                <div key={card.id} className="cursor-not-allowed">
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6 h-40 flex flex-col opacity-60">
                     <div className="flex items-center mb-4">
-                      <div 
+                      <div
                         className="p-3 rounded-full mr-4 flex-shrink-0"
                         style={{ backgroundColor: card.color || '#c2b186' }}
                       >
@@ -355,7 +354,7 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={card.icon} />
                         </svg>
                       </div>
-                      <h3 className="text-lg lg:text-xl font-bold text-[#4d4725] group-hover:text-[#6b6b47] transition-colors leading-tight">
+                      <h3 className="text-lg lg:text-xl font-bold text-[#4d4725] leading-tight">
                         {card.title}
                       </h3>
                     </div>
@@ -363,7 +362,7 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
                       {card.description}
                     </p>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </div>
