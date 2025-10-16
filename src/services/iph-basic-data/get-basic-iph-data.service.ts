@@ -65,7 +65,7 @@ export const getBasicDataByIphId = async (id: string): Promise<I_BasicDataDto> =
   // Validación de entrada
   if (!id || typeof id !== 'string') {
     const errorMsg = 'ID de IPH inválido o no proporcionado';
-    logError(SERVICE_NAME, errorMsg, { id });
+    logError(SERVICE_NAME, errorMsg, `id: ${id}`);
     throw new Error(errorMsg);
   }
 
@@ -118,12 +118,7 @@ export const getBasicDataByIphId = async (id: string): Promise<I_BasicDataDto> =
   } catch (error) {
     const errorMessage = (error as Error).message || 'Error desconocido al obtener datos básicos del IPH';
 
-    logError(SERVICE_NAME, errorMessage, {
-      function: functionName,
-      id,
-      error,
-      stack: (error as Error).stack
-    });
+    logError(SERVICE_NAME, error, `function: ${functionName}, id: ${id}, stack: ${(error as Error).stack || 'N/A'}`);
 
     // Lanzar error con mensaje más específico si es posible
     if (errorMessage.includes('409') || errorMessage.includes('ConflictException')) {
