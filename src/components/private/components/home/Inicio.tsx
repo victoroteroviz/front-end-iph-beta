@@ -9,11 +9,10 @@ import useUserSession from '../../layout/hooks/useUserSession';
 // Componentes atómicos separados
 import GraficaCard from '../statistics/cards/GraficaCard';
 import GraficaSemanaCard from '../statistics/cards/GraficaSemanaCard';
-import Heatmap from './components/Heatmap';
 import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
 
 // Componentes comunes
-import { LoadingSpinner, ErrorMessage } from '../../common';
+import { LoadingSpinner, ErrorMessage, Heatmap } from '../../common';
 
 /**
  * Props interface for Inicio component

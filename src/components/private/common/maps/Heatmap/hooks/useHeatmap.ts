@@ -6,13 +6,13 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getCoordenadasMapaCalor } from '../../../../../services/mapa-calor/get-coordenadas-mapa-calor.service';
-import { logInfo, logError } from '../../../../../helper/log/logger.helper';
-import { showError } from '../../../../../helper/notification/notification.helper';
-import type { I_CoordenadaCluster, I_GetCoordenadasQuery } from '../../../../../interfaces/mapa-calor';
+import { getCoordenadasMapaCalor } from '../../../../../../services/mapa-calor/get-coordenadas-mapa-calor.service';
+import { logInfo, logError } from '../../../../../../helper/log/logger.helper';
+import { showError } from '../../../../../../helper/notification/notification.helper';
+import type { I_CoordenadaCluster, I_GetCoordenadasQuery } from '../../../../../../interfaces/mapa-calor';
 import type { Map as LeafletMap } from 'leaflet';
 import { useGeolocation } from './useGeolocation';
-import { getSimpleAddress } from '../../../../../services/geocoding/reverse-geocoding.service';
+import { getSimpleAddress } from '../../../../../../services/geocoding/reverse-geocoding.service';
 
 interface HeatmapStats {
   totalIPH: number;
@@ -92,14 +92,14 @@ export const useHeatmap = (): UseHeatmapReturn => {
 
     try {
       fetchingRef.current = true;
-      
+
       // Usar loading normal solo para carga inicial, silent para actualizaciones
       if (silent) {
         setSilentLoading(true);
       } else {
         setLoading(true);
       }
-      
+
       setError(null);
 
       // Cancelar request anterior si existe
@@ -153,7 +153,7 @@ export const useHeatmap = (): UseHeatmapReturn => {
       setCenterAddressLoading(true);
       const address = await getSimpleAddress(lat, lng);
       setCenterAddress(address);
-      
+
       logInfo(MODULE_NAME, 'Dirección del centro obtenida', { lat, lng, address });
     } catch (error) {
       logError(MODULE_NAME, error as Error, 'Error obteniendo dirección del centro');

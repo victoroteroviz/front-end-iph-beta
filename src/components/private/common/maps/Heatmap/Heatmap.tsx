@@ -3,15 +3,7 @@
  *
  * @module Heatmap
  * @description Muestra la distribución geográfica de IPH usando clustering dinámico
- * - Integra          {silentLoading && (
-            <div className="px-3 py-1 bg-[#f0f9ff] border border-[#0284c7] text-[#0284c7] text-xs font-medium rounded-full flex items-center gap-2">
-              <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Actualizando...
-            </div>
-          )}rvicio real getCoordenadasMapaCalor
+ * - Integra con servicio real getCoordenadasMapaCalor
  * - Clustering automático por nivel de zoom
  * - Actualización dinámica al mover/zoom del mapa
  */
@@ -21,7 +13,7 @@ import { MapContainer, TileLayer, CircleMarker, Popup, useMapEvents, Marker } fr
 import type { Map as LeafletMap } from 'leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useHeatmap } from '../hooks/useHeatmap';
+import { useHeatmap } from './hooks/useHeatmap';
 import type { I_CoordenadaCluster } from '../../../../../interfaces/mapa-calor';
 
 
@@ -165,7 +157,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
       weight: isCluster ? 4 : 3,
       isCluster
     }; // Muy alta - Rojo intenso
-    
+
     if (count > 45) return {
       color: '#c2410c',
       fillColor: '#f97316',
@@ -175,7 +167,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
       weight: isCluster ? 3.5 : 2.5,
       isCluster
     }; // Alta - Naranja
-    
+
     if (count > 30) return {
       color: '#ca8a04',
       fillColor: '#fbbf24',
@@ -185,7 +177,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
       weight: isCluster ? 3 : 2,
       isCluster
     }; // Media-Alta - Amarillo
-    
+
     if (count > 20) return {
       color: '#16a34a',
       fillColor: '#4ade80',
@@ -195,7 +187,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
       weight: isCluster ? 2.5 : 2,
       isCluster
     }; // Media - Verde
-    
+
     return {
       color: '#0284c7',
       fillColor: '#38bdf8',
@@ -308,8 +300,8 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
               />
 
               {/* Manejador de eventos del mapa */}
-              <MapEventHandler 
-                onMapMove={handleMapMove} 
+              <MapEventHandler
+                onMapMove={handleMapMove}
                 userLocation={userLocation}
                 onZoomChange={setCurrentZoom}
               />
@@ -378,7 +370,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
                     <Popup>
                       <div className="text-center">
                         <h4 className="font-semibold text-[#4d4725] mb-1">
-                          {circleProps.isCluster ? '� Cluster de IPH' : '📍 Lugar de IPH'}
+                          {circleProps.isCluster ? '🗺️ Cluster de IPH' : '📍 Lugar de IPH'}
                         </h4>
                         <p className="text-sm text-[#6b7280] mb-1">
                           <strong>{count}</strong> {circleProps.isCluster ? 'IPH agrupados' : 'IPH registrados'}
