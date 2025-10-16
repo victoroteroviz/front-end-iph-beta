@@ -50,7 +50,6 @@ import { API_BASE_URL } from '../../../../../config/env.config';
 const DetalleIPH: React.FC<DetalleIPHProps> = ({
   registro,
   onClose,
-  onEditarEstatus,
   className = ''
 }) => {
   const [selectedTab, setSelectedTab] = useState<'general' | 'evidencias' | 'seguimiento'>('general');
@@ -266,7 +265,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
    * Configuración de tabs - Condicional según evidencias disponibles
    */
   const tabs = useMemo(() => {
-    const baseTabs = [
+    const baseTabs: Array<{ id: 'general' | 'evidencias' | 'seguimiento'; label: string; icon: typeof FileText }> = [
       { id: 'general' as const, label: 'Información General', icon: FileText }
     ];
 

@@ -113,11 +113,7 @@ export const useDetalleIPH = (params: UseDetalleIPHParams): UseDetalleIPHReturn 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido al cargar datos básicos del IPH';
 
-      logError('useDetalleIPH', errorMessage, {
-        iphId,
-        error,
-        stack: error instanceof Error ? error.stack : undefined
-      });
+      logError('useDetalleIPH', error, `iphId: ${iphId}, stack: ${error instanceof Error ? error.stack : 'N/A'}`);
 
       setError(errorMessage);
       showError(`No se pudieron cargar los datos del IPH: ${errorMessage}`);
