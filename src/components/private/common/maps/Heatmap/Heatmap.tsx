@@ -131,13 +131,13 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
 
     // Determinar si es un cluster basado en el zoom
     if (currentZoom < 12) {
-      // Zoom alejado - Clusters agresivos (1 decimal)
+      // Zoom alejado - Clusters agresivos (1 decimal) - REDUCIDO para evitar sobrelapamiento
       isCluster = true;
-      baseRadius = Math.min(Math.sqrt(count) * 4, 35); // Radio dinámico según count, máx 35px
+      baseRadius = Math.min(Math.sqrt(count) * 2.5, 20); // Radio dinámico según count, máx 20px (antes 35px)
     } else if (currentZoom < 15) {
       // Zoom medio - Semi-clusters (2 decimales)
       isCluster = count > 10; // Si hay más de 10, probablemente es cluster
-      baseRadius = Math.min(Math.sqrt(count) * 3, 25); // Radio dinámico, máx 25px
+      baseRadius = Math.min(Math.sqrt(count) * 2.8, 22); // Radio dinámico, máx 22px (antes 25px)
     } else {
       // Zoom cercano - Puntos individuales
       isCluster = count > 5; // Solo clusters muy pequeños
@@ -145,7 +145,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
     }
 
     // Asegurar un radio mínimo
-    const radius = Math.max(baseRadius, isCluster ? 8 : 5);
+    const radius = Math.max(baseRadius, isCluster ? 6 : 4); // Reducido de 8:5 a 6:4
 
     // Determinar colores según intensidad
     if (count > 60) return {

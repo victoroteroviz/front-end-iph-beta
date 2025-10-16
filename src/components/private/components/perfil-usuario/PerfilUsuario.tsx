@@ -15,11 +15,15 @@
  * @version 2.0.0
  */
 
-import React, { useEffect } from 'react';
-import { User, Mail, IdCard, Users, MapPin, Briefcase, Award } from 'lucide-react';
+import React, { useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { User, Mail, IdCard, Users, MapPin, Briefcase, Award, ArrowLeft } from 'lucide-react';
 
 // Hook personalizado
 import usePerfilUsuario from './hooks/usePerfilUsuario';
+
+// Componentes layout
+import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
 
 // Componentes atómicos
 import FormField from './components/FormField';
@@ -49,6 +53,9 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
   onCancel,
   className = ''
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const {
     state,
     updateFormData,
@@ -60,6 +67,18 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
     handleConfirmUpdate,
     handleCancelUpdate
   } = usePerfilUsuario();
+
+  // Handler para volver atrás
+  const handleGoBack = () => {
+    // Si viene de edición de usuario, volver a usuarios
+    // Si viene de perfil propio, volver a inicio
+    if (location.pathname.includes('/usuarios/')) {
+      navigate('/usuarios');
+    } else {
+      navigate('/inicio');
+    }
+    logInfo('PerfilUsuario', 'Usuario regresó a la vista anterior');
+  };
 
   const {
     formData,
@@ -79,6 +98,32 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
     canViewSensitiveData
   } = state;
 
+  // Breadcrumbs dinámicos
+  const breadcrumbItems: BreadcrumbItem[] = useMemo(() => {
+    const items: BreadcrumbItem[] = [];
+
+    if (location.pathname.includes('/usuarios/')) {
+      // Viene de gestión de usuarios
+      items.push({ label: 'Gestión de Usuarios', path: '/usuarios' });
+
+      if (location.pathname.includes('/nuevo')) {
+        items.push({ label: 'Nuevo Usuario', isActive: true });
+      } else if (location.pathname.includes('/editar/')) {
+        items.push({
+          label: formData.nombre
+            ? `Editar: ${formData.nombre} ${formData.primerApellido}`
+            : 'Editar Usuario',
+          isActive: true
+        });
+      }
+    } else {
+      // Es perfil propio
+      items.push({ label: 'Mi Perfil', isActive: true });
+    }
+
+    return items;
+  }, [location.pathname, formData.nombre, formData.primerApellido]);
+
   // Log del componente al montar
   useEffect(() => {
     logInfo('PerfilUsuario', 'Componente montado', {
@@ -93,11 +138,18 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
   // Estado de carga general
   if (isLoading || isCatalogsLoading) {
     return (
-      <div className="flex justify-center items-center min-h-96">
-        <LoadingSpinner 
-          size="large" 
-          message={isCatalogsLoading ? "Cargando formulario..." : "Cargando datos del usuario..."}
-        />
+      <div className={`min-h-screen p-4 md:p-6 lg:p-8 ${className}`} data-component="perfil-usuario">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <Breadcrumbs items={breadcrumbItems} />
+          </div>
+          <div className="flex justify-center items-center py-16">
+            <LoadingSpinner
+              size="large"
+              message={isCatalogsLoading ? "Cargando formulario..." : "Cargando datos del usuario..."}
+            />
+          </div>
+        </div>
       </div>
     );
   }
@@ -105,38 +157,74 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
   // Verificar permisos
   if (!canEdit && !canCreate) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-          <div className="text-yellow-600 text-lg font-medium mb-2">
-            Acceso Restringido
+      <div className={`min-h-screen p-4 md:p-6 lg:p-8 ${className}`} data-component="perfil-usuario">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <Breadcrumbs items={breadcrumbItems} />
           </div>
-          <p className="text-yellow-700">
-            No tienes permisos para {isEditing ? 'editar este usuario' : 'crear usuarios'}.
-          </p>
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+            <div className="text-yellow-600 text-lg font-medium mb-2 font-poppins">
+              Acceso Restringido
+            </div>
+            <p className="text-yellow-700 font-poppins">
+              No tienes permisos para {isEditing ? 'editar este usuario' : 'crear usuarios'}.
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`max-w-6xl mx-auto p-6 font-poppins ${className}`}>
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-[#4d4725] mb-2">
-          {isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}
-        </h1>
-        <p className="text-gray-600">
-          {isEditing 
-            ? 'Modifica la información del usuario y sus permisos'
-            : 'Completa todos los campos para crear un nuevo usuario'
-          }
-        </p>
-      </div>
+    <div className={`min-h-screen p-4 md:p-6 lg:p-8 ${className}`} data-component="perfil-usuario">
+      <div className="max-w-7xl mx-auto">
 
-      <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-        
-        {/* Sección: Información Personal */}
-        <FormSection title="Información Personal" icon={User}>
+        {/* Breadcrumbs con botón de regreso */}
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <Breadcrumbs items={breadcrumbItems} />
+
+          <button
+            onClick={handleGoBack}
+            className="
+              flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all duration-200 font-semibold shadow-sm
+              text-[#4d4725] bg-white border-gray-300
+              hover:bg-gray-50 hover:border-gray-400 hover:shadow-md hover:scale-105
+              active:scale-95
+              cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 font-poppins
+            "
+            title="Volver a la vista anterior"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Regresar</span>
+          </button>
+        </div>
+
+        {/* Header principal */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-3 bg-[#948b54] rounded-lg">
+              <User className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-[#4d4725] font-poppins">
+                {isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}
+              </h1>
+              <p className="text-gray-600 font-poppins">
+                {isEditing
+                  ? 'Modifica la información del usuario y sus permisos'
+                  : 'Completa todos los campos para crear un nuevo usuario'
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Contenedor del formulario */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+
+            {/* Sección: Información Personal */}
+            <FormSection title="Información Personal" icon={User}>
           <div className="grid md:grid-cols-2 gap-4">
             <FormField
               label="Nombre"
@@ -412,19 +500,21 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
             onCancel={onCancel || handleCancel}
           />
         </div>
-      </form>
+          </form>
+        </div>
 
-      {/* Modal de Confirmación para Actualización */}
-      <ConfirmationModal
-        isOpen={showConfirmationModal}
-        title="Confirmar Actualización"
-        message="¿Está seguro que desea actualizar la información de este usuario? Esta acción modificará permanentemente los datos del usuario en el sistema."
-        confirmText="Sí, Actualizar"
-        cancelText="Cancelar"
-        onConfirm={handleConfirmUpdate}
-        onCancel={handleCancelUpdate}
-        type="warning"
-      />
+        {/* Modal de Confirmación para Actualización */}
+        <ConfirmationModal
+          isOpen={showConfirmationModal}
+          title="Confirmar Actualización"
+          message="¿Está seguro que desea actualizar la información de este usuario? Esta acción modificará permanentemente los datos del usuario en el sistema."
+          confirmText="Sí, Actualizar"
+          cancelText="Cancelar"
+          onConfirm={handleConfirmUpdate}
+          onCancel={handleCancelUpdate}
+          type="warning"
+        />
+      </div>
     </div>
   );
 };
