@@ -6,7 +6,8 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { RefreshCw, FileX } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { RefreshCw, FileX, FileText, ArrowLeft } from 'lucide-react';
 
 // Hook personalizado
 import useInformeEjecutivo from './hooks/useInformeEjecutivo';
@@ -15,6 +16,7 @@ import useInformeEjecutivo from './hooks/useInformeEjecutivo';
 import TabNavigation from './components/TabNavigation';
 import PDFExportButton from './components/PDFExportButton';
 import SectionModal from './components/SectionModal';
+import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
 
 // Utils
 import { getTabsForIphType, getTabsWithStatus } from './utils/tabsConfig';
@@ -31,6 +33,8 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
   readonly = true,
   showPDFButton = false
 }) => {
+  const navigate = useNavigate();
+
   const {
     state,
     refreshInforme
@@ -39,6 +43,12 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
   // Estado para el tab activo y modal
   const [activeTab, setActiveTab] = useState('datos-generales');
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Handler para volver atrás
+  const handleGoBack = () => {
+    navigate('/informepolicial');
+    logInfo('InformeEjecutivo', 'Usuario regresó a Listado de Referencias');
+  };
 
   // Configuración de tabs basada en el tipo de IPH
   const tabsWithStatus = useMemo(() => {
@@ -96,15 +106,36 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
     });
   }, [informeId, readonly, showPDFButton]);
 
+  // Breadcrumbs items
+  const breadcrumbItems: BreadcrumbItem[] = useMemo(() => {
+    const items: BreadcrumbItem[] = [
+      { label: 'Listado de Referencias', path: '/informepolicial' }
+    ];
+
+    const iph = state.responseData?.iph;
+    if (iph && !Array.isArray(iph) && iph.nReferencia) {
+      items.push({ label: `${iph.nReferencia}`, isActive: true });
+    } else {
+      items.push({ label: 'Informe Ejecutivo', isActive: true });
+    }
+
+    return items;
+  }, [state.responseData]);
+
   // Estado de carga inicial
   if (state.isLoading && !state.responseData) {
     return (
-      <div className={`bg-[#f8f0e7] min-h-screen p-6 text-[#4d4725] font-poppins ${className}`}>
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
+      <div className={`min-h-screen p-4 md:p-6 lg:p-8 ${className}`} data-component="informe-ejecutivo">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <Breadcrumbs items={[{ label: 'Cargando...', isActive: true }]} />
+          </div>
+          <div className="text-center py-16">
             <RefreshCw className="h-12 w-12 animate-spin mx-auto text-[#4d4725] mb-4" />
-            <p className="text-lg font-medium">Cargando informe ejecutivo...</p>
-            <p className="text-sm text-gray-600 mt-2">
+            <h2 className="text-xl font-semibold text-[#4d4725] mb-2 font-poppins">
+              Cargando informe ejecutivo...
+            </h2>
+            <p className="text-gray-600 font-poppins">
               Obteniendo datos del servidor...
             </p>
           </div>
@@ -116,25 +147,28 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
   // Estado de error
   if (state.error) {
     return (
-      <div className={`bg-[#f8f0e7] min-h-screen p-6 text-[#4d4725] font-poppins ${className}`}>
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
+      <div className={`min-h-screen p-4 md:p-6 lg:p-8 ${className}`} data-component="informe-ejecutivo">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <Breadcrumbs items={breadcrumbItems} />
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
             <FileX className="h-12 w-12 mx-auto text-red-500 mb-4" />
-            <h2 className="text-xl font-bold mb-2 text-red-600">
+            <h2 className="text-xl font-bold mb-2 text-red-600 font-poppins">
               Error al cargar el informe
             </h2>
-            <p className="text-gray-600 mb-6">{state.error}</p>
+            <p className="text-gray-600 mb-6 font-poppins">{state.error}</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={refreshInforme}
-                className="flex items-center gap-2 px-4 py-2 bg-[#c2b186] text-white rounded-lg hover:bg-[#a89770] transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-[#4d4725] text-white rounded-lg hover:bg-[#3d3820] transition-colors font-poppins"
               >
                 <RefreshCw className="h-4 w-4" />
                 Intentar nuevamente
               </button>
               <button
                 onClick={() => window.history.back()}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-poppins"
               >
                 Volver atrás
               </button>
@@ -148,17 +182,20 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
   // Informe no encontrado
   if (!state.responseData || !state.responseData.iph || (Array.isArray(state.responseData.iph) && state.responseData.iph.length === 0)) {
     return (
-      <div className={`bg-[#f8f0e7] min-h-screen p-6 text-[#4d4725] font-poppins ${className}`}>
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
+      <div className={`min-h-screen p-4 md:p-6 lg:p-8 ${className}`} data-component="informe-ejecutivo">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <Breadcrumbs items={breadcrumbItems} />
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
             <FileX className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h2 className="text-xl font-bold mb-2">Informe no encontrado</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-xl font-bold mb-2 font-poppins">Informe no encontrado</h2>
+            <p className="text-gray-600 mb-6 font-poppins">
               El informe ejecutivo solicitado no existe o no está disponible.
             </p>
             <button
               onClick={() => window.history.back()}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-poppins"
             >
               Volver atrás
             </button>
@@ -171,50 +208,82 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
   const { iph } = state.responseData;
 
   return (
-    <div className={`bg-[#f8f0e7] min-h-screen p-6 text-[#4d4725] font-poppins ${className}`}>
-      <div className="max-w-6xl mx-auto space-y-6">
-        
-        {/* Header con información básica y botón PDF */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-[#4d4725]">
-              Informe Ejecutivo IPH
-            </h1>
-            {!Array.isArray(iph) && iph?.nReferencia && (
-              <p className="text-gray-600 mt-1">
-                Referencia: {iph.nReferencia}
-              </p>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-3">
-            {/* Botón de actualizar */}
-            <button
-              onClick={refreshInforme}
-              disabled={state.isLoading}
-              className="
-                flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all duration-200 font-semibold shadow-sm
-                text-white bg-[#c2b186] border-[#c2b186] 
-                hover:bg-[#4d4725] hover:border-[#4d4725] hover:shadow-md hover:scale-105 
-                active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
-                cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#c2b186] focus:ring-offset-2
-              "
-              title="Actualizar datos del informe"
-            >
-              <RefreshCw 
-                className={`h-4 w-4 ${state.isLoading ? 'animate-spin' : ''}`} 
-              />
-              <span className="hidden sm:inline">Actualizar</span>
-            </button>
+    <div className={`min-h-screen p-4 md:p-6 lg:p-8 ${className}`} data-component="informe-ejecutivo">
+      <div className="max-w-7xl mx-auto">
 
-            {/* Botón PDF si está habilitado */}
-            {showPDFButton && informeId && (
-              <PDFExportButton
-                informeId={informeId}
-                referencia={!Array.isArray(iph) ? iph?.nReferencia : undefined}
-                onExport={handlePDFExport}
-              />
-            )}
+        {/* Breadcrumbs con botón de regreso */}
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <Breadcrumbs items={breadcrumbItems} />
+
+          <button
+            onClick={handleGoBack}
+            className="
+              flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all duration-200 font-semibold shadow-sm
+              text-[#4d4725] bg-white border-gray-300
+              hover:bg-gray-50 hover:border-gray-400 hover:shadow-md hover:scale-105
+              active:scale-95
+              cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 font-poppins
+            "
+            title="Volver al listado de referencias"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Regresar</span>
+          </button>
+        </div>
+
+        {/* Header principal */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-[#948b54] rounded-lg">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-[#4d4725] font-poppins">
+                  Informe Ejecutivo IPH
+                </h1>
+                {!Array.isArray(iph) && iph?.nReferencia && (
+                  <p className="text-gray-600 font-poppins">
+                    Referencia: {iph.nReferencia}
+                  </p>
+                )}
+                {!Array.isArray(iph) && iph?.tipoIph?.nombre && (
+                  <p className="text-sm text-gray-500 font-poppins mt-1">
+                    Tipo: {iph.tipoIph.nombre}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              {/* Botón de actualizar */}
+              <button
+                onClick={refreshInforme}
+                disabled={state.isLoading}
+                className="
+                  flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all duration-200 font-semibold shadow-sm
+                  text-white bg-[#4d4725] border-[#4d4725]
+                  hover:bg-[#3d3820] hover:border-[#3d3820] hover:shadow-md hover:scale-105
+                  active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+                  cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-2 font-poppins
+                "
+                title="Actualizar datos del informe"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${state.isLoading ? 'animate-spin' : ''}`}
+                />
+                <span className="hidden sm:inline">Actualizar</span>
+              </button>
+
+              {/* Botón PDF si está habilitado */}
+              {showPDFButton && informeId && (
+                <PDFExportButton
+                  informeId={informeId}
+                  referencia={!Array.isArray(iph) ? iph?.nReferencia : undefined}
+                  onExport={handlePDFExport}
+                />
+              )}
+            </div>
           </div>
         </div>
 
@@ -228,7 +297,7 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
         )}
 
         {/* Información de ayuda */}
-        <div className="bg-white rounded-lg shadow p-6 text-center">
+        <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
           <div className="max-w-2xl mx-auto">
             <h3 className="text-lg font-semibold text-[#4d4725] font-poppins mb-3">
               Selecciona una sección para ver su contenido
@@ -237,7 +306,7 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
               Haz clic en cualquier elemento de la lista superior para abrir su contenido en una ventana modal.
               Puedes navegar entre secciones usando los controles del modal.
             </p>
-            <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
+            <div className="flex items-center justify-center gap-6 text-sm text-gray-500 font-poppins">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-green-500"></div>
                 <span>Secciones con datos</span>
@@ -251,25 +320,26 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
         </div>
 
         {/* Información del sistema */}
-        <div className="mt-8 text-center text-sm text-gray-600 border-t pt-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <p>
-              Informe Ejecutivo IPH • Solo Lectura 
-              {readonly && " • No editable"}
+        <div className="mt-6 bg-gray-50 rounded-xl border border-gray-200 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-gray-600 font-poppins">
+            <p className="flex items-center gap-2">
+              <span className="font-medium text-[#4d4725]">Informe Ejecutivo IPH</span>
+              <span>•</span>
+              <span>Solo Lectura</span>
+              {readonly && (
+                <>
+                  <span>•</span>
+                  <span>No editable</span>
+                </>
+              )}
             </p>
-            
+
             {tabsWithStatus.length > 0 && (
-              <p className="text-xs">
+              <p className="text-xs bg-white px-3 py-1 rounded-full border border-gray-200">
                 {tabsWithStatus.filter(t => t.hasData).length} de {tabsWithStatus.length} secciones con datos
               </p>
             )}
           </div>
-          
-          {!Array.isArray(iph) && iph?.tipoIph?.nombre && (
-            <p className="text-xs text-gray-500 mt-2">
-              Tipo: {iph.tipoIph.nombre}
-            </p>
-          )}
         </div>
       </div>
 

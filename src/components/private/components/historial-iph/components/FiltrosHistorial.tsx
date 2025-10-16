@@ -282,8 +282,6 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
             >
               <option value="">Seleccionar tipo de filtro...</option>
               <option value="usuario">Usuario</option>
-              <option value="estatus">Estatus</option>
-              <option value="tipoDelito">Tipo de Delito</option>
               <option value="n_referencia">Número de Referencia</option>
             </select>
           </div>
