@@ -295,8 +295,8 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
               ref={mapRef}
             >
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
               />
 
               {/* Manejador de eventos del mapa */}
@@ -414,7 +414,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
         </div>
       </div>
 
-      {/* Panel de información de clustering */}
+      {/* Panel de información de clustering
       <div className="mb-4 bg-gradient-to-r from-[#f0f9ff] to-[#e0f2fe] border border-[#0284c7] rounded-lg p-4">
         <div className="flex items-center gap-3 mb-2">
           <svg className="w-5 h-5 text-[#0284c7]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -438,7 +438,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
           </p>
           <span className="text-xs text-[#64748b]">{coordenadas.length} puntos</span>
         </div>
-      </div>
+      </div> */}
 
       {/* Panel de estadísticas y controles */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
