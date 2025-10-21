@@ -6,7 +6,8 @@
       "Bash(wsl:*)",
       "Bash(npx tsc:*)",
       "Bash(npm install:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []
