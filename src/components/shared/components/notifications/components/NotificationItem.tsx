@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
-import type { Notification } from '../../../../helper/notification/notification.helper';
+import type { Notification } from '../../../../../helper/notification/notification.helper';
 
 interface NotificationItemProps {
   notification: Notification;

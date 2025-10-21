@@ -1,6 +1,6 @@
-import { API_BASE_URL } from "../../config/env.config";
-import {HttpHelper} from "../../helper/http/http.helper";
-import type { IRole } from "../../interfaces/role/role.interface";
+import { API_BASE_URL } from "../../../../config/env.config";
+import {HttpHelper} from "../../../../helper/http/http.helper";
+import type { IRole } from "../../../../interfaces/role/role.interface";
 
 const http = HttpHelper.getInstance({
   baseURL: API_BASE_URL,

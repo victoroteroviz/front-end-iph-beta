@@ -1,6 +1,6 @@
-import { API_BASE_URL } from "../../config/env.config";
-import { HttpHelper } from "../../helper/http/http.helper";
-import { logHttp, logInfo, logError } from "../../helper/log/logger.helper";
+import { API_BASE_URL } from "../../../../config/env.config";
+import { HttpHelper } from "../../../../helper/http/http.helper";
+import { logHttp, logInfo, logError } from "../../../../helper/log/logger.helper";
 
 /**
  * Interface para los tipos de IPH

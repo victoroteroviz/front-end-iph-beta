@@ -5,12 +5,12 @@
 
 import { logInfo, logError } from '../../helper/log/logger.helper';
 import { getUserById, createUsuario as createUsuarioAPI, updateUsuario as updateUsuarioAPI } from '../user/crud-user.service';
-import { getRoles } from '../roles/get-roles.service';
-import { getGrados } from '../catalogs/grados.service';
-import { getCargos } from '../catalogs/cargos.service';
-import { getMunicipios } from '../catalogs/municipios.service';
-import { getAdscripciones } from '../catalogs/adscripciones.service';
-import { getSexos } from '../catalogs/sexos.service';
+import { getRoles } from '../../components/shared/services/roles/get-roles.service';
+import { getGrados } from '../../components/shared/services/catalogs/grados.service';
+import { getCargos } from '../../components/shared/services/catalogs/cargos.service';
+import { getMunicipios } from '../../components/shared/services/catalogs/municipios.service';
+import { getAdscripciones } from '../../components/shared/services/catalogs/adscripciones.service';
+import { getSexos } from '../../components/shared/services/catalogs/sexos.service';
 
 import type {
   IGetUserById,

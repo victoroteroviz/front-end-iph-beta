@@ -1,9 +1,9 @@
 //+Helpers
-import {HttpHelper} from "../../helper/http/http.helper";
+import {HttpHelper} from "../../../../helper/http/http.helper";
 //+Variables de entorno
-import { API_BASE_URL } from "../../config/env.config";
+import { API_BASE_URL } from "../../../../config/env.config";
 //+ Interfaces
-import type { ISexosAllData } from "../../interfaces/catalogs/sexos.interface";
+import type { ISexosAllData } from "../../../../interfaces/catalogs/sexos.interface";
 
 const url : string = '/api/sexo-web';
 

@@ -25,8 +25,6 @@ import { Breadcrumbs, useBreadcrumbs } from './breadcrumbs';
 import useUserSession from './hooks/useUserSession';
 import useSidebar from './hooks/useSidebar';
 
-// Context
-import { ScrollProvider, useScrollContext } from '../../../contexts/ScrollContext';
 
 // Helpers
 import { logInfo } from '../../../helper/log/logger.helper';
@@ -41,7 +39,6 @@ const DashboardContent: React.FC<DashboardProps> = ({
   children,
   className = ''
 }) => {
-  const { scrollContainerRef } = useScrollContext();
   const location = useLocation();
   const {
     userRole,
@@ -60,17 +57,7 @@ const DashboardContent: React.FC<DashboardProps> = ({
   // Estado para el colapso del sidebar
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
 
-  // Resetear scroll cuando cambia la ruta
-  React.useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = 0;
-      logInfo('Dashboard', 'Scroll reset on route change', {
-        pathname: location.pathname,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }, [location.pathname, scrollContainerRef]);
-
+  
   // Log cuando se monta el dashboard
   React.useEffect(() => {
     if (isAuthenticated && userRole && userData) {
@@ -150,20 +137,10 @@ const DashboardContent: React.FC<DashboardProps> = ({
           {/* <Topbar userRole={userRole} onLogout={logout} /> */}
         </div>
 
-        {/* Breadcrumbs - Temporalmente desactivado */}
-        {false && breadcrumbs.length > 0 && (
-          <div className="px-6 py-3 border-b border-gray-200 bg-white/50">
-            <Breadcrumbs
-              items={breadcrumbs}
-              showHomeIcon
-              className="max-w-full"
-            />
-          </div>
-        )}
+      
 
         {/* Content Area con scroll */}
         <div
-          ref={scrollContainerRef}
           className="flex-1 overflow-y-auto"
         >
           {/* Renderizar children o Outlet */}
@@ -179,9 +156,7 @@ const DashboardContent: React.FC<DashboardProps> = ({
  */
 const Dashboard: React.FC<DashboardProps> = (props) => {
   return (
-    <ScrollProvider>
       <DashboardContent {...props} />
-    </ScrollProvider>
   );
 };
 

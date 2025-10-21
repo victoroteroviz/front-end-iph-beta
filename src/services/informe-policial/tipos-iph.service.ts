@@ -4,7 +4,7 @@
  */
 
 import type { ITipoIPH } from '../../interfaces/components/informe-policial.interface';
-import { getTiposIph, type ITiposIph } from '../catalogs/tipos-iph.service';
+import { getTiposIph, type ITiposIph } from '../../components/shared/services/catalogs/tipos-iph.service';
 import { logInfo, logError } from '../../helper/log/logger.helper';
 
 // =====================================================

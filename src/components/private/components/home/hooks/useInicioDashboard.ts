@@ -20,7 +20,6 @@ import { showError } from '../../../../../helper/notification/notification.helpe
 import { logError } from '../../../../../helper/log/logger.helper';
 
 // Context
-import { useScrollContext } from '../../../../../contexts/ScrollContext';
 
 // Interfaces
 import type { 
@@ -52,7 +51,6 @@ interface DashboardControls {
 
 const useInicioDashboard = () => {
   const navigate = useNavigate();
-  const { preserveScrollPosition, restoreScrollPosition } = useScrollContext();
   
   // Estados principales
   const [state, setState] = useState<DashboardState>({

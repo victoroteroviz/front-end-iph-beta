@@ -1,11 +1,11 @@
 
 //+Helpers
-import {HttpHelper} from "../../helper/http/http.helper";
-import { CacheHelper } from "../../helper/cache/cache.helper";
-import { logInfo, logError } from "../../helper/log/logger.helper";
+import {HttpHelper} from "../../../../helper/http/http.helper";
+import { CacheHelper } from "../../../../helper/cache/cache.helper";
+import { logInfo, logError } from "../../../../helper/log/logger.helper";
 //+Variables de entorno
-import { API_BASE_URL } from "../../config/env.config";
-import type { IGrados, IGradosAllData } from "../../interfaces/catalogs/grados.interface";
+import { API_BASE_URL } from "../../../../config/env.config";
+import type { IGrados, IGradosAllData } from "../../../../interfaces/catalogs/grados.interface";
 
 // Configuración del cliente HTTP con baseURL desde variables de entorno
 const http : HttpHelper = HttpHelper.getInstance(

@@ -11,10 +11,10 @@ import Login from './components/public/auth/Login'
 import Dashboard from './components/private/layout/Dashboard'
 
 // Sistema de notificaciones - Carga inmediata (global)
-import { NotificationContainer } from './components/shared/notifications'
+import { NotificationContainer } from './components/shared/components/notifications'
 
 // Loading fallbacks
-import { RouteLoadingFallback } from './components/shared/loading'
+import { RouteLoadingFallback } from './components/shared/components/loading'
 
 // Componentes lazy - Code splitting automático por ruta
 const Inicio = lazy(() => import('./components/private/components/home/Inicio'))

@@ -10,7 +10,7 @@ import {
   clearAllNotifications as clearAllNotificationsHelper,
   getNotifications as getNotificationsHelper,
   type Notification
-} from '../../../../helper/notification/notification.helper';
+} from '../../../../../helper/notification/notification.helper';
 
 interface UseNotificationsReturn {
   notifications: Notification[];
