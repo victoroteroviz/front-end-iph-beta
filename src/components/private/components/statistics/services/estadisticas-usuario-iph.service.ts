@@ -1,12 +1,12 @@
-import { API_BASE_URL } from '../../config/env.config';
-import { httpHelper } from '../../helper/http/http.helper';
+import { API_BASE_URL } from '../../../../../config/env.config';
+import { httpHelper } from '../../../../../helper/http/http.helper';
 import {
   type RankingResponse,
   type TotalesResponse,
   type EstadisticasQueryDto,
   type UsuarioEstadistica,
   PeriodoEnum
-} from '../../interfaces/IEstadisticasUsuarioIph';
+} from '../../../../../interfaces/IEstadisticasUsuarioIph';
 
 // Mock data para desarrollo
 const MOCK_USUARIOS_MAYORES: UsuarioEstadistica[] = [

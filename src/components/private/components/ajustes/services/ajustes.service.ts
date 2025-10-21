@@ -4,9 +4,9 @@
  * @description Servicio adaptable con patrón mock/real para ajustes y configuraciones
  */
 
-import type { IAjustesResponse, ICatalogo } from '../../interfaces/ajustes';
-import { getMockAjustesData, getMockCatalogos, filtrarSeccionesPorRol } from '../../mock/ajustes';
-import { logInfo, logError } from '../../helper/log/logger.helper';
+import type { IAjustesResponse, ICatalogo } from '../../../../../interfaces/ajustes';
+import { getMockAjustesData, getMockCatalogos, filtrarSeccionesPorRol } from '../../../../../mock/ajustes';
+import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 
 // TODO: Cambiar a false cuando esté lista la API real
 const USE_MOCK_DATA = true;

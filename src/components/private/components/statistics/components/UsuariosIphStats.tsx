@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Bar, Doughnut } from 'react-chartjs-2';
-import { estadisticasUsuarioIphService } from '../../../../../services/estadisticas-usuario-iph/estadisticas-usuario-iph.service';
+import { estadisticasUsuarioIphService } from '../services/estadisticas-usuario-iph.service';
 import type {
   RankingResponse,
   TotalesResponse,

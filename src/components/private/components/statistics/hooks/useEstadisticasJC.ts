@@ -11,7 +11,7 @@ import {
   getJusticiaCivicaDiaria,
   getJusticiaCivicaMensual,
   getJusticiaCivicaAnual
-} from '../../../../../services/estadisticas-jc/get-jc.service';
+} from '../services/get-jc.service';
 import type {
   RespuestaJC,
   ParamsJCDiaria,

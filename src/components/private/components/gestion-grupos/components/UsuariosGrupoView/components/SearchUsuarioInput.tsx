@@ -9,7 +9,7 @@ import { Search, X, Loader2, User, AlertCircle } from 'lucide-react';
 import { COLORS } from '../../../constants';
 
 //+ Servicios
-import { buscarUsuariosPorNombre, formatearNombreCompleto } from '../../../../../../../services/usuarios/buscar-usuario-nombre.service';
+import { buscarUsuariosPorNombre, formatearNombreCompleto } from '../services/buscar-usuario-nombre.service';
 
 //+ Interfaces
 import type { IUsuarioBusqueda } from '../../../../../../../interfaces/user/crud';

@@ -16,7 +16,7 @@ import {
   getAjustesConfiguration,
   getCatalogosDisponibles,
   verificarPermisoSeccion
-} from '../../../../../services/ajustes/ajustes.service';
+} from '../services/ajustes.service';
 import { canAccessAdmin, canAccessSuperAdmin } from '../../../../../config/permissions.config';
 import { showSuccess, showError, showInfo } from '../../../../../helper/notification/notification.helper';
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';

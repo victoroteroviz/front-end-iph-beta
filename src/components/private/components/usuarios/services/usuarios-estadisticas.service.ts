@@ -3,7 +3,7 @@
  * Implementa patrón mock/real para facilitar migración futura a API real
  */
 
-import { logInfo, logError } from '../../helper/log/logger.helper';
+import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 // import { HttpHelper } from '../../helper/http/http.helper'; // Para futuras implementaciones reales
 // import { API_BASE_URL } from '../../config/env.config'; // Para futuras implementaciones reales
 import type {
@@ -11,8 +11,8 @@ import type {
   IUsuarioMetricas,
   IEstadisticasResponse,
   IUsuarioMetricasResponse
-} from '../../interfaces/components/usuarios.interface';
-import type { IPaginatedUsers } from '../../interfaces/user/crud/get-paginated.users.interface';
+} from '../../../../../interfaces/components/usuarios.interface';
+import type { IPaginatedUsers } from '../../../../../interfaces/user/crud/get-paginated.users.interface';
 
 // =====================================================
 // CONFIGURACIÓN MOCK/REAL

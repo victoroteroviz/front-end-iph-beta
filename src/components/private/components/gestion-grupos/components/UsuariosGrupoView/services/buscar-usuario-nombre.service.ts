@@ -11,14 +11,14 @@
  * GET /api/users-web/buscar-usuario-nombre/Juan%20Carlos
  */
 
-import { logInfo, logError } from '../../helper/log/logger.helper';
-import { HttpHelper } from '../../helper/http/http.helper';
-import { API_BASE_URL } from '../../config/env.config';
+import { logInfo, logError } from '../../../../../../../helper/log/logger.helper';
+import { HttpHelper } from '../../../../../../../helper/http/http.helper';
+import { API_BASE_URL } from '../../../../../../../config/env.config';
 import type {
   IBuscarUsuarioNombreParams,
   IBuscarUsuarioNombreResponse,
   IUsuarioBusqueda
-} from '../../interfaces/user/crud';
+} from '../../../../../../../interfaces/user/crud';
 
 // =====================================================
 // CONFIGURACIÓN MOCK/REAL

@@ -13,10 +13,10 @@
  * - GET /api/estadisticas/getJusticiaCivicaAnual/?anio=2025
  */
 
-import { HttpHelper } from '../../helper/http/http.helper';
-import { logInfo, logError } from '../../helper/log/logger.helper';
-import { API_BASE_URL } from '../../config/env.config';
-import { API_BASE_ROUTES } from '../../config/routes.config';
+import { HttpHelper } from '../../../../../helper/http/http.helper';
+import { logInfo, logError } from '../../../../../helper/log/logger.helper';
+import { API_BASE_URL } from '../../../../../config/env.config';
+import { API_BASE_ROUTES } from '../../../../../config/routes.config';
 
 // Interfaces
 import type {
@@ -24,7 +24,7 @@ import type {
   ParamsJCDiaria,
   ParamsJCMensual,
   ParamsJCAnual
-} from '../../interfaces/estadisticas-jc';
+} from '../../../../../interfaces/estadisticas-jc';
 
 // Constantes del módulo
 const MODULE_NAME = 'EstadisticasJC';

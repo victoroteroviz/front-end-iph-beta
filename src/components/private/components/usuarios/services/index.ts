@@ -21,4 +21,4 @@ export {
   sanitizarTerminoBusqueda,
   formatearNombreCompleto,
   obtenerIniciales
-} from './buscar-usuario-nombre.service';
+} from '../../gestion-grupos/components/UsuariosGrupoView/services/buscar-usuario-nombre.service';
