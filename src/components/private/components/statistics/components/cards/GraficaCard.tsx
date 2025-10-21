@@ -1,10 +1,11 @@
 import React, { memo, useMemo, useState, useRef, useEffect } from 'react';
 import { Bar } from "react-chartjs-2";
 import { AlertCircle, BarChart3, Calendar, ChevronDown } from 'lucide-react';
-import type { IResumenPorMes } from '../../../../../interfaces/statistics/statistics.interface';
+import type { IResumenPorMes } from '../../../../../../interfaces/statistics/statistics.interface';
 
 // Chart.js se registra centralizadamente en chart.config.ts
-import '../../../../../config/chart.config';
+import '../../../../../../config/chart.config';
+
 
 interface GraficaCardProps {
   titulo: string;

@@ -29,7 +29,7 @@ import FiltrosHistorial from './components/FiltrosHistorial';
 import HistorialTable from './table/HistorialTable';
 import PaginacionHistorial from './components/PaginacionHistorial';
 import DetalleIPH from './components/DetalleIPH';
-import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
+import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';

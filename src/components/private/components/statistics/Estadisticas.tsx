@@ -1,45 +1,44 @@
-import React, { useState, useCallback } from 'react';
+/**
+ * Componente principal de Panel de Estadísticas
+ * Muestra grid de tarjetas con diferentes tipos de estadísticas disponibles
+ *
+ * @pattern Atomic Design + Custom Hook
+ * @uses useStatisticsModal - Hook personalizado para lógica del modal
+ * @version 2.0.0 - Refactorizado para usar hooks personalizados
+ */
+
+import React, { useState } from 'react';
 import { BarChart3 } from 'lucide-react';
 import type { IStatisticCard } from '../../../../interfaces/IStatistic';
 import { statisticsCardsConfig } from './config';
-import StatisticsModal from './components/StatisticsModal';
-import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
+import StatisticsModal from './components/modals/StatisticsModal';
+import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
+import { useStatisticsModal } from './hooks/useStatisticsModal';
+import { logDebug, logWarning } from '../../../../helper/log/logger.helper';
 import './Estadisticas.css';
 
 const Estadisticas: React.FC = () => {
   // Configuración de las tarjetas de estadísticas (importada desde config)
   const [statistics] = useState<IStatisticCard[]>(statisticsCardsConfig);
-  const [selectedStat, setSelectedStat] = useState<IStatisticCard | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Hook personalizado para manejar lógica del modal
+  const { selectedStat, isModalOpen, handleCardClick, handleCloseModal } = useStatisticsModal({
+    closeDelay: 300,
+    onOpen: (stat) => {
+      logDebug('Estadisticas', 'Modal abierto', {
+        statId: stat.id,
+        statTitle: stat.titulo
+      });
+    },
+    onClose: () => {
+      logDebug('Estadisticas', 'Modal cerrado');
+    }
+  });
 
   // Breadcrumbs
   const breadcrumbItems: BreadcrumbItem[] = [
     { label: 'Panel de Estadísticas', isActive: true }
   ];
-
-  /**
-   * Manejar clic en tarjeta de estadística
-   */
-  const handleCardClick = useCallback((stat: IStatisticCard) => {
-    if (stat.habilitado) {
-      setSelectedStat(stat);
-      setIsModalOpen(true);
-      console.log(`Abriendo modal de: ${stat.titulo}`);
-    } else {
-      console.log(`La estadística "${stat.titulo}" está deshabilitada`);
-    }
-  }, []);
-
-  /**
-   * Cerrar modal de estadística
-   */
-  const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false);
-    // Pequeño delay antes de limpiar la estadística seleccionada para que la animación se vea bien
-    setTimeout(() => {
-      setSelectedStat(null);
-    }, 300);
-  }, []);
 
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8" data-component="estadisticas">

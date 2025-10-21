@@ -16,7 +16,7 @@ import UsuariosTable from './components/UsuariosTable';
 import VirtualizedTable from './components/VirtualizedTable';
 import Pagination from './components/Pagination';
 import DeleteConfirmModal from './components/DeleteConfirmModal';
-import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
+import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';

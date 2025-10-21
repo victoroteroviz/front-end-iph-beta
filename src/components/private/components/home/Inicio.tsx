@@ -6,9 +6,9 @@ import useInicioDashboard from './hooks/useInicioDashboard';
 import useUserSession from '../../layout/hooks/useUserSession';
 
 // Componentes atómicos separados
-import GraficaCard from '../statistics/cards/GraficaCard';
-import GraficaSemanaCard from '../statistics/cards/GraficaSemanaCard';
-import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
+import GraficaCard from '../statistics/components/cards/GraficaCard';
+import GraficaSemanaCard from '../statistics/components/cards/GraficaSemanaCard';
+import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 
 // Componentes comunes
 import { LoadingSpinner, ErrorMessage, Heatmap } from '../../common';

@@ -16,7 +16,7 @@ import useInformeEjecutivo from './hooks/useInformeEjecutivo';
 import TabNavigation from './components/TabNavigation';
 import PDFExportButton from './components/PDFExportButton';
 import SectionModal from './components/SectionModal';
-import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
+import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 
 // Utils
 import { getTabsForIphType, getTabsWithStatus } from './utils/tabsConfig';

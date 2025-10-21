@@ -10,8 +10,8 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useEstadisticasProbableDelictivo } from './hooks/useEstadisticasProbableDelictivo';
-import GraficaBarrasJC from './components/GraficaBarrasJC';
-import GraficaPromedioJC from './components/GraficaPromedioJC';
+import GraficaBarrasJC from './components/charts/GraficaBarrasJC';
+import GraficaPromedioJC from './components/charts/GraficaPromedioJC';
 import './EstadisticasJC.css';
 
 interface EstadisticasProbableDelictivoProps {

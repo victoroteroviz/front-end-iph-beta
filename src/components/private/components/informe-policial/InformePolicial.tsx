@@ -19,7 +19,7 @@ import IPHPagination from './components/IPHPagination';
 import AutoRefreshIndicator from './components/AutoRefreshIndicator';
 import EstadisticasCards from './components/EstadisticasCards';
 import Accordion from './components/Accordion';
-import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
+import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';

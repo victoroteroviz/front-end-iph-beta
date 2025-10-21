@@ -23,7 +23,7 @@ import { User, Mail, IdCard, Users, MapPin, Briefcase, Award, ArrowLeft } from '
 import usePerfilUsuario from './hooks/usePerfilUsuario';
 
 // Componentes layout
-import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
+import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 
 // Componentes atómicos
 import FormField from './components/FormField';

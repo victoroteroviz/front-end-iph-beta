@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { Calendar, Filter } from 'lucide-react';
 
 // Interfaces
-import type { EstadisticasFiltersProps } from '../../../../../interfaces/components/estadisticasUsuario.interface';
+import type { EstadisticasFiltersProps } from '../../../../../../interfaces/components/estadisticasUsuario.interface';
 
 /**
  * Componente de filtros para estadísticas

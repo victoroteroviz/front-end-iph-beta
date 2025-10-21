@@ -11,7 +11,7 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react';
-import { Breadcrumbs, type BreadcrumbItem } from '../../layout/breadcrumbs';
+import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 
 //+ Hooks personalizados
 import { useGestionGruposUnificado } from './hooks/useGestionGruposUnificado';

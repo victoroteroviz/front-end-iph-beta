@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { User } from 'lucide-react';
 
 // Interfaces
-import type { UsuarioCardProps } from '../../../../../interfaces/components/estadisticasUsuario.interface';
+import type { UsuarioCardProps } from '../../../../../../interfaces/components/estadisticasUsuario.interface';
 
 /**
  * Componente de tarjeta de usuario

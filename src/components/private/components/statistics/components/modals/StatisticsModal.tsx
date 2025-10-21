@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import type { IStatisticCard } from '../../../../../interfaces/IStatistic';
-import UsuariosIphStats from './UsuariosIphStats';
-import EstadisticasJC from '../EstadisticasJC';
-import EstadisticasProbableDelictivo from '../EstadisticasProbableDelictivo';
-import EstadisticasFilters from './EstadisticasFilters';
+import type { IStatisticCard } from '../../../../../../interfaces/IStatistic';
+import UsuariosIphStats from '../tables/UsuariosIphStats';
+// import UsuariosIphStats from '../UsuariosIphStats';
+import EstadisticasProbableDelictivo from '../../EstadisticasProbableDelictivo';
+import EstadisticasJC from '../../EstadisticasJC';
+import EstadisticasFilters from '../filters/EstadisticasFilters';
 import './StatisticsModal.css';
 
 interface StatisticsModalProps {

@@ -4,8 +4,8 @@
  */
 
 import React from 'react';
-import type { RespuestaJC } from '../../../../../interfaces/estadisticas-jc';
-import type { TipoPeriodo } from '../hooks/useEstadisticasJC';
+import type { RespuestaJC } from '../../../../../../interfaces/estadisticas-jc';
+import type { TipoPeriodo } from '../../hooks/useEstadisticasJC';
 
 interface EstadisticaJCCardProps {
   /** Tipo de período (diaria, mensual, anual) */

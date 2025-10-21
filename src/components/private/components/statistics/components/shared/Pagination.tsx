@@ -7,7 +7,7 @@ import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Interfaces
-import type { PaginationProps } from '../../../../../interfaces/components/estadisticasUsuario.interface';
+import type { PaginationProps } from '../../../../../../interfaces/components/estadisticasUsuario.interface';
 
 /**
  * Componente de paginación

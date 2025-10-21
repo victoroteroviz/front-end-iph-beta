@@ -8,10 +8,10 @@ export { default as Estadisticas } from './Estadisticas';
 
 // Componente de Estadísticas de Justicia Cívica (nuevo)
 export { default as EstadisticasJC } from './EstadisticasJC';
-export { default as EstadisticaJCCard } from './components/EstadisticaJCCard';
-export { default as FiltroFechaJC } from './components/FiltroFechaJC';
-export { default as GraficaBarrasJC } from './components/GraficaBarrasJC';
-export { default as GraficaPromedioJC } from './components/GraficaPromedioJC';
+export {default as EstadisticaJCCard} from './components/cards/EstadisticaJCCard';
+export {default as FiltroFechaJC} from './components/filters/FiltroFechaJC';
+export {default as GraficaBarrasJC} from './components/charts/GraficaBarrasJC';
+export {default as GraficaPromedioJC} from './components/charts/GraficaPromedioJC';
 
 // Hook de Estadísticas JC
 export { useEstadisticasJC } from './hooks/useEstadisticasJC';

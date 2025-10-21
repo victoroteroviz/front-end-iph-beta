@@ -16,8 +16,8 @@ import {
 import type { ChartOptions } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Bar } from 'react-chartjs-2';
-import type { RespuestaJC } from '../../../../../interfaces/estadisticas-jc';
-import type { TipoPeriodo } from '../hooks/useEstadisticasJC';
+import type { RespuestaJC } from '../../../../../../interfaces/estadisticas-jc';
+import type { TipoPeriodo } from '../../hooks/useEstadisticasJC';
 
 // Registrar componentes de Chart.js
 ChartJS.register(

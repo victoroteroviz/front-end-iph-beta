@@ -2,13 +2,13 @@ import React, { memo, useState, useRef, useEffect, useMemo, useCallback } from '
 import { Bar } from "react-chartjs-2";
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { CalendarDays, AlertCircle, BarChart3, X } from 'lucide-react';
-import type { IResumenPorSemana } from '../../../../../interfaces/statistics/statistics.interface';
+import type {IResumenPorSemana} from '../../../../../../interfaces/statistics/statistics.interface';
 
 // Importar estilos CSS de react-datepicker
 import 'react-datepicker/dist/react-datepicker.css';
 
 // Chart.js se registra centralizadamente en chart.config.ts
-import '../../../../../config/chart.config';
+import '../../../../../../config/chart.config';
 
 // Configuración de localización española
 import { es } from 'date-fns/locale';

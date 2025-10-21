@@ -19,7 +19,7 @@ import { Menu } from 'lucide-react';
 // Componentes atómicos
 import Sidebar from './sidebar/Sidebar';
 // import Topbar from './topbar/Topbar'; // Desactivado temporalmente
-import { Breadcrumbs, useBreadcrumbs } from './breadcrumbs';
+import { Breadcrumbs, useBreadcrumbs } from '../../shared/components/breadcrumbs';
 
 // Hooks
 import useUserSession from './hooks/useUserSession';
