@@ -1,6 +1,6 @@
 import React, { type ReactElement, cloneElement, type FormEvent } from 'react';
-import { sanitizeInput } from '../../../helper/security/security.helper';
-import { logInfo } from '../../../helper/log/logger.helper';
+import { sanitizeInput } from '../../../../helper/security/security.helper';
+import { logInfo } from '../../../../helper/log/logger.helper';
 
 interface FormSanitizerProps {
   children: ReactElement;
