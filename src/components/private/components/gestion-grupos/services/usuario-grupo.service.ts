@@ -21,16 +21,6 @@ import type {
   IEstadisticasUsuarioGrupo
 } from "../../../../../interfaces/usuario-grupo";
 
-//+ Mocks
-import {
-  obtenerUsuariosPorGrupoMock,
-  obtenerUsuariosGruposPorIdMock,
-  asignarUsuarioAGrupoMock,
-  obtenerEstadisticasUsuarioGrupoMock
-} from "../../../../../mock/usuario-grupo";
-
-// Flag para cambiar entre mock y API real
-const USE_MOCK_DATA = false; // TODO: Cambiar a false para usar API real
 
 // Configuración del HTTP helper
 const http: HttpHelper = HttpHelper.getInstance({
@@ -101,15 +91,6 @@ export const obtenerUsuariosPorGrupo = async (): Promise<IGrupoUsuario[]> => {
   logInfo('usuario-grupo.service', 'Iniciando obtención de usuarios por grupo');
 
   try {
-    if (USE_MOCK_DATA) {
-      logDebug('usuario-grupo.service', 'Usando datos mock para obtenerUsuariosPorGrupo');
-      const grupos = await obtenerUsuariosPorGrupoMock();
-      logInfo('usuario-grupo.service', 'Grupos con usuarios obtenidos exitosamente (mock)', {
-        total: grupos.length,
-        totalUsuarios: grupos.reduce((sum, grupo) => sum + grupo.cantidadUsuarios, 0)
-      });
-      return grupos;
-    }
 
     // Código para API real
     const url = `${BASE_URL}/obtener-usuarios-por-grupo`;
@@ -170,16 +151,6 @@ export const obtenerUsuariosGruposPorId = async (id: string): Promise<IObtenerUs
   }
 
   try {
-    if (USE_MOCK_DATA) {
-      logDebug('usuario-grupo.service', 'Usando datos mock para obtenerUsuariosGruposPorId');
-      const resultado = await obtenerUsuariosGruposPorIdMock(id);
-      logInfo('usuario-grupo.service', 'Usuarios del grupo obtenidos exitosamente (mock)', {
-        grupoId: id,
-        grupoNombre: resultado.nombre,
-        totalUsuarios: resultado.data?.length || 0
-      });
-      return resultado;
-    }
 
     // Código para API real
     const url = `${BASE_URL}/obtener-usuarios-por-grupo/${encodeURIComponent(id)}`;
@@ -237,17 +208,7 @@ export const asignarUsuarioAGrupo = async (request: IAsignarUsuarioGrupoRequest)
   }
 
   try {
-    if (USE_MOCK_DATA) {
-      logDebug('usuario-grupo.service', 'Usando datos mock para asignarUsuarioAGrupo');
-      const response = await asignarUsuarioAGrupoMock(request.usuarioId, request.grupoId);
-      logInfo('usuario-grupo.service', 'Usuario asignado al grupo exitosamente (mock)', {
-        usuarioId: request.usuarioId,
-        grupoId: request.grupoId,
-        nombreUsuario: response.data.nombreUsuario,
-        nombreGrupo: response.data.nombreGrupo
-      });
-      return response;
-    }
+
 
     // Código para API real
     const url = `${BASE_URL}/asignar-usuario-a-grupo`;
@@ -285,12 +246,7 @@ export const obtenerEstadisticasUsuarioGrupo = async (): Promise<IEstadisticasUs
   logInfo('usuario-grupo.service', 'Iniciando obtención de estadísticas');
 
   try {
-    if (USE_MOCK_DATA) {
-      logDebug('usuario-grupo.service', 'Usando datos mock para estadísticas');
-      const estadisticas = await obtenerEstadisticasUsuarioGrupoMock();
-      logInfo('usuario-grupo.service', 'Estadísticas obtenidas exitosamente (mock)', estadisticas);
-      return estadisticas;
-    }
+
 
     // Para API real, necesitaríamos hacer múltiples peticiones o tener un endpoint específico
     // Por ahora, calcularemos las estadísticas basándose en los datos de grupos

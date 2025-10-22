@@ -5,7 +5,7 @@
  */
 
 import type { IAjustesResponse, ICatalogo } from '../../../../../interfaces/ajustes';
-import { getMockAjustesData, getMockCatalogos, filtrarSeccionesPorRol } from '../../../../../mock/ajustes';
+import { getMockAjustesData, getMockCatalogos, filtrarSeccionesPorRol } from '../mock/ajustes/ajustes.mock';
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 
 // TODO: Cambiar a false cuando esté lista la API real

@@ -12,7 +12,7 @@ import type {
   IAjustesEstadisticas,
   ICatalogo,
   ICatalogoItem
-} from '../../interfaces/ajustes';
+} from '../../../../../../interfaces/ajustes';
 
 /**
  * @constant MOCK_AJUSTES_CONFIG
