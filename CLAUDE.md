@@ -74,11 +74,11 @@ export const ALLOWED_ROLES = [
 ];
 ```
 
-## HELPERS REUTILIZABLES
+## HELPERS Y CONFIGURACIONES REUTILIZABLES
 
 ### **1. Security Helper**
 - `sanitizeInput()` - Limpia inputs XSS
-- `recordFailedAttempt()` - Rate limiting  
+- `recordFailedAttempt()` - Rate limiting
 - `isAccountLocked()` - Control de bloqueos
 - `generateCSRFToken()` - Protección CSRF
 
@@ -90,6 +90,21 @@ export const ALLOWED_ROLES = [
 ### **3. Notification Helper**
 - `showSuccess()`, `showError()`, `showInfo()`, `showWarning()`
 - Sistema de suscripción integrado
+
+### **4. Status Config** (`src/config/status.config.ts`)
+- ✅ **Configuración centralizada** de estatus de IPH
+- ✅ **Colores y etiquetas** consistentes en toda la aplicación
+- ✅ **Funciones helper**: `getStatusConfig()`, `isValidStatus()`, `getValidStatuses()`
+- ✅ **TypeScript typesafe** con tipos `StatusType` y `StatusConfig`
+- **Estatus soportados**: Activo, Inactivo, Pendiente, Cancelado, N/D
+
+```typescript
+import { getStatusConfig } from '@/config/status.config';
+
+// Uso en componentes
+const estatusInfo = getStatusConfig(iph.estatus);
+// → { color: '#10b981', bgColor: '#dcfce7', label: 'Activo' }
+```
 
 ## COMPONENTES MIGRADOS COMPLETAMENTE
 
@@ -121,8 +136,12 @@ export const ALLOWED_ROLES = [
 - ✅ Historial completo de IPHs con filtros avanzados
 - ✅ Sistema de mocks organizados con JSDoc TODO para API real
 - ✅ Componentes atómicos (HistorialTable, FiltrosHistorial, Paginacion)
-- ✅ Vista detalle dummy para futuro desarrollo
+- ✅ **DetalleIPH completamente integrado con servicio real `getBasicDataByIphId`**
 - ✅ Hook personalizado useHistorialIPH con control de roles
+- ✅ Hook personalizado useDetalleIPH para carga de datos del servidor
+- ✅ **Galería de evidencias** con modal de visualización y navegación
+- ✅ **Sin datos dummy**: Todo proviene de `I_BasicDataDto` del backend
+- ✅ **Configuración centralizada** de estatus mediante `status.config.ts`
 
 ### **6. IphOficial** (`src/components/private/components/iph-oficial/IphOficial.tsx`)
 - ✅ Vista detallada de IPH oficial por ID
@@ -186,6 +205,12 @@ export const ALLOWED_ROLES = [
 - `perfil-usuario.service.ts` - Gestión de perfiles con integración catálogos
 - `usuarios-estadisticas.service.ts` - Estadísticas de usuarios con patrón mock/real
 - `informe-ejecutivo.service.ts` - Adaptador getIphById con exportación PDF mock/real
+- **`get-basic-iph-data.service.ts`** - ✅ **Servicio de datos básicos de IPH** (`getBasicDataByIphId`)
+  - Endpoint: `/api/iph-web/getBasicDataByIph/:id`
+  - Retorna: `I_BasicDataDto` con información completa del IPH
+  - Usado por: **DetalleIPH** en HistorialIPH
+  - Configuración: HttpHelper con 15s timeout y 3 reintentos
+  - Flag: `USE_MOCK_DATA = false` (usando API real)
 
 ### **Patrón de Servicios Mock:**
 ```typescript
@@ -413,14 +438,54 @@ sessionStorage.getItem('userData')
 
 ### **2. Estructura de Refactorización:**
 1. **Interfaces** - Crear interfaces tipadas completas
-2. **Mocks** - Implementar datos realistas 
+2. **Mocks** - Implementar datos realistas
 3. **Servicios** - Adaptables con flag mock/real
 4. **Hook personalizado** - Lógica de negocio separada
 5. **Componentes atómicos** - Separar por funcionalidad
 6. **Componente principal** - Integrar todo
 7. **Documentación** - README.md completo
 
-### **3. Integración con Arquitectura:**
+### **3. ✨ Patrón de Refactorización sin Mocks (Nuevo):**
+
+**Objetivo:** Eliminar dependencias de datos dummy y usar exclusivamente servicios reales.
+
+**Pasos aplicados en DetalleIPH (v2.0.0):**
+
+1. **Análisis de Dependencias Mock**
+   - Identificar imports de archivos `/mock/`
+   - Detectar datos hardcodeados o dummy
+   - Mapear qué datos provienen del servicio real
+
+2. **Centralización de Configuraciones**
+   - Mover configuraciones UI (colores, etiquetas) a `/src/config/`
+   - Ejemplo: `estatusConfig` → `src/config/status.config.ts`
+   - Crear funciones helper typesafe (TypeScript)
+
+3. **Eliminación de Datos Dummy**
+   - ❌ **Eliminar** objetos dummy como `dummyData`, `involucrados`, `seguimiento`
+   - ✅ **Usar** exclusivamente datos del servicio (`I_BasicDataDto`)
+   - ✅ **Fallback** a datos locales del registro solo si falla el servicio
+
+4. **Simplificación de la Lógica**
+   - Variable única `displayData` con prioridad: `datosBasicos ?? registroLocal`
+   - Calcular valores derivados una sola vez (nombres, ubicaciones, fechas)
+   - Eliminar `useMemo` innecesarios para datos simples
+
+5. **Actualización de Imports**
+   ```typescript
+   // ❌ ANTES (con mocks)
+   import { estatusConfig } from '../../../../../mock/historial-iph';
+
+   // ✅ DESPUÉS (config centralizada)
+   import { getStatusConfig } from '../../../../../config/status.config';
+   ```
+
+6. **Documentación Actualizada**
+   - README.md con sección de "Datos del Servicio"
+   - JSDoc actualizado sin menciones a "dummy"
+   - Diagrama de flujo de datos desde servicio
+
+### **4. Integración con Arquitectura:**
 ```typescript
 // Siempre seguir este patrón
 import { ALLOWED_ROLES } from '../config/env.config';
@@ -508,9 +573,9 @@ const USE_MOCK_DATA = false;
 **✅ COMPONENTES COMPLETADOS:**
 - Login - Autenticación completa
 - Dashboard - Layout principal con sidebar
-- Inicio - Dashboard con estadísticas  
+- Inicio - Dashboard con estadísticas
 - EstadisticasUsuario - Estadísticas por usuario
-- HistorialIPH - Historial con filtros avanzados
+- **HistorialIPH** - Historial con filtros avanzados + **DetalleIPH v2.0** (100% sin mocks)
 - IphOficial - Vista detallada integrada con getIphById
 - InformePolicial - Lista de IPH con auto-refresh y filtros por rol
 - PerfilUsuario - Gestión completa de perfiles de usuario
@@ -523,20 +588,102 @@ const USE_MOCK_DATA = false;
 - Servicios integrados (mock y reales)
 - Sistema de logging y notificaciones activo
 - sessionStorage implementado en todo el sistema
+- **Configuración centralizada de estatus** (`status.config.ts`)
 
 **📊 MÉTRICAS:**
 - **10 componentes** completamente migrados
 - **30+ interfaces** TypeScript creadas
-- **10 servicios** implementados con patrón mock/real
+- **11 servicios** implementados (incluye `get-basic-iph-data`)
 - **40+ componentes atómicos** reutilizables
-- **8 hooks personalizados** implementados
+- **9 hooks personalizados** implementados (incluye `useDetalleIPH`)
 - **Integración react-leaflet** para mapas interactivos
 - **2 componentes con virtualización** para alto rendimiento
 - **Sistema de exportación PDF** configurable mock/real
+- **1 configuración centralizada** (`status.config.ts`) eliminando duplicación
 
 **Servidor de desarrollo:** `npm run dev` → http://localhost:5173/
 
 **Status:** ✅ **Sistema completamente funcional con arquitectura moderna**
-- Guarda la logica del servicio e interfaces de getIphById del servicio : /home/okip/Documentos/Okip/betas/front-end-iph/src/services/iph/get-iph.service.ts
-- Guarda este contexto para poder seguir en otro chat
-- Guarda el patron que estamos haciendo en el componete de informe ejectivo
+
+---
+
+## 📝 CHANGELOG RECIENTE
+
+### **v3.1.0 - DetalleIPH Refactorización Completa** (2024-01-30)
+
+#### ✨ Nuevas Funcionalidades
+
+- ✅ **Configuración Centralizada de Estatus**
+  - Nuevo archivo: `src/config/status.config.ts`
+  - Funciones: `getStatusConfig()`, `isValidStatus()`, `getValidStatuses()`
+  - TypeScript typesafe con `StatusType` y `StatusConfig`
+  - Eliminación de duplicación de configuraciones
+
+- ✅ **Integración Completa con Backend**
+  - Servicio: `getBasicDataByIphId` desde `get-basic-iph-data.service.ts`
+  - Hook personalizado: `useDetalleIPH` para manejo de estado
+  - Interface: `I_BasicDataDto` con tipado completo
+
+#### 🔧 Mejoras
+
+- **DetalleIPH v2.0.0**
+  - ❌ Eliminados todos los datos dummy
+  - ❌ Eliminado tab de "Seguimiento" (no existe en backend)
+  - ❌ Eliminadas referencias a `/mock/historial-iph/`
+  - ✅ Datos 100% desde servicio real
+  - ✅ Fallback inteligente a datos locales en caso de error
+  - ✅ Simplificación de lógica con variable única `displayData`
+  - ✅ Documentación completa en README.md
+
+#### 📚 Documentación
+
+- **Nuevo**: `src/components/private/components/historial-iph/components/README.md`
+  - Descripción completa del componente
+  - Estructura de datos del servicio
+  - Flujo de datos con diagramas
+  - Casos de prueba recomendados
+  - Changelog del componente
+
+- **Actualizado**: `CLAUDE.md`
+  - Nueva sección "Patrón de Refactorización sin Mocks"
+  - Documentación del helper `status.config.ts`
+  - Métricas actualizadas (11 servicios, 9 hooks)
+  - Changelog de versiones
+
+#### 🗂️ Archivos Afectados
+
+**Creados:**
+- `src/config/status.config.ts`
+- `src/components/private/components/historial-iph/components/README.md`
+
+**Modificados:**
+- `src/components/private/components/historial-iph/components/DetalleIPH.tsx`
+- `CLAUDE.md`
+
+**Obsoletos (ya no se usan en DetalleIPH):**
+- `src/mock/historial-iph/estadisticas.mock.ts` (solo `estatusConfig` se usaba)
+- `src/mock/historial-iph/registros.mock.ts` (no se usaba)
+
+#### 🎯 Patrón Establecido
+
+Este patrón de refactorización sin mocks puede aplicarse a otros componentes:
+
+1. Identificar dependencias mock
+2. Centralizar configuraciones UI
+3. Eliminar datos dummy
+4. Simplificar lógica de datos
+5. Actualizar imports
+6. Documentar cambios
+
+#### 🚀 Próximos Pasos Recomendados
+
+- Aplicar mismo patrón a otros componentes con datos dummy
+- Migrar otras configuraciones UI a `/src/config/`
+- Crear tests unitarios para `status.config.ts`
+- Revisar otros componentes que usen `/mock/historial-iph/estadisticas.mock.ts`
+
+---
+
+**Última actualización**: 2024-01-30
+**Versión actual**: 3.1.0
+**Componentes**: 10 migrados | 11 servicios | 9 hooks personalizados

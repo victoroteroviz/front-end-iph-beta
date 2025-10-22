@@ -1,13 +1,23 @@
 /**
  * Componente DetalleIPH
  * Vista para mostrar el detalle completo de un registro IPH
- * Integrado con el servicio getBasicDataByIphId para datos reales
  *
- * @note Integrado con servicio real de datos básicos de IPH
- * Muestra información detallada del registro seleccionado
+ * @description
+ * Componente modal que muestra información detallada de un IPH específico.
+ * Integrado con el servicio `getBasicDataByIphId` para obtener datos reales del servidor.
+ *
+ * **Características:**
+ * - Carga dinámica de datos básicos desde el backend
+ * - Visualización de evidencias fotográficas con galería modal
+ * - Sistema de tabs para organizar información
+ * - Construcción automática de URLs de evidencias
+ * - Estados de carga y manejo de errores
+ *
+ * @version 2.0.0
+ * @since 2024-01-30
  */
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   X,
   FileText,
@@ -29,17 +39,15 @@ import {
 // Interfaces
 import type { DetalleIPHProps } from '../../../../../interfaces/components/historialIph.interface';
 
-// Configuración de estatus
-import { estatusConfig } from '../../../../../mock/historial-iph';
+// Config
+import { getStatusConfig } from '../../../../../config/status.config';
+import { API_BASE_URL } from '../../../../../config/env.config';
 
 // Hooks
 import { useDetalleIPH } from '../hooks/useDetalleIPH';
 
 // Helpers
 import { logInfo, logDebug, logError } from '../../../../../helper/log/logger.helper';
-
-// Config
-import { API_BASE_URL } from '../../../../../config/env.config';
 
 /**
  * Componente de detalle de IPH integrado con servicio real
@@ -52,7 +60,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
   onClose,
   className = ''
 }) => {
-  const [selectedTab, setSelectedTab] = useState<'general' | 'evidencias' | 'seguimiento'>('general');
+  const [selectedTab, setSelectedTab] = useState<'general' | 'evidencias'>('general');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
 
@@ -160,38 +168,45 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
   }, [selectedImage, handleCloseImageModal]);
 
   /**
-   * Formatea fecha y hora
+   * Formatea fecha y hora desde Date
    */
-  const formatDateTime = (fecha: string, hora: string) => {
+  const formatDateTime = useCallback((fecha: Date | string) => {
     try {
-      const date = new Date(fecha);
+      const date = typeof fecha === 'string' ? new Date(fecha) : fecha;
+
       const formattedDate = date.toLocaleDateString('es-MX', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
         year: 'numeric'
       });
-      
-      const [hours, minutes] = hora.split(':');
-      const time = new Date();
-      time.setHours(parseInt(hours), parseInt(minutes));
-      const formattedTime = time.toLocaleTimeString('es-MX', {
+
+      const formattedTime = date.toLocaleTimeString('es-MX', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: true
       });
-      
-      return { formattedDate, formattedTime };
-    } catch {
-      return { formattedDate: fecha, formattedTime: hora };
-    }
-  };
 
-  // Usar datos básicos del servicio si están disponibles, fallback a registro
-  const datosActuales = datosBasicos || {
+      return { formattedDate, formattedTime };
+    } catch (error) {
+      logError('DetalleIPH', 'Error al formatear fecha', error);
+      return {
+        formattedDate: 'Fecha no disponible',
+        formattedTime: 'Hora no disponible'
+      };
+    }
+  }, []);
+
+  // Determinar si hay datos cargados del servicio
+  const hasServiceData = datosBasicos !== null;
+
+  // Datos a mostrar: priorizar datos del servicio, fallback a datos del registro local
+  const displayData = hasServiceData ? datosBasicos : {
+    id: registro.id,
     numero: registro.numeroReferencia,
     tipoIph: registro.tipoDelito,
     delito: registro.tipoDelito,
+    tipoDelito: registro.tipoDelito,
     estatus: registro.estatus,
     fechaCreacion: registro.fechaCreacion,
     ubicacion: registro.ubicacion ? {
@@ -201,92 +216,43 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
       municipio: '',
       ciudad: ''
     } : undefined,
-    observaciones: registro.observaciones || '',
+    observaciones: registro.observaciones || 'Sin observaciones',
     primerRespondiente: {
       nombre: registro.usuario.split(' ')[0] || '',
       apellidoPaterno: registro.usuario.split(' ')[1] || '',
       apellidoMaterno: registro.usuario.split(' ')[2] || ''
     },
-    evidencias: [],
-    tipoDelito: registro.tipoDelito
+    evidencias: []
   };
 
-  const { formattedDate, formattedTime } = formatDateTime(registro.fechaCreacion.toISOString().split('T')[0], registro.fechaCreacion.toTimeString().split(' ')[0]);
-  const estatusInfo = estatusConfig[datosActuales.estatus as keyof typeof estatusConfig] || estatusConfig['N/D'];
+  // Formatear fecha y hora
+  const { formattedDate, formattedTime } = formatDateTime(displayData.fechaCreacion);
+
+  // Obtener configuración de estatus
+  const estatusInfo = getStatusConfig(displayData.estatus);
+
+  // Obtener nombre completo del primer respondiente
+  const nombrePrimerRespondiente = displayData.primerRespondiente
+    ? `${displayData.primerRespondiente.nombre} ${displayData.primerRespondiente.apellidoPaterno} ${displayData.primerRespondiente.apellidoMaterno}`.trim()
+    : registro.usuario;
+
+  // Obtener ubicación formateada
+  const ubicacionTexto = displayData.ubicacion?.calle || 'Sin ubicación especificada';
+  const ubicacionSecundaria = displayData.ubicacion?.colonia && displayData.ubicacion?.municipio
+    ? `${displayData.ubicacion.colonia}, ${displayData.ubicacion.municipio}`
+    : null;
 
   /**
-   * Datos para la vista detallada (mezcla de reales y dummy)
+   * Configuración de tabs
    */
-  const dummyData = useMemo(() => ({
-    ubicacionCompleta: {
-      direccion: datosActuales.ubicacion?.calle || 'Sin ubicación especificada',
-      colonia: datosActuales.ubicacion?.colonia || 'Col. Centro',
-      municipio: datosActuales.ubicacion?.municipio || 'Ciudad de México',
-      ciudad: datosActuales.ubicacion?.ciudad || '',
-      estado: datosActuales.ubicacion?.estado || '',
-      cp: '06000',
-      referencias: 'Información detallada disponible próximamente'
-    },
-    involucrados: [
-      {
-        id: 1,
-        tipo: 'Primer Respondiente',
-        nombre: datosActuales.primerRespondiente
-          ? `${datosActuales.primerRespondiente.nombre} ${datosActuales.primerRespondiente.apellidoPaterno} ${datosActuales.primerRespondiente.apellidoMaterno}`.trim()
-          : registro.usuario,
-        edad: 0,
-        telefono: 'No disponible',
-        domicilio: 'No disponible'
-      }
-    ],
-    // Las evidencias ahora solo manejan URLs de imágenes
-    evidenciasUrls: datosActuales.evidencias || [],
-    seguimiento: [
-      {
-        id: 1,
-        fecha: new Date(datosActuales.fechaCreacion).toLocaleString(),
-        accion: 'Registro inicial del caso',
-        usuario: datosActuales.primerRespondiente
-          ? `${datosActuales.primerRespondiente.nombre} ${datosActuales.primerRespondiente.apellidoPaterno}`.trim()
-          : registro.usuario,
-        descripcion: `Se registra el IPH tipo ${datosActuales.tipoIph} con estatus ${datosActuales.estatus}`
-      },
-      {
-        id: 2,
-        fecha: new Date(datosActuales.fechaCreacion).toLocaleString(),
-        accion: 'Datos básicos registrados',
-        usuario: 'Sistema',
-        descripcion: `Número de referencia: ${datosActuales.numero || registro.numeroReferencia}`
-      }
-    ]
-  }), [datosActuales, registro.usuario, registro.numeroReferencia]);
-
-  /**
-   * Configuración de tabs - Condicional según evidencias disponibles
-   */
-  const tabs = useMemo(() => {
-    const baseTabs: Array<{ id: 'general' | 'evidencias' | 'seguimiento'; label: string; icon: typeof FileText }> = [
-      { id: 'general' as const, label: 'Información General', icon: FileText }
-    ];
-
-    // Solo mostrar pestaña de evidencias si hay evidencias
-    if (dummyData.evidenciasUrls && dummyData.evidenciasUrls.length > 0) {
-      baseTabs.push({
-        id: 'evidencias' as const,
-        label: `Evidencias (${dummyData.evidenciasUrls.length})`,
-        icon: Camera
-      });
-    }
-
-    // Pestaña de seguimiento siempre visible
-    baseTabs.push({
-      id: 'seguimiento' as const,
-      label: 'Seguimiento',
-      icon: MessageSquare
-    });
-
-    return baseTabs;
-  }, [dummyData.evidenciasUrls]);
+  const tabs = [
+    { id: 'general' as const, label: 'Información General', icon: FileText },
+    ...(displayData.evidencias.length > 0 ? [{
+      id: 'evidencias' as const,
+      label: `Evidencias (${displayData.evidencias.length})`,
+      icon: Camera
+    }] : [])
+  ];
 
   return (
     <div
@@ -305,7 +271,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
             <div className="flex items-center gap-2">
               <Shield size={24} className="text-[#4d4725]" />
               <h2 className="text-xl font-bold text-[#4d4725]">
-                Detalle IPH - {datosActuales.numero || registro.numeroReferencia}
+                Detalle IPH - {displayData.numero}
               </h2>
             </div>
 
@@ -324,7 +290,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                 <span>Error al cargar datos completos</span>
               </div>
             )}
-            
+
             <div
               className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
               style={{
@@ -378,94 +344,52 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
           {selectedTab === 'general' && (
             <div className="space-y-6">
               {/* Información básica */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <FileText size={20} className="text-[#4d4725]" />
-                    Información del Caso
-                  </h3>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Calendar size={16} className="text-gray-400" />
-                      <span className="text-sm text-gray-600">Fecha:</span>
-                      <span className="font-medium">{formattedDate}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Clock size={16} className="text-gray-400" />
-                      <span className="text-sm text-gray-600">Hora:</span>
-                      <span className="font-medium">{formattedTime}</span>
-                    </div>
-                    
-                    <div className="flex items-start gap-2">
-                      <MapPin size={16} className="text-gray-400 mt-0.5" />
-                      <div>
-                        <span className="text-sm text-gray-600">Ubicación:</span>
-                        <div className="font-medium">{dummyData.ubicacionCompleta.direccion}</div>
-                        <div className="text-sm text-gray-500">
-                          {dummyData.ubicacionCompleta.colonia}, {dummyData.ubicacionCompleta.municipio}
-                        </div>
-                        <div className="text-sm text-gray-500">C.P. {dummyData.ubicacionCompleta.cp}</div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          Referencias: {dummyData.ubicacionCompleta.referencias}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle size={16} className="text-gray-400" />
-                      <span className="text-sm text-gray-600">Tipo de delito:</span>
-                      <span className="font-medium">{datosActuales.tipoDelito || datosActuales.delito}</span>
-                    </div>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <FileText size={20} className="text-[#4d4725]" />
+                  Información del Caso
+                </h3>
 
-                    <div className="flex items-center gap-2">
-                      <FileText size={16} className="text-gray-400" />
-                      <span className="text-sm text-gray-600">Tipo de IPH:</span>
-                      <span className="font-medium">{datosActuales.tipoIph}</span>
-                    </div>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Calendar size={16} className="text-gray-400" />
+                    <span className="text-sm text-gray-600">Fecha:</span>
+                    <span className="font-medium">{formattedDate}</span>
+                  </div>
 
-                    <div className="flex items-center gap-2">
-                      <User size={16} className="text-gray-400" />
-                      <span className="text-sm text-gray-600">Primer Respondiente:</span>
-                      <span className="font-medium">
-                        {datosActuales.primerRespondiente
-                          ? `${datosActuales.primerRespondiente.nombre} ${datosActuales.primerRespondiente.apellidoPaterno} ${datosActuales.primerRespondiente.apellidoMaterno}`.trim()
-                          : registro.usuario}
-                      </span>
+                  <div className="flex items-center gap-2">
+                    <Clock size={16} className="text-gray-400" />
+                    <span className="text-sm text-gray-600">Hora:</span>
+                    <span className="font-medium">{formattedTime}</span>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <MapPin size={16} className="text-gray-400 mt-0.5" />
+                    <div className="flex-1">
+                      <span className="text-sm text-gray-600">Ubicación:</span>
+                      <div className="font-medium">{ubicacionTexto}</div>
+                      {ubicacionSecundaria && (
+                        <div className="text-sm text-gray-500">{ubicacionSecundaria}</div>
+                      )}
                     </div>
                   </div>
-                </div>
 
-                {/* Involucrados */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <User size={20} className="text-[#4d4725]" />
-                    Personas Involucradas
-                  </h3>
-                  
-                  <div className="space-y-3">
-                    {dummyData.involucrados.map((persona) => (
-                      <div key={persona.id} className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className={`
-                            px-2 py-1 rounded-full text-xs font-medium
-                            ${persona.tipo === 'Víctima' 
-                              ? 'bg-red-100 text-red-800' 
-                              : 'bg-blue-100 text-blue-800'
-                            }
-                          `}>
-                            {persona.tipo}
-                          </span>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="font-medium">{persona.nombre}</div>
-                          <div className="text-sm text-gray-600">Edad: {persona.edad} años</div>
-                          <div className="text-sm text-gray-600">Tel: {persona.telefono}</div>
-                          <div className="text-sm text-gray-600">Domicilio: {persona.domicilio}</div>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle size={16} className="text-gray-400" />
+                    <span className="text-sm text-gray-600">Tipo de delito:</span>
+                    <span className="font-medium">{displayData.tipoDelito || displayData.delito}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <FileText size={16} className="text-gray-400" />
+                    <span className="text-sm text-gray-600">Tipo de IPH:</span>
+                    <span className="font-medium">{displayData.tipoIph}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <User size={16} className="text-gray-400" />
+                    <span className="text-sm text-gray-600">Primer Respondiente:</span>
+                    <span className="font-medium">{nombrePrimerRespondiente}</span>
                   </div>
                 </div>
               </div>
@@ -479,7 +403,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
 
                 <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-gray-900 whitespace-pre-wrap">
-                    {datosActuales.observaciones || 'Sin observaciones registradas'}
+                    {displayData.observaciones}
                   </p>
                 </div>
               </div>
@@ -493,9 +417,9 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                 Evidencias Fotográficas
               </h3>
 
-              {dummyData.evidenciasUrls.length > 0 ? (
+              {displayData.evidencias.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {dummyData.evidenciasUrls.map((url, index) => {
+                  {displayData.evidencias.map((url, index) => {
                     const fullUrl = buildEvidenciaUrl(url);
                     logDebug('DetalleIPH', 'Renderizando miniatura', { index, url: fullUrl });
 
@@ -621,76 +545,31 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
               )}
             </div>
           )}
-
-          {selectedTab === 'seguimiento' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <MessageSquare size={20} className="text-[#4d4725]" />
-                  Historial de Seguimiento
-                </h3>
-                <span className="
-                  px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium
-                  rounded-full border border-yellow-300
-                ">
-                  Próximamente
-                </span>
-              </div>
-              
-              <div className="space-y-4">
-                {dummyData.seguimiento.map((evento, index) => (
-                  <div key={evento.id} className="flex gap-4">
-                    <div className="flex flex-col items-center">
-                      <div className="w-8 h-8 bg-[#4d4725] rounded-full flex items-center justify-center">
-                        <CheckCircle size={16} className="text-white" />
-                      </div>
-                      {index < dummyData.seguimiento.length - 1 && (
-                        <div className="w-0.5 h-8 bg-gray-300 mt-2"></div>
-                      )}
-                    </div>
-                    
-                    <div className="flex-1 pb-8">
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-gray-900">{evento.accion}</h4>
-                          <span className="text-xs text-gray-500">{evento.fecha}</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-2">{evento.descripcion}</p>
-                        <div className="flex items-center gap-2">
-                          <User size={12} className="text-gray-400" />
-                          <span className="text-xs text-gray-500">{evento.usuario}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Footer */}
         <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-500">
-              {datosBasicos ? (
+              {hasServiceData ? (
                 <div className="flex items-center gap-2">
                   <CheckCircle size={16} className="text-green-600" />
-                  <span>
-                    <strong>Datos básicos cargados desde el servidor.</strong> Algunos datos detallados aún son de demostración.
-                  </span>
+                  <span>Datos cargados desde el servidor</span>
                 </div>
               ) : loadingDatosBasicos ? (
                 <div className="flex items-center gap-2">
                   <Loader2 size={16} className="animate-spin text-blue-600" />
                   <span>Cargando datos del servidor...</span>
                 </div>
+              ) : errorDatosBasicos ? (
+                <div className="flex items-center gap-2">
+                  <AlertTriangle size={16} className="text-red-600" />
+                  <span>Error: {errorDatosBasicos}</span>
+                </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <AlertTriangle size={16} className="text-yellow-600" />
-                  <span>
-                    <strong>Mostrando datos locales.</strong> {errorDatosBasicos ? `Error: ${errorDatosBasicos}` : 'Datos del servidor no disponibles.'}
-                  </span>
+                  <span>Mostrando datos locales</span>
                 </div>
               )}
             </div>
@@ -741,7 +620,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
               rounded-full text-gray-900 text-sm font-semibold z-10
               shadow-lg
             ">
-              {selectedImageIndex + 1} / {dummyData.evidenciasUrls.length}
+              {selectedImageIndex + 1} / {displayData.evidencias.length}
             </div>
 
             {/* Botón anterior */}
@@ -749,7 +628,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handlePreviousImage(dummyData.evidenciasUrls);
+                  handlePreviousImage(displayData.evidencias);
                 }}
                 className="
                   absolute left-4 p-4 bg-white hover:bg-gray-100
@@ -777,11 +656,11 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
             </div>
 
             {/* Botón siguiente */}
-            {selectedImageIndex < dummyData.evidenciasUrls.length - 1 && (
+            {selectedImageIndex < displayData.evidencias.length - 1 && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleNextImage(dummyData.evidenciasUrls);
+                  handleNextImage(displayData.evidencias);
                 }}
                 className="
                   absolute right-4 p-4 bg-white hover:bg-gray-100
