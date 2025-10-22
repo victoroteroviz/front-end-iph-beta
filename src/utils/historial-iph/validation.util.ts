@@ -8,7 +8,7 @@
  * @since 2024-01-30
  */
 
-import type { GetHistorialIPHParamsEnhanced } from '../../services/historial/historial-iph.service';
+import type { GetHistorialIPHParamsEnhanced } from '../../components/private/components/historial-iph/services/historial-iph.service';
 
 // ==================== CONFIGURACIONES ====================
 

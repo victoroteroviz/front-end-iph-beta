@@ -12,7 +12,7 @@ import { showError } from '../../../../../../helper/notification/notification.he
 import type { I_CoordenadaCluster, I_GetCoordenadasQuery } from '../../../../../../interfaces/mapa-calor';
 import type { Map as LeafletMap } from 'leaflet';
 import { useGeolocation } from './useGeolocation';
-import { getSimpleAddress } from '../../../../../../services/geocoding/reverse-geocoding.service';
+import { getSimpleAddress } from '../services/reverse-geocoding.service';
 
 interface HeatmapStats {
   totalIPH: number;

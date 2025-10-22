@@ -23,7 +23,7 @@ import {
   getRegistroIPHById,
   getEstatusOptions,
   getEstadisticasHistorial
-} from '../../../../../services/historial/historial-iph.service';
+} from '../services/historial-iph.service';
 
 // Interfaces
 import type {

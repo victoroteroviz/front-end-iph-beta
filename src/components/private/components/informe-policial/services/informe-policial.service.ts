@@ -8,13 +8,13 @@ import type {
   IInformePolicialFilters,
   IInformePolicialService,
   IRegistroIPH
-} from '../../interfaces/components/informe-policial.interface';
+} from '../../../../../interfaces/components/informe-policial.interface';
 
 // Servicios existentes
-import { getAllIph, getIphByUser } from '../iph/get-iph.service';
+import { getAllIph, getIphByUser } from '../../../../../services/iph/get-iph.service';
 
 // Helpers
-import { logInfo, logError } from '../../helper/log/logger.helper';
+import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 
 // =====================================================
 // TRANSFORMADORES DE DATOS

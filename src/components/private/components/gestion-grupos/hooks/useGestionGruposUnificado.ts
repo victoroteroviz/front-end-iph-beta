@@ -27,7 +27,7 @@ import {
   createGrupo,
   updateGrupo,
   deleteGrupo
-} from '../../../../../services/grupos';
+} from '../services/grupos.service';
 
 import {
   obtenerUsuariosPorGrupo

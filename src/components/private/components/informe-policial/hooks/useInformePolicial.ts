@@ -8,8 +8,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Servicios
-import { informePolicialService, getCurrentUserInfo } from '../../../../../services/informe-policial/informe-policial.service';
-import { getTiposIPH } from '../../../../../services/informe-policial/tipos-iph.service';
+import { informePolicialService, getCurrentUserInfo } from '../services/informe-policial.service';
+import { getTiposIPH } from '../services/tipos-iph.service';
 
 // Helpers
 import { showSuccess, showError, showWarning } from '../../../../../helper/notification/notification.helper';

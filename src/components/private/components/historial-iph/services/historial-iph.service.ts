@@ -11,13 +11,13 @@
  * @author Sistema IPH Frontend
  */
 
-import { logInfo, logError } from '../../helper/log/logger.helper';
-import { HttpHelper } from '../../helper/http/http.helper';
+import { logInfo, logError } from '../../../../../helper/log/logger.helper';
+import { HttpHelper } from '../../../../../helper/http/http.helper';
 import {
   API_BASE_URL
-} from '../../config/env.config';
-import { API_BASE_ROUTES } from '../../config/routes.config';
-import { getValidStatuses } from '../../config/status.config';
+} from '../../../../../config/env.config';
+import { API_BASE_ROUTES } from '../../../../../config/routes.config';
+import { getValidStatuses } from '../../../../../config/status.config';
 
 // Configuración del cliente HTTP
 const http: HttpHelper = HttpHelper.getInstance({
@@ -42,7 +42,7 @@ import type {
   ResHistory,
   ResHistoryData,
   PaginatedResHistory
-} from '../../interfaces/components/historialIph.interface';
+} from '../../../../../interfaces/components/historialIph.interface';
 
 // Utilidades de transformación y validación
 import {
@@ -62,7 +62,7 @@ import {
   buildQueryParams,
   DATE_VALIDATION,
   DEFAULT_PAGINATION
-} from '../../utils/historial-iph';
+} from '../../../../../utils/historial-iph';
 
 // Interfaces mejoradas para alinearse con el backend
 export interface GetHistorialIPHParamsEnhanced extends Omit<GetHistorialIPHParams, 'filtros'> {

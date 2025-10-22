@@ -33,7 +33,7 @@ import {
   updateGrupo,
   deleteGrupo,
   filterGrupos
-} from '../../../../../services/grupos';
+} from '../services/grupos.service';
 
 import {
   obtenerUsuariosPorGrupo,

@@ -5,7 +5,7 @@
  * @module ReverseGeocodingService
  */
 
-import { logInfo, logError } from '../../helper/log/logger.helper';
+import { logInfo, logError } from '../../../../../../helper/log/logger.helper';
 
 const MODULE_NAME = 'ReverseGeocodingService';
 

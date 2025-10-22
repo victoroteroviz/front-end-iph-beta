@@ -15,17 +15,17 @@
  */
 
 //+ Helpers
-import { HttpHelper } from "../../helper/http/http.helper";
+import { HttpHelper } from "../../../../../helper/http/http.helper";
 import {
   logDebug,
   logInfo,
   logError,
   logWarning,
   logHttp
-} from "../../helper/log/logger.helper";
+} from "../../../../../helper/log/logger.helper";
 
 //+ Environment
-import { API_BASE_URL } from "../../config/env.config";
+import { API_BASE_URL } from "../../../../../config/env.config";
 
 //+ Interfaces
 import type {
@@ -34,7 +34,7 @@ import type {
   IGrupoFormData,
   IUpdateGrupoRequest,
   IGrupoFilters
-} from "../../interfaces/grupos";
+} from "../../../../../interfaces/grupos";
 
 // ============================================================================
 // CONFIGURACIÓN

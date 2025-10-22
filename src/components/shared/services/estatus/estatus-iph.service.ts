@@ -3,10 +3,10 @@
  * Implementa patr�n Singleton y principios SOLID
  */
 
-import httpHelper from '../../helper/http/http.helper';
-import { API_BASE_URL } from '../../config/env.config';
-import { logInfo, logError } from '../../helper/log/logger.helper';
-import type { ResEstatusIph, ResHistorialIphResponse, QueryHistorialDto, ResHistory } from '../../interfaces/estatus-iph';
+import httpHelper from '../../../../helper/http/http.helper';
+import { API_BASE_URL } from '../../../../config/env.config';
+import { logInfo, logError } from '../../../../helper/log/logger.helper';
+import type { ResEstatusIph, ResHistorialIphResponse, QueryHistorialDto, ResHistory } from '../../../../interfaces/estatus-iph';
 
 /**
  * Configuraci�n del servicio

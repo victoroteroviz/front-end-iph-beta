@@ -3,9 +3,9 @@
  * Integrado con el servicio real de tipos-iph.service
  */
 
-import type { ITipoIPH } from '../../interfaces/components/informe-policial.interface';
-import { getTiposIph, type ITiposIph } from '../../components/shared/services/catalogs/tipos-iph.service';
-import { logInfo, logError } from '../../helper/log/logger.helper';
+import type { ITipoIPH } from '../../../../../interfaces/components/informe-policial.interface';
+import { getTiposIph, type ITiposIph } from '../../../../shared/services/catalogs/tipos-iph.service';
+import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 
 // =====================================================
 // MOCK DATA

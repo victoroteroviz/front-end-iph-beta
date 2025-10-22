@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 // Servicio
-import { getEstadisticasHistorial } from '../../../../../services/historial/historial-iph.service';
+import { getEstadisticasHistorial } from '../../historial-iph/services/historial-iph.service';
 
 // Helpers
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';

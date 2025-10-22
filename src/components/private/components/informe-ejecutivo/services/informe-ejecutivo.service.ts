@@ -6,13 +6,13 @@
 import type { 
   IInformeEjecutivo,
   IInformeEjecutivoService 
-} from '../../interfaces/components/informe-ejecutivo.interface';
+} from '../../../../../interfaces/components/informe-ejecutivo.interface';
 
 // Servicio existente
-import { getIphById } from '../iph/get-iph.service';
+import { getIphById } from '../../../../../services/iph/get-iph.service';
 
 // Helpers
-import { logInfo, logError } from '../../helper/log/logger.helper';
+import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 
 // =====================================================
 // CONFIGURACIÓN
