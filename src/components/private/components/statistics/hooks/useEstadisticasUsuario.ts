@@ -14,7 +14,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 // Servicios refactorizados
-import { getIphCountByUsers } from '../../../../../services/statistics/iph/statistics.service';
+import { getIphCountByUsers } from '../services/statistics.service';
 
 // Helpers
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';

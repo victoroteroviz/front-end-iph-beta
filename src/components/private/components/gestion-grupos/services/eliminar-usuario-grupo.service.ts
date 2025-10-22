@@ -8,13 +8,13 @@
  * DELETE /api/usuario-grupo/eliminar-usuario-de-grupo/uuid-usuario/uuid-grupo
  */
 
-import { logInfo, logError } from '../../helper/log/logger.helper';
-import { HttpHelper } from '../../helper/http/http.helper';
-import { API_BASE_URL } from '../../config/env.config';
+import { logInfo, logError } from '../../../../../helper/log/logger.helper';
+import { HttpHelper } from '../../../../../helper/http/http.helper';
+import { API_BASE_URL } from '../../../../../config/env.config';
 import type {
   IEliminarUsuarioGrupoParams,
   IEliminarUsuarioGrupoResponse
-} from '../../interfaces/grupo';
+} from '../../../../../interfaces/grupo';
 
 // =====================================================
 // CONFIGURACIÓN MOCK/REAL

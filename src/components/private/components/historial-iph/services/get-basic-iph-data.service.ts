@@ -5,15 +5,15 @@
  * @module IphBasicDataService
  */
 
-import { API_BASE_URL } from '../../config/env.config';
-import { HttpHelper } from '../../helper/http/http.helper';
-import { logDebug, logError, logInfo, logVerbose } from '../../helper/log/logger.helper';
+import { API_BASE_URL } from '../../../../../config/env.config';
+import { HttpHelper } from '../../../../../helper/http/http.helper';
+import { logDebug, logError, logInfo, logVerbose } from '../../../../../helper/log/logger.helper';
 
 // Interfaces
-import type { I_BasicDataDto } from '../../interfaces/iph-basic-data';
+import type { I_BasicDataDto } from '../../../../../interfaces/iph-basic-data';
 
 // Mocks (para desarrollo)
-import { getMockBasicIphData } from '../../mock/iph-basic-data';
+import { getMockBasicIphData } from '../../../../../mock/iph-basic-data';
 
 // Constantes del servicio
 const SERVICE_NAME = 'IphBasicDataService';

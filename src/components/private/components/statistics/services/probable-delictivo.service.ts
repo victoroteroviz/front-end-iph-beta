@@ -13,9 +13,9 @@
  * - GET /api/probable-delictivo/getProbableDelictivoAnual?anio=2025
  */
 
-import { HttpHelper } from '../../helper/http/http.helper';
-import { logInfo, logError } from '../../helper/log/logger.helper';
-import { API_BASE_URL } from '../../config/env.config';
+import { HttpHelper } from '../../../../../helper/http/http.helper';
+import { logInfo, logError } from '../../../../../helper/log/logger.helper';
+import { API_BASE_URL } from '../../../../../config/env.config';
 
 // Interfaces
 import type {
@@ -23,7 +23,7 @@ import type {
   ParamsProbableDelictivoDiario,
   ParamsProbableDelictivoMensual,
   ParamsProbableDelictivoAnual
-} from '../../interfaces/probable-delictivo';
+} from '../../../../../interfaces/probable-delictivo';
 
 // Constantes del módulo
 const MODULE_NAME = 'ProbableDelictivo';

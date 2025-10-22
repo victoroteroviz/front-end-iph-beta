@@ -26,7 +26,7 @@ import {
   asignarUsuarioAGrupo,
   obtenerEstadisticasUsuarioGrupo,
   filtrarGruposUsuarios
-} from '../../../../../services/usuario-grupo';
+} from '../services/usuario-grupo.service';
 
 //+ Helpers
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';

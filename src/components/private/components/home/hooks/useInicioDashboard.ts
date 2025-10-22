@@ -9,7 +9,7 @@ import {
   getResumenPorMes,
   //! Descomentar cuando este listo el endpoint
   // getIphCountByUsers
-} from '../../../../../services/statistics/iph/statistics.service';
+} from '../../statistics/services/statistics.service';
 
 // Sistema de roles
 import { isUserAuthenticated, getUserFromStorage } from '../../../../../helper/navigation/navigation.helper';

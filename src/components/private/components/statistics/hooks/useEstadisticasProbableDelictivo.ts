@@ -11,7 +11,7 @@ import {
   getProbableDelictivoDiario,
   getProbableDelictivoMensual,
   getProbableDelictivoAnual
-} from '../../../../../services/probable-delictivo/probable-delictivo.service';
+} from '../services/probable-delictivo.service';
 import type {
   RespuestaProbableDelictivo,
   ParamsProbableDelictivoDiario,

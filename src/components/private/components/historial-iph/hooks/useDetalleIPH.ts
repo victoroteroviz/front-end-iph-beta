@@ -17,7 +17,7 @@ import { logInfo, logError, logDebug } from '../../../../../helper/log/logger.he
 import { showError } from '../../../../../helper/notification/notification.helper';
 
 // Services
-import { getBasicDataByIphId } from '../../../../../services/iph-basic-data/get-basic-iph-data.service';
+import { getBasicDataByIphId } from '../services/get-basic-iph-data.service';
 
 // Interfaces
 import type { I_BasicDataDto } from '../../../../../interfaces/iph-basic-data';

@@ -1,6 +1,6 @@
-import { API_BASE_URL } from "../../../config/env.config";
-import {HttpHelper} from "../../../helper/http/http.helper";
-import { API_BASE_ROUTES } from "../../../config/routes.config";
+import { API_BASE_URL } from "../../../../../config/env.config";
+import {HttpHelper} from "../../../../../helper/http/http.helper";
+import { API_BASE_ROUTES } from "../../../../../config/routes.config";
 //+interfaces 
 import type {
    IVariacionResumen,
@@ -8,9 +8,9 @@ import type {
    IResumenPorSemana,
    IResumenPorMes,
    IUsuarioIphCountResponse
- } from "../../../interfaces/statistics/statistics.interface";
+ } from "../../../../../interfaces/statistics/statistics.interface";
 // +mocks
-import { getMockIphCountByUsers } from "../../../mock/statistics";
+import { getMockIphCountByUsers } from "../../../../../mock/statistics";
 
 // Flag para alternar entre mock y API real
 const USE_MOCK_DATA = true;

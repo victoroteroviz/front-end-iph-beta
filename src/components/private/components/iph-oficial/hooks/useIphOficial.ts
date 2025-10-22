@@ -22,7 +22,7 @@ import {
   getIphOficial,
   iphOficialExists,
   getIphOficialBasicInfo
-} from '../../../../../services/iph-oficial/iph-oficial.service';
+} from '../services/iph-oficial.service';
 
 // Interfaces
 import type {

@@ -14,8 +14,9 @@ import type { IUsuarioBusqueda } from '../../../../../../../interfaces/user/crud
 import {
   obtenerUsuariosGruposPorId,
   asignarUsuarioAGrupo,
-  eliminarUsuarioDeGrupo
-} from '../../../../../../../services/usuario-grupo';
+} from '../../../services/usuario-grupo.service';
+
+import { eliminarUsuarioDeGrupo } from '../../../services/eliminar-usuario-grupo.service';
 
 //+ Helpers
 import { logInfo, logError } from '../../../../../../../helper/log/logger.helper';

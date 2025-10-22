@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, User, Mail, Phone, IdCard, MapPin, Award, Briefcase, Users, Loader2 } from 'lucide-react';
-import { getUserById } from '../../../../../services/user/crud-user.service';
+import { getUserById } from '../services/crud-user.service';
 import type { IGetUserById } from '../../../../../interfaces/user/crud/crud-user.interface';
 
 interface IUsuarioViewModalProps {

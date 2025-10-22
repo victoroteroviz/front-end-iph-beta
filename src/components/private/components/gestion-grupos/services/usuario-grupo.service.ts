@@ -5,11 +5,11 @@
  */
 
 //+ Helpers
-import { HttpHelper } from "../../helper/http/http.helper";
-import { logDebug, logInfo, logError } from "../../helper/log/logger.helper";
+import { HttpHelper } from "../../../../../helper/http/http.helper";
+import { logDebug, logInfo, logError } from "../../../../../helper/log/logger.helper";
 
 //+ Environment
-import { API_BASE_URL } from "../../config/env.config";
+import { API_BASE_URL } from "../../../../../config/env.config";
 
 //+ Interfaces
 import type {
@@ -19,7 +19,7 @@ import type {
   IAsignarUsuarioGrupoRequest,
   IUsuarioGrupoFilters,
   IEstadisticasUsuarioGrupo
-} from "../../interfaces/usuario-grupo";
+} from "../../../../../interfaces/usuario-grupo";
 
 //+ Mocks
 import {
@@ -27,7 +27,7 @@ import {
   obtenerUsuariosGruposPorIdMock,
   asignarUsuarioAGrupoMock,
   obtenerEstadisticasUsuarioGrupoMock
-} from "../../mock/usuario-grupo";
+} from "../../../../../mock/usuario-grupo";
 
 // Flag para cambiar entre mock y API real
 const USE_MOCK_DATA = false; // TODO: Cambiar a false para usar API real

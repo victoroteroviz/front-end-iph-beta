@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 // Servicios
-import { getIphById } from '../../../../../services/iph/get-iph.service';
+import { getIphById } from '../../iph-oficial/services/get-iph.service';
 
 // Helpers
 import { showWarning } from '../../../../../helper/notification/notification.helper';

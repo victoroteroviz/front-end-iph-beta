@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getCoordenadasMapaCalor } from '../../../../../../services/mapa-calor/get-coordenadas-mapa-calor.service';
+import { getCoordenadasMapaCalor } from '../services/get-coordenadas-mapa-calor.service';
 import { logInfo, logError } from '../../../../../../helper/log/logger.helper';
 import { showError } from '../../../../../../helper/notification/notification.helper';
 import type { I_CoordenadaCluster, I_GetCoordenadasQuery } from '../../../../../../interfaces/mapa-calor';

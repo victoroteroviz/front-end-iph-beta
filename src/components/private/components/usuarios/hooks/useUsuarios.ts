@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Servicios
-import { getUsuarios, deleteUsuario } from '../../../../../services/user/crud-user.service';
+import { getUsuarios, deleteUsuario } from '../services/crud-user.service';
 
 // Helpers
 import { showSuccess, showError, showWarning } from '../../../../../helper/notification/notification.helper';

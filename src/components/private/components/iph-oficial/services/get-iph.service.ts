@@ -1,13 +1,13 @@
 //+ Helpers
-import { HttpHelper } from "../../helper/http/http.helper";
-import { logDebug } from "../../helper/log/logger.helper";
+import { HttpHelper } from "../../../../../helper/http/http.helper";
+import { logDebug } from "../../../../../helper/log/logger.helper";
 
 //+ ENVIROMENT
-import { API_BASE_URL } from "../../config/env.config";
-import { API_BASE_ROUTES } from "../../config/routes.config";
+import { API_BASE_URL } from "../../../../../config/env.config";
+import { API_BASE_ROUTES } from "../../../../../config/routes.config";
 //+Interfaces
-import type { getIph } from "../../interfaces/request/iph/request-iph.service";
-import type { IPaginatedIPH, ResponseIphData, I_IphData, IDetencion, IUsoFuerza, IPrimerRespondiente, ILugarIntervencion } from "../../interfaces/iph/iph.interface";
+import type { getIph } from "../../../../../interfaces/request/iph/request-iph.service";
+import type { IPaginatedIPH, ResponseIphData, I_IphData, IDetencion, IUsoFuerza, IPrimerRespondiente, ILugarIntervencion } from "../../../../../interfaces/iph/iph.interface";
 
 const http: HttpHelper = HttpHelper.getInstance({
   baseURL: API_BASE_URL,

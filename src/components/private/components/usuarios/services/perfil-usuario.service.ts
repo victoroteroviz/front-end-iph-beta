@@ -3,14 +3,14 @@
  * Implementa patrón mock/real para facilitar desarrollo y testing
  */
 
-import { logInfo, logError } from '../../helper/log/logger.helper';
-import { getUserById, createUsuario as createUsuarioAPI, updateUsuario as updateUsuarioAPI } from '../user/crud-user.service';
-import { getRoles } from '../../components/shared/services/roles/get-roles.service';
-import { getGrados } from '../../components/shared/services/catalogs/grados.service';
-import { getCargos } from '../../components/shared/services/catalogs/cargos.service';
-import { getMunicipios } from '../../components/shared/services/catalogs/municipios.service';
-import { getAdscripciones } from '../../components/shared/services/catalogs/adscripciones.service';
-import { getSexos } from '../../components/shared/services/catalogs/sexos.service';
+import { logInfo, logError } from '../../../../../helper/log/logger.helper';
+import { getUserById, createUsuario as createUsuarioAPI, updateUsuario as updateUsuarioAPI } from './crud-user.service';
+import { getRoles } from '../../../../shared/services/roles/get-roles.service';
+import { getGrados } from '../../../../shared/services/catalogs/grados.service';
+import { getCargos } from '../../../../shared/services/catalogs/cargos.service';
+import { getMunicipios } from '../../../../shared/services/catalogs/municipios.service';
+import { getAdscripciones } from '../../../../shared/services/catalogs/adscripciones.service';
+import { getSexos } from '../../../../shared/services/catalogs/sexos.service';
 
 import type {
   IGetUserById,
@@ -18,11 +18,11 @@ import type {
   IUpdateUser,
   ICreatedUser,
   UserRole
-} from '../../interfaces/user/crud/crud-user.interface';
+} from '../../../../../interfaces/user/crud/crud-user.interface';
 import type { 
   ICatalogsResponse, 
   IRolesResponse,
-} from '../../interfaces/components/perfilUsuario.interface';
+} from '../../../../../interfaces/components/perfilUsuario.interface';
 
 // =====================================================
 // CONFIGURACIÓN MOCK/REAL

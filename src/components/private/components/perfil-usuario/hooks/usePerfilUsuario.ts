@@ -16,7 +16,7 @@ import {
   getRolesDisponibles,
   buildUpdateUserPayload,
   validateCatalogCompleteness
-} from '../../../../../services/perfil-usuario/perfil-usuario.service';
+} from '../../usuarios/services/perfil-usuario.service';
 
 // Helpers
 import { showSuccess, showError, showWarning } from '../../../../../helper/notification/notification.helper';

@@ -1,15 +1,15 @@
 
-import { API_BASE_URL } from "../../config/env.config";
+import { API_BASE_URL } from "../../../../../config/env.config";
 
-import { HttpHelper } from "../../helper/http/http.helper";
-import type { IPaginatedUsers, IPaginatedUsersResponse } from "../../interfaces/user/crud/get-paginated.users.interface";
+import { HttpHelper } from "../../../../../helper/http/http.helper";
+import type { IPaginatedUsers, IPaginatedUsersResponse } from "../../../../../interfaces/user/crud/get-paginated.users.interface";
 import type {
   ICreatedUser,
   ICreateUser,
   IGetUserById,
   IUpdateUser,
-} from "../../interfaces/user/crud/crud-user.interface";
-import { UserSearchParams, UserOrderByParams, SortOrder } from "../../interfaces/user/crud/user-search-params.enum";
+} from "../../../../../interfaces/user/crud/crud-user.interface";
+import { UserSearchParams, UserOrderByParams, SortOrder } from "../../../../../interfaces/user/crud/user-search-params.enum";
 
 const http: HttpHelper = HttpHelper.getInstance({
   baseURL: API_BASE_URL,

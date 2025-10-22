@@ -11,26 +11,26 @@
  * @author Sistema IPH Frontend
  */
 
-import { logInfo, logError, logWarning } from '../../helper/log/logger.helper';
+import { logInfo, logError, logWarning } from '../../../../../helper/log/logger.helper';
 
 // Servicio existente del sistema
-import { getIphById } from '../iph/get-iph.service';
+import { getIphById } from './get-iph.service';
 
 // Interfaces
 import type {
   IphOficialData,
   IphOficialResponse,
   GetIphOficialParams
-} from '../../interfaces/components/iphOficial.interface';
+} from '../../../../../interfaces/components/iphOficial.interface';
 
-import type { ResponseIphData } from '../../interfaces/iph/iph.interface';
+import type { ResponseIphData } from '../../../../../interfaces/iph/iph.interface';
 
 // Mock data imports
 import {
   iphOficialMockData,
   getIphOficialMockById,
   mockDelay
-} from '../../mock/iph-oficial';
+} from '../../../../../mock/iph-oficial';
 
 // ==================== CONFIGURACIÓN ====================
 

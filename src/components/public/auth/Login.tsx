@@ -22,7 +22,7 @@ import { z } from 'zod';
 import iphLogin from '../../../assets/iph/iphLogin.png';
 
 // Servicios
-import { login, isLoggedIn } from '../../../services/user/login.service';
+import { login, isLoggedIn } from './services/login.service';
 
 // Helpers
 import { isUserAuthenticated } from '../../../helper/navigation/navigation.helper';

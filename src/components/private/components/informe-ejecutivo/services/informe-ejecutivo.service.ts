@@ -9,7 +9,7 @@ import type {
 } from '../../../../../interfaces/components/informe-ejecutivo.interface';
 
 // Servicio existente
-import { getIphById } from '../../../../../services/iph/get-iph.service';
+import { getIphById } from '../../iph-oficial/services/get-iph.service';
 
 // Helpers
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';

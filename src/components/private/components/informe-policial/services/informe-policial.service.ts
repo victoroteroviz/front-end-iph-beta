@@ -11,7 +11,7 @@ import type {
 } from '../../../../../interfaces/components/informe-policial.interface';
 
 // Servicios existentes
-import { getAllIph, getIphByUser } from '../../../../../services/iph/get-iph.service';
+import { getAllIph, getIphByUser } from '../../iph-oficial/services/get-iph.service';
 
 // Helpers
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
