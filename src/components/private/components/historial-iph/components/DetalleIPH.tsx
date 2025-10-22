@@ -13,7 +13,7 @@
  * - Construcción automática de URLs de evidencias
  * - Estados de carga y manejo de errores
  *
- * @version 2.0.0
+ * @version 2.1.0 - Optimización de logging
  * @since 2024-01-30
  */
 
@@ -48,6 +48,7 @@ import { useDetalleIPH } from '../hooks/useDetalleIPH';
 
 // Helpers
 import { logInfo, logDebug, logError } from '../../../../../helper/log/logger.helper';
+import { logWarning } from '../../../../../helper/log/logger.helper';
 
 /**
  * Componente de detalle de IPH integrado con servicio real
@@ -76,32 +77,51 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
 
   // Log cuando se carga el componente
   useEffect(() => {
-    logInfo('DetalleIPH', 'Componente montado', { registroId: registro.id });
+    logInfo('DetalleIPH', 'Componente montado', {
+      registroId: registro.id,
+      numeroReferencia: registro.numeroReferencia,
+      usuario: registro.usuario
+    });
+
     return () => {
       logInfo('DetalleIPH', 'Componente desmontado', { registroId: registro.id });
     };
-  }, [registro.id]);
+  }, [registro.id, registro.numeroReferencia, registro.usuario]);
 
   /**
    * Construye la URL completa de una evidencia
    * Maneja tanto URLs completas como rutas relativas
    */
   const buildEvidenciaUrl = useCallback((url: string): string => {
-    if (!url) return '';
+    if (!url) {
+      logWarning('DetalleIPH', 'URL de evidencia vacía recibida', { iphId: registro.id });
+      return '';
+    }
+
+    let fullUrl: string;
 
     // Si ya es una URL completa (http:// o https://), retornarla tal cual
     if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
+      fullUrl = url;
     }
-
     // Si empieza con /, agregar solo la base URL
-    if (url.startsWith('/')) {
-      return `${API_BASE_URL}${url}`;
+    else if (url.startsWith('/')) {
+      fullUrl = `${API_BASE_URL}${url}`;
+    }
+    // Si no empieza con /, agregar base URL con /
+    else {
+      fullUrl = `${API_BASE_URL}/${url}`;
     }
 
-    // Si no empieza con /, agregar base URL con /
-    return `${API_BASE_URL}/${url}`;
-  }, []);
+    logDebug('DetalleIPH', 'URL de evidencia construida', {
+      iphId: registro.id,
+      urlOriginal: url,
+      urlFinal: fullUrl,
+      esUrlCompleta: url.startsWith('http')
+    });
+
+    return fullUrl;
+  }, [registro.id]);
 
   /**
    * Abre el modal de imagen
@@ -110,8 +130,14 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
     const fullUrl = buildEvidenciaUrl(url);
     setSelectedImage(fullUrl);
     setSelectedImageIndex(index);
-    logDebug('DetalleIPH', 'Abriendo modal de imagen', { url: fullUrl, index });
-  }, [buildEvidenciaUrl]);
+
+    logInfo('DetalleIPH', 'Evidencia seleccionada para visualización', {
+      iphId: registro.id,
+      imagenIndex: index + 1,
+      totalImagenes: datosBasicos?.evidencias?.length || 0,
+      url: fullUrl
+    });
+  }, [buildEvidenciaUrl, registro.id, datosBasicos?.evidencias?.length]);
 
   /**
    * Cierra el modal de imagen
@@ -119,7 +145,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
   const handleCloseImageModal = useCallback(() => {
     setSelectedImage(null);
     setSelectedImageIndex(0);
-    logDebug('DetalleIPH', 'Cerrando modal de imagen');
+    // Operación UI trivial - no requiere logging
   }, []);
 
   /**
@@ -131,8 +157,15 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
       const fullUrl = buildEvidenciaUrl(evidencias[newIndex]);
       setSelectedImageIndex(newIndex);
       setSelectedImage(fullUrl);
+
+      logDebug('DetalleIPH', 'Navegación a evidencia anterior', {
+        iphId: registro.id,
+        imagenAnterior: selectedImageIndex + 1,
+        imagenNueva: newIndex + 1,
+        totalImagenes: evidencias.length
+      });
     }
-  }, [selectedImageIndex, buildEvidenciaUrl]);
+  }, [selectedImageIndex, buildEvidenciaUrl, registro.id]);
 
   /**
    * Navega a la siguiente imagen
@@ -143,8 +176,15 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
       const fullUrl = buildEvidenciaUrl(evidencias[newIndex]);
       setSelectedImageIndex(newIndex);
       setSelectedImage(fullUrl);
+
+      logDebug('DetalleIPH', 'Navegación a evidencia siguiente', {
+        iphId: registro.id,
+        imagenAnterior: selectedImageIndex + 1,
+        imagenNueva: newIndex + 1,
+        totalImagenes: evidencias.length
+      });
     }
-  }, [selectedImageIndex, buildEvidenciaUrl]);
+  }, [selectedImageIndex, buildEvidenciaUrl, registro.id]);
 
   /**
    * Maneja el evento de la tecla Escape para cerrar el modal de imagen
@@ -189,13 +229,13 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
 
       return { formattedDate, formattedTime };
     } catch (error) {
-      logError('DetalleIPH', 'Error al formatear fecha', error);
+      logError('DetalleIPH', error, `Error al formatear fecha - iphId: ${registro.id}, fechaRecibida: ${fecha}, tipoFecha: ${typeof fecha}`);
       return {
         formattedDate: 'Fecha no disponible',
         formattedTime: 'Hora no disponible'
       };
     }
-  }, []);
+  }, [registro.id]);
 
   // Determinar si hay datos cargados del servicio
   const hasServiceData = datosBasicos !== null;
@@ -225,6 +265,50 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
     evidencias: []
   };
 
+  /**
+   * Efecto para detectar uso de datos locales (fallback crítico)
+   */
+  useEffect(() => {
+    // Solo loguear si NO hay datos del servicio, NO está cargando, y NO hay error
+    // (significa que el hook decidió no cargar o el servicio no respondió)
+    if (!hasServiceData && !loadingDatosBasicos && errorDatosBasicos) {
+      logWarning('DetalleIPH', 'Usando datos locales por fallo del servicio', {
+        iphId: registro.id,
+        numeroReferencia: registro.numeroReferencia,
+        errorServicio: errorDatosBasicos,
+        datosLocalesDisponibles: {
+          tipoDelito: registro.tipoDelito,
+          usuario: registro.usuario,
+          estatus: registro.estatus
+        }
+      });
+    } else if (!hasServiceData && !loadingDatosBasicos && !errorDatosBasicos) {
+      logWarning('DetalleIPH', 'Usando datos locales - servicio no disponible', {
+        iphId: registro.id,
+        numeroReferencia: registro.numeroReferencia,
+        razon: 'Servicio no respondió o datos no cargados'
+      });
+    }
+  }, [hasServiceData, loadingDatosBasicos, errorDatosBasicos, registro]);
+
+  /**
+   * Log cuando se cargan exitosamente los datos del servicio
+   */
+  useEffect(() => {
+    if (hasServiceData && datosBasicos) {
+      logInfo('DetalleIPH', 'Datos del servicio cargados y mostrados', {
+        iphId: datosBasicos.id,
+        numero: datosBasicos.numero,
+        tipoIph: datosBasicos.tipoIph,
+        estatus: datosBasicos.estatus,
+        evidencias: datosBasicos.evidencias?.length || 0,
+        primerRespondiente: datosBasicos.primerRespondiente
+          ? `${datosBasicos.primerRespondiente.nombre} ${datosBasicos.primerRespondiente.apellidoPaterno}`
+          : 'N/A'
+      });
+    }
+  }, [hasServiceData, datosBasicos]);
+
   // Formatear fecha y hora
   const { formattedDate, formattedTime } = formatDateTime(displayData.fechaCreacion);
 
@@ -253,6 +337,21 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
       icon: Camera
     }] : [])
   ];
+
+  /**
+   * Handler para cambio de tab con logging
+   */
+  const handleTabChange = useCallback((tabId: 'general' | 'evidencias') => {
+    const tabAnterior = selectedTab;
+    setSelectedTab(tabId);
+
+    logDebug('DetalleIPH', 'Cambio de tab', {
+      iphId: registro.id,
+      tabAnterior,
+      tabNuevo: tabId,
+      evidenciasDisponibles: displayData.evidencias.length
+    });
+  }, [selectedTab, registro.id, displayData.evidencias.length]);
 
   return (
     <div
@@ -323,7 +422,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
             {tabs.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => setSelectedTab(id)}
+                onClick={() => handleTabChange(id)}
                 className={`
                   flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer
                   ${selectedTab === id
@@ -421,7 +520,6 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {displayData.evidencias.map((url, index) => {
                     const fullUrl = buildEvidenciaUrl(url);
-                    logDebug('DetalleIPH', 'Renderizando miniatura', { index, url: fullUrl });
 
                     return (
                       <div
@@ -453,15 +551,12 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                             objectFit: 'cover',
                             display: 'block'
                           }}
-                          onLoad={() => {
-                            logDebug('DetalleIPH', '✅ Imagen cargada y renderizada', {
-                              index,
-                              url: fullUrl,
-                              timestamp: new Date().toISOString()
-                            });
-                          }}
                           onError={() => {
-                            logError('DetalleIPH', 'Imagen no disponible', `Error al cargar imagen ${index + 1}: ${fullUrl}`);
+                            logError(
+                              'DetalleIPH', 
+                              new Error('Error al cargar evidencia'), 
+                              `iphId: ${registro.id}, numeroIph: ${registro.numeroReferencia}, imagenIndex: ${index + 1}/${displayData.evidencias.length}, url: ${fullUrl}, esUrlCompleta: ${url.startsWith('http')}`
+                            );
                           }}
                         />
 
@@ -649,7 +744,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                 className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl bg-gray-800"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  logError('DetalleIPH', 'Error en modal de imagen', `No se pudo cargar: ${selectedImage}`);
+                  logError('DetalleIPH', new Error('Error al cargar imagen en modal'), `iphId: ${registro.id}, numeroIph: ${registro.numeroReferencia}, imagenIndex: ${selectedImageIndex + 1}/${displayData.evidencias.length}, url: ${selectedImage}`);
                   target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="600" height="600"%3E%3Crect fill="%23374151" width="600" height="600"/%3E%3Cg%3E%3Ccircle cx="300" cy="280" r="60" fill="%239ca3af" opacity="0.5"/%3E%3Crect x="270" y="250" width="60" height="60" fill="%239ca3af" opacity="0.5" rx="8"/%3E%3C/g%3E%3Ctext fill="%23e5e7eb" x="50%25" y="65%25" dominant-baseline="middle" text-anchor="middle" font-size="20" font-family="system-ui"%3EImagen no disponible%3C/text%3E%3Ctext fill="%239ca3af" x="50%25" y="72%25" dominant-baseline="middle" text-anchor="middle" font-size="14" font-family="system-ui"%3EVerifique la URL de la evidencia%3C/text%3E%3C/svg%3E';
                 }}
               />

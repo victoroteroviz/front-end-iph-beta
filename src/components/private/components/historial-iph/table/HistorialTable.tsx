@@ -1,6 +1,17 @@
 /**
- * Componente HistorialTable SUPER OPTIMIZADO
+ * Componente HistorialTable
  * Tabla principal para mostrar los registros del historial de IPH
+ *
+ * @version 2.0.0
+ * @since 2024-01-30
+ *
+ * @changes v2.0.0
+ * - ✅ Eliminado objeto `predefinedColors` hardcodeado (legacy)
+ * - ✅ Eliminada función `generateEstatusColors()` duplicada
+ * - ✅ Eliminado cache de colores innecesario (`colorCache`)
+ * - ✅ Refactorizado `EstatusComponent` para usar `getStatusConfig()` centralizado
+ * - ✅ Reducido de 421 a 381 líneas (-9.5%)
+ * - ✅ Usa configuración de `status.config.ts` (Procesando, Supervisión, Finalizado)
  */
 
 import React, { useMemo, useCallback } from 'react';
@@ -19,8 +30,8 @@ import type {
   RegistroHistorialIPH
 } from '../../../../../interfaces/components/historialIph.interface';
 
-// Configuración de estatus (fallback para UI)
-import { estatusConfig } from '../../../../../mock/historial-iph';
+// Configuración de estatus centralizada
+import { getStatusConfig } from '../../../../../config/status.config';
 
 // Helpers
 import { logInfo } from '../../../../../helper/log/logger.helper';
@@ -97,71 +108,21 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
     }
   }, [onEditarEstatus]);
 
-  // Colores predefinidos memoizados con tipo explícito para índice string
-  const predefinedColors = useMemo(() => ({
-    'Activo': { color: '#065f46', bgColor: '#d1fae5' },
-    'Inactivo': { color: '#7c2d12', bgColor: '#fed7aa' },
-    'Pendiente': { color: '#92400e', bgColor: '#fef3c7' },
-    'Completado': { color: '#1e40af', bgColor: '#dbeafe' },
-    'En Proceso': { color: '#7c3aed', bgColor: '#ede9fe' },
-    'Cancelado': { color: '#dc2626', bgColor: '#fee2e2' },
-    'N/D': { color: '#6b7280', bgColor: '#e5e7eb' }
-  } as Record<string, {color: string, bgColor: string}>), []);
-
-  // Cache para colores generados
-  const colorCache = useMemo(() => new Map<string, {color: string, bgColor: string}>(), []);
-
-  const generateEstatusColors = useCallback((estatus: string) => {
-    // Verificar cache primero
-    if (colorCache.has(estatus)) {
-      return colorCache.get(estatus)!;
-    }
-
-    // Si existe un color predefinido, usarlo
-    if (predefinedColors[estatus]) {
-      const colors = predefinedColors[estatus];
-      colorCache.set(estatus, colors);
-      return colors;
-    }
-
-    // Generar hash simple del string
-    let hash = 0;
-    for (let i = 0; i < estatus.length; i++) {
-      const char = estatus.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convertir a 32bit integer
-    }
-
-    // Generar colores basados en hash para estatus desconocidos
-    const hue = Math.abs(hash) % 360;
-    const saturation = 65; // Saturación fija para mejor legibilidad
-    const lightness = 45; // Luminosidad para el texto
-    const bgLightness = 90; // Luminosidad para el fondo
-
-    const colors = {
-      color: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
-      bgColor: `hsl(${hue}, ${saturation}%, ${bgLightness}%)`
-    };
-
-    // Guardar en cache
-    colorCache.set(estatus, colors);
-    return colors;
-  }, [predefinedColors, colorCache]);
-
-  // Componente de estatus memoizado
+  // Componente de estatus memoizado usando configuración centralizada
   const EstatusComponent = React.memo<{registro: RegistroHistorialIPH}>(({ registro }) => {
-    const colors = generateEstatusColors(registro.estatus);
+    // Usar configuración centralizada de status.config.ts
+    const statusConfig = getStatusConfig(registro.estatus);
 
     return (
       <span
         className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
         style={{
-          backgroundColor: colors.bgColor,
-          color: colors.color
+          backgroundColor: statusConfig.bgColor,
+          color: statusConfig.color
         }}
-        title={`Estatus: ${registro.estatus}`}
+        title={`Estatus: ${statusConfig.label}`}
       >
-        {registro.estatus}
+        {statusConfig.label}
       </span>
     );
   }, (prevProps, nextProps) => {

@@ -24,38 +24,32 @@ export interface StatusConfig {
 /**
  * Tipo para los estatus válidos del sistema
  */
-export type StatusType = 'Activo' | 'Inactivo' | 'Pendiente' | 'Cancelado' | 'N/D';
+export type StatusType = 'Procesando' | 'Supervisión' | 'Finalizado' | 'N/D';
 
 /**
  * Configuración de colores y etiquetas para cada estatus
  *
  * @description
- * - **Activo**: IPH en proceso activo de investigación
- * - **Inactivo**: IPH archivado o sin actividad
- * - **Pendiente**: IPH esperando información o acción
- * - **Cancelado**: IPH cancelado por resolución o acuerdo
+ * - **Procesando**: IPH en proceso de elaboración y revisión
+ * - **Supervisión**: IPH bajo revisión de supervisor
+ * - **Finalizado**: IPH completado y cerrado
  * - **N/D**: Estatus no disponible o desconocido
  */
 export const STATUS_CONFIG: Record<StatusType, StatusConfig> = {
-  Activo: {
-    color: '#10b981', // green-500
-    bgColor: '#dcfce7', // green-100
-    label: 'Activo'
-  },
-  Inactivo: {
-    color: '#6b7280', // gray-500
-    bgColor: '#f3f4f6', // gray-100
-    label: 'Inactivo'
-  },
-  Pendiente: {
+  Procesando: {
     color: '#f59e0b', // amber-500
     bgColor: '#fef3c7', // amber-100
-    label: 'Pendiente'
+    label: 'Procesando'
   },
-  Cancelado: {
-    color: '#ef4444', // red-500
-    bgColor: '#fee2e2', // red-100
-    label: 'Cancelado'
+  Supervisión: {
+    color: '#3b82f6', // blue-500
+    bgColor: '#dbeafe', // blue-100
+    label: 'Supervisión'
+  },
+  Finalizado: {
+    color: '#10b981', // green-500
+    bgColor: '#dcfce7', // green-100
+    label: 'Finalizado'
   },
   'N/D': {
     color: '#6b7280', // gray-500

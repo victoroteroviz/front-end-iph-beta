@@ -96,14 +96,31 @@ export const ALLOWED_ROLES = [
 - ✅ **Colores y etiquetas** consistentes en toda la aplicación
 - ✅ **Funciones helper**: `getStatusConfig()`, `isValidStatus()`, `getValidStatuses()`
 - ✅ **TypeScript typesafe** con tipos `StatusType` y `StatusConfig`
-- **Estatus soportados**: Activo, Inactivo, Pendiente, Cancelado, N/D
+- **Estatus soportados** (v2.0.0): **Procesando, Supervisión, Finalizado, N/D**
 
 ```typescript
 import { getStatusConfig } from '@/config/status.config';
 
 // Uso en componentes
 const estatusInfo = getStatusConfig(iph.estatus);
-// → { color: '#10b981', bgColor: '#dcfce7', label: 'Activo' }
+// → { color: '#f59e0b', bgColor: '#fef3c7', label: 'Procesando' }
+```
+
+### **5. Utilidades de Historial IPH** (`src/utils/historial-iph/`)
+- ✅ **Transformaciones de datos** entre formatos API e internos
+- ✅ **Validaciones** de fechas, coordenadas y parámetros
+- ✅ **Separación de responsabilidades** - código reutilizable
+- **Archivos**:
+  - `transformations.util.ts` - Transformaciones de datos
+  - `validation.util.ts` - Validaciones y builders
+  - `index.ts` - Barrel export
+
+```typescript
+import {
+  transformResHistoryToRegistro,
+  validateCoordinates,
+  buildQueryParams
+} from '@/utils/historial-iph';
 ```
 
 ## COMPONENTES MIGRADOS COMPLETAMENTE
@@ -199,7 +216,12 @@ const estatusInfo = getStatusConfig(iph.estatus);
 ### **Servicios Implementados:**
 - `login.service.ts` - Autenticación con ALLOWED_ROLES
 - `statistics.service.ts` - getIphCountByUsers implementado
-- `historial-iph.service.ts` - Servicio completo con mocks y JSDoc TODO
+- **`historial-iph.service.ts` (v2.0.0)** - ✅ **Servicio 100% API sin mocks**
+  - Eliminado todo código mock y flag `USE_MOCK_DATA`
+  - Funciones de transformación movidas a `utils/historial-iph/`
+  - Validaciones movidas a `utils/historial-iph/`
+  - Fallback de estatus usando `status.config.ts`
+  - 10+ funciones de API implementadas
 - `iph-oficial.service.ts` - Integrado con getIphById existente
 - `informe-policial.service.ts` - Integrado con getAllIph y getIphByUser, control por roles
 - `perfil-usuario.service.ts` - Gestión de perfiles con integración catálogos
@@ -210,10 +232,10 @@ const estatusInfo = getStatusConfig(iph.estatus);
   - Retorna: `I_BasicDataDto` con información completa del IPH
   - Usado por: **DetalleIPH** en HistorialIPH
   - Configuración: HttpHelper con 15s timeout y 3 reintentos
-  - Flag: `USE_MOCK_DATA = false` (usando API real)
 
-### **Patrón de Servicios Mock:**
+### **Patrón de Servicios (Legacy - en migración):**
 ```typescript
+// DEPRECADO - Solo para servicios legacy aún no migrados
 const USE_MOCK_DATA = true; // Cambiar a false para API real
 
 export const getDataFunction = async (params) => {
@@ -224,6 +246,8 @@ export const getDataFunction = async (params) => {
   }
 };
 ```
+
+**NOTA:** El servicio `historial-iph.service.ts` ya NO usa este patrón. Usa solo API real.
 
 ## CONFIGURACIÓN DE RUTAS
 
@@ -560,7 +584,9 @@ npm run lint
 
 ### **Activación de APIs Reales:**
 ```typescript
-// En cada servicio, cambiar:
+// DEPRECADO - Solo para servicios legacy
+// El servicio historial-iph.service.ts ya NO usa mocks
+// Para servicios legacy, cambiar:
 const USE_MOCK_DATA = false;
 
 // Los componentes automáticamente usarán datos reales
@@ -594,12 +620,14 @@ const USE_MOCK_DATA = false;
 - **10 componentes** completamente migrados
 - **30+ interfaces** TypeScript creadas
 - **11 servicios** implementados (incluye `get-basic-iph-data`)
+- **1 servicio refactorizado** sin mocks (`historial-iph.service.ts v2.0.0`)
 - **40+ componentes atómicos** reutilizables
 - **9 hooks personalizados** implementados (incluye `useDetalleIPH`)
 - **Integración react-leaflet** para mapas interactivos
 - **2 componentes con virtualización** para alto rendimiento
 - **Sistema de exportación PDF** configurable mock/real
 - **1 configuración centralizada** (`status.config.ts`) eliminando duplicación
+- **3 utilidades** de transformación y validación (`utils/historial-iph/`)
 
 **Servidor de desarrollo:** `npm run dev` → http://localhost:5173/
 
@@ -608,6 +636,84 @@ const USE_MOCK_DATA = false;
 ---
 
 ## 📝 CHANGELOG RECIENTE
+
+### **v3.2.0 - Servicio HistorialIPH Refactorizado 100% API** (2024-01-30)
+
+#### ✨ Nuevas Funcionalidades
+
+- ✅ **Utilidades de Historial IPH** (`src/utils/historial-iph/`)
+  - Nuevo archivo: `transformations.util.ts` - 10+ funciones de transformación
+  - Nuevo archivo: `validation.util.ts` - Validaciones y builders
+  - Barrel export: `index.ts` para importaciones limpias
+  - Separación de responsabilidades siguiendo principios SOLID
+
+- ✅ **Actualización de Status Config** (`status.config.ts v2.0.0`)
+  - **Nuevos estatus del backend**: `Procesando`, `Supervisión`, `Finalizado`
+  - Eliminados estatus legacy: `Activo`, `Inactivo`, `Pendiente`, `Cancelado`
+  - Fallback automático en `getEstatusOptions()` del servicio
+
+#### 🔧 Mejoras
+
+- **historial-iph.service.ts v2.0.0**
+  - ❌ **Eliminado completamente** flag `USE_MOCK_DATA`
+  - ❌ **Eliminadas** funciones `mockDelay()`, `getHistorialMock()`, `updateEstatusMock()`
+  - ❌ **Eliminados** imports de `/mock/historial-iph/`
+  - ✅ **100% API real** - todas las funciones usan endpoints del backend
+  - ✅ **Código limpio** - reducido de 1328 a 679 líneas (-49%)
+  - ✅ **Imports organizados** desde `utils/historial-iph/`
+  - ✅ **Fallback inteligente** usando `getValidStatuses()` de `status.config.ts`
+  - ✅ **10+ funciones de API** completamente implementadas
+
+- **HistorialTable.tsx**
+  - ✅ Actualizado import de `estatusConfig` a `getStatusConfig` desde `status.config.ts`
+  - ✅ Eliminada dependencia de archivos mock
+
+#### 📚 Documentación
+
+- **Actualizado**: `CLAUDE.md`
+  - Nueva sección "Utilidades de Historial IPH"
+  - Actualizado estatus soportados a v2.0.0
+  - Marcado patrón mock/API como "Legacy - en migración"
+  - Métricas actualizadas (1 servicio refactorizado, 3 utilidades)
+  - Changelog v3.2.0
+
+#### 🗂️ Archivos Afectados
+
+**Creados:**
+- `src/utils/historial-iph/transformations.util.ts` (270 líneas)
+- `src/utils/historial-iph/validation.util.ts` (150 líneas)
+- `src/utils/historial-iph/index.ts` (barrel export)
+
+**Modificados:**
+- `src/services/historial/historial-iph.service.ts` (v1.0.0 → v2.0.0)
+- `src/config/status.config.ts` (v1.0.0 → v2.0.0)
+- `src/components/private/components/historial-iph/table/HistorialTable.tsx`
+- `CLAUDE.md`
+
+**Obsoletos (sin eliminar por compatibilidad):**
+- `src/mock/historial-iph/registros.mock.ts`
+- `src/mock/historial-iph/estadisticas.mock.ts`
+- `src/mock/historial-iph/index.ts`
+
+#### 🎯 Patrón Establecido para Futuras Migraciones
+
+Este refactorización establece el patrón **"API-First Service"**:
+
+1. **Eliminar** flag `USE_MOCK_DATA` y bloques condicionales
+2. **Mover** funciones de transformación a `/utils/[modulo]/transformations.util.ts`
+3. **Mover** funciones de validación a `/utils/[modulo]/validation.util.ts`
+4. **Crear** barrel export en `/utils/[modulo]/index.ts`
+5. **Usar** configuraciones centralizadas (`status.config.ts`, etc.)
+6. **Implementar** fallbacks inteligentes usando configs del sistema
+7. **Documentar** en CLAUDE.md el cambio de versión
+
+#### 🚀 Próximos Servicios a Migrar
+
+- `iph-oficial.service.ts`
+- `usuarios-estadisticas.service.ts`
+- `informe-ejecutivo.service.ts`
+
+---
 
 ### **v3.1.0 - DetalleIPH Refactorización Completa** (2024-01-30)
 
@@ -685,5 +791,5 @@ Este patrón de refactorización sin mocks puede aplicarse a otros componentes:
 ---
 
 **Última actualización**: 2024-01-30
-**Versión actual**: 3.1.0
-**Componentes**: 10 migrados | 11 servicios | 9 hooks personalizados
+**Versión actual**: 3.2.0
+**Componentes**: 10 migrados | 11 servicios (1 refactorizado sin mocks) | 9 hooks personalizados | 3 utilidades
