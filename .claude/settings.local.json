@@ -9,7 +9,8 @@
       "Bash(npm run build:*)",
       "Bash(grep:*)",
       "Bash(tree:*)",
-      "Bash(bash /mnt/d/Okip/codigo-fuente/front-end-iph-beta/REFACTOR_STATISTICS_SCRIPT.sh:*)"
+      "Bash(bash /mnt/d/Okip/codigo-fuente/front-end-iph-beta/REFACTOR_STATISTICS_SCRIPT.sh:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

@@ -12,8 +12,8 @@ import type { SidebarConfig, SidebarItemConfig } from '../../../../../interfaces
  * Configuración principal del sidebar
  */
 // Import del logo y isotipo
-import logoBlanco from '../../../../../assets/iph/siriph_completo_blanco.png';
-import isotipoBlanco from '../../../../../assets/iph/IPH_Isotipo_Blanco.png';
+import logoBlanco from '../../../../../assets/iph/siriph_completo_blanco.webp';
+import isotipoBlanco from '../../../../../assets/iph/IPH_Isotipo_Blanco.webp';
 
 export const SIDEBAR_CONFIG: SidebarConfig = {
   title: 'IPH',

@@ -41,10 +41,6 @@ interface SidebarItemProps {
   onNavigate?: () => void;
 }
 
-{
-  console.log('This is a dummy change to force git to recognize the file as changed.');
-}
-
 const SidebarItem = React.memo<SidebarItemProps>(({ item, isActive, isCollapsed, onNavigate }) => {
   // Memoizar handler para evitar re-creaciones
   const handleClick = useCallback((e: React.MouseEvent) => {

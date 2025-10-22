@@ -3,7 +3,7 @@
  * Muestra una notificación específica con su tipo, mensaje y controles
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
 import type { Notification } from '../../../../../helper/notification/notification.helper';
 
@@ -11,6 +11,12 @@ interface NotificationItemProps {
   notification: Notification;
   onRemove: (id: string) => void;
 }
+
+// Constantes de animación
+const ANIMATION_TIMINGS = {
+  ENTER_DELAY: 50,
+  EXIT_DURATION: 300, // Debe coincidir con duration-300 en CSS
+} as const;
 
 const NOTIFICATION_STYLES = {
   success: {
@@ -39,47 +45,83 @@ const NOTIFICATION_STYLES = {
   }
 };
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ 
-  notification, 
-  onRemove 
+const NotificationItemComponent: React.FC<NotificationItemProps> = ({
+  notification,
+  onRemove
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+  const itemRef = useRef<HTMLDivElement>(null);
 
   const styles = NOTIFICATION_STYLES[notification.type];
   const Icon = styles.icon;
 
+  // Detectar preferencia de usuario para animaciones reducidas
+  const prefersReducedMotion = useMemo(
+    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    []
+  );
+
+  // Calcular timestamp formateado solo una vez
+  const formattedTime = useMemo(
+    () => new Date(notification.timestamp).toLocaleTimeString(),
+    [notification.timestamp]
+  );
+
   useEffect(() => {
-    // Animación de entrada
-    const timer = setTimeout(() => setIsVisible(true), 50);
+    // Animación de entrada (skip si prefers-reduced-motion)
+    const delay = prefersReducedMotion ? 0 : ANIMATION_TIMINGS.ENTER_DELAY;
+    const timer = setTimeout(() => setIsVisible(true), delay);
     return () => clearTimeout(timer);
-  }, []);
+  }, [prefersReducedMotion]);
+
+  // Focus management para accesibilidad
+  useEffect(() => {
+    if (isVisible && itemRef.current && notification.type === 'error') {
+      // Errores críticos reciben foco automáticamente
+      itemRef.current.focus();
+    }
+  }, [isVisible, notification.type]);
 
   const handleRemove = () => {
-    setIsRemoving(true);
-    setTimeout(() => {
+    if (prefersReducedMotion) {
+      // Sin animación de salida si prefers-reduced-motion
       onRemove(notification.id);
-    }, 300); // Tiempo para animación de salida
+    } else {
+      setIsRemoving(true);
+      setTimeout(() => {
+        onRemove(notification.id);
+      }, ANIMATION_TIMINGS.EXIT_DURATION);
+    }
   };
 
   return (
-    <div 
+    <div
+      ref={itemRef}
+      role="alert"
+      aria-live={notification.type === 'error' ? 'assertive' : 'polite'}
+      aria-atomic="true"
+      tabIndex={-1}
       className={`
         notification-item
         ${styles.bg} ${styles.text}
         border rounded-lg shadow-lg p-4 mb-3 mx-4
-        transform transition-all duration-300 ease-in-out
-        ${isVisible && !isRemoving 
-          ? 'translate-x-0 opacity-100 scale-100' 
+        transform transition-all ease-in-out
+        ${prefersReducedMotion ? 'duration-0' : 'duration-300'}
+        ${isVisible && !isRemoving
+          ? 'translate-x-0 opacity-100 scale-100'
           : 'translate-x-full opacity-0 scale-95'
         }
         max-w-sm w-full
         relative
         font-poppins
+        focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+          notification.type === 'error' ? 'focus:ring-red-500' :
+          notification.type === 'warning' ? 'focus:ring-yellow-500' :
+          notification.type === 'success' ? 'focus:ring-green-500' :
+          'focus:ring-blue-500'
+        }
       `}
-      style={{
-        transitionDelay: isVisible ? '0ms' : '0ms'
-      }}
     >
       {/* Contenido principal */}
       <div className="flex items-start space-x-3">
@@ -99,7 +141,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
           
           {/* Timestamp */}
           <p className="text-xs opacity-75 mt-2">
-            {new Date(notification.timestamp).toLocaleTimeString()}
+            {formattedTime}
           </p>
         </div>
 
@@ -133,5 +175,20 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     </div>
   );
 };
+
+// Memoizar componente para prevenir re-renders innecesarios
+const NotificationItem = React.memo<NotificationItemProps>(
+  NotificationItemComponent,
+  (prevProps, nextProps) => {
+    // Solo re-renderizar si la notificación cambió
+    return (
+      prevProps.notification.id === nextProps.notification.id &&
+      prevProps.notification.timestamp === nextProps.notification.timestamp &&
+      prevProps.notification.message === nextProps.notification.message
+    );
+  }
+);
+
+NotificationItem.displayName = 'NotificationItem';
 
 export default NotificationItem;

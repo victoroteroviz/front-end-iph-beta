@@ -52,7 +52,8 @@ class NotificationHelper {
   private static instance: NotificationHelper;
   private config: NotificationConfig;
   private notifications: Map<string, Notification> = new Map();
-  private listeners: ((notifications: Notification[]) => void)[] = [];
+  private listeners: Set<(notifications: Notification[]) => void> = new Set();
+  private timers: Map<string, NodeJS.Timeout> = new Map();
 
   private constructor(config?: Partial<NotificationConfig>) {
     this.config = { ...DEFAULT_NOTIFICATION_CONFIG, ...config };
@@ -81,12 +82,23 @@ class NotificationHelper {
 
   /**
    * Notifica a los listeners sobre cambios
+   * Incluye manejo de errores para prevenir que un listener defectuoso rompa otros
    */
   private notifyListeners(): void {
     const notificationsList = Array.from(this.notifications.values())
       .sort((a, b) => b.timestamp - a.timestamp);
-    
-    this.listeners.forEach(listener => listener(notificationsList));
+
+    this.listeners.forEach(listener => {
+      try {
+        listener(notificationsList);
+      } catch (error) {
+        logError(
+          'NotificationHelper',
+          'Error en listener de notificación',
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    });
   }
 
   /**
@@ -129,9 +141,10 @@ class NotificationHelper {
 
     // Auto-remover si está configurado
     if (autoClose && duration > 0) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         this.removeNotification(id);
       }, duration);
+      this.timers.set(id, timer);
     }
 
     this.notifyListeners();
@@ -140,8 +153,16 @@ class NotificationHelper {
 
   /**
    * Remueve una notificación por ID
+   * Limpia el timer asociado si existe para prevenir memory leaks
    */
   public removeNotification(id: string): boolean {
+    // Limpiar timer si existe
+    const timer = this.timers.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      this.timers.delete(id);
+    }
+
     const removed = this.notifications.delete(id);
     if (removed) {
       this.notifyListeners();
@@ -151,11 +172,16 @@ class NotificationHelper {
 
   /**
    * Limpia todas las notificaciones
+   * Limpia todos los timers para prevenir memory leaks
    */
   public clearAllNotifications(): void {
+    // Limpiar todos los timers
+    this.timers.forEach(timer => clearTimeout(timer));
+    this.timers.clear();
+
     this.notifications.clear();
     this.notifyListeners();
-    
+
     if (this.config.enableLogging) {
       logInfo('NotificationHelper', 'Todas las notificaciones han sido limpiadas');
     }
@@ -178,17 +204,30 @@ class NotificationHelper {
 
   /**
    * Suscribe a cambios en las notificaciones
+   * Usa Set para mejor performance y cleanup automático
    */
   public subscribe(listener: (notifications: Notification[]) => void): () => void {
-    this.listeners.push(listener);
-    
+    this.listeners.add(listener);
+
     // Retorna función para desuscribirse
     return () => {
-      const index = this.listeners.indexOf(listener);
-      if (index > -1) {
-        this.listeners.splice(index, 1);
-      }
+      this.listeners.delete(listener);
     };
+  }
+
+  /**
+   * Destruye la instancia y limpia todos los recursos
+   * Útil para testing o cleanup completo
+   */
+  public destroy(): void {
+    this.timers.forEach(timer => clearTimeout(timer));
+    this.timers.clear();
+    this.notifications.clear();
+    this.listeners.clear();
+
+    if (this.config.enableLogging) {
+      logInfo('NotificationHelper', 'Helper destruido y recursos liberados');
+    }
   }
 
   // Métodos específicos por tipo de notificación
