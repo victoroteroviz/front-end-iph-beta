@@ -51,19 +51,22 @@ const SidebarItem = React.memo<SidebarItemProps>(({ item, isActive, isCollapsed,
     onNavigate?.();
   }, [item.isDisabled, onNavigate]);
 
-  // Pre-calcular clases estáticas
-  const baseClasses = 'flex items-center gap-3 px-2 py-3 rounded transition-all duration-300 ease-in-out min-h-[44px]';
+  // Pre-calcular clases con estado collapsed optimizado - Transición más suave
+  const baseClasses = 'flex items-center rounded min-h-[44px]';
+  const transitionClasses = 'transition-all duration-400 ease-in-out';
   const activeClasses = 'bg-[#7a7246] text-white shadow-sm';
   const inactiveClasses = 'hover:bg-[#7a7246] hover:text-white cursor-pointer';
   const disabledClasses = 'opacity-50 cursor-not-allowed';
-  const collapsedClasses = 'justify-center';
+
+  // Clases dinámicas para collapsed/expanded - Padding mínimo para background
+  const spacingClasses = isCollapsed
+    ? 'px-2 py-3 justify-center gap-0'  // Collapsed: centrado, sin gap, px mínimo
+    : 'px-2 py-3 gap-3';                // Expanded: gap normal, px mínimo
 
   // Optimizar className con concatenación directa
-  const className = `${baseClasses} ${
+  const className = `${baseClasses} ${transitionClasses} ${spacingClasses} ${
     isActive ? activeClasses : inactiveClasses
-  }${item.isDisabled ? ` ${disabledClasses}` : ''}${
-    isCollapsed ? ` ${collapsedClasses}` : ''
-  }`;
+  }${item.isDisabled ? ` ${disabledClasses}` : ''}`;
 
   // Memoizar título para collapsed
   const title = isCollapsed ? item.label : undefined;
@@ -76,9 +79,11 @@ const SidebarItem = React.memo<SidebarItemProps>(({ item, isActive, isCollapsed,
       aria-label={`Navegar a ${item.label}`}
       title={title}
     >
-      <span className="flex-shrink-0">{item.icon}</span>
-      <span className={`text-sm font-medium truncate transition-all duration-300 ease-in-out ${
-        isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'
+      <span className="flex-shrink-0 transition-transform duration-400 ease-in-out">
+        {item.icon}
+      </span>
+      <span className={`text-sm font-medium truncate transition-all duration-400 ease-in-out ${
+        isCollapsed ? 'opacity-0 w-0 overflow-hidden ml-0' : 'opacity-100 w-auto ml-0'
       }`}>
         {item.label}
       </span>
@@ -236,60 +241,79 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
         <div>
           {/* Logo con controles - OPTIMIZADO */}
           <div className="relative">
-            <div className={`transition-all duration-300 ease-in-out ${
-              shouldCollapse ? 'p-2 pr-10' : 'p-4 pr-12'
-            } flex items-center justify-center`}>
+            <div className={`transition-all duration-300 ease-in-out flex items-center ${
+              shouldCollapse
+                ? 'py-4 px-2 justify-center'
+                : 'py-5 px-4 justify-start'
+            }${isMobile ? ' pr-12' : ''}`}>
               {SIDEBAR_CONFIG.logo ? (
-                <img
-                  key={shouldCollapse ? 'isotipo' : 'logo'} // Force re-render para smooth transition
-                  src={shouldCollapse
-                    ? SIDEBAR_CONFIG.isotipo || SIDEBAR_CONFIG.logo
-                    : SIDEBAR_CONFIG.logo
-                  }
-                  alt="IPH Logo"
-                  className={`transition-all duration-300 ease-in-out ${
-                    shouldCollapse
-                      ? 'h-8 w-8 object-contain'
-                      : 'h-12 w-auto max-w-full object-contain'
-                  }`}
-                />
+                <div className={`relative w-full flex items-center justify-center transition-all duration-400 ease-in-out ${
+                  shouldCollapse ? 'h-10' : 'h-14'
+                }`}>
+                  {/* Logo completo - fade out cuando se colapsa */}
+                  <img
+                    src={SIDEBAR_CONFIG.logo}
+                    alt="IPH Logo Completo"
+                    className={`
+                      absolute inset-0 m-auto
+                      h-14 w-auto max-w-full object-contain
+                      transition-all duration-400 ease-in-out
+                      ${shouldCollapse
+                        ? 'opacity-0 scale-75 pointer-events-none'
+                        : 'opacity-100 scale-100'
+                      }
+                    `}
+                    style={{
+                      transformOrigin: 'center center',
+                    }}
+                    loading="lazy"
+                    decoding="async"
+                  />
+
+                  {/* Isotipo - fade in cuando se colapsa */}
+                  {SIDEBAR_CONFIG.isotipo && (
+                    <img
+                      src={SIDEBAR_CONFIG.isotipo}
+                      alt="IPH Isotipo"
+                      className={`
+                        h-10 w-10 object-contain mx-auto
+                        transition-all duration-400 ease-in-out
+                        ${shouldCollapse
+                          ? 'opacity-100 scale-100'
+                          : 'opacity-0 scale-75 pointer-events-none'
+                        }
+                      `}
+                      style={{
+                        transformOrigin: 'center center',
+                      }}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                </div>
               ) : (
                 <h1 className={`text-white font-bold transition-all duration-300 ${
-                  shouldCollapse ? 'text-xs' : 'text-lg'
+                  shouldCollapse ? 'text-sm' : 'text-xl'
                 }`}>
                   {shouldCollapse ? 'IPH' : SIDEBAR_CONFIG.title}
                 </h1>
               )}
             </div>
 
-            {/* Botones de control */}
-            {isMobile ? (
+            {/* Botón cerrar solo en móvil */}
+            {isMobile && (
               <button
                 onClick={handleClose}
-                className="absolute right-2 top-2 p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200"
+                className="absolute right-2 top-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200"
                 aria-label="Cerrar menú"
               >
-                <X size={16} className="text-white" />
-              </button>
-            ) : (
-              <button
-                onClick={handleToggleCollapse}
-                className="absolute right-2 top-2 p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 ease-in-out"
-                aria-label={shouldCollapse ? "Expandir sidebar" : "Colapsar sidebar"}
-              >
-                <div className="transition-transform duration-300 ease-in-out">
-                  {shouldCollapse ? (
-                    <ChevronRight size={16} className="text-white" />
-                  ) : (
-                    <ChevronLeft size={16} className="text-white" />
-                  )}
-                </div>
+                <X size={18} className="text-white" />
               </button>
             )}
           </div>
 
           {/* Navegación - OPTIMIZADA */}
-          <nav className={`mt-4 space-y-2 transition-all duration-300 ease-in-out ${shouldCollapse ? 'px-2' : 'px-4'}`}>
+          <nav className={`mt-4 space-y-2 transition-all duration-400 ease-in-out ${shouldCollapse ? 'px-2' : 'px-4'}`}>
             {filteredItems.length > 0 ? (
               filteredItems.map((item) => (
                 <SidebarItem
@@ -329,6 +353,38 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
           </button>
         </div>
       </aside>
+
+      {/* Botón pestaña flotante collapse/expand - MEJORADO UX */}
+      {!isMobile && (
+        <button
+          onClick={handleToggleCollapse}
+          className="
+            fixed top-1/2 -translate-y-1/2 z-50
+            w-8 h-16
+            bg-[#948b54] shadow-lg hover:shadow-xl
+            flex items-center justify-center
+            transition-all duration-300 ease-in-out
+            hover:w-9 hover:bg-[#7a7246]
+            focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#948b54]
+            cursor-pointer
+          "
+          style={{
+            left: sidebarWidth,
+            borderTopRightRadius: '0.5rem',
+            borderBottomRightRadius: '0.5rem',
+            borderLeft: 'none',
+            transition: 'left 400ms cubic-bezier(0.4, 0.0, 0.2, 1), width 400ms ease-in-out, background-color 400ms ease-in-out, box-shadow 400ms ease-in-out'
+          }}
+          aria-label={shouldCollapse ? "Expandir sidebar" : "Colapsar sidebar"}
+          title={shouldCollapse ? "Expandir sidebar" : "Colapsar sidebar"}
+        >
+          {shouldCollapse ? (
+            <ChevronRight size={20} className="text-white" />
+          ) : (
+            <ChevronLeft size={20} className="text-white" />
+          )}
+        </button>
+      )}
     </>
   );
 };
