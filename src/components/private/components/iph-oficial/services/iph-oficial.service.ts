@@ -1,17 +1,16 @@
 /**
  * Servicio para el manejo de IPH Oficial
- * 
+ *
  * @fileoverview Este servicio maneja la obtención y visualización de IPH oficial
- * por ID específico, integrando con el servicio existente getIphById y proporcionando
- * datos mock para desarrollo.
- * 
- * @version 1.0.0
- * @since 2024-01-29
- * 
+ * por ID específico, integrando con el servicio existente getIphById.
+ *
+ * @version 2.0.0
+ * @since 2024-01-30
+ *
  * @author Sistema IPH Frontend
  */
 
-import { logInfo, logError, logWarning } from '../../../../../helper/log/logger.helper';
+import { logInfo, logError, logDebug } from '../../../../../helper/log/logger.helper';
 
 // Servicio existente del sistema
 import { getIphById } from './get-iph.service';
@@ -23,22 +22,20 @@ import type {
   GetIphOficialParams
 } from '../../../../../interfaces/components/iphOficial.interface';
 
-import type { ResponseIphData } from '../../../../../interfaces/iph/iph.interface';
-
-// Mock data imports
+// Utils
 import {
-  iphOficialMockData,
-  getIphOficialMockById,
-  mockDelay
-} from '../../../../../mock/iph-oficial';
+  validateIphOficialParams,
+  validateServerResponse,
+  transformServerDataToComponent,
+  extractBasicInfo
+} from '../../../../../utils/iph-oficial';
 
 // ==================== CONFIGURACIÓN ====================
 
 /**
- * Configuración del servicio
- * @constant {boolean} USE_MOCK_DATA - Flag para usar datos mock en lugar del API real
+ * Nombre del servicio para logging
  */
-const USE_MOCK_DATA = true; // TODO: Cambiar a false cuando el API esté estable
+const SERVICE_NAME = 'IphOficialService';
 
 /**
  * Configuración de timeouts y reintentos
@@ -49,142 +46,61 @@ const SERVICE_CONFIG = {
   retryDelay: 1000
 } as const;
 
-// ==================== TRANSFORMACIÓN DE DATOS ====================
-
-/**
- * Transforma datos del servidor (I_IPHById) al formato del componente (IphOficialData)
- * 
- * @param serverData - Datos del servidor en formato I_IPHById
- * @returns Datos transformados en formato IphOficialData
- */
-const transformServerDataToComponent = (serverData: ResponseIphData): IphOficialData => {
-  const iphData = Array.isArray(serverData.iph) ? null : serverData.iph;
-
-  logInfo('IphOficial Service', 'Transformando datos del servidor', {
-    id: iphData?.id,
-    referencia: iphData?.nReferencia
-  });
-
-  // Transformar los campos any a tipos específicos
-  const transformedData: IphOficialData = {
-    // Campos base
-    id: iphData?.id,
-    nReferencia: iphData?.nReferencia,
-    nFolioSist: iphData?.nFolioSist,
-    observaciones: iphData?.observaciones || 'Sin observaciones',
-    coordenadas: iphData?.coordenadas,
-    hechos: iphData?.hechos,
-    fechaCreacion: iphData?.fechaCreacion,
-    
-    // Relaciones
-    primerRespondiente: Array.isArray(serverData.primerRespondiente) ? undefined : serverData.primerRespondiente,
-    estatus: iphData?.estatus,
-    
-    // Campos extendidos - transformar de any a tipos específicos
-    conocimiento_hecho: Array.isArray(serverData.conocimientoHecho) ? undefined : serverData.conocimientoHecho as any,
-    lugar_intervencion: Array.isArray(serverData.lugarIntervencion) ? undefined : serverData.lugarIntervencion as any,
-    narrativaHechos: Array.isArray(serverData.narrativaHecho) ? undefined : serverData.narrativaHecho as any,
-    detencion_pertenencias: Array.isArray(serverData.detencion) ? serverData.detencion as any : [],
-    cInspeccionVehiculo: Array.isArray(serverData.inspeccionVehiculo) ? serverData.inspeccionVehiculo as any : [],
-    armas_objetos: Array.isArray(serverData.armaObjeto) ? serverData.armaObjeto as any : [],
-    uso_fuerza: Array.isArray(serverData.usoFuerza) ? undefined : serverData.usoFuerza as any,
-    entrega_recepcion: Array.isArray(serverData.entregaRecepcion) ? undefined : serverData.entregaRecepcion as any,
-    continuacion: Array.isArray(serverData.continuacion) ? serverData.continuacion as any : [],
-    entrevistas: Array.isArray(serverData.entrevista) ? serverData.entrevista as any : []
-  };
-
-  logInfo('IphOficial Service', 'Transformación de datos completada', {
-    id: transformedData.id,
-    secciones: {
-      conocimiento: !!transformedData.conocimiento_hecho,
-      lugar: !!transformedData.lugar_intervencion,
-      narrativa: !!transformedData.narrativaHechos,
-      detencion: transformedData.detencion_pertenencias?.length || 0,
-      vehiculos: transformedData.cInspeccionVehiculo?.length || 0,
-      armas: transformedData.armas_objetos?.length || 0,
-      fotos: transformedData.ruta_fotos_lugar?.length || 0
-    }
-  });
-
-  return transformedData;
-};
-
-// ==================== FUNCIONES MOCK ====================
-
-/**
- * Obtiene IPH oficial usando datos mock
- * @param params - Parámetros de consulta
- * @returns Promise con el IPH oficial mock
- */
-const getIphOficialMock = async (params: GetIphOficialParams): Promise<IphOficialResponse> => {
-  logInfo('IphOficial Service', 'Obteniendo IPH oficial con datos mock', { params });
-  
-  await mockDelay(600);
-  
-  const { id } = params;
-  
-  const data = getIphOficialMockById(id);
-  
-  if (!data) {
-    const error = `IPH con ID ${id} no encontrado en datos mock`;
-    logError('IphOficial Service', error);
-    throw new Error(error);
-  }
-  
-  const response: IphOficialResponse = {
-    success: true,
-    data,
-    message: 'IPH oficial obtenido exitosamente (mock)'
-  };
-  
-  logInfo('IphOficial Service', 'IPH oficial obtenido exitosamente (mock)', {
-    id: data.id,
-    referencia: data.nReferencia
-  });
-  
-  return response;
-};
-
 // ==================== FUNCIONES API ====================
 
 /**
  * Obtiene IPH oficial desde el API real usando el servicio existente
- * 
+ *
  * @param params - Parámetros de consulta
  * @returns Promise con el IPH oficial del servidor
- * 
+ *
+ * @throws Error si hay problemas con la petición o validación
+ *
  * @description Utiliza el servicio existente getIphById y transforma los datos
  * al formato requerido por el componente
+ *
+ * @example
+ * ```typescript
+ * const response = await getIphOficialFromAPI({ id: 'GUGN01123060520252247' });
+ * console.log(response.data.nReferencia);
+ * ```
  */
 const getIphOficialFromAPI = async (params: GetIphOficialParams): Promise<IphOficialResponse> => {
-  logInfo('IphOficial Service', 'Obteniendo IPH oficial desde API', { params });
-  
+  logDebug(SERVICE_NAME, 'Obteniendo IPH oficial desde API', { params });
+
   try {
     const { id } = params;
-    
+
+    // Validar parámetros con utils
+    validateIphOficialParams(params);
+
     // Usar el servicio existente
     const serverData = await getIphById(id);
-    
+
+    // Validar respuesta del servidor
+    validateServerResponse(serverData);
+
     // Transformar datos del servidor al formato del componente
     const transformedData = transformServerDataToComponent(serverData);
-    
+
     const response: IphOficialResponse = {
       success: true,
       data: transformedData,
-      message: 'IPH oficial obtenido exitosamente desde API'
+      message: 'IPH oficial obtenido exitosamente'
     };
-    
-    logInfo('IphOficial Service', 'IPH oficial obtenido exitosamente desde API', {
+
+    logInfo(SERVICE_NAME, 'IPH oficial obtenido exitosamente', {
       id: transformedData.id,
       referencia: transformedData.nReferencia,
       estatus: transformedData.estatus
     });
-    
+
     return response;
-    
+
   } catch (error) {
-    logError('IphOficial Service', error, `Error obteniendo IPH oficial desde API - params: ${JSON.stringify(params)}`);
-    throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    logError(SERVICE_NAME, error, `Error obteniendo IPH oficial - params: ${JSON.stringify(params)}`);
+    throw new Error(`Error al obtener IPH oficial: ${errorMessage}`);
   }
 };
 
@@ -192,69 +108,68 @@ const getIphOficialFromAPI = async (params: GetIphOficialParams): Promise<IphOfi
 
 /**
  * Obtiene un IPH oficial por ID
- * Utiliza mock o API según la configuración
- * 
+ *
  * @param params - Parámetros de consulta que incluyen el ID
  * @returns Promise con el IPH oficial
- * 
- * @throws {Error} Si hay error en la consulta o el ID no se encuentra
- * 
+ *
+ * @throws {Error} Si hay error en la consulta, validación o el ID no se encuentra
+ *
  * @example
  * ```typescript
- * const iphData = await getIphOficial({ 
+ * const iphData = await getIphOficial({
  *   id: 'GUGN01123060520252247',
- *   includeDetails: true 
+ *   includeDetails: true
  * });
+ * console.log(iphData.data.nReferencia);
  * ```
  */
 export const getIphOficial = async (params: GetIphOficialParams): Promise<IphOficialResponse> => {
-  try {
-    // Validar parámetros
-    if (!params.id || params.id.trim() === '') {
-      const error = 'ID de IPH es requerido';
-      logError('IphOficial Service', error, `Error en mock fallback - params: ${JSON.stringify(params)}`);
-      throw new Error(error);
-    }
+  logDebug(SERVICE_NAME, 'getIphOficial llamado', { params });
 
-    if (USE_MOCK_DATA) {
-      logWarning('IphOficial Service', 'Usando datos mock - cambiar USE_MOCK_DATA a false para API real');
-      return await getIphOficialMock(params);
-    } else {
-      return await getIphOficialFromAPI(params);
-    }
+  try {
+    // Validar parámetros primero
+    validateIphOficialParams(params);
+
+    // Obtener desde API
+    return await getIphOficialFromAPI(params);
+
   } catch (error) {
-    logError('IphOficial Service', error, `Error en getIphOficial - params: ${JSON.stringify(params)}`);
-    throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    logError(SERVICE_NAME, error, `Error en getIphOficial - params: ${JSON.stringify(params)}`);
+    throw new Error(errorMessage);
   }
 };
 
 /**
  * Verifica si un IPH existe por ID
- * 
+ *
  * @param id - ID del IPH a verificar
  * @returns Promise<boolean> - true si existe, false en caso contrario
+ *
+ * @example
+ * ```typescript
+ * const exists = await iphOficialExists('GUGN01123060520252247');
+ * if (exists) {
+ *   console.log('El IPH existe');
+ * }
+ * ```
  */
 export const iphOficialExists = async (id: string): Promise<boolean> => {
   try {
-    logInfo('IphOficial Service', 'Verificando existencia de IPH', { id });
-    
-    if (USE_MOCK_DATA) {
-      const exists = getIphOficialMockById(id) !== null;
-      logInfo('IphOficial Service', 'Verificación completada (mock)', { id, exists });
-      return exists;
-    } else {
-      // Usar el servicio real para verificar existencia
-      try {
-        await getIphById(id);
-        logInfo('IphOficial Service', 'IPH existe en API', { id });
-        return true;
-      } catch {
-        logInfo('IphOficial Service', 'IPH no existe en API', { id });
-        return false;
-      }
-    }
+    logDebug(SERVICE_NAME, 'Verificando existencia de IPH', { id });
+
+    // Validar formato del ID
+    validateIphOficialParams({ id });
+
+    // Intentar obtener el IPH
+    await getIphById(id);
+
+    logInfo(SERVICE_NAME, 'IPH existe', { id });
+    return true;
+
   } catch (error) {
-    logError('IphOficial Service', error, `Error verificando existencia de IPH - id: ${id}`);
+    // Si falla, el IPH no existe o hay un error
+    logDebug(SERVICE_NAME, 'IPH no existe o error al verificar', { id, error });
     return false;
   }
 };
@@ -262,66 +177,46 @@ export const iphOficialExists = async (id: string): Promise<boolean> => {
 /**
  * Obtiene información básica de un IPH (solo campos principales)
  * Útil para previsualizaciones o listados
- * 
+ *
  * @param id - ID del IPH
- * @returns Promise con información básica
+ * @returns Promise con información básica o null si hay error
+ *
+ * @example
+ * ```typescript
+ * const basicInfo = await getIphOficialBasicInfo('GUGN01123060520252247');
+ * if (basicInfo) {
+ *   console.log(basicInfo.nReferencia, basicInfo.estatus);
+ * }
+ * ```
  */
-export const getIphOficialBasicInfo = async (id: string): Promise<Pick<IphOficialData, 'id' | 'nReferencia' | 'nFolioSist' | 'estatus' | 'tipoIph' | 'fechaCreacion'> | null> => {
+export const getIphOficialBasicInfo = async (
+  id: string
+): Promise<Pick<IphOficialData, 'id' | 'nReferencia' | 'nFolioSist' | 'estatus' | 'tipoIph' | 'fechaCreacion'> | null> => {
   try {
-    logInfo('IphOficial Service', 'Obteniendo información básica de IPH', { id });
-    
+    logDebug(SERVICE_NAME, 'Obteniendo información básica de IPH', { id });
+
+    // Obtener IPH completo
     const response = await getIphOficial({ id });
-    
-    const basicInfo = {
-      id: response.data.id || '',
-      nReferencia: response.data.nReferencia || '',
-      nFolioSist: response.data.nFolioSist || '',
-      estatus: response.data.estatus || 'No especificado',
-      tipoIph: response.data.tipoIph,
-      fechaCreacion: response.data.fechaCreacion || ''
-    };
-    
-    logInfo('IphOficial Service', 'Información básica obtenida', { basicInfo });
+
+    // Extraer información básica usando utils
+    const basicInfo = extractBasicInfo(response.data);
+
+    logInfo(SERVICE_NAME, 'Información básica obtenida', { basicInfo });
     return basicInfo;
-    
+
   } catch (error) {
-    logError('IphOficial Service', error, `Error obteniendo información básica - id: ${id}`);
+    logError(SERVICE_NAME, error, `Error obteniendo información básica - id: ${id}`);
     return null;
   }
 };
 
-// ==================== UTILIDADES EXPORT ====================
+// ==================== CONFIGURACIÓN EXPORT ====================
 
 /**
- * Exporta las configuraciones y utilidades del servicio
+ * Exporta las configuraciones del servicio
+ * Útil para testing y debugging
  */
 export const IphOficialServiceConfig = {
-  USE_MOCK_DATA,
-  SERVICE_CONFIG,
-  transformServerDataToComponent,
-  mockDelay
+  SERVICE_NAME,
+  SERVICE_CONFIG
 } as const;
-
-/**
- * TODO LIST PARA IMPLEMENTACIÓN COMPLETA:
- * 
- * 1. ✅ Integrar con servicio existente getIphById
- * 2. ⏳ Optimizar transformación de datos any a tipos específicos
- * 3. ⏳ Implementar cache para IPHs consultados frecuentemente
- * 4. ⏳ Agregar validación de permisos por tipo de IPH
- * 5. ⏳ Implementar funcionalidad de impresión/exportación
- * 6. ⏳ Agregar soporte para diferentes formatos de coordenadas
- * 7. ⏳ Implementar preview de imágenes y documentos adjuntos
- * 8. ⏳ Agregar funcionalidad de comentarios/anotaciones
- * 9. ⏳ Implementar auditoria de consultas
- * 10. ⏳ Agregar soporte para versiones/historial del documento
- * 11. ⏳ Implementar validación de firma digital
- * 12. ⏳ Agregar exportación a diferentes formatos (PDF, Word, etc.)
- * 
- * SERVICIOS ADICIONALES A CONSIDERAR:
- * - Servicio de impresión optimizada
- * - Servicio de validación de firmas
- * - Servicio de gestión de anexos
- * - Servicio de auditoria de consultas
- * - Servicio de notificaciones por cambios de estatus
- */
