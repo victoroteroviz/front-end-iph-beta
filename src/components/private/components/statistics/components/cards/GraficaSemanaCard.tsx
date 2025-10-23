@@ -224,17 +224,63 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
   const [previewRange, setPreviewRange] = useState<ApiWeekRange | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
 
+  // 🐛 FIX: Helper para crear fechas en hora local y evitar problemas de zona horaria
+  const createLocalDate = useCallback((dateString?: string): Date => {
+    if (dateString) {
+      // Si viene con hora, usar tal cual; si no, agregar T00:00:00 para hora local
+      const fullDateString = dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
+      return new Date(fullDateString);
+    }
+    return new Date();
+  }, []);
+
+  // Helper para obtener lunes de una semana (sin problemas de timezone)
+  const getMondayOfWeek = useCallback((date: Date): Date => {
+    const result = new Date(date);
+    const day = result.getDay();
+    const diff = day === 0 ? -6 : 1 - day; // Si es domingo (0), retroceder 6 días
+    result.setDate(result.getDate() + diff);
+    result.setHours(0, 0, 0, 0);
+    return result;
+  }, []);
+
   // Inicializar fechas basadas en data existente
   useEffect(() => {
     if (data && data.semana_inicio && data.semana_fin) {
-      const start = new Date(data.semana_inicio);
-      const end = new Date(data.semana_fin);
+      // 🐛 FIX: Usar helper para parsear fechas en hora local
+      const start = createLocalDate(data.semana_inicio);
+      const end = createLocalDate(data.semana_fin);
+      
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
         setStartDate(start);
         setEndDate(end);
       }
     }
-  }, [data]);
+  }, [data, createLocalDate]);
+
+  // ✅ CORRECCIÓN 2: Sincronizar calendario cuando cambia semanaOffset desde los botones
+  useEffect(() => {
+    // 🐛 FIX: Calcular fechas en hora local usando helper
+    const today = new Date();
+    const currentMonday = getMondayOfWeek(today);
+
+    const targetMonday = new Date(currentMonday);
+    targetMonday.setDate(currentMonday.getDate() + (semanaOffset * 7));
+
+    const targetSunday = new Date(targetMonday);
+    targetSunday.setDate(targetMonday.getDate() + 6);
+
+    // Actualizar calendario siempre que cambie el offset
+    console.log('GraficaSemanaCard: Sincronizando calendario desde semanaOffset:', {
+      semanaOffset,
+      targetMonday: targetMonday.toISOString(),
+      targetSunday: targetSunday.toISOString(),
+      targetMondayLocal: targetMonday.toLocaleDateString('es-ES'),
+      targetSundayLocal: targetSunday.toLocaleDateString('es-ES')
+    });
+    setStartDate(targetMonday);
+    setEndDate(targetSunday);
+  }, [semanaOffset, getMondayOfWeek]); // Intencionalmente solo semanaOffset para evitar loops
 
   // Cerrar calendario cuando se hace clic fuera
   useEffect(() => {
@@ -322,11 +368,8 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
     const ranges: ApiWeekRange[] = [];
     const today = new Date();
 
-    // Encontrar el inicio de la semana actual (lunes)
-    const dayOfWeek = today.getDay();
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const currentMonday = new Date(today);
-    currentMonday.setDate(today.getDate() + mondayOffset);
+    // 🐛 FIX: Usar helper para obtener lunes de forma consistente
+    const currentMonday = getMondayOfWeek(today);
 
     // Generar rangos para las últimas 8 semanas (offset -7 a 0)
     for (let offset = -7; offset <= 0; offset++) {
@@ -351,7 +394,7 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
     }
 
     return ranges.reverse(); // Mostrar más recientes primero
-  }, [availableRanges]);
+  }, [availableRanges, getMondayOfWeek]);
 
   // Obtener rangos válidos
   const validRanges = useMemo(() => generateApiRanges(), [generateApiRanges]);
@@ -416,13 +459,31 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
     setStartDate(validRange.startDate);
     setEndDate(validRange.endDate);
 
-    // Llamar callback inmediatamente con el rango válido
+    // ✅ CORRECCIÓN 1: Calcular y actualizar semanaOffset directamente para sincronización bidireccional
+    // 🐛 FIX: Usar helpers para cálculos de fecha consistentes
+    const today = new Date();
+    const currentMonday = getMondayOfWeek(today);
+    const selectedMonday = getMondayOfWeek(validRange.startDate);
+
+    const diffTime = currentMonday.getTime() - selectedMonday.getTime();
+    const diffWeeks = Math.round(diffTime / (1000 * 60 * 60 * 24 * 7));
+    const targetOffset = -diffWeeks;
+
+    console.log('GraficaSemanaCard: Sincronizando semanaOffset desde calendario:', {
+      label: validRange.label,
+      startDate: validRange.startDate.toISOString(),
+      endDate: validRange.endDate.toISOString(),
+      currentMonday: currentMonday.toISOString(),
+      selectedMonday: selectedMonday.toISOString(),
+      diffWeeks,
+      targetOffset
+    });
+
+    // Actualizar semanaOffset a través del setter del padre
+    setSemanaOffset(targetOffset);
+
+    // Llamar callback opcional (ya que setSemanaOffset carga datos)
     if (onDateRangeChange) {
-      console.log('GraficaSemanaCard: Calling onDateRangeChange with valid API range:', {
-        label: validRange.label,
-        startDate: validRange.startDate.toISOString(),
-        endDate: validRange.endDate.toISOString()
-      });
       onDateRangeChange(validRange.startDate, validRange.endDate);
     }
 
@@ -434,17 +495,15 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
 
   // Limpiar selección
   const handleClearDates = () => {
-    setStartDate(null);
-    setEndDate(null);
     setPreviewRange(null);
     setIsCalendarOpen(false);
 
-    // Notificar al componente padre que se limpió la selección
-    if (onDateRangeChange) {
-      console.log('GraficaSemanaCard: Clearing selection, calling onDateRangeChange with null');
-      // Llamar con fechas nulas o fechas por defecto
-      onDateRangeChange(new Date(), new Date());
-    }
+    // ✅ CORRECCIÓN 4: Resetear a semana actual (offset 0) en lugar de fechas inválidas
+    console.log('GraficaSemanaCard: Clearing selection, resetting to current week (offset 0)');
+    setSemanaOffset(0);
+
+    // No es necesario actualizar startDate/endDate manualmente,
+    // el useEffect que sincroniza con semanaOffset lo hará automáticamente
   };
 
   // Formatear texto del rango seleccionado
@@ -546,12 +605,13 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
               onClick={() => {
                 console.log('🔙 Button: Clicking "Atrás" - current offset:', semanaOffset);
                 setSemanaOffset((prev) => {
-                  const newOffset = prev - 1;
-                  console.log('🔙 Button: Setting offset from', prev, 'to', newOffset);
+                  // ✅ CORRECCIÓN 3: Aplicar límite inferior para evitar valores excesivamente negativos
+                  const newOffset = Math.max(prev - 1, -7);
+                  console.log('🔙 Button: Setting offset from', prev, 'to', newOffset, '(limit: -7)');
                   return newOffset;
                 });
               }}
-              disabled={loading}
+              disabled={loading || semanaOffset <= -7}
               className="
                 text-xs px-3 py-1.5 bg-white border border-gray-300 rounded-l-md
                 hover:bg-gray-50 focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] focus:outline-none
@@ -567,8 +627,9 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
               onClick={() => {
                 console.log('🔜 Button: Clicking "Adelante" - current offset:', semanaOffset);
                 setSemanaOffset((prev) => {
-                  const newOffset = prev + 1;
-                  console.log('🔜 Button: Setting offset from', prev, 'to', newOffset);
+                  // ✅ CORRECCIÓN 3: Aplicar límite superior para garantizar que nunca supere 0
+                  const newOffset = Math.min(prev + 1, 0);
+                  console.log('🔜 Button: Setting offset from', prev, 'to', newOffset, '(limit: 0)');
                   return newOffset;
                 });
               }}
@@ -761,13 +822,18 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
 };
 
 export default memo(GraficaSemanaCard, (prevProps, nextProps) => {
-  // Solo re-renderizar si cambian las props relevantes
+  // ✅ CORRECCIÓN 5: Incluir todas las props relevantes en la comparación
   return (
     prevProps.titulo === nextProps.titulo &&
     prevProps.semanaOffset === nextProps.semanaOffset &&
     prevProps.loading === nextProps.loading &&
     prevProps.error === nextProps.error &&
     prevProps.data === nextProps.data &&
-    prevProps.className === nextProps.className
+    prevProps.className === nextProps.className &&
+    prevProps.setSemanaOffset === nextProps.setSemanaOffset &&
+    prevProps.onDateRangeChange === nextProps.onDateRangeChange &&
+    // Comparar availableRanges por longitud y contenido (shallow comparison)
+    prevProps.availableRanges?.length === nextProps.availableRanges?.length &&
+    JSON.stringify(prevProps.availableRanges) === JSON.stringify(nextProps.availableRanges)
   );
 });
