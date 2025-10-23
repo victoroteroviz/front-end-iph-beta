@@ -12,6 +12,12 @@ import { getUsuarios, deleteUsuario } from '../services/crud-user.service';
 // Helpers
 import { showSuccess, showError, showWarning } from '../../../../../helper/notification/notification.helper';
 import { logInfo, logError, logAuth } from '../../../../../helper/log/logger.helper';
+import {
+  getUserRoles,
+  validateExternalRoles,
+  canExternalRoleAccess,
+  hasExternalRole
+} from '../../../../../helper/role/role.helper';
 
 // Interfaces
 import type {
@@ -57,45 +63,87 @@ const useUsuarios = (): IUseUsuariosReturn => {
   // FUNCIONES DE CONTROL DE ACCESO
   // =====================================================
 
+  /**
+   * Verifica y establece permisos del usuario actual
+   * Usa el sistema centralizado de validación de roles (role.helper v2.0.0)
+   *
+   * @returns true si tiene acceso, false si debe redirigir
+   */
   const checkPermissions = useCallback(() => {
-    // Leer datos del sessionStorage con las keys correctas
-    const userData = JSON.parse(sessionStorage.getItem('user_data') || '{}');
-    const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
-    
-    logInfo('UsuariosHook', 'Datos de sessionStorage', { userData, userRoles });
-    
-    // Determinar permisos basado en roles
-    const isSuperAdmin = userRoles.some((role: any) => role.nombre === 'SuperAdmin');
-    const isAdmin = userRoles.some((role: any) => role.nombre === 'Administrador');
-    const isSuperior = userRoles.some((role: any) => role.nombre === 'Superior');
-    const isElemento = userRoles.some((role: any) => role.nombre === 'Elemento');
+    // Obtener roles desde sessionStorage usando el helper
+    const userRoles = getUserRoles();
 
+    logInfo('UsuariosHook', 'Validando permisos de usuario', {
+      rolesCount: userRoles.length
+    });
+
+    // Validar que los roles sean válidos según la configuración del sistema
+    const validRoles = validateExternalRoles(userRoles);
+
+    if (validRoles.length === 0) {
+      logError(
+        'UsuariosHook',
+        new Error('Roles inválidos'),
+        'Usuario sin roles válidos en el sistema'
+      );
+      showWarning('No tienes roles válidos para acceder a esta sección', 'Acceso Restringido');
+      navigate('/inicio');
+      return false;
+    }
+
+    // Verificar roles específicos usando el helper centralizado
+    const isSuperAdmin = hasExternalRole(validRoles, 'SuperAdmin');
+    const isAdmin = hasExternalRole(validRoles, 'Administrador');
+    const isSuperior = hasExternalRole(validRoles, 'Superior');
+    const isElemento = hasExternalRole(validRoles, 'Elemento');
+
+    // Verificar acceso jerárquico (Admin y superiores)
+    const canAccessAdminFeatures = canExternalRoleAccess(validRoles, 'Administrador');
+
+    // Establecer permisos en el estado
+    // Solo SuperAdmin y Admin pueden gestionar usuarios
     setState(prev => ({
       ...prev,
-      canCreateUsers: isSuperAdmin || isAdmin,
-      canEditUsers: isSuperAdmin || isAdmin,
-      canDeleteUsers: isSuperAdmin || isAdmin,
-      canViewAllUsers: isSuperAdmin || isAdmin,
-      // Elementos y Superiores pueden ver usuarios limitados (por implementar)
-      canViewTeamUsers: isSuperior || isElemento
+      canCreateUsers: canAccessAdminFeatures,  // Admin o SuperAdmin
+      canEditUsers: canAccessAdminFeatures,    // Admin o SuperAdmin
+      canDeleteUsers: canAccessAdminFeatures,  // Admin o SuperAdmin
+      canViewAllUsers: canAccessAdminFeatures, // Admin o SuperAdmin
+      canViewTeamUsers: isSuperior || isElemento // Superior/Elemento (funcionalidad futura)
     }));
 
-    logInfo('UsuariosHook', 'Permisos calculados', {
-      userRolesCount: userRoles.length,
-      roles: userRoles.map((r: any) => r.nombre),
+    logInfo('UsuariosHook', 'Permisos calculados correctamente', {
+      validRolesCount: validRoles.length,
+      roles: validRoles.map(r => r.nombre),
       isSuperAdmin,
       isAdmin,
       isSuperior,
       isElemento,
-      canViewAllUsers: isSuperAdmin || isAdmin
+      canCreateUsers: canAccessAdminFeatures,
+      canEditUsers: canAccessAdminFeatures,
+      canDeleteUsers: canAccessAdminFeatures,
+      canViewAllUsers: canAccessAdminFeatures
     });
 
-    // Verificar acceso básico
-    if (!isSuperAdmin && !isAdmin && !isSuperior && !isElemento) {
-      showWarning('No tienes permisos para acceder a esta sección', 'Acceso Restringido');
+    // Verificar acceso básico a la sección de usuarios
+    // Solo Admin y SuperAdmin pueden acceder
+    if (!canAccessAdminFeatures) {
+      logAuth('access_denied', false, {
+        section: 'usuarios',
+        reason: 'Requiere permisos de Administrador',
+        userRoles: validRoles.map(r => r.nombre)
+      });
+      showWarning(
+        'Solo Administradores y SuperAdmins pueden acceder a la gestión de usuarios',
+        'Acceso Restringido'
+      );
       navigate('/inicio');
       return false;
     }
+
+    logAuth('access_granted', true, {
+      section: 'usuarios',
+      userRoles: validRoles.map(r => r.nombre)
+    });
 
     return true;
   }, [navigate]);
@@ -211,29 +259,82 @@ const useUsuarios = (): IUseUsuariosReturn => {
   // FUNCIONES DE ACCIONES
   // =====================================================
 
+  /**
+   * Navega a la página de creación de usuario
+   * Requiere: Admin o SuperAdmin
+   */
   const handleCreateUser = useCallback(() => {
-    if (!state.canCreateUsers) {
-      showWarning('No tienes permisos para crear usuarios', 'Acceso Denegado');
+    // Doble validación: estado + verificación en tiempo real
+    const currentRoles = getUserRoles();
+    const canCreate = canExternalRoleAccess(currentRoles, 'Administrador');
+
+    if (!state.canCreateUsers || !canCreate) {
+      logAuth('create_user_denied', false, {
+        reason: 'Permisos insuficientes',
+        statePermission: state.canCreateUsers,
+        runtimePermission: canCreate
+      });
+      showWarning(
+        'Solo Administradores y SuperAdmins pueden crear usuarios',
+        'Acceso Denegado'
+      );
       return;
     }
 
     logInfo('UsuariosHook', 'Navegando a crear usuario');
+    logAuth('create_user_initiated', true, {
+      userRoles: currentRoles.map(r => r.nombre)
+    });
     navigate('/usuarios/nuevo');
   }, [state.canCreateUsers, navigate]);
 
+  /**
+   * Navega a la página de edición de usuario
+   * Requiere: Admin o SuperAdmin
+   */
   const handleEditUser = useCallback((usuario: IPaginatedUsers) => {
-    if (!state.canEditUsers) {
-      showWarning('No tienes permisos para editar usuarios', 'Acceso Denegado');
+    // Doble validación: estado + verificación en tiempo real
+    const currentRoles = getUserRoles();
+    const canEdit = canExternalRoleAccess(currentRoles, 'Administrador');
+
+    if (!state.canEditUsers || !canEdit) {
+      logAuth('edit_user_denied', false, {
+        userId: usuario.id,
+        reason: 'Permisos insuficientes'
+      });
+      showWarning(
+        'Solo Administradores y SuperAdmins pueden editar usuarios',
+        'Acceso Denegado'
+      );
       return;
     }
 
     logInfo('UsuariosHook', 'Navegando a editar usuario', { userId: usuario.id });
+    logAuth('edit_user_initiated', true, {
+      userId: usuario.id,
+      userName: `${usuario.nombre} ${usuario.primer_apellido}`
+    });
     navigate(`/usuarios/editar/${usuario.id}`);
   }, [state.canEditUsers, navigate]);
 
+  /**
+   * Abre el modal de confirmación para eliminar usuario
+   * Requiere: Admin o SuperAdmin
+   */
   const handleDeleteUser = useCallback((usuario: IPaginatedUsers) => {
-    if (!state.canDeleteUsers) {
-      showWarning('No tienes permisos para eliminar usuarios', 'Acceso Denegado');
+    // Doble validación: estado + verificación en tiempo real
+    const currentRoles = getUserRoles();
+    const canDelete = canExternalRoleAccess(currentRoles, 'Administrador');
+
+    if (!state.canDeleteUsers || !canDelete) {
+      logAuth('delete_user_denied', false, {
+        userId: usuario.id,
+        reason: 'Permisos insuficientes'
+      });
+      showWarning(
+        'Solo Administradores y SuperAdmins pueden eliminar usuarios',
+        'Acceso Denegado'
+      );
       return;
     }
 
@@ -245,7 +346,10 @@ const useUsuarios = (): IUseUsuariosReturn => {
       deleteError: null
     }));
 
-    logInfo('UsuariosHook', 'Modal de eliminación abierto', { userId: usuario.id });
+    logInfo('UsuariosHook', 'Modal de eliminación abierto', {
+      userId: usuario.id,
+      userName: `${usuario.nombre} ${usuario.primer_apellido}`
+    });
   }, [state.canDeleteUsers]);
 
   // Abrir modal de eliminación
@@ -347,13 +451,35 @@ const useUsuarios = (): IUseUsuariosReturn => {
   // EFECTOS
   // =====================================================
 
+  /**
+   * Efecto de inicialización
+   * Se ejecuta UNA SOLA VEZ al montar el componente
+   */
   useEffect(() => {
     const hasAccess = checkPermissions();
     if (!hasAccess) return;
 
     // Carga inicial
     loadUsuarios();
-  }, [checkPermissions, loadUsuarios]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // ✅ Array vacío = solo se ejecuta al montar
+
+  /**
+   * Efecto para recargar cuando cambian los filtros
+   */
+  useEffect(() => {
+    // Solo recargar si ya pasó la verificación inicial
+    if (state.canViewAllUsers || state.canViewTeamUsers) {
+      loadUsuarios();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    state.filters.page,
+    state.filters.orderBy,
+    state.filters.order,
+    state.filters.search,
+    state.filters.searchBy
+  ]);
 
 
   // =====================================================

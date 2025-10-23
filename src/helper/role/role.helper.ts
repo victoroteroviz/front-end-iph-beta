@@ -1,19 +1,26 @@
 /**
  * Helper de Roles - Sistema centralizado para validación de roles
  * Siguiendo principios SOLID, KISS y DRY
- * 
+ *
  * Proporciona funciones reutilizables para:
  * - Validación de roles específicos
  * - Control de acceso jerárquico
  * - Verificación de permisos granulares
- * - Obtención de datos de roles desde sessionStorage
+ * - Obtención de datos de roles desde sessionStorage O props externos
  * - Configuración dinámica desde variables de entorno
+ *
+ * @version 2.0.0
+ * @features
+ * - ✅ Validación de roles externos (props)
+ * - ✅ Validación de roles desde sessionStorage
+ * - ✅ API simple para componentes y servicios
+ * - ✅ Compatibilidad con código existente
  */
 
 import { logInfo, logError, logWarning } from '../log/logger.helper';
 import {
-  hasRole,
-  hasHierarchicalAccess,
+  hasRole as configHasRole,
+  hasHierarchicalAccess as configHasHierarchicalAccess,
   getRoleLevel,
   getValidRoles,
   getSystemRoleTypes,
@@ -22,11 +29,12 @@ import {
   isAdmin as configIsAdmin,
   isSuperior as configIsSuperior,
   isElemento as configIsElemento,
-  canAccessSuperAdmin,
-  canAccessAdmin,
-  canAccessSuperior,
-  canAccessElemento
+  canAccessSuperAdmin as configCanAccessSuperAdmin,
+  canAccessAdmin as configCanAccessAdmin,
+  canAccessSuperior as configCanAccessSuperior,
+  canAccessElemento as configCanAccessElemento
 } from '../../config/permissions.config';
+import { ALLOWED_ROLES } from '../../config/env.config';
 import type { IRole } from '../../interfaces/role/role.interface';
 import type { SystemRoleType, RoleConfig } from '../../config/permissions.config';
 
@@ -55,14 +63,15 @@ export interface RoleValidationResult {
 export const getRoleNames = (): string[] => getSystemRoleTypes();
 
 /**
- * Obtiene roles completos dinámicamente desde la configuración
- * @returns Array con roles disponibles
+ * Obtiene roles completos dinámicamente desde la configuración (.env)
+ * @returns Array con roles permitidos según ALLOWED_ROLES
  */
 export const getSystemRoles = (): IRole[] => {
-  const roleMap = getValidRoles();
-  const allRoles: IRole[] = [];
-  roleMap.forEach(roles => allRoles.push(...roles));
-  return allRoles;
+  if (!Array.isArray(ALLOWED_ROLES)) {
+    logWarning('RoleHelper', 'ALLOWED_ROLES no es un array válido');
+    return [];
+  }
+  return ALLOWED_ROLES as IRole[];
 };
 
 /**
@@ -293,7 +302,7 @@ class RoleHelper {
 
   /**
    * Verifica permisos para operaciones específicas usando la configuración dinámica
-   * 
+   *
    * @param operation - Tipo de operación ('create', 'read', 'update', 'delete', 'admin', 'superuser')
    * @param userRoles - Roles del usuario (opcional)
    * @returns true si tiene permisos para la operación
@@ -304,15 +313,135 @@ class RoleHelper {
   ): boolean {
     try {
       const roles = userRoles || this.getUserRoles();
-      
-      // Verificar si algún rol del usuario tiene el permiso requerido
-      // Simplificado: SuperAdmin y Admin tienen todos los permisos
-      return roles.some(role =>
-        role.nombre === 'SuperAdmin' || role.nombre === 'Administrador'
-      );
+
+      // Mapa de operaciones permitidas por rol
+      const operationMap: Record<string, string[]> = {
+        superuser: ['SuperAdmin'],
+        admin: ['SuperAdmin', 'Administrador'],
+        create: ['SuperAdmin', 'Administrador', 'Superior'],
+        update: ['SuperAdmin', 'Administrador'],
+        delete: ['SuperAdmin'],
+        read: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento']
+      };
+
+      const allowedRoles = operationMap[operation] || [];
+      return roles.some(role => allowedRoles.includes(role.nombre));
 
     } catch (error) {
       logError('RoleHelper', error, `Error verificando permisos para operación ${operation}`);
+      return false;
+    }
+  }
+
+  /**
+   * Valida que los roles proporcionados sean válidos según ALLOWED_ROLES (.env)
+   *
+   * @param roles - Roles a validar (pueden venir de props externos)
+   * @returns Array de roles válidos o array vacío si ninguno es válido
+   * @example
+   * const validRoles = roleHelper.validateExternalRoles(propsRoles);
+   * if (validRoles.length > 0) {
+   *   // Usar validRoles de forma segura
+   * }
+   */
+  public validateExternalRoles(roles: IRole[]): IRole[] {
+    try {
+      if (!Array.isArray(roles) || roles.length === 0) {
+        logWarning('RoleHelper', 'Roles externos vacíos o inválidos');
+        return [];
+      }
+
+      // Comparar contra ALLOWED_ROLES desde .env (fuente de verdad)
+      const systemRoles = ALLOWED_ROLES as IRole[];
+
+      if (!Array.isArray(systemRoles) || systemRoles.length === 0) {
+        logError('RoleHelper', new Error('ALLOWED_ROLES no configurado'), 'ALLOWED_ROLES vacío o inválido');
+        return [];
+      }
+
+      const validRoles = roles.filter(externalRole =>
+        systemRoles.some((systemRole: IRole) =>
+          systemRole.id === externalRole.id &&
+          systemRole.nombre === externalRole.nombre
+        )
+      );
+
+      if (validRoles.length === 0) {
+        logWarning('RoleHelper', 'Ningún rol externo es válido según ALLOWED_ROLES', {
+          rolesRecibidos: roles,
+          rolesPermitidos: systemRoles
+        });
+      } else {
+        logInfo('RoleHelper', `${validRoles.length} rol(es) externo(s) validado(s)`, { validRoles });
+      }
+
+      return validRoles;
+
+    } catch (error) {
+      logError('RoleHelper', error, 'Error validando roles externos');
+      return [];
+    }
+  }
+
+  /**
+   * Verifica si un array de roles externos tiene un rol específico (con validación)
+   *
+   * @param externalRoles - Roles externos a verificar
+   * @param roleName - Nombre del rol a buscar ('SuperAdmin', 'Administrador', 'Superior', 'Elemento')
+   * @returns true si tiene el rol y es válido
+   * @example
+   * const hasAdmin = roleHelper.hasExternalRole(propsRoles, 'Administrador');
+   */
+  public hasExternalRole(externalRoles: IRole[], roleName: string): boolean {
+    try {
+      const validRoles = this.validateExternalRoles(externalRoles);
+      return validRoles.some(role => role.nombre === roleName);
+    } catch (error) {
+      logError('RoleHelper', error, 'Error verificando rol externo');
+      return false;
+    }
+  }
+
+  /**
+   * Verifica acceso jerárquico para roles externos (con validación)
+   *
+   * Jerarquía del sistema:
+   * - SuperAdmin: Puede acceder a todo (Admin, Superior, Elemento)
+   * - Administrador: Puede acceder a Superior y Elemento
+   * - Superior: Puede acceder a Elemento
+   * - Elemento: Solo acceso propio
+   *
+   * @param externalRoles - Roles externos a verificar
+   * @param targetRoleName - Nombre del rol objetivo ('SuperAdmin', 'Administrador', 'Superior', 'Elemento')
+   * @returns true si tiene acceso jerárquico
+   * @example
+   * const canAccess = roleHelper.canExternalRoleAccess(propsRoles, 'Superior');
+   * // Si el usuario es Admin o SuperAdmin, retorna true
+   */
+  public canExternalRoleAccess(externalRoles: IRole[], targetRoleName: string): boolean {
+    try {
+      const validRoles = this.validateExternalRoles(externalRoles);
+
+      if (validRoles.length === 0) {
+        return false;
+      }
+
+      // Jerarquía: cada rol puede acceder a los roles listados en su array
+      const hierarchy: Record<string, string[]> = {
+        'SuperAdmin': ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
+        'Administrador': ['Administrador', 'Superior', 'Elemento'],
+        'Superior': ['Superior', 'Elemento'],
+        'Elemento': ['Elemento']
+      };
+
+      // Verificar si algún rol del usuario tiene acceso jerárquico al rol objetivo
+      return validRoles.some(userRole => {
+        const allowedRoles = hierarchy[userRole.nombre] || [];
+        return allowedRoles.includes(targetRoleName);
+      });
+
+    } catch (error) {
+      logError('RoleHelper', error, 'Error verificando acceso jerárquico externo');
       return false;
     }
   }
@@ -327,8 +456,57 @@ const roleHelper = RoleHelper.getInstance();
  * ==========================================
  */
 
+// ==================== VALIDACIÓN DE ROLES EXTERNOS ====================
+
 /**
- * Obtiene los roles del usuario actual
+ * Valida roles externos (de props, API, etc.) contra la configuración del sistema
+ *
+ * @param externalRoles - Roles a validar
+ * @returns Array de roles válidos
+ * @example
+ * // En un componente con props
+ * const validRoles = validateExternalRoles(props.userRoles);
+ * if (validRoles.length > 0) {
+ *   // Los roles son válidos, proceder
+ * }
+ */
+export const validateExternalRoles = (externalRoles: IRole[]): IRole[] =>
+  roleHelper.validateExternalRoles(externalRoles);
+
+/**
+ * Verifica si roles externos tienen un rol específico del sistema
+ *
+ * @param externalRoles - Roles externos a verificar
+ * @param roleName - Nombre del rol ('SuperAdmin', 'Administrador', 'Superior', 'Elemento')
+ * @returns true si tiene el rol y es válido
+ * @example
+ * // En un servicio
+ * if (hasExternalRole(apiRoles, 'Administrador')) {
+ *   // El usuario tiene rol de Administrador válido
+ * }
+ */
+export const hasExternalRole = (externalRoles: IRole[], roleName: string): boolean =>
+  roleHelper.hasExternalRole(externalRoles, roleName);
+
+/**
+ * Verifica acceso jerárquico para roles externos
+ *
+ * @param externalRoles - Roles externos a verificar
+ * @param targetRoleName - Nombre del rol objetivo ('SuperAdmin', 'Administrador', 'Superior', 'Elemento')
+ * @returns true si tiene acceso jerárquico
+ * @example
+ * // SuperAdmin o Administrador pueden acceder a funcionalidades de Superior
+ * if (canExternalRoleAccess(propsRoles, 'Superior')) {
+ *   // Permitir acceso
+ * }
+ */
+export const canExternalRoleAccess = (externalRoles: IRole[], targetRoleName: string): boolean =>
+  roleHelper.canExternalRoleAccess(externalRoles, targetRoleName);
+
+// ==================== FUNCIONES DE SESSIONSTORAGE (EXISTENTES) ====================
+
+/**
+ * Obtiene los roles del usuario actual desde sessionStorage
  */
 export const getUserRoles = (): IRole[] => roleHelper.getUserRoles();
 

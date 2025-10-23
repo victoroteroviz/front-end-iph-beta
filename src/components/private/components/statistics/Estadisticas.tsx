@@ -4,7 +4,14 @@
  *
  * @pattern Atomic Design + Custom Hook
  * @uses useStatisticsModal - Hook personalizado para lógica del modal
- * @version 2.0.0 - Refactorizado para usar hooks personalizados
+ * @uses useEstadisticasPermissions - Hook personalizado para control de acceso
+ * @version 2.1.0 - Agregado control de acceso por roles
+ *
+ * Roles permitidos:
+ * - SuperAdmin: Acceso completo + exportación
+ * - Administrador: Acceso completo + exportación
+ * - Superior: Acceso completo (sin exportación)
+ * - Elemento: SIN ACCESO (redirige a /inicio)
  */
 
 import React, { useState } from 'react';
@@ -14,10 +21,14 @@ import { statisticsCardsConfig } from './config';
 import StatisticsModal from './components/modals/StatisticsModal';
 import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 import { useStatisticsModal } from './hooks/useStatisticsModal';
+import { useEstadisticasPermissions } from './hooks/useEstadisticasPermissions';
 import { logDebug, logWarning } from '../../../../helper/log/logger.helper';
 import './Estadisticas.css';
 
 const Estadisticas: React.FC = () => {
+  // Control de acceso por roles
+  const { hasAccess, canView, canExport, isLoading } = useEstadisticasPermissions();
+
   // Configuración de las tarjetas de estadísticas (importada desde config)
   const [statistics] = useState<IStatisticCard[]>(statisticsCardsConfig);
 
@@ -34,6 +45,18 @@ const Estadisticas: React.FC = () => {
       logDebug('Estadisticas', 'Modal cerrado');
     }
   });
+
+  // Early return si no tiene acceso o está cargando permisos
+  if (isLoading || !hasAccess || !canView) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#948b54] mx-auto mb-4"></div>
+          <p className="text-gray-600 font-poppins">Verificando permisos...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Breadcrumbs
   const breadcrumbItems: BreadcrumbItem[] = [

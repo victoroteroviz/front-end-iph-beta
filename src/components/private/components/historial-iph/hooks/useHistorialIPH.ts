@@ -131,11 +131,12 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
 
   /**
    * Verifica si el usuario tiene permisos para acceder al historial
+   * TODOS los roles tienen acceso (SuperAdmin, Admin, Superior, Elemento)
    */
   const hasAccess = useMemo(() => {
     const userDataStr = sessionStorage.getItem('user_data');
     const rolesStr = sessionStorage.getItem('roles');
-    
+
     if (!userDataStr || !rolesStr) {
       logWarning('useHistorialIPH', 'No hay datos de usuario en sessionStorage');
       return false;
@@ -144,15 +145,19 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
     try {
       JSON.parse(userDataStr);
       const userRoles = JSON.parse(rolesStr) || [];
-      
-      // Solo Admin y SuperAdmin pueden acceder
-      const allowedRoleNames = ['Administrador', 'SuperAdmin'];
+
+      // TODOS los roles pueden acceder al historial
+      const allowedRoleNames = ['Administrador', 'SuperAdmin', 'Superior', 'Elemento'];
       const hasPermission = userRoles.some((role: {id: number; nombre: string}) =>
         allowedRoleNames.includes(role.nombre)
       );
 
       if (!hasPermission) {
         logWarning('useHistorialIPH', 'Usuario sin permisos para acceder al historial', {
+          userRoles: userRoles.map((r: {id: number; nombre: string}) => r.nombre)
+        });
+      } else {
+        logInfo('useHistorialIPH', 'Usuario con acceso al historial', {
           userRoles: userRoles.map((r: {id: number; nombre: string}) => r.nombre)
         });
       }

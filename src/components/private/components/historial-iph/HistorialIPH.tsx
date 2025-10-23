@@ -1,4 +1,4 @@
-/**
+  /**
  * Componente HistorialIPH SUPER OPTIMIZADO
  *
  * Características implementadas:
@@ -7,8 +7,8 @@
  * - Componentes atómicos separados y memoizados
  * - Estados de carga y error optimizados
  * - Servicios integrados con backend
- * - Sistema de roles (Admin/SuperAdmin only)
- * - Vista detalle dummy para futuro desarrollo
+ * - Sistema de roles (TODOS los roles tienen acceso)
+ * - Vista detalle con servicio real getBasicDataByIphId
  * - Logging completo de eventos
  * - Accesibilidad mejorada
  * - Diseño responsivo
@@ -16,6 +16,12 @@
  * - Paginación completa optimizada
  * - React.memo y callbacks optimizados
  * - Prevención de re-renders innecesarios
+ *
+ * Roles permitidos:
+ * - SuperAdmin: Acceso completo
+ * - Administrador: Acceso completo
+ * - Superior: Acceso completo
+ * - Elemento: Acceso completo
  */
 
 import React, { useEffect, useCallback, useMemo } from 'react';
@@ -136,15 +142,14 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
         <div className="max-w-2xl mx-auto text-center py-16">
           <Shield size={64} className="mx-auto text-red-400 mb-6" />
           <h2 className="text-2xl font-bold text-red-600 mb-4">
-            Acceso Restringido
+            Error de Autenticación
           </h2>
           <p className="text-gray-600 mb-6">
-            No tienes permisos para acceder al historial de IPHs.
-            Esta funcionalidad está disponible únicamente para usuarios con rol de
-            Administrador o SuperAdmin.
+            No se pudieron validar tus credenciales para acceder al historial de IPHs.
+            Por favor, intenta cerrar sesión y volver a iniciar sesión.
           </p>
           <div className="text-sm text-gray-500">
-            Si crees que esto es un error, contacta al administrador del sistema.
+            Si el problema persiste, contacta al administrador del sistema.
           </div>
         </div>
       </div>
