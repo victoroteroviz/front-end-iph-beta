@@ -138,62 +138,70 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
     return (
       <div className="min-h-screen p-4 md:p-6 lg:p-8" data-component="informe-policial">
         <div className="max-w-3xl mx-auto">
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-            <div className="flex justify-center mb-6">
-              <div className="p-4 bg-red-100 rounded-full">
-                <Shield className="h-16 w-16 text-red-600" />
+          <div className="bg-gradient-to-br from-white via-red-50/30 to-white rounded-2xl border border-red-200 p-8 text-center shadow-lg overflow-hidden relative">
+            {/* Patrón decorativo */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-100/30 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-red-100/30 rounded-full blur-3xl" />
+
+            <div className="relative z-10">
+              <div className="flex justify-center mb-6">
+                <div className="p-4 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl shadow-lg">
+                  <Shield className="h-16 w-16 text-white" />
+                </div>
               </div>
-            </div>
-            
-            <h2 className="text-2xl font-bold text-red-600 mb-4 font-poppins">
-              Acceso Denegado
-            </h2>
-            
-            <p className="text-gray-700 mb-6 font-poppins text-lg">
-              {roleValidation.message}
-            </p>
-            
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-red-800 font-poppins">
-                <strong>Permisos requeridos:</strong> SuperAdmin, Administrador o Superior
+
+              <h2 className="text-3xl font-bold text-red-600 mb-4 font-poppins tracking-tight">
+                Acceso Denegado
+              </h2>
+
+              <p className="text-gray-700 mb-6 font-poppins text-lg max-w-md mx-auto">
+                {roleValidation.message}
               </p>
-              {roleValidation.reason === 'invalid_roles' && (
-                <p className="text-sm text-red-700 font-poppins mt-2">
-                  Tus credenciales no pudieron ser validadas. Esto puede deberse a datos corruptos en la sesión.
+
+              <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 shadow-sm">
+                <p className="text-sm text-red-800 font-poppins">
+                  <strong className="font-bold">Permisos requeridos:</strong> SuperAdmin, Administrador o Superior
                 </p>
-              )}
+                {roleValidation.reason === 'invalid_roles' && (
+                  <p className="text-sm text-red-700 font-poppins mt-2">
+                    Tus credenciales no pudieron ser validadas. Esto puede deberse a datos corruptos en la sesión.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={() => window.history.back()}
+                  className="
+                    px-6 py-3 bg-gray-600 text-white rounded-lg
+                    hover:bg-gray-700 hover:scale-[1.02] active:scale-[0.98]
+                    transition-all duration-200 shadow-md hover:shadow-lg
+                    font-semibold font-poppins cursor-pointer
+                  "
+                >
+                  Volver Atrás
+                </button>
+
+                <button
+                  onClick={() => {
+                    sessionStorage.clear();
+                    window.location.href = '/login';
+                  }}
+                  className="
+                    px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg
+                    hover:from-red-700 hover:to-red-800 hover:scale-[1.02] active:scale-[0.98]
+                    transition-all duration-200 shadow-md hover:shadow-lg
+                    font-semibold font-poppins cursor-pointer
+                  "
+                >
+                  Cerrar Sesión
+                </button>
+              </div>
+
+              <p className="text-sm text-gray-500 mt-6 font-poppins">
+                Si crees que esto es un error, contacta al administrador del sistema.
+              </p>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={() => window.history.back()}
-                className="
-                  px-6 py-3 bg-gray-600 text-white rounded-lg
-                  hover:bg-gray-700 transition-colors duration-200
-                  font-medium font-poppins
-                "
-              >
-                Volver Atrás
-              </button>
-              
-              <button
-                onClick={() => {
-                  sessionStorage.clear();
-                  window.location.href = '/login';
-                }}
-                className="
-                  px-6 py-3 bg-red-600 text-white rounded-lg
-                  hover:bg-red-700 transition-colors duration-200
-                  font-medium font-poppins
-                "
-              >
-                Cerrar Sesión
-              </button>
-            </div>
-            
-            <p className="text-sm text-gray-500 mt-6 font-poppins">
-              Si crees que esto es un error, contacta al administrador del sistema.
-            </p>
           </div>
         </div>
       </div>
@@ -238,76 +246,92 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
           <Breadcrumbs items={breadcrumbItems} />
         </div>
 
-        {/* Header principal */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-[#948b54] rounded-lg">
-                <FileText className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-[#4d4725] font-poppins">
-                  Listado de Referencias
-                </h1>
-                <p className="text-gray-600 font-poppins">
-                  {state.userCanViewAll
-                    ? 'Vista global de todos los informes policiales por semana'
-                    : 'Vista de mis informes policiales hechos por semana'
-                  }
-                </p>
-                <p className="text-sm text-gray-500 font-poppins mt-1">
-                  IPH's de la semana: {(() => {
-                    // Obtener la fecha actual
-                    const now = new Date();
+        {/* Header principal - MEJORADO VISUALMENTE */}
+        <div className="relative bg-gradient-to-br from-white via-[#fdf7f1] to-white rounded-2xl border border-[#c2b186]/30 p-6 mb-6 shadow-lg shadow-[#4d4725]/5 overflow-hidden">
+          {/* Patrón de fondo decorativo */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#948b54]/5 rounded-full blur-3xl -z-0" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#c2b186]/5 rounded-full blur-3xl -z-0" />
 
-                    // Calcular el lunes de la semana actual
-                    const currentDay = now.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado
-                    const daysToMonday = currentDay === 0 ? -6 : 1 - currentDay; // Si es domingo, retroceder 6 días
-                    const monday = new Date(now);
-                    monday.setDate(now.getDate() + daysToMonday);
-
-                    // Calcular el domingo de la semana actual (6 días después del lunes)
-                    const sunday = new Date(monday);
-                    sunday.setDate(monday.getDate() + 6);
-
-                    // Formatear las fechas
-                    const formatDate = (date: Date) => {
-                      return date.toLocaleDateString('es-MX', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric'
-                      });
-                    };
-
-                    return `${formatDate(monday)} al ${formatDate(sunday)}`;
-                  })()}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              {/* Estadísticas rápidas */}
-              <div className="flex items-center gap-4 bg-gray-50 rounded-lg p-3 border border-gray-200">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-[#4d4725]" />
-                  <span className="text-sm font-medium text-gray-700 font-poppins">
-                    {state.pagination.totalItems} informes
-                  </span>
+          <div className="relative z-10">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-xl shadow-lg shadow-[#4d4725]/20 transition-transform duration-300 hover:scale-110 hover:rotate-3">
+                  <FileText className="h-7 w-7 text-white" />
                 </div>
-                <div className="w-px h-4 bg-gray-300" />
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-[#4d4725]" />
-                  <span className="text-sm font-medium text-gray-700 font-poppins">
-                    Página {state.filters.page} de {state.pagination.totalPages}
-                  </span>
+                <div>
+                  <h1 className="text-3xl font-bold text-[#4d4725] font-poppins tracking-tight">
+                    Listado de Referencias
+                  </h1>
+                  <p className="text-gray-600 font-poppins mt-1">
+                    {state.userCanViewAll
+                      ? 'Vista global de todos los informes policiales por semana'
+                      : 'Vista de mis informes policiales hechos por semana'
+                    }
+                  </p>
+                  <p className="text-sm text-gray-500 font-poppins mt-1 flex items-center gap-2">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#4d4725]/10 text-[#4d4725] font-medium">
+                      IPH's de la semana
+                    </span>
+                    {(() => {
+                      const now = new Date();
+                      const currentDay = now.getDay();
+                      const daysToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+                      const monday = new Date(now);
+                      monday.setDate(now.getDate() + daysToMonday);
+                      const sunday = new Date(monday);
+                      sunday.setDate(monday.getDate() + 6);
+                      const formatDate = (date: Date) => {
+                        return date.toLocaleDateString('es-MX', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        });
+                      };
+                      return `${formatDate(monday)} al ${formatDate(sunday)}`;
+                    })()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Estadísticas rápidas mejoradas */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-lg px-4 py-3 border border-[#c2b186]/20 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-[#948b54]/10 rounded-md">
+                      <FileText className="h-4 w-4 text-[#4d4725]" />
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-[#4d4725] font-poppins leading-none">
+                        {state.pagination.totalItems}
+                      </div>
+                      <div className="text-xs text-gray-600 font-poppins">
+                        Informes
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-px h-8 bg-[#c2b186]/30" />
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-[#948b54]/10 rounded-md">
+                      <Users className="h-4 w-4 text-[#4d4725]" />
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-[#4d4725] font-poppins leading-none">
+                        {state.filters.page}
+                      </div>
+                      <div className="text-xs text-gray-600 font-poppins">
+                        de {state.pagination.totalPages}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Indicador de auto-refresh */}
+        {/* Indicador de auto-refresh - MEJORADO */}
         {showAutoRefreshIndicator && (
-          <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+          <div className="bg-white rounded-xl border border-[#c2b186]/30 p-5 mb-6 shadow-md">
             <AutoRefreshIndicator
               isActive={state.autoRefreshEnabled}
               nextRefreshIn={timeUntilNextRefresh}
@@ -316,15 +340,20 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
           </div>
         )}
 
-        {/* Filtros y Búsqueda */}
-        <div className="bg-white rounded-xl border border-gray-200 mb-6">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Filter className="h-5 w-5 text-[#4d4725]" />
-                <h2 className="text-xl font-semibold text-[#4d4725] font-poppins">
+        {/* Filtros y Búsqueda - MEJORADOS */}
+        <div className="bg-white rounded-xl border border-[#c2b186]/30 mb-6 shadow-md overflow-hidden">
+          <div className="p-6 bg-gradient-to-r from-[#fdf7f1] to-white border-b border-[#c2b186]/20">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-lg shadow-sm">
+                <Filter className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-[#4d4725] font-poppins">
                   Filtros de Búsqueda
                 </h2>
+                <p className="text-sm text-gray-600 font-poppins">
+                  Refina tu búsqueda de informes
+                </p>
               </div>
             </div>
             <div className="space-y-4">
@@ -348,8 +377,8 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
           </div>
         </div>
 
-        {/* Lista de Informes */}
-        <div className="bg-white rounded-xl border border-gray-200 mb-6">
+        {/* Lista de Informes - MEJORADA */}
+        <div className="bg-white rounded-xl border border-[#c2b186]/30 mb-6 shadow-md overflow-hidden">
           <div className="p-6">
             {/* Indicador de actualización */}
             {state.isRefreshing && (
@@ -407,9 +436,9 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
 
         
 
-        {/* Paginación */}
+        {/* Paginación - MEJORADA */}
         {state.pagination.totalPages > 1 && (
-          <div className="bg-white rounded-xl border border-gray-200 mb-6 p-4">
+          <div className="bg-white rounded-xl border border-[#c2b186]/30 mb-6 p-5 shadow-md">
             <IPHPagination
               pagination={{
                 ...state.pagination,
@@ -421,47 +450,56 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
           </div>
         )}
 
-{/* Estadísticas */}
-        <div className="bg-white rounded-xl border border-gray-200 mb-6">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center gap-2">
-              <SquareChartGantt className="h-5 w-5 text-[#4d4725]" />
-              <h2 className="text-xl font-semibold text-[#4d4725] font-poppins">
-                Datos de Registro
-              </h2>
+        {/* Estadísticas - MEJORADAS */}
+        <div className="bg-white rounded-xl border border-[#c2b186]/30 mb-6 shadow-md overflow-hidden">
+          <div className="p-6 bg-gradient-to-r from-[#fdf7f1] to-white border-b border-[#c2b186]/20">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-lg shadow-sm">
+                <SquareChartGantt className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-[#4d4725] font-poppins">
+                  Datos de Registro
+                </h2>
+                <p className="text-sm text-gray-600 font-poppins">
+                  Estadísticas generales del sistema
+                </p>
+              </div>
             </div>
-            <p className="text-sm text-gray-600 font-poppins mt-1">
-              Estadísticas generales del sistema
-            </p>
           </div>
           <div className="p-6">
             <EstadisticasCards />
           </div>
         </div>
 
-        {/* Información de la sesión */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm text-gray-600 font-poppins">
-            <div className="flex items-center gap-4">
+        {/* Información de la sesión - MEJORADA */}
+        <div className="bg-gradient-to-r from-white to-[#fdf7f1] rounded-xl border border-[#c2b186]/30 p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm font-poppins">
               {state.lastUpdated && (
-                <span>
-                  Última actualización: {state.lastUpdated.toLocaleTimeString('es-MX')}
-                </span>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 rounded-lg border border-[#c2b186]/20">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                  <span className="text-gray-700">
+                    Última actualización: <span className="font-semibold text-[#4d4725]">{state.lastUpdated.toLocaleTimeString('es-MX')}</span>
+                  </span>
+                </div>
               )}
-              <span className="hidden sm:inline">•</span>
-              <span>
-                Modo: {state.userCanViewAll ? 'Vista global' : 'Vista personal'}
-              </span>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 rounded-lg border border-[#c2b186]/20">
+                <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                <span className="text-gray-700">
+                  Modo: <span className="font-semibold text-[#4d4725]">{state.userCanViewAll ? 'Vista global' : 'Vista personal'}</span>
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 rounded-lg border border-[#c2b186]/20">
               <div
                 className={`w-2 h-2 rounded-full ${
                   state.autoRefreshEnabled ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
                 }`}
               />
-              <span>
-                Auto-refresh {state.autoRefreshEnabled ? 'activo' : 'pausado'}
+              <span className="text-sm font-poppins text-gray-700">
+                Auto-refresh <span className="font-semibold text-[#4d4725]">{state.autoRefreshEnabled ? 'activo' : 'pausado'}</span>
               </span>
             </div>
           </div>

@@ -97,16 +97,16 @@ const SidebarItem = React.memo<SidebarItemProps>(({ item, isActive, isCollapsed,
   }, []);
 
   // Pre-calcular clases con estado collapsed optimizado - Transición más suave
-  const baseClasses = 'flex items-center rounded min-h-[44px]';
-  const transitionClasses = 'transition-all duration-400 ease-in-out';
-  const activeClasses = 'bg-[#7a7246] text-white shadow-sm';
-  const inactiveClasses = 'hover:bg-[#7a7246] hover:text-white cursor-pointer';
+  const baseClasses = 'group flex items-center rounded-lg min-h-[48px] relative overflow-hidden';
+  const transitionClasses = 'transition-all duration-300 ease-out';
+  const activeClasses = 'bg-[#6b6339] text-white shadow-md border-l-4 border-[#4d4725]';
+  const inactiveClasses = 'hover:bg-[#7a7246]/70 hover:text-white hover:shadow-sm cursor-pointer text-white/90';
   const disabledClasses = 'opacity-50 cursor-not-allowed';
 
-  // Clases dinámicas para collapsed/expanded - Padding mínimo para background
+  // Clases dinámicas para collapsed/expanded - Padding mejorado
   const spacingClasses = isCollapsed
-    ? 'px-2 py-3 justify-center gap-0'  // Collapsed: centrado, sin gap, px mínimo
-    : 'px-2 py-3 gap-3';                // Expanded: gap normal, px mínimo
+    ? 'px-2 py-3 justify-center gap-0 border-l-0'  // Collapsed: centrado, sin borde izquierdo
+    : 'px-3 py-3.5 gap-3';                          // Expanded: gap normal, padding mejorado
 
   // Optimizar className con concatenación directa
   const className = `${baseClasses} ${transitionClasses} ${spacingClasses} ${
@@ -126,10 +126,18 @@ const SidebarItem = React.memo<SidebarItemProps>(({ item, isActive, isCollapsed,
       aria-label={`Navegar a ${item.label}`}
       title={title}
     >
-      <span className="flex-shrink-0 transition-transform duration-400 ease-in-out">
+      {/* Efecto de brillo sutil en hover */}
+      {!isActive && (
+        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      )}
+
+      {/* Icono con animación mejorada */}
+      <span className="flex-shrink-0 transition-all duration-300 ease-out group-hover:scale-110 relative z-10">
         {item.icon}
       </span>
-      <span className={`text-sm font-medium truncate transition-all duration-400 ease-in-out ${
+
+      {/* Texto con mejor tipografía */}
+      <span className={`text-sm font-semibold tracking-wide truncate transition-all duration-300 ease-in-out relative z-10 ${
         isCollapsed ? 'opacity-0 w-0 overflow-hidden ml-0' : 'opacity-100 w-auto ml-0'
       }`}>
         {item.label}
@@ -286,25 +294,33 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
       >
         {/* Header */}
         <div>
-          {/* Logo con controles - OPTIMIZADO */}
+          {/* Logo con controles - MEJORADO VISUALMENTE */}
           <div className="relative">
-            <div className={`transition-all duration-300 ease-in-out flex items-center ${
-              shouldCollapse
-                ? 'py-4 px-2 justify-center'
-                : 'py-5 px-4 justify-start'
-            }${isMobile ? ' pr-12' : ''}`}>
+            {/* Contenedor del logo con mejor espaciado */}
+            <div className={`
+              transition-all duration-400 ease-in-out flex items-center
+              bg-gradient-to-b from-white/5 to-transparent
+              ${shouldCollapse
+                ? 'py-5 px-2 justify-center'
+                : 'py-6 px-4 justify-center'
+              }
+              ${isMobile ? 'pr-12' : ''}
+            `}>
               {SIDEBAR_CONFIG.logo ? (
-                <div className={`relative w-full flex items-center justify-center transition-all duration-400 ease-in-out ${
-                  shouldCollapse ? 'h-10' : 'h-14'
-                }`}>
+                <div className={`
+                  relative w-full flex items-center justify-center
+                  transition-all duration-400 ease-in-out
+                  ${shouldCollapse ? 'h-12' : 'h-16'}
+                `}>
                   {/* Logo completo - fade out cuando se colapsa */}
                   <img
                     src={SIDEBAR_CONFIG.logo}
                     alt="IPH Logo Completo"
                     className={`
                       absolute inset-0 m-auto
-                      h-14 w-auto max-w-full object-contain
+                      h-16 w-auto max-w-full object-contain
                       transition-all duration-400 ease-in-out
+                      drop-shadow-lg
                       ${shouldCollapse
                         ? 'opacity-0 scale-75 pointer-events-none'
                         : 'opacity-100 scale-100'
@@ -312,6 +328,7 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
                     `}
                     style={{
                       transformOrigin: 'center center',
+                      filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))'
                     }}
                     loading="lazy"
                     decoding="async"
@@ -323,8 +340,9 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
                       src={SIDEBAR_CONFIG.isotipo}
                       alt="IPH Isotipo"
                       className={`
-                        h-10 w-10 object-contain mx-auto
+                        h-12 w-12 object-contain mx-auto
                         transition-all duration-400 ease-in-out
+                        drop-shadow-lg
                         ${shouldCollapse
                           ? 'opacity-100 scale-100'
                           : 'opacity-0 scale-75 pointer-events-none'
@@ -332,6 +350,7 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
                       `}
                       style={{
                         transformOrigin: 'center center',
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))'
                       }}
                       loading="lazy"
                       decoding="async"
@@ -339,22 +358,30 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
                   )}
                 </div>
               ) : (
-                <h1 className={`text-white font-bold transition-all duration-300 ${
-                  shouldCollapse ? 'text-sm' : 'text-xl'
-                }`}>
+                <h1 className={`
+                  text-white font-bold transition-all duration-300 tracking-wide
+                  ${shouldCollapse ? 'text-base' : 'text-2xl'}
+                `}>
                   {shouldCollapse ? 'IPH' : SIDEBAR_CONFIG.title}
                 </h1>
               )}
             </div>
 
+            {/* Separador decorativo debajo del logo */}
+            <div className={`
+              h-px bg-gradient-to-r from-transparent via-white/20 to-transparent
+              transition-all duration-300
+              ${shouldCollapse ? 'mx-2' : 'mx-4'}
+            `} />
+
             {/* Botón cerrar solo en móvil */}
             {isMobile && (
               <button
                 onClick={handleClose}
-                className="absolute right-2 top-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200"
+                className="absolute right-3 top-3 p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200 cursor-pointer"
                 aria-label="Cerrar menú"
               >
-                <X size={18} className="text-white" />
+                <X size={20} className="text-white" />
               </button>
             )}
           </div>
@@ -381,20 +408,40 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
           </nav>
         </div>
 
-        {/* Footer con logout - OPTIMIZADO */}
+        {/* Footer con logout - MEJORADO VISUALMENTE */}
         <div className={`pb-6 transition-all duration-300 ease-in-out ${shouldCollapse ? 'px-2' : 'px-4'}`}>
+          {/* Separador visual decorativo */}
+          <div className={`mb-4 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent transition-all duration-300`} />
+
           <button
             onClick={logout}
-            className={`w-full flex items-center gap-3 px-2 py-3 rounded hover:bg-[#7a7246] transition-all duration-300 ease-in-out min-h-[44px]${
-              shouldCollapse ? ' justify-center' : ''
-            }`}
+            className={`
+              group relative w-full flex items-center gap-3
+              px-3 py-3.5 rounded-lg
+              bg-[#7a7246]/80 hover:bg-[#6b6339]
+              border-l-4 border-[#4d4725]
+              shadow-md hover:shadow-lg
+              transition-all duration-300 ease-out
+              hover:scale-[1.02] active:scale-[0.98]
+              cursor-pointer
+              min-h-[50px]
+              ${shouldCollapse ? 'justify-center px-2 border-l-0' : ''}
+            `}
             title={shouldCollapse ? 'Desconectar' : undefined}
             aria-label="Cerrar sesión"
           >
-            <LogOut size={20} className="flex-shrink-0" />
-            <span className={`text-sm font-medium transition-all duration-300 ease-in-out ${
-              shouldCollapse ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'
-            }`}>
+            {/* Icono con animación mejorada */}
+            <LogOut
+              size={21}
+              className="flex-shrink-0 text-white transition-all duration-300 group-hover:rotate-12 group-hover:scale-110"
+            />
+
+            {/* Texto con mejor tipografía */}
+            <span className={`
+              text-sm font-semibold text-white tracking-wide
+              transition-all duration-300 ease-in-out
+              ${shouldCollapse ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}
+            `}>
               Desconectar
             </span>
           </button>

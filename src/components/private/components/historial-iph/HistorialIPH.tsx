@@ -170,54 +170,71 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
           <Breadcrumbs items={breadcrumbItems} />
         </div>
 
-        {/* Header principal */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-[#948b54] rounded-lg">
-                <FileText className="h-6 w-6 text-white" />
+        {/* Header principal - MEJORADO VISUALMENTE */}
+        <div className="relative bg-gradient-to-br from-white via-[#fdf7f1] to-white rounded-2xl border border-[#c2b186]/30 p-6 mb-6 shadow-lg shadow-[#4d4725]/5 overflow-hidden">
+          {/* Patrón de fondo decorativo */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#948b54]/5 rounded-full blur-3xl -z-0" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#c2b186]/5 rounded-full blur-3xl -z-0" />
+
+          <div className="relative z-10">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-xl shadow-lg shadow-[#4d4725]/20 transition-transform duration-300 hover:scale-110 hover:rotate-3">
+                  <FileText className="h-7 w-7 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-[#4d4725] font-poppins tracking-tight">
+                    Historial de IPH
+                  </h1>
+                  <p className="text-gray-600 font-poppins mt-1">
+                    Gestión y seguimiento de Informes Policiales Homologados
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-[#4d4725] font-poppins">
-                  Historial de IPH
-                </h1>
-                <p className="text-gray-600 font-poppins">
-                  Gestión y seguimiento de Informes Policiales Homologados
-                </p>
-              </div>
+
+              {/* Botón de actualización mejorado */}
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="
+                  flex items-center gap-2 px-5 py-2.5 text-sm font-semibold
+                  text-white bg-gradient-to-r from-[#4d4725] to-[#3a3519] rounded-lg
+                  hover:from-[#3a3519] hover:to-[#2d2812] hover:scale-[1.02] active:scale-[0.98]
+                  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+                  transition-all duration-200 font-poppins shadow-md hover:shadow-lg
+                  cursor-pointer
+                "
+                aria-label="Actualizar datos del historial"
+              >
+                <RefreshCw
+                  size={18}
+                  className={loading ? 'animate-spin' : ''}
+                  aria-hidden="true"
+                />
+                <span className="hidden sm:inline">
+                  {loading ? 'Actualizando...' : 'Actualizar'}
+                </span>
+              </button>
             </div>
-            {/* Botón de actualización */}
-            <button
-              onClick={handleRefresh}
-              disabled={loading}
-              className="
-                flex items-center gap-2 px-4 py-2 text-sm font-medium
-                text-white bg-[#4d4725] rounded-lg
-                hover:bg-[#3a3519] disabled:opacity-50 disabled:cursor-not-allowed
-                transition-colors duration-200 font-poppins
-              "
-              aria-label="Actualizar datos del historial"
-            >
-              <RefreshCw
-                size={16}
-                className={loading ? 'animate-spin' : ''}
-                aria-hidden="true"
-              />
-              <span className="hidden sm:inline">
-                {loading ? 'Actualizando...' : 'Actualizar'}
-              </span>
-            </button>
           </div>
         </div>
 
-        {/* Búsqueda y Lista */}
-        <div className="bg-white rounded-xl border border-gray-200">
-          {/* Header de filtros */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-[#4d4725] font-poppins">
-                Filtros de Búsqueda
-              </h2>
+        {/* Búsqueda y Lista - MEJORADA */}
+        <div className="bg-white rounded-xl border border-[#c2b186]/30 shadow-md overflow-hidden">
+          {/* Header de filtros mejorado */}
+          <div className="p-6 bg-gradient-to-r from-[#fdf7f1] to-white border-b border-[#c2b186]/20">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-lg shadow-sm">
+                <FileText className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-[#4d4725] font-poppins">
+                  Filtros de Búsqueda
+                </h2>
+                <p className="text-sm text-gray-600 font-poppins">
+                  Refina tu búsqueda de informes policiales
+                </p>
+              </div>
             </div>
             <FiltrosHistorial
               filtros={filtros}
