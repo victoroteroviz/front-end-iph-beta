@@ -469,7 +469,7 @@ const useUsuarios = (): IUseUsuariosReturn => {
    */
   useEffect(() => {
     // Solo recargar si ya pasó la verificación inicial
-    if (state.canViewAllUsers || state.canViewTeamUsers) {
+    if (state.canViewAllUsers) {
       loadUsuarios();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

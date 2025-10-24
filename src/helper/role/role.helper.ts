@@ -9,52 +9,104 @@
  * - Obtención de datos de roles desde sessionStorage O props externos
  * - Configuración dinámica desde variables de entorno
  *
- * @version 2.0.0
+ * @version 2.1.0
  * @features
  * - ✅ Validación de roles externos (props)
  * - ✅ Validación de roles desde sessionStorage
  * - ✅ API simple para componentes y servicios
  * - ✅ Compatibilidad con código existente
+ * - ✅ Validación Zod en runtime para seguridad
+ * - ✅ Sistema de caching para performance
+ * - ✅ Optimizaciones O(1) con Map
+ * - ✅ Protección contra datos corruptos
+ *
+ * @security
+ * - Validación estricta con Zod para prevenir inyección
+ * - Cache con TTL para reducir lecturas costosas
+ * - Sanitización automática de datos corruptos
+ * - Logs seguros sin exponer datos sensibles
  */
 
+import { z } from 'zod';
 import { logInfo, logError, logWarning } from '../log/logger.helper';
 import {
-  hasRole as configHasRole,
   hasHierarchicalAccess as configHasHierarchicalAccess,
   getRoleLevel,
-  getValidRoles,
-  getSystemRoleTypes,
-  getSystemRoleDefinition,
-  isSuperAdmin as configIsSuperAdmin,
-  isAdmin as configIsAdmin,
-  isSuperior as configIsSuperior,
-  isElemento as configIsElemento,
-  canAccessSuperAdmin as configCanAccessSuperAdmin,
-  canAccessAdmin as configCanAccessAdmin,
-  canAccessSuperior as configCanAccessSuperior,
-  canAccessElemento as configCanAccessElemento
+  getSystemRoleTypes
 } from '../../config/permissions.config';
 import { ALLOWED_ROLES } from '../../config/env.config';
 import type { IRole } from '../../interfaces/role/role.interface';
-import type { SystemRoleType, RoleConfig } from '../../config/permissions.config';
+import type { SystemRoleType } from '../../config/permissions.config';
+
+// ==================== SCHEMAS ZOD PARA VALIDACIÓN ====================
 
 /**
- * Interface para el contexto de usuario con roles
+ * Schema de validación Zod para roles
+ * Protege contra inyección y datos corruptos en sessionStorage
+ * 
+ * @security Valida estructura, tipos y valores permitidos
  */
-export interface UserRoleContext {
+const RoleSchema = z.object({
+  id: z.number()
+    .int('ID de rol debe ser entero')
+    .positive('ID de rol debe ser positivo')
+    .max(999, 'ID de rol fuera de rango permitido'),
+  nombre: z.string()
+    .min(1, 'Nombre de rol no puede estar vacío')
+    .max(50, 'Nombre de rol demasiado largo')
+    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+$/, 'Nombre de rol contiene caracteres inválidos')
+    .refine(
+      (val) => ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'].includes(val),
+      { message: 'Rol no válido según configuración del sistema' }
+    )
+});
+
+/**
+ * Schema para array de roles con límite máximo
+ */
+const RolesArraySchema = z.array(RoleSchema)
+  .max(10, 'Demasiados roles asignados')
+  .nonempty('Array de roles no puede estar vacío');
+
+/**
+ * Schema para datos de usuario desde sessionStorage
+ */
+const UserDataSchema = z.object({
+  id: z.string()
+    .min(1, 'ID de usuario requerido')
+    .max(100, 'ID de usuario demasiado largo'),
+  // Otros campos opcionales pueden agregarse aquí
+}).passthrough(); // Permite otros campos sin validarlos estrictamente
+
+// ==================== TYPES (según estándares, no interfaces) ====================
+
+/**
+ * Type para el contexto de usuario con roles
+ * 
+ * @type
+ * @property {string} [userId] - ID del usuario (opcional)
+ * @property {IRole[]} roles - Array de roles del usuario
+ */
+export type UserRoleContext = {
   userId?: string;
   roles: IRole[];
-}
+};
 
 /**
- * Interface para resultado de validación
+ * Type para resultado de validación de roles
+ * 
+ * @type
+ * @property {boolean} isValid - Si los roles son válidos
+ * @property {string} message - Mensaje descriptivo del resultado
+ * @property {string} [matchedRole] - Primer rol válido encontrado (opcional)
+ * @property {string[]} [userRoles] - Lista de nombres de roles (opcional)
  */
-export interface RoleValidationResult {
+export type RoleValidationResult = {
   isValid: boolean;
   message: string;
   matchedRole?: string;
   userRoles?: string[];
-}
+};
 
 /**
  * Obtiene nombres de roles dinámicamente desde la configuración
@@ -82,6 +134,13 @@ export type RoleName = string;
 /**
  * Clase principal del Role Helper
  * Implementa patrón Singleton para consistencia global
+ * 
+ * @version 2.1.0
+ * @features
+ * - Cache con TTL para optimizar lecturas de sessionStorage
+ * - Validación Zod en runtime para seguridad
+ * - Optimizaciones O(1) con Map
+ * - Sanitización automática de datos corruptos
  */
 class RoleHelper {
   private static instance: RoleHelper;
@@ -90,10 +149,33 @@ class RoleHelper {
     USER_DATA: 'user_data'
   } as const;
 
-  private constructor() {}
+  // ==================== SISTEMA DE CACHING ====================
+  
+  /**
+   * Cache de roles con timestamp para TTL
+   * @private
+   */
+  private rolesCache: IRole[] | null = null;
+  private cacheTimestamp: number = 0;
+  private readonly CACHE_TTL = 5000; // 5 segundos
+
+  /**
+   * Map de roles permitidos para lookup O(1)
+   * Se inicializa lazy (solo cuando se necesita)
+   * @private
+   */
+  private allowedRolesMap: Map<string, IRole> | null = null;
+
+  private constructor() {
+    logInfo('RoleHelper', 'Instancia de RoleHelper creada con sistema de caching');
+  }
 
   /**
    * Obtiene la instancia única del Role Helper (Singleton)
+   * 
+   * @returns {RoleHelper} Instancia única del helper de roles
+   * @example
+   * const helper = RoleHelper.getInstance();
    */
   public static getInstance(): RoleHelper {
     if (!RoleHelper.instance) {
@@ -102,45 +184,198 @@ class RoleHelper {
     return RoleHelper.instance;
   }
 
+  // ==================== MÉTODOS DE CACHING ====================
+
   /**
-   * Obtiene los roles del usuario desde sessionStorage
+   * Invalida el cache de roles
+   * Debe llamarse después de login/logout o cambios de sesión
    * 
-   * @returns Array de roles o array vacío si no hay datos
+   * @public
+   * @example
+   * // Después de login/logout
+   * roleHelper.invalidateCache();
+   */
+  public invalidateCache(): void {
+    this.rolesCache = null;
+    this.cacheTimestamp = 0;
+    logInfo('RoleHelper', 'Cache de roles invalidado manualmente');
+  }
+
+  /**
+   * Verifica si el cache es válido basado en TTL
+   * 
+   * @private
+   * @returns {boolean} true si el cache es válido
+   */
+  private isCacheValid(): boolean {
+    if (!this.rolesCache) return false;
+    const now = Date.now();
+    return (now - this.cacheTimestamp) < this.CACHE_TTL;
+  }
+
+  /**
+   * Obtiene Map de roles permitidos para lookup O(1)
+   * Implementa lazy initialization
+   * 
+   * @private
+   * @returns {Map<string, IRole>} Map de roles permitidos
+   */
+  private getAllowedRolesMap(): Map<string, IRole> {
+    if (!this.allowedRolesMap) {
+      const allowed = ALLOWED_ROLES as IRole[];
+      
+      if (!Array.isArray(allowed) || allowed.length === 0) {
+        logWarning('RoleHelper', 'ALLOWED_ROLES vacío al crear Map');
+        this.allowedRolesMap = new Map();
+        return this.allowedRolesMap;
+      }
+
+      this.allowedRolesMap = new Map(
+        allowed.map(role => [`${role.id}-${role.nombre}`, role])
+      );
+      
+      logInfo('RoleHelper', 'Map de roles permitidos creado', {
+        size: this.allowedRolesMap.size
+      });
+    }
+    
+    return this.allowedRolesMap;
+  }
+
+  // ==================== MÉTODOS PRINCIPALES CON VALIDACIÓN ZOD ====================
+
+  /**
+   * Obtiene y valida roles desde sessionStorage con Zod
+   * Implementa caching para reducir lecturas costosas
+   * 
+   * @returns {IRole[]} Array de roles validados o array vacío
+   * @security Valida estructura con Zod y sanitiza datos corruptos
+   * @performance Usa cache con TTL de 5 segundos
+   * 
+   * @example
+   * const roles = roleHelper.getUserRoles();
+   * // Primera llamada: lee sessionStorage y valida
+   * // Siguientes llamadas (< 5s): retorna desde cache
    */
   public getUserRoles(): IRole[] {
+    // Retornar cache si es válido
+    if (this.isCacheValid()) {
+      return this.rolesCache!;
+    }
+
+    // Cache expirado o inválido, refrescar
     try {
       const rolesData = sessionStorage.getItem(this.STORAGE_KEYS.ROLES);
-      if (!rolesData) return [];
+      
+      if (!rolesData) {
+        this.rolesCache = [];
+        this.cacheTimestamp = Date.now();
+        return [];
+      }
 
-      const roles: IRole[] = JSON.parse(rolesData);
-      return Array.isArray(roles) ? roles : [];
+      const parsed = JSON.parse(rolesData);
+
+      // Validación con Zod
+      const validationResult = RolesArraySchema.safeParse(parsed);
+
+      if (!validationResult.success) {
+        logError(
+          'RoleHelper',
+          validationResult.error,
+          'Datos de roles inválidos según schema Zod - sessionStorage corrupto'
+        );
+
+        // Sanitizar sessionStorage corrupto
+        logWarning('RoleHelper', 'Limpiando sessionStorage corrupto');
+        sessionStorage.removeItem(this.STORAGE_KEYS.ROLES);
+        
+        this.rolesCache = [];
+        this.cacheTimestamp = Date.now();
+        return [];
+      }
+
+      // Datos válidos, actualizar cache
+      const validatedRoles = validationResult.data;
+      this.rolesCache = validatedRoles;
+      this.cacheTimestamp = Date.now();
+
+      logInfo('RoleHelper', 'Roles validados y cacheados correctamente', {
+        count: validatedRoles.length
+      });
+
+      return validatedRoles;
 
     } catch (error) {
-      logError('RoleHelper', error, 'Error obteniendo roles del usuario');
+      logError('RoleHelper', error, 'Error crítico obteniendo roles del usuario');
+      
+      // Limpiar cache y sessionStorage en caso de error
+      this.rolesCache = [];
+      this.cacheTimestamp = Date.now();
+      
+      try {
+        sessionStorage.removeItem(this.STORAGE_KEYS.ROLES);
+      } catch {
+        // Silenciar error de limpieza
+      }
+      
       return [];
     }
   }
 
   /**
    * Obtiene el contexto completo del usuario con roles
+   * Valida estructura de user_data con Zod
    * 
-   * @returns Contexto del usuario o null si no hay datos
+   * @returns {UserRoleContext | null} Contexto del usuario o null si no hay datos válidos
+   * @security Valida estructura con Zod antes de retornar
+   * 
+   * @example
+   * const context = roleHelper.getUserRoleContext();
+   * if (context) {
+   *   console.log(`Usuario ${context.userId} con ${context.roles.length} roles`);
+   * }
    */
   public getUserRoleContext(): UserRoleContext | null {
     try {
       const userData = sessionStorage.getItem(this.STORAGE_KEYS.USER_DATA);
-      const roles = this.getUserRoles();
+      const roles = this.getUserRoles(); // Ya usa cache y validación Zod
 
       if (!userData || roles.length === 0) return null;
 
-      const user = JSON.parse(userData);
+      const parsed = JSON.parse(userData);
+
+      // Validación con Zod
+      const validationResult = UserDataSchema.safeParse(parsed);
+
+      if (!validationResult.success) {
+        logError(
+          'RoleHelper',
+          validationResult.error,
+          'Datos de usuario inválidos según schema Zod'
+        );
+
+        // Sanitizar sessionStorage corrupto
+        sessionStorage.removeItem(this.STORAGE_KEYS.USER_DATA);
+        return null;
+      }
+
+      const validatedUser = validationResult.data;
+
       return {
-        userId: user.id,
+        userId: validatedUser.id,
         roles
       };
 
     } catch (error) {
       logError('RoleHelper', error, 'Error obteniendo contexto del usuario');
+      
+      // Intentar limpiar datos corruptos
+      try {
+        sessionStorage.removeItem(this.STORAGE_KEYS.USER_DATA);
+      } catch {
+        // Silenciar error de limpieza
+      }
+      
       return null;
     }
   }
@@ -228,23 +463,31 @@ class RoleHelper {
 
   /**
    * Verifica acceso jerárquico - si el usuario puede acceder a funcionalidades de un rol específico
+   * Usa la configuración centralizada de permissions.config
    * 
-   * @param requiredRoleName - Nombre del rol requerido
-   * @param userRoles - Roles del usuario (opcional)
-   * @returns true si tiene acceso jerárquico
+   * @param {string} requiredRoleName - Nombre del rol requerido
+   * @param {IRole[]} [userRoles] - Roles del usuario (opcional, se obtienen desde cache si no se proporcionan)
+   * @returns {boolean} true si tiene acceso jerárquico
+   * @performance Usa cache de getUserRoles() para evitar lecturas repetidas
+   * 
+   * @example
+   * // Verificar si puede acceder a funcionalidades de Superior
+   * if (roleHelper.hasHierarchicalAccess('Superior')) {
+   *   // Admin, SuperAdmin o Superior pueden acceder
+   * }
    */
   public hasHierarchicalAccess(requiredRoleName: string, userRoles?: IRole[]): boolean {
     try {
-      const roles = userRoles || this.getUserRoles();
+      const roles = userRoles || this.getUserRoles(); // Usa cache automáticamente
       
       // Verificar si tiene el rol exacto
       if (roles.some(role => role.nombre === requiredRoleName)) {
         return true;
       }
 
-      // Verificar acceso jerárquico para cada rol del usuario
+      // Verificar acceso jerárquico para cada rol del usuario usando permissions.config
       return roles.some(userRole =>
-        hasHierarchicalAccess([userRole], requiredRoleName as SystemRoleType)
+        configHasHierarchicalAccess([userRole], requiredRoleName as SystemRoleType)
       );
 
     } catch (error) {
@@ -335,9 +578,13 @@ class RoleHelper {
 
   /**
    * Valida que los roles proporcionados sean válidos según ALLOWED_ROLES (.env)
+   * OPTIMIZADO: Usa Map para lookup O(1) en lugar de O(n*m)
    *
-   * @param roles - Roles a validar (pueden venir de props externos)
-   * @returns Array de roles válidos o array vacío si ninguno es válido
+   * @param {IRole[]} roles - Roles a validar (pueden venir de props externos)
+   * @returns {IRole[]} Array de roles válidos o array vacío si ninguno es válido
+   * @performance Optimizado de O(n*m) a O(n) usando Map
+   * @security Valida contra ALLOWED_ROLES como fuente de verdad
+   * 
    * @example
    * const validRoles = roleHelper.validateExternalRoles(propsRoles);
    * if (validRoles.length > 0) {
@@ -351,28 +598,32 @@ class RoleHelper {
         return [];
       }
 
-      // Comparar contra ALLOWED_ROLES desde .env (fuente de verdad)
-      const systemRoles = ALLOWED_ROLES as IRole[];
+      // Obtener Map de roles permitidos (lazy initialization)
+      const allowedMap = this.getAllowedRolesMap();
 
-      if (!Array.isArray(systemRoles) || systemRoles.length === 0) {
-        logError('RoleHelper', new Error('ALLOWED_ROLES no configurado'), 'ALLOWED_ROLES vacío o inválido');
+      if (allowedMap.size === 0) {
+        logError(
+          'RoleHelper',
+          new Error('ALLOWED_ROLES vacío'),
+          'No hay roles permitidos configurados en el sistema'
+        );
         return [];
       }
 
-      const validRoles = roles.filter(externalRole =>
-        systemRoles.some((systemRole: IRole) =>
-          systemRole.id === externalRole.id &&
-          systemRole.nombre === externalRole.nombre
-        )
-      );
+      // Validación O(n) usando Map lookup O(1)
+      const validRoles = roles.filter(externalRole => {
+        const key = `${externalRole.id}-${externalRole.nombre}`;
+        return allowedMap.has(key);
+      });
 
       if (validRoles.length === 0) {
         logWarning('RoleHelper', 'Ningún rol externo es válido según ALLOWED_ROLES', {
-          rolesRecibidos: roles,
-          rolesPermitidos: systemRoles
+          rolesRecibidosCount: roles.length,
+          rolesPermitidosCount: allowedMap.size
         });
       } else {
-        logInfo('RoleHelper', `${validRoles.length} rol(es) externo(s) validado(s)`, { validRoles });
+        // Log seguro: solo metadata, no datos sensibles
+        logInfo('RoleHelper', `${validRoles.length} rol(es) externo(s) validado(s) correctamente`);
       }
 
       return validRoles;
@@ -651,10 +902,31 @@ export const getPermissionsFor = {
   })
 };
 
+/**
+ * Invalida el cache de roles
+ * Debe llamarse después de login/logout o cambios de sesión
+ * 
+ * @public
+ * @example
+ * // Después de login
+ * invalidateRoleCache();
+ * 
+ * // Después de logout
+ * sessionStorage.clear();
+ * invalidateRoleCache();
+ */
+export const invalidateRoleCache = (): void => roleHelper.invalidateCache();
+
 // Logging de inicialización
-logInfo('RoleHelper', 'Role Helper inicializado correctamente', {
+logInfo('RoleHelper', 'Role Helper v2.1.0 inicializado correctamente', {
   availableRoles: getSystemRoleTypes(),
-  totalRoles: getSystemRoles().length
+  totalRoles: getSystemRoles().length,
+  features: [
+    'Validación Zod runtime',
+    'Cache con TTL 5s',
+    'Optimización Map O(1)',
+    'Protección datos corruptos'
+  ]
 });
 
 // Exportaciones principales

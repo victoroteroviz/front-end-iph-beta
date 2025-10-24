@@ -201,7 +201,8 @@ const getIPHList = async (
         userId: targetUserId 
       });
       
-      serverResponse = await getIphByUser(parseInt(targetUserId), serviceParams);
+      // NOTA: targetUserId es un UUID string, NO usar parseInt()
+      serverResponse = await getIphByUser(targetUserId, serviceParams);
     }
 
     const transformedData = transformServerResponseToComponent(serverResponse);

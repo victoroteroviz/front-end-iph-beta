@@ -3,10 +3,15 @@
  * Lista de informes policiales con filtros, paginación y auto-refresh
  * Migrado completamente a TypeScript con arquitectura moderna
  * Auto-refresh cada 5 minutos con control manual
+ * 
+ * @security Control de acceso por roles
+ * - Solo SuperAdmin, Administrador y Superior tienen acceso
+ * - Validación con Role Helper v2.1.0 (Zod + Cache)
+ * - Elemento no tiene acceso a este módulo
  */
 
-import React, { useEffect } from 'react';
-import { AlertCircle, RefreshCw, FileText, Users, Loader2, SquareChartGantt, Filter } from 'lucide-react';
+import React, { useEffect, useMemo } from 'react';
+import { AlertCircle, RefreshCw, FileText, Users, Loader2, SquareChartGantt, Filter, Shield } from 'lucide-react';
 
 // Hook personalizado
 import useInformePolicial from './hooks/useInformePolicial';
@@ -18,11 +23,15 @@ import IPHCardsGrid from './components/IPHCardsGrid';
 import IPHPagination from './components/IPHPagination';
 import AutoRefreshIndicator from './components/AutoRefreshIndicator';
 import EstadisticasCards from './components/EstadisticasCards';
-import Accordion from './components/Accordion';
 import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 
 // Helpers
-import { logInfo } from '../../../../helper/log/logger.helper';
+import { logInfo, logWarning } from '../../../../helper/log/logger.helper';
+import { 
+  getUserRoles, 
+  validateCurrentUserRoles,
+  hasAnyRole 
+} from '../../../../helper/role/role.helper';
 
 // Interfaces
 import type { IInformePolicialProps } from '../../../../interfaces/components/informe-policial.interface';
@@ -33,6 +42,66 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
   autoRefreshInterval = INFORME_POLICIAL_CONFIG.AUTO_REFRESH_INTERVAL,
   showAutoRefreshIndicator = true
 }) => {
+  // ==================== VALIDACIÓN DE ROLES (Debe ejecutarse primero) ====================
+  
+  /**
+   * Valida permisos de acceso al componente
+   * Solo SuperAdmin, Administrador y Superior tienen acceso
+   * 
+   * @security Usa Role Helper v2.1.0 con:
+   * - Validación Zod automática
+   * - Cache de 5 segundos
+   * - Auto-sanitización de datos corruptos
+   */
+  const roleValidation = useMemo(() => {
+    // Obtener roles del usuario (usa cache automáticamente)
+    const userRoles = getUserRoles();
+    
+    // Validar estructura de roles
+    const validation = validateCurrentUserRoles();
+    
+    if (!validation.isValid) {
+      logWarning('InformePolicial', 'Acceso denegado - Roles inválidos');
+      return {
+        hasAccess: false,
+        reason: 'invalid_roles',
+        message: 'No se pudieron validar tus credenciales. Por favor, cierra sesión e inicia sesión nuevamente.'
+      };
+    }
+    
+    // Verificar si tiene alguno de los roles permitidos
+    const allowedRoles = ['SuperAdmin', 'Administrador', 'Superior'];
+    const hasPermission = hasAnyRole(allowedRoles, userRoles);
+    
+    if (!hasPermission) {
+      logWarning('InformePolicial', 'Acceso denegado - Sin permisos suficientes');
+      return {
+        hasAccess: false,
+        reason: 'insufficient_permissions',
+        message: 'No tienes permisos para acceder al módulo de Informe Policial. Este módulo requiere permisos de Supervisor o superiores.'
+      };
+    }
+    
+    // Acceso concedido
+    logInfo('InformePolicial', 'Acceso concedido al módulo de Informe Policial', {
+      matchedRole: validation.matchedRole,
+      rolesCount: userRoles.length
+    });
+    
+    return {
+      hasAccess: true,
+      reason: 'authorized',
+      message: 'Acceso autorizado',
+      userRole: validation.matchedRole
+    };
+  }, []); // Solo se ejecuta una vez (cache se mantiene por 5s en el helper)
+
+  // ==================== HOOKS (Se ejecutan DESPUÉS de validación) ====================
+  
+  /**
+   * Hook principal con parámetro 'enabled' basado en permisos
+   * Si no tiene acceso, el hook NO ejecutará API calls
+   */
   const {
     state,
     updateFilters,
@@ -46,16 +115,92 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
     hasData,
     isAnyLoading,
     visibleRecords
-  } = useInformePolicial(autoRefreshInterval);
+  } = useInformePolicial(autoRefreshInterval, roleValidation.hasAccess);
 
   // Log cuando el componente se monta
   useEffect(() => {
-    logInfo('InformePolicial', 'Component mounted', {
-      autoRefreshInterval: autoRefreshInterval / 1000 / 60, // en minutos
-      showAutoRefreshIndicator,
-      userCanViewAll: state.userCanViewAll
-    });
-  }, [autoRefreshInterval, showAutoRefreshIndicator, state.userCanViewAll]);
+    if (roleValidation.hasAccess) {
+      logInfo('InformePolicial', 'Component mounted', {
+        autoRefreshInterval: autoRefreshInterval / 1000 / 60, // en minutos
+        showAutoRefreshIndicator,
+        userCanViewAll: state.userCanViewAll,
+        userRole: roleValidation.userRole
+      });
+    }
+  }, [autoRefreshInterval, showAutoRefreshIndicator, state.userCanViewAll, roleValidation]);
+
+  // ==================== COMPONENTE DE ACCESO DENEGADO ====================
+  
+  /**
+   * Muestra mensaje de error cuando no tiene permisos
+   */
+  if (!roleValidation.hasAccess) {
+    return (
+      <div className="min-h-screen p-4 md:p-6 lg:p-8" data-component="informe-policial">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+            <div className="flex justify-center mb-6">
+              <div className="p-4 bg-red-100 rounded-full">
+                <Shield className="h-16 w-16 text-red-600" />
+              </div>
+            </div>
+            
+            <h2 className="text-2xl font-bold text-red-600 mb-4 font-poppins">
+              Acceso Denegado
+            </h2>
+            
+            <p className="text-gray-700 mb-6 font-poppins text-lg">
+              {roleValidation.message}
+            </p>
+            
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-red-800 font-poppins">
+                <strong>Permisos requeridos:</strong> SuperAdmin, Administrador o Superior
+              </p>
+              {roleValidation.reason === 'invalid_roles' && (
+                <p className="text-sm text-red-700 font-poppins mt-2">
+                  Tus credenciales no pudieron ser validadas. Esto puede deberse a datos corruptos en la sesión.
+                </p>
+              )}
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => window.history.back()}
+                className="
+                  px-6 py-3 bg-gray-600 text-white rounded-lg
+                  hover:bg-gray-700 transition-colors duration-200
+                  font-medium font-poppins
+                "
+              >
+                Volver Atrás
+              </button>
+              
+              <button
+                onClick={() => {
+                  sessionStorage.clear();
+                  window.location.href = '/login';
+                }}
+                className="
+                  px-6 py-3 bg-red-600 text-white rounded-lg
+                  hover:bg-red-700 transition-colors duration-200
+                  font-medium font-poppins
+                "
+              >
+                Cerrar Sesión
+              </button>
+            </div>
+            
+            <p className="text-sm text-gray-500 mt-6 font-poppins">
+              Si crees que esto es un error, contacta al administrador del sistema.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ==================== RENDERIZADO DEL COMPONENTE ====================
 
   // Breadcrumbs
   const breadcrumbItems: BreadcrumbItem[] = [

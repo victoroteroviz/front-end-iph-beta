@@ -375,7 +375,7 @@ export const getIphById = async (id: string): Promise<ResponseIphData> => {
   }
 }
 
-export const getIphByUser = async(userId: number, params: getIph): Promise<IPaginatedIPH>=>{
+export const getIphByUser = async(userId: string, params: getIph): Promise<IPaginatedIPH>=>{
   const url: string = `${urlFather}/getIphsByUser/${userId}?page=${params.page}&orderBy=${params.orderBy}&order=${params.order}&search=${encodeURIComponent(params.search)}&searchBy=${params.searchBy}`;
   try {
     const response = await http.get<IPaginatedIPH>(url);

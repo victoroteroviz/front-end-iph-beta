@@ -62,8 +62,18 @@ const createInitialState = (): IInformePolicialState => {
 // HOOK PRINCIPAL
 // =====================================================
 
+/**
+ * Hook para manejar la lógica del módulo de Informe Policial
+ * 
+ * @param autoRefreshInterval - Intervalo de auto-refresh en ms (default: 5min)
+ * @param enabled - Si false, no ejecuta API calls ni efectos (default: true)
+ * @returns Estado y funciones del módulo
+ * 
+ * @security El parámetro 'enabled' debe ser false cuando el usuario no tiene permisos
+ */
 const useInformePolicial = (
-  autoRefreshInterval: number = INFORME_POLICIAL_CONFIG.AUTO_REFRESH_INTERVAL
+  autoRefreshInterval: number = INFORME_POLICIAL_CONFIG.AUTO_REFRESH_INTERVAL,
+  enabled: boolean = true
 ): IUseInformePolicialReturn => {
   const navigate = useNavigate();
   const [state, setState] = useState<IInformePolicialState>(createInitialState);
@@ -369,16 +379,27 @@ const useInformePolicial = (
 
   // Efecto de inicialización
   useEffect(() => {
+    // Si el hook está deshabilitado, no ejecutar nada
+    if (!enabled) {
+      logInfo('InformePolicial', 'Hook disabled - skipping initialization');
+      return;
+    }
+
     const hasAccess = checkAccess();
     if (!hasAccess) return;
 
     // Cargar tipos y datos iniciales
     loadTiposIPH();
     loadIPHs();
-  }, [checkAccess, loadTiposIPH]); // Solo en mount
+  }, [enabled, checkAccess, loadTiposIPH, loadIPHs]); // Incluir 'enabled' en dependencias
 
   // Efecto de filtros - escucha TODOS los cambios de filtros
   useEffect(() => {
+    // Si el hook está deshabilitado, no ejecutar
+    if (!enabled) {
+      return;
+    }
+
     // Cancelar debounce anterior
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
@@ -394,11 +415,12 @@ const useInformePolicial = (
       // Sin búsqueda o filtros de ordenamiento/paginación - cargar inmediatamente
       loadIPHs();
     }
-  }, [state.filters.search, state.filters.searchBy, state.filters.orderBy, state.filters.order, state.filters.page, state.filters.tipoId, loadIPHs]);
+  }, [enabled, state.filters.search, state.filters.searchBy, state.filters.orderBy, state.filters.order, state.filters.page, state.filters.tipoId, loadIPHs]);
 
   // Efecto de auto-refresh
   useEffect(() => {
-    if (!state.autoRefreshEnabled) {
+    // Si el hook está deshabilitado, limpiar timers y salir
+    if (!enabled || !state.autoRefreshEnabled) {
       if (autoRefreshTimer.current) {
         clearInterval(autoRefreshTimer.current);
         autoRefreshTimer.current = null;
@@ -432,7 +454,7 @@ const useInformePolicial = (
         autoRefreshTimer.current = null;
       }
     };
-  }, [state.autoRefreshEnabled, state.nextAutoRefresh, autoRefreshInterval, loadIPHs]);
+  }, [enabled, state.autoRefreshEnabled, state.nextAutoRefresh, autoRefreshInterval, loadIPHs]);
 
   // Cleanup effect
   useEffect(() => {

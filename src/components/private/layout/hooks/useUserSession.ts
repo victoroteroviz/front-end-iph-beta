@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 
 // Helpers
 import { isUserAuthenticated, getUserFromStorage, clearNavigationData } from '../../../../helper/navigation/navigation.helper';
-import { logInfo, logError } from '../../../../helper/log/logger.helper';
-import { showSuccess } from '../../../../helper/notification/notification.helper';
+import { logInfo, logError, logWarning } from '../../../../helper/log/logger.helper';
+import { showSuccess, showWarning } from '../../../../helper/notification/notification.helper';
+import { isTokenExpired, getStoredToken } from '../../../../helper/security/jwt.helper';
 
 // Interfaces
 import type { UserSessionState, UserData } from '../../../../interfaces/components/dashboard.interface';
@@ -43,6 +44,22 @@ const useUserSession = (): UserSessionState => {
     setState(prev => ({ ...prev, isLoading: true }));
 
     try {
+      // ✅ NUEVA: Verificar expiración de JWT PRIMERO
+      const token = getStoredToken();
+      if (isTokenExpired(token)) {
+        logWarning('useUserSession', 'Token JWT expirado detectado');
+        showWarning('Su sesión ha expirado. Por favor, inicie sesión nuevamente.');
+        clearNavigationData();
+        setState({
+          userRole: null,
+          userData: null,
+          isAuthenticated: false,
+          isLoading: false
+        });
+        navigate('/');
+        return;
+      }
+
       // Verificar autenticación básica
       if (!isUserAuthenticated()) {
         logInfo('useUserSession', 'Usuario no autenticado detectado');
@@ -52,6 +69,7 @@ const useUserSession = (): UserSessionState => {
           isAuthenticated: false,
           isLoading: false
         });
+        navigate('/');
         return;
       }
 
@@ -117,7 +135,7 @@ const useUserSession = (): UserSessionState => {
         isLoading: false
       });
     }
-  }, []);
+  }, [navigate]);
 
   /**
    * Maneja el logout del usuario - simplificado

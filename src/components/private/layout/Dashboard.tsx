@@ -13,7 +13,7 @@
  */
 
 import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 
 // Componentes atómicos
@@ -81,15 +81,9 @@ const DashboardContent: React.FC<DashboardProps> = ({
     );
   }
 
-  // Si no está autenticado, no renderizar (el useUserSession ya redirige)
+  // ✅ MEJORADO: Redirigir explícitamente si no está autenticado
   if (!isAuthenticated || !userRole || !userData) {
-    return (
-      <div className={`min-h-screen bg-[#f8f0e7] flex items-center justify-center ${className}`}>
-        <div className="text-center">
-          <p className="text-[#4d4725] font-poppins">Verificando autenticación...</p>
-        </div>
-      </div>
-    );
+    return <Navigate to="/" replace />;
   }
 
   return (
