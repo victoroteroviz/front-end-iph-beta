@@ -72,7 +72,7 @@ export const useRouteTransitionContext = () => {
 /**
  * Componente interno que maneja la navegación y precarga
  */
-function AppRoutes({ loadingBarRef }: { loadingBarRef: React.RefObject<TopLoadingBarRef> }) {
+function AppRoutes({ loadingBarRef }: { loadingBarRef: React.RefObject<TopLoadingBarRef | null> }) {
   const location = useLocation();
   const routes = getAllRoutes();
   const { isTransitioning, startTransition: startRouteTransition } = useRouteTransition(loadingBarRef);

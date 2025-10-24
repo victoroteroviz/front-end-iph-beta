@@ -863,8 +863,13 @@ export class CacheHelper {
   ): void {
     if (!this.config.enableLogging) return;
 
-    const logFn = level === 'info' ? logInfo : level === 'warn' ? logWarning : logError;
-    logFn('CacheHelper', message, data);
+    if (level === 'error') {
+      logError('CacheHelper', data || new Error(message), message);
+    } else if (level === 'warn') {
+      logWarning('CacheHelper', message, data);
+    } else {
+      logInfo('CacheHelper', message, data);
+    }
   }
 }
 

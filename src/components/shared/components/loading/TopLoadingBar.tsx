@@ -16,7 +16,18 @@
  * @version 1.0.0
  */
 
-import { useState, useEffect, useImperativeHandle, forwardRef, useCallback, useMemo } from 'react';
+import {
+  useState,
+  useEffect,
+  useImperativeHandle,
+  forwardRef,
+  useCallback,
+  useMemo,
+  createContext,
+  useContext,
+  useRef,
+  type ReactNode
+} from 'react';
 
 // =====================================================
 // TYPES
@@ -240,7 +251,7 @@ TopLoadingBar.displayName = 'TopLoadingBar';
  * };
  * ```
  */
-export const useTopLoadingBar = (barRef: React.RefObject<TopLoadingBarRef>) => {
+export const useTopLoadingBar = (barRef: React.RefObject<TopLoadingBarRef | null>) => {
   const startLoading = useCallback(() => {
     barRef.current?.start();
   }, [barRef]);
@@ -268,8 +279,6 @@ export const useTopLoadingBar = (barRef: React.RefObject<TopLoadingBarRef>) => {
 // =====================================================
 // CONTEXT PROVIDER
 // =====================================================
-
-import { createContext, useContext, useRef, type ReactNode } from 'react';
 
 /**
  * Contexto para TopLoadingBar global

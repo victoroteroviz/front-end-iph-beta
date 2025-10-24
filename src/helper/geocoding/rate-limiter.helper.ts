@@ -46,7 +46,7 @@ export interface RateLimiterMetrics {
 class RateLimiter {
   private lastRequestTime = 0;
   private readonly minInterval: number; // Intervalo mínimo en ms
-  private requestQueue: Array<QueueItem<unknown>> = [];
+  private requestQueue: Array<QueueItem<any>> = [];
   private processing = false;
   
   // Métricas
@@ -84,13 +84,13 @@ class RateLimiter {
   public async execute<T>(fn: () => Promise<T>): Promise<T> {
     return new Promise((resolve, reject) => {
       const queueItem: QueueItem<T> = {
-        resolve: resolve as (value: unknown) => void,
+        resolve,
         reject,
-        fn: fn as () => Promise<unknown>,
+        fn,
         timestamp: Date.now()
       };
 
-      this.requestQueue.push(queueItem);
+      this.requestQueue.push(queueItem as QueueItem<any>);
 
       logDebug(MODULE_NAME, 'Request agregado a cola', {
         queueSize: this.requestQueue.length,

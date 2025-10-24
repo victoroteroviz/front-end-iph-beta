@@ -487,8 +487,13 @@ export class RoutePreloader {
   ): void {
     if (!this.config.enableLogging) return;
 
-    const logFn = level === 'info' ? logInfo : level === 'warn' ? logWarning : logError;
-    logFn('RoutePreloader', message, data);
+    if (level === 'error') {
+      logError('RoutePreloader', data || new Error(message), message);
+    } else if (level === 'warn') {
+      logWarning('RoutePreloader', message, data);
+    } else {
+      logInfo('RoutePreloader', message, data);
+    }
   }
 }
 

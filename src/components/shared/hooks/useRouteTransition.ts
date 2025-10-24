@@ -35,11 +35,11 @@ import type { TopLoadingBarRef } from '../components/loading';
  * };
  * ```
  */
-export const useRouteTransition = (loadingBarRef?: React.RefObject<TopLoadingBarRef>) => {
+export const useRouteTransition = (loadingBarRef?: React.RefObject<TopLoadingBarRef | null>) => {
   const location = useLocation();
   const [isTransitioning, setIsTransitioning] = useState(false);
   const previousPath = useRef(location.pathname);
-  const transitionTimer = useRef<NodeJS.Timeout>();
+  const transitionTimer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   /**
    * Inicia la transición de ruta
