@@ -41,29 +41,53 @@
 .estadisticas-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .stat-card {
   background: white;
-  border-radius: 0.5rem;
-  padding: 1.25rem;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border-left-width: 4px; /* Borde izquierdo más grueso como indicador */
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
   display: flex;
-  gap: 1rem;
+  gap: 1.25rem;
   outline: none;
 }
 
+/* Efecto de resplandor sutil en hover */
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(194, 177, 134, 0.05) 0%, rgba(148, 139, 84, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
 .stat-card:hover:not(.disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-color: #c2b186;
-  background: #fdf7f1;
+  transform: translateY(-4px) scale(1.01);
+  box-shadow:
+    0 10px 25px -5px rgba(77, 71, 37, 0.15),
+    0 8px 10px -6px rgba(77, 71, 37, 0.1),
+    0 0 0 1px rgba(194, 177, 134, 0.2);
+  border-color: currentColor; /* Usa el color del borde izquierdo */
+  background: #fdfcfa;
+}
+
+.stat-card:hover:not(.disabled)::before {
+  opacity: 1;
 }
 
 .stat-card:focus-visible {
@@ -72,24 +96,27 @@
 }
 
 .stat-card.disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
   background: #f9fafb;
+  border-left-color: #d1d5db !important;
 }
 
 .stat-card-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 0.5rem;
+  width: 64px;
+  height: 64px;
+  border-radius: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: transform 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
 .stat-card:hover:not(.disabled) .stat-card-icon {
-  transform: scale(1.05);
+  transform: scale(1.08) rotate(-3deg);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
 .stat-card.disabled .stat-card-icon {
@@ -122,16 +149,47 @@
 
 .stat-card-badge {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  background: #f59e0b;
+  top: 0.875rem;
+  right: 0.875rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   color: white;
-  padding: 0.125rem 0.625rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.625rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.3), 0 2px 4px -2px rgba(245, 158, 11, 0.2);
+  animation: badge-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-card-badge::before {
+  content: '⏳';
+  font-size: 0.75rem;
+  animation: badge-rotate 3s linear infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes badge-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive Design */
@@ -150,32 +208,57 @@
 
   .estadisticas-grid {
     grid-template-columns: 1fr;
-    gap: 0.75rem;
+    gap: 1rem;
   }
 
   .stat-card {
-    padding: 1rem;
+    padding: 1.25rem;
+    border-radius: 0.75rem;
   }
 
   .stat-card-icon {
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
   }
 
   .stat-icon {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
   }
 
   .stat-card-content h3 {
-    font-size: 1rem;
+    font-size: 1.0625rem;
   }
 
   .stat-card-content p {
     font-size: 0.8125rem;
   }
 
+  .stat-card-badge {
+    top: 0.625rem;
+    right: 0.625rem;
+    padding: 0.1875rem 0.625rem;
+    font-size: 0.5625rem;
+  }
+
+  .stat-card-badge::before {
+    font-size: 0.6875rem;
+  }
+
+  /* Reducir animaciones en móvil para mejor rendimiento */
+  .stat-card:hover:not(.disabled) {
+    transform: translateY(-2px) scale(1);
+  }
+
+  .stat-card:hover:not(.disabled) .stat-card-icon {
+    transform: scale(1.05) rotate(-2deg);
+  }
+}
+
+/* Mejoras para tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
   .estadisticas-grid {
-    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
   }
 }

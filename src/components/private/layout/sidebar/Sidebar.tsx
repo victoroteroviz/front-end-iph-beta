@@ -59,12 +59,18 @@ const SidebarItem = React.memo<SidebarItemProps>(({ item, isActive, isCollapsed,
       return;
     }
 
+    // Si ya estamos en esta ruta, no activar transición ni navegar
+    if (isActive) {
+      e.preventDefault();
+      return;
+    }
+
     // Activar overlay de transición inmediatamente
     startTransition();
 
     // Ejecutar navegación
     onNavigate?.();
-  }, [item.isDisabled, onNavigate, startTransition]);
+  }, [item.isDisabled, isActive, onNavigate, startTransition]);
 
   // Handler para precarga on hover
   const handleMouseEnter = useCallback(() => {
