@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { logInfo, logError } from '../../../../../../helper/log/logger.helper';
+import { sanitizeCoordinatesForLog } from '../../../../../../helper/security/security.helper';
 
 interface GeolocationState {
   /** Coordenadas actuales del usuario */
@@ -78,9 +79,11 @@ export const useGeolocation = (): GeolocationState => {
           longitude: position.coords.longitude
         };
 
+        // Sanitizar coordenadas antes de loggear (seguridad y privacidad)
+        const sanitizedLocation = sanitizeCoordinatesForLog(coords.latitude, coords.longitude);
+
         logInfo(MODULE_NAME, 'Ubicación obtenida exitosamente', {
-          latitude: coords.latitude,
-          longitude: coords.longitude,
+          ...sanitizedLocation,
           accuracy: position.coords.accuracy
         });
 

@@ -45,6 +45,19 @@ export const statisticsCardsConfig: IStatisticCard[] = [
     color: STATISTICS_COLORS.IPH_DARK,
     ruta: STATISTICS_ROUTES.RENDIMIENTO
   },
+  {
+    id: 'Mapas de calor',
+    titulo: 'Mapas de Calor',
+    descripcion: 'Visualización de datos geoespaciales mediante mapas de calor para identificar zonas de alta incidencia delictiva',
+    icono: (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="stat-icon">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h.008v.008H9V12zm0-3h.008v.008H9V9zm6 3h.008v.008H15V12z" />
+      </svg>
+    ),
+    habilitado: true,
+    color: STATISTICS_COLORS.IPH_SECONDARY,
+  },
     {
     id: 'objetos-armas',
     titulo: 'Objetos y Armas Confiscadas',

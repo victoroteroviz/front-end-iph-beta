@@ -11,7 +11,7 @@ import GraficaSemanaCard from '../statistics/components/cards/GraficaSemanaCard'
 import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 
 // Componentes comunes
-import { LoadingSpinner, ErrorMessage, Heatmap } from '../../common';
+import { LoadingSpinner, ErrorMessage } from '../../common';
 
 /**
  * Props interface for Inicio component
@@ -140,160 +140,224 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
   ];
 
   return (
-    <div className={`min-h-screen p-4 md:p-6 lg:p-8 font-poppins ${className}`}>
+    <div className={`min-h-screen p-4 md:p-6 lg:p-8 font-poppins ${className} animate-fadeIn`}>
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumbs */}
         <div className="mb-8">
           <Breadcrumbs items={breadcrumbItems} />
         </div>
-        {/* Welcome Header - Con botón Actualizar */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-[#4d4725]">
-              ¡Bienvenido, {fullName}!
-            </h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="bg-[#c2b186] text-white px-4 py-2 rounded-full">
-              <span className="text-sm font-medium">
-                {new Date().toLocaleDateString('es-ES', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric'
-                })}
-              </span>
+
+        {/* Welcome Header - Diseño mejorado */}
+        <div className="bg-[rgb(148,139,84)] rounded-xl shadow-lg p-6 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2 drop-shadow-md">
+                ¡Bienvenido, {fullName}!
+              </h1>
+              <p className="text-[#ede8d4] text-sm">
+                Panel de control y estadísticas en tiempo real
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                recargarDatos();
-              }}
-              disabled={loading}
-              className="px-4 py-2 bg-[#4d4725] text-white rounded-lg hover:bg-[#3a3519] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2"
-            >
-              <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              {loading ? 'Actualizando...' : 'Actualizar'}
-            </button>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm text-white px-4 py-2.5 rounded-lg border border-white/30 shadow-inner">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-sm font-medium">
+                    {new Date().toLocaleDateString('es-ES', {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric'
+                    })}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  recargarDatos();
+                }}
+                disabled={loading}
+                className="px-5 py-2.5 bg-white text-[#4d4725] rounded-lg hover:bg-[#ede8d4] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2 font-medium shadow-md hover:shadow-lg"
+              >
+                <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {loading ? 'Actualizando...' : 'Actualizar'}
+              </button>
+            </div>
           </div>
+        </div>
+
+      {/* Gráficas de Reportes - Ahora arriba como solicitado */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="animate-slideInLeft">
+          {datosPorMes && (
+            <GraficaCard
+              titulo="Reportes de IPH Mensual"
+              data={datosPorMes}
+              anioSeleccionado={anioSeleccionado}
+              setAnioSeleccionado={setAnioSeleccionado}
+            />
+          )}
+        </div>
+
+        <div className="animate-slideInRight">
+          {datosPorSemana && (
+            <GraficaSemanaCard
+              titulo="Reportes de IPH Día"
+              data={datosPorSemana}
+              semanaOffset={semanaOffset}
+              setSemanaOffset={setSemanaOffset}
+              loading={loading}
+              onDateRangeChange={(startDate, endDate) => {
+                console.log('📅 Calendar: Rango seleccionado desde el calendario:', {
+                  startDate: startDate.toISOString(),
+                  endDate: endDate.toISOString(),
+                  startFormatted: startDate.toLocaleDateString('es-ES'),
+                  endFormatted: endDate.toLocaleDateString('es-ES')
+                });
+
+                // Calcular diferencia en semanas desde hoy hasta la fecha de fin del rango
+                const hoy = new Date();
+                const inicioSemanaActual = new Date(hoy);
+                const diaSemana = hoy.getDay();
+                const diasHastaLunes = diaSemana === 0 ? -6 : 1 - diaSemana;
+                inicioSemanaActual.setDate(hoy.getDate() + diasHastaLunes);
+                inicioSemanaActual.setHours(0, 0, 0, 0);
+
+                const inicioRangoSeleccionado = new Date(startDate);
+                inicioRangoSeleccionado.setHours(0, 0, 0, 0);
+
+                const diffTime = inicioSemanaActual.getTime() - inicioRangoSeleccionado.getTime();
+                const diffWeeks = Math.round(diffTime / (1000 * 60 * 60 * 24 * 7));
+
+                // El offset es la diferencia: 0 = semana actual, negativo = semanas pasadas
+                const targetOffset = -diffWeeks;
+
+                console.log('📊 Calendar: Cálculo de offset:', {
+                  inicioSemanaActual: inicioSemanaActual.toISOString(),
+                  inicioRangoSeleccionado: inicioRangoSeleccionado.toISOString(),
+                  diffTime,
+                  diffWeeks,
+                  targetOffset,
+                  currentOffset: semanaOffset
+                });
+
+                // Solo actualizar si el offset calculado es diferente al actual
+                if (targetOffset !== semanaOffset) {
+                  console.log(`📡 Calendar: Actualizando offset de ${semanaOffset} a ${targetOffset}`);
+                  setSemanaOffset(targetOffset);
+                } else {
+                  console.log('📡 Calendar: El offset calculado es igual al actual, no se requiere actualización');
+                }
+              }}
+            />
+          )}
         </div>
       </div>
 
-      {/* Tarjetas de resumen - EXACTO como legacy */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      {/* Tarjetas de Resumen - Mejoradas con animaciones */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Justicia Civil */}
-        <div className="bg-white rounded shadow p-4">
-          <h2 className="font-semibold mb-4">Justicia Civil</h2>
+        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 animate-fadeIn">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-[#4d4725]">Justicia Civil</h2>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             {/* Con Detenidos */}
-            <div className="flex flex-col items-center justify-center text-center bg-[#ede8d4] rounded p-4 shadow-inner">
-              <div className="text-4xl mb-1">🪪</div>
-              <p className="text-sm font-semibold">Con Detenidos</p>
-              <p className="text-3xl font-bold">{resumen.justicia.conDetenido}</p>
-              <p className="text-sm text-green-600">+ {Math.abs(variaciones.justicia.con)}%</p>
+            <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-[#e5dcc3]">
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              </div>
+              <div className="text-5xl mb-2">🪪</div>
+              <p className="text-sm font-semibold text-[#4d4725] mb-1">Con Detenidos</p>
+              <p className="text-4xl font-bold text-[#4d4725] mb-2">{resumen.justicia.conDetenido}</p>
+              <div className="flex items-center gap-1 px-3 py-1 bg-green-100 rounded-full">
+                <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                <span className="text-xs font-bold text-green-700">+{Math.abs(variaciones.justicia.con)}%</span>
+              </div>
             </div>
+
             {/* Sin Detenidos */}
-            <div className="flex flex-col items-center justify-center text-center bg-[#ede8d4] rounded p-4 shadow-inner">
-              <div className="text-4xl mb-1">🧍‍♂️</div>
-              <p className="text-sm font-semibold">Sin Detenidos</p>
-              <p className="text-3xl font-bold">{resumen.justicia.sinDetenido}</p>
-              <p className="text-sm text-red-500">+ {Math.abs(variaciones.justicia.sin)}%</p>
+            <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-[#e5dcc3]">
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              </div>
+              <div className="text-5xl mb-2">🧍‍♂️</div>
+              <p className="text-sm font-semibold text-[#4d4725] mb-1">Sin Detenidos</p>
+              <p className="text-4xl font-bold text-[#4d4725] mb-2">{resumen.justicia.sinDetenido}</p>
+              <div className="flex items-center gap-1 px-3 py-1 bg-red-100 rounded-full">
+                <svg className="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                <span className="text-xs font-bold text-red-700">+{Math.abs(variaciones.justicia.sin)}%</span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Probable Delictivo */}
-        <div className="bg-white rounded shadow p-4">
-          <h2 className="font-semibold mb-4">Probable Delictivo</h2>
+        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 animate-fadeIn" style={{ animationDelay: '100ms' }}>
+          <div className="flex items-center gap-3 mb-5">
+            <div className="p-2 bg-gradient-to-br from-red-500 to-red-600 rounded-lg">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-[#4d4725]">Probable Delictivo</h2>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             {/* Con Detenidos */}
-            <div className="flex flex-col items-center justify-center text-center bg-[#ede8d4] rounded p-4 shadow-inner">
-              <div className="text-4xl mb-1">👮</div>
-              <p className="text-sm font-semibold">Con Detenidos</p>
-              <p className="text-3xl font-bold">{resumen.delito.conDetenido}</p>
-              <p className="text-sm text-green-600">+ {Math.abs(variaciones.delito.con)}%</p>
+            <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-[#e5dcc3]">
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              </div>
+              <div className="text-5xl mb-2">👮</div>
+              <p className="text-sm font-semibold text-[#4d4725] mb-1">Con Detenidos</p>
+              <p className="text-4xl font-bold text-[#4d4725] mb-2">{resumen.delito.conDetenido}</p>
+              <div className="flex items-center gap-1 px-3 py-1 bg-green-100 rounded-full">
+                <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                <span className="text-xs font-bold text-green-700">+{Math.abs(variaciones.delito.con)}%</span>
+              </div>
             </div>
+
             {/* Sin Detenidos */}
-            <div className="flex flex-col items-center justify-center text-center bg-[#ede8d4] rounded p-4 shadow-inner">
-              <div className="text-4xl mb-1">⛓️</div>
-              <p className="text-sm font-semibold">Sin Detenidos</p>
-              <p className="text-3xl font-bold">{resumen.delito.sinDetenido}</p>
-              <p className="text-sm text-green-600">+ {Math.abs(variaciones.delito.sin)}%</p>
+            <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-[#e5dcc3]">
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              </div>
+              <div className="text-5xl mb-2">⛓️</div>
+              <p className="text-sm font-semibold text-[#4d4725] mb-1">Sin Detenidos</p>
+              <p className="text-4xl font-bold text-[#4d4725] mb-2">{resumen.delito.sinDetenido}</p>
+              <div className="flex items-center gap-1 px-3 py-1 bg-green-100 rounded-full">
+                <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                <span className="text-xs font-bold text-green-700">+{Math.abs(variaciones.delito.sin)}%</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Gráficas - EXACTO al original */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {datosPorMes && (
-          <GraficaCard 
-            titulo="Reportes de IPH Mensual" 
-            data={datosPorMes} 
-            anioSeleccionado={anioSeleccionado} 
-            setAnioSeleccionado={setAnioSeleccionado} 
-          />
-        )}
-        
-        {datosPorSemana && (
-          <GraficaSemanaCard
-            titulo="Reportes de IPH Día"
-            data={datosPorSemana}
-            semanaOffset={semanaOffset}
-            setSemanaOffset={setSemanaOffset}
-            loading={loading}
-            onDateRangeChange={(startDate, endDate) => {
-              console.log('📅 Calendar: Rango seleccionado desde el calendario:', {
-                startDate: startDate.toISOString(),
-                endDate: endDate.toISOString(),
-                startFormatted: startDate.toLocaleDateString('es-ES'),
-                endFormatted: endDate.toLocaleDateString('es-ES')
-              });
-
-              // Calcular diferencia en semanas desde hoy hasta la fecha de fin del rango
-              const hoy = new Date();
-              const inicioSemanaActual = new Date(hoy);
-              const diaSemana = hoy.getDay();
-              const diasHastaLunes = diaSemana === 0 ? -6 : 1 - diaSemana;
-              inicioSemanaActual.setDate(hoy.getDate() + diasHastaLunes);
-              inicioSemanaActual.setHours(0, 0, 0, 0);
-
-              const inicioRangoSeleccionado = new Date(startDate);
-              inicioRangoSeleccionado.setHours(0, 0, 0, 0);
-
-              const diffTime = inicioSemanaActual.getTime() - inicioRangoSeleccionado.getTime();
-              const diffWeeks = Math.round(diffTime / (1000 * 60 * 60 * 24 * 7));
-
-              // El offset es la diferencia: 0 = semana actual, negativo = semanas pasadas
-              const targetOffset = -diffWeeks;
-
-              console.log('📊 Calendar: Cálculo de offset:', {
-                inicioSemanaActual: inicioSemanaActual.toISOString(),
-                inicioRangoSeleccionado: inicioRangoSeleccionado.toISOString(),
-                diffTime,
-                diffWeeks,
-                targetOffset,
-                currentOffset: semanaOffset
-              });
-
-              // Solo actualizar si el offset calculado es diferente al actual
-              if (targetOffset !== semanaOffset) {
-                console.log(`📡 Calendar: Actualizando offset de ${semanaOffset} a ${targetOffset}`);
-                setSemanaOffset(targetOffset);
-              } else {
-                console.log('📡 Calendar: El offset calculado es igual al actual, no se requiere actualización');
-              }
-            }}
-          />
-        )}
-      </div>
       
-      {/* Mapa de Calor - Integrado con API real */}
-      <Heatmap className="mb-6" />
+     
       
 
       {/* Quick Access Section - Mantenida con estilo mejorado */}

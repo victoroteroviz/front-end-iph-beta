@@ -245,14 +245,65 @@ class SecurityHelper {
    */
   public validateCSRFToken(token: string): boolean {
     if (!token || typeof token !== 'string') return false;
-    
+
     const parts = token.split('_');
     if (parts.length !== 2) return false;
-    
+
     const timestamp = parseInt(parts[0], 36);
     const maxAge = 60 * 60 * 1000; // 1 hora
-    
+
     return !isNaN(timestamp) && (Date.now() - timestamp) < maxAge;
+  }
+
+  /**
+   * Sanitiza coordenadas geográficas para logging seguro
+   * Convierte coordenadas exactas a área aproximada (~10km precisión)
+   *
+   * @param lat - Latitud (-90 a 90)
+   * @param lng - Longitud (-180 a 180)
+   * @returns Objeto con datos sanitizados para logging
+   *
+   * @example
+   * ```typescript
+   * // Coordenadas exactas
+   * const exact = { lat: 19.432608, lng: -99.133209 };
+   *
+   * // Sanitizadas para log
+   * const sanitized = sanitizeCoordinatesForLog(exact.lat, exact.lng);
+   * // → { approximateArea: "19.4, -99.1", precision: "~10km", hasCoordinates: true }
+   * ```
+   */
+  public sanitizeCoordinatesForLog(lat: number, lng: number): {
+    approximateArea: string;
+    precision: string;
+    hasCoordinates: boolean;
+    validRange: boolean;
+  } {
+    // Validar que las coordenadas estén en rango válido
+    const validLat = !isNaN(lat) && lat >= -90 && lat <= 90;
+    const validLng = !isNaN(lng) && lng >= -180 && lng <= 180;
+    const validRange = validLat && validLng;
+
+    if (!validRange) {
+      return {
+        approximateArea: 'Invalid coordinates',
+        precision: 'N/A',
+        hasCoordinates: false,
+        validRange: false
+      };
+    }
+
+    // Redondear a 1 decimal (~10km de precisión)
+    // Esto oculta la ubicación exacta pero mantiene contexto útil para debugging
+    const approxLat = lat.toFixed(1);
+    const approxLng = lng.toFixed(1);
+
+    return {
+      approximateArea: `${approxLat}, ${approxLng}`,
+      precision: '~10km',
+      hasCoordinates: true,
+      validRange: true
+    };
   }
 }
 
@@ -279,6 +330,8 @@ export const clearFailedAttempts = (identifier: string): void => securityHelper.
 export const generateCSRFToken = (): string => securityHelper.generateCSRFToken();
 
 export const validateCSRFToken = (token: string): boolean => securityHelper.validateCSRFToken(token);
+
+export const sanitizeCoordinatesForLog = (lat: number, lng: number) => securityHelper.sanitizeCoordinatesForLog(lat, lng);
 
 // Exportaciones
 export { SecurityHelper, securityHelper };

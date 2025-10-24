@@ -6,6 +6,7 @@
  */
 
 import { logInfo, logError } from '../../../../../../helper/log/logger.helper';
+import { sanitizeCoordinatesForLog } from '../../../../../../helper/security/security.helper';
 
 const MODULE_NAME = 'ReverseGeocodingService';
 
@@ -57,11 +58,13 @@ interface NominatimResponse {
  * @returns Dirección formateada
  */
 export const getReverseGeocoding = async (
-  lat: number, 
+  lat: number,
   lng: number
 ): Promise<I_ReverseGeocodingResult> => {
   try {
-    logInfo(MODULE_NAME, 'Iniciando geocoding reverso', { lat, lng });
+    // Sanitizar coordenadas antes de loggear (privacidad)
+    const sanitizedLocation = sanitizeCoordinatesForLog(lat, lng);
+    logInfo(MODULE_NAME, 'Iniciando geocoding reverso', sanitizedLocation);
 
     // Validar coordenadas
     if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
@@ -98,9 +101,10 @@ export const getReverseGeocoding = async (
       road: data.address?.road
     };
 
+    // Sanitizar coordenadas antes de loggear (privacidad)
+    const sanitizedLocationSuccess = sanitizeCoordinatesForLog(lat, lng);
     logInfo(MODULE_NAME, 'Geocoding reverso exitoso', {
-      lat,
-      lng,
+      ...sanitizedLocationSuccess,
       address: result.displayName
     });
 

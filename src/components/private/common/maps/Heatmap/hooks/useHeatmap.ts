@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { getCoordenadasMapaCalor } from '../services/get-coordenadas-mapa-calor.service';
 import { logInfo, logError } from '../../../../../../helper/log/logger.helper';
 import { showError } from '../../../../../../helper/notification/notification.helper';
+import { sanitizeCoordinatesForLog } from '../../../../../../helper/security/security.helper';
 import type { I_CoordenadaCluster, I_GetCoordenadasQuery } from '../../../../../../interfaces/mapa-calor';
 import type { Map as LeafletMap } from 'leaflet';
 import { useGeolocation } from './useGeolocation';
@@ -154,7 +155,12 @@ export const useHeatmap = (): UseHeatmapReturn => {
       const address = await getSimpleAddress(lat, lng);
       setCenterAddress(address);
 
-      logInfo(MODULE_NAME, 'Dirección del centro obtenida', { lat, lng, address });
+      // Sanitizar coordenadas antes de loggear (privacidad y seguridad)
+      const sanitizedLocation = sanitizeCoordinatesForLog(lat, lng);
+      logInfo(MODULE_NAME, 'Dirección del centro obtenida', {
+        ...sanitizedLocation,
+        address
+      });
     } catch (error) {
       logError(MODULE_NAME, error as Error, 'Error obteniendo dirección del centro');
       setCenterAddress(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
