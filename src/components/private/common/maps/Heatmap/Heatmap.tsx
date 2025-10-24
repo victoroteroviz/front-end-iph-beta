@@ -6,20 +6,58 @@
  * - Integra con servicio real getCoordenadasMapaCalor
  * - Clustering automático por nivel de zoom
  * - Actualización dinámica al mover/zoom del mapa
+ * 
+ * @performance
+ * - Memoización de transformaciones de coordenadas
+ * - Pre-cálculo de circleProps para evitar re-renders
+ * - Optimización de dependencias de useEffect
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMapEvents, Marker } from 'react-leaflet';
 import type { Map as LeafletMap } from 'leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useHeatmap } from './hooks/useHeatmap';
-import type { I_CoordenadaCluster } from '../../../../../interfaces/mapa-calor';
+import userLocationIcon from '../../../../../assets/icons/user-location.svg';
+import GeolocationConsent from './components/GeolocationConsent';
 
+/**
+ * Tipo para coordenadas procesadas y validadas
+ */
+type ProcessedCoordinate = {
+  lat: number;
+  lng: number;
+  count: number;
+  originalIndex: number;
+};
+
+/**
+ * Props del círculo marcador con isCluster calculado
+ */
+type CircleProps = {
+  radius: number;
+  color: string;
+  fillColor: string;
+  opacity: number;
+  fillOpacity: number;
+  weight: number;
+  isCluster: boolean;
+};
 
 interface HeatmapProps {
   className?: string;
 }
+
+/**
+ * Icono de ubicación de usuario (creado una sola vez, no en cada render)
+ * @performance Asset SVG estático en lugar de btoa() inline
+ */
+const USER_LOCATION_ICON = L.icon({
+  iconUrl: userLocationIcon,
+  iconSize: [24, 24],
+  iconAnchor: [12, 12]
+});
 
 /**
  * Componente interno para manejar eventos del mapa y centrar en ubicación del usuario
@@ -55,6 +93,7 @@ const MapEventHandler: React.FC<{
   }, [userLocation, map]);
 
   // Controlar zoom con scroll solo cuando se presiona tecla Z
+  // @performance Optimizado: solo depende de map, no de ctrlPressed
   useEffect(() => {
     if (!map) return;
 
@@ -83,7 +122,7 @@ const MapEventHandler: React.FC<{
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [map, ctrlPressed]);
+  }, [map]); // Solo depender de map, no de ctrlPressed
 
   return null;
 };
@@ -102,50 +141,44 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
     userLocation,
     geolocationLoading,
     centerAddress,
-    centerAddressLoading
+    centerAddressLoading,
+    needsConsent, // Nuevo: Mostrar modal de consentimiento
+    handleConsent // Nuevo: Manejar consentimiento
   } = useHeatmap();
 
   const mapRef = useRef<LeafletMap | null>(null);
   const [currentZoom, setCurrentZoom] = useState<number>(11);
 
-  // Icono personalizado para marcador de usuario
-  const userIcon = L.icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10" fill="#3b82f6" fill-opacity="0.2"/>
-        <circle cx="12" cy="12" r="3" fill="#3b82f6"/>
-      </svg>
-    `),
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
-  });
-
   /**
    * Determina el color y tamaño del círculo basado en la cantidad de IPH
    * y el nivel de zoom (para diferenciar clusters de puntos individuales)
+   * 
+   * @performance Memoizada con useCallback para evitar recreación en cada render
+   * @optimization Radios ajustados para evitar solapamiento en coordenadas cercanas
    */
-  const getCircleProps = (count: number, currentZoom: number) => {
+  const getCircleProps = useCallback((count: number, currentZoom: number): CircleProps => {
     // Calcular radio base según el zoom y el count
     let baseRadius;
     let isCluster = false;
 
     // Determinar si es un cluster basado en el zoom
+    // Radios más pequeños para evitar solapamiento
     if (currentZoom < 12) {
-      // Zoom alejado - Clusters agresivos (1 decimal) - REDUCIDO para evitar sobrelapamiento
+      // Zoom alejado - Clusters agresivos (1 decimal) - Radios muy reducidos
       isCluster = true;
-      baseRadius = Math.min(Math.sqrt(count) * 2.5, 20); // Radio dinámico según count, máx 20px (antes 35px)
+      baseRadius = Math.min(Math.sqrt(count) * 1.8, 12); // Radio dinámico según count, máx 12px (antes 20px)
     } else if (currentZoom < 15) {
       // Zoom medio - Semi-clusters (2 decimales)
       isCluster = count > 10; // Si hay más de 10, probablemente es cluster
-      baseRadius = Math.min(Math.sqrt(count) * 2.8, 22); // Radio dinámico, máx 22px (antes 25px)
+      baseRadius = Math.min(Math.sqrt(count) * 2, 14); // Radio dinámico, máx 14px (antes 22px)
     } else {
       // Zoom cercano - Puntos individuales
       isCluster = count > 5; // Solo clusters muy pequeños
-      baseRadius = Math.min(Math.sqrt(count) * 2, 15); // Radio dinámico, máx 15px
+      baseRadius = Math.min(Math.sqrt(count) * 1.5, 10); // Radio dinámico, máx 10px (antes 15px)
     }
 
-    // Asegurar un radio mínimo
-    const radius = Math.max(baseRadius, isCluster ? 6 : 4); // Reducido de 8:5 a 6:4
+    // Asegurar un radio mínimo pero más pequeño
+    const radius = Math.max(baseRadius, isCluster ? 4 : 3); // Reducido de 6:4 a 4:3
 
     // Determinar colores según intensidad
     if (count > 60) return {
@@ -154,7 +187,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
       radius,
       opacity: isCluster ? 0.9 : 0.85,
       fillOpacity: isCluster ? 0.7 : 0.6,
-      weight: isCluster ? 4 : 3,
+      weight: isCluster ? 3 : 2, // Borde más delgado
       isCluster
     }; // Muy alta - Rojo intenso
 
@@ -164,7 +197,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
       radius,
       opacity: isCluster ? 0.85 : 0.8,
       fillOpacity: isCluster ? 0.65 : 0.55,
-      weight: isCluster ? 3.5 : 2.5,
+      weight: isCluster ? 2.5 : 2, // Borde más delgado
       isCluster
     }; // Alta - Naranja
 
@@ -174,7 +207,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
       radius,
       opacity: isCluster ? 0.8 : 0.75,
       fillOpacity: isCluster ? 0.6 : 0.5,
-      weight: isCluster ? 3 : 2,
+      weight: isCluster ? 2.5 : 1.5, // Borde más delgado
       isCluster
     }; // Media-Alta - Amarillo
 
@@ -184,7 +217,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
       radius,
       opacity: isCluster ? 0.75 : 0.7,
       fillOpacity: isCluster ? 0.55 : 0.45,
-      weight: isCluster ? 2.5 : 2,
+      weight: isCluster ? 2 : 1.5, // Borde más delgado
       isCluster
     }; // Media - Verde
 
@@ -194,10 +227,52 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
       radius,
       opacity: isCluster ? 0.7 : 0.65,
       fillOpacity: isCluster ? 0.5 : 0.4,
-      weight: isCluster ? 2 : 1.5,
+      weight: isCluster ? 1.5 : 1, // Borde más delgado
       isCluster
     }; // Baja - Azul
-  };
+  }, []); // Sin dependencias - función pura
+
+  /**
+   * Transforma y valida coordenadas UNA SOLA VEZ
+   * 
+   * @performance useMemo para evitar recalcular en cada render
+   * Solo se ejecuta cuando las coordenadas cambian
+   */
+  const validCoordinates = useMemo<ProcessedCoordinate[]>(() => {
+    return coordenadas
+      .map((point, index) => {
+        const lat = typeof point.latitud === 'number'
+          ? point.latitud
+          : parseFloat(String(point.latitud || 0));
+        const lng = typeof point.longitud === 'number'
+          ? point.longitud
+          : parseFloat(String(point.longitud || 0));
+        const count = typeof point.count === 'number'
+          ? point.count
+          : parseInt(String(point.count || 0), 10);
+
+        // Validar y retornar solo válidos
+        if (isNaN(lat) || isNaN(lng) || isNaN(count) || lat === 0 || lng === 0) {
+          return null;
+        }
+
+        return { lat, lng, count, originalIndex: index };
+      })
+      .filter((coord): coord is ProcessedCoordinate => coord !== null);
+  }, [coordenadas]); // Solo recalcular cuando coordenadas cambian
+
+  /**
+   * Pre-calcular props de círculos para cada coordenada
+   * 
+   * @performance useMemo para evitar recalcular getCircleProps en cada render
+   * Solo se ejecuta cuando validCoordinates o currentZoom cambian
+   */
+  const circlePropsMap = useMemo(() => {
+    return validCoordinates.map(coord => ({
+      ...coord,
+      circleProps: getCircleProps(coord.count, currentZoom)
+    }));
+  }, [validCoordinates, currentZoom, getCircleProps]); // Recalcular solo si zoom o coordenadas cambian
 
   /**
    * Determina la clasificación de actividad
@@ -212,21 +287,28 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
 
   return (
     <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
+      {/* Modal de consentimiento de geolocalización */}
+      {/* @security Consentimiento explícito GDPR/LFPDP compliant */}
+      <GeolocationConsent
+        isVisible={needsConsent}
+        onAccept={() => handleConsent(true)}
+        onReject={() => handleConsent(false)}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-[#4d4725]">
           Mapa de Calor - Lugares con Mayores intervenciones de IPH
         </h3>
-        <div className="flex items-center gap-2">
-          {geolocationLoading && (
+        <div className="flex items-center gap-2 min-h-[32px]">
+          {geolocationLoading ? (
             <div className="px-3 py-1 bg-[#dbeafe] text-[#1e40af] text-xs font-medium rounded-full flex items-center gap-2">
               <svg className="animate-pulse h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
               </svg>
               Obteniendo ubicación...
             </div>
-          )}
-          {silentLoading && (
+          ) : silentLoading ? (
             <div className="px-3 py-1 bg-[#f0f9ff] border border-[#0284c7] text-[#0284c7] text-xs font-medium rounded-full flex items-center gap-2">
               <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -234,55 +316,74 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
               </svg>
               Actualizando...
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
       {/* Dirección del centro del mapa */}
-      {!geolocationLoading && (centerAddress || centerAddressLoading) && (
-        <div className="mb-4 bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9] border border-[#cbd5e1] rounded-lg p-3">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0">
-              <svg className="w-5 h-5 text-[#4d4725]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#4d4725] mb-1">Centro del mapa:</p>
-              {centerAddressLoading ? (
-                <div className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4 text-[#6b7280]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span className="text-sm text-[#6b7280]">Obteniendo dirección...</span>
-                </div>
-              ) : (
-                <p className="text-sm text-[#6b7280] truncate">{centerAddress}</p>
-              )}
+      {/* Reservar espacio mínimo para evitar CLS cuando aparece/desaparece */}
+      <div className="mb-4 min-h-[76px]">
+        {!geolocationLoading && (centerAddress || centerAddressLoading) && (
+          <div className="bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9] border border-[#cbd5e1] rounded-lg p-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <svg className="w-5 h-5 text-[#4d4725]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-[#4d4725] mb-1">Centro del mapa:</p>
+                {centerAddressLoading ? (
+                  <div className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4 text-[#6b7280]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-sm text-[#6b7280]">Obteniendo dirección...</span>
+                  </div>
+                ) : centerAddress ? (
+                  <p className="text-sm text-[#6b7280] truncate">{centerAddress}</p>
+                ) : null}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Error Alert */}
-      {error && (
-        <div className="mb-4 bg-[#fee2e2] border border-[#ef4444] text-[#991b1b] px-4 py-3 rounded-lg flex items-start gap-3">
-          <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-          </svg>
-          <div>
-            <h4 className="font-semibold text-sm">Error al cargar el mapa</h4>
-            <p className="text-sm">{error}</p>
+      {/* Error Alert con espacio reservado para evitar CLS */}
+      {/* @performance min-h-[60px] reserva espacio para evitar layout shift */}
+      <div className="min-h-[60px] mb-4">
+        {error && (
+          <div className="bg-[#fee2e2] border border-[#ef4444] text-[#991b1b] px-4 py-3 rounded-lg flex items-start gap-3">
+            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <h4 className="font-semibold text-sm">Error al cargar el mapa</h4>
+              <p className="text-sm">{error}</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Mapa principal */}
+      {/* Mapa principal con altura fija para evitar CLS */}
+      {/* @performance Altura fija previene Cumulative Layout Shift */}
       <div className="mb-6">
         <div className="relative">
           <div className="h-96 lg:h-[500px] rounded-lg overflow-hidden border border-[#e5e7eb] relative">
+            {loading && coordenadas.length === 0 ? (
+              /* Skeleton loader con dimensiones exactas */
+              <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
+                <div className="text-center">
+                  <svg className="animate-spin h-8 w-8 text-[#4d4725] mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <p className="text-[#4d4725] font-medium">Cargando mapa...</p>
+                </div>
+              </div>
+            ) : (
             <MapContainer
               center={[19.4326, -99.1332]} // Centro de Ciudad de México
               zoom={11}
@@ -307,10 +408,11 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
               />
 
               {/* Marcador de ubicación del usuario */}
+              {/* @performance Usa icono SVG estático en lugar de btoa() inline */}
               {userLocation && !geolocationLoading && (
                 <Marker
                   position={[userLocation.lat, userLocation.lng]}
-                  icon={userIcon}
+                  icon={USER_LOCATION_ICON}
                 >
                   <Popup>
                     <div className="text-center">
@@ -325,90 +427,66 @@ const Heatmap: React.FC<HeatmapProps> = ({ className = '' }) => {
                 </Marker>
               )}
 
-              {/* Marcadores de calor */}
-              {coordenadas.map((point: I_CoordenadaCluster, index: number) => {
-                // Validar y normalizar datos del backend
-                const lat = typeof point.latitud === 'number' ? point.latitud : parseFloat(String(point.latitud || 0));
-                const lng = typeof point.longitud === 'number' ? point.longitud : parseFloat(String(point.longitud || 0));
-                const count = typeof point.count === 'number' ? point.count : parseInt(String(point.count || 0), 10);
-
-                // Validación adicional - Saltar coordenadas inválidas
-                if (isNaN(lat) || isNaN(lng) || isNaN(count) || lat === 0 || lng === 0) {
-                  return null;
-                }
-
-                const circleProps = getCircleProps(count, currentZoom);
-                return (
-                  <CircleMarker
-                    key={`${lat}-${lng}-${index}`}
-                    center={[lat, lng]}
-                    radius={circleProps.radius}
-                    pathOptions={{
-                      color: circleProps.color,
-                      fillColor: circleProps.fillColor,
-                      fillOpacity: circleProps.fillOpacity,
-                      weight: circleProps.weight,
-                      opacity: circleProps.opacity
-                    }}
-                    eventHandlers={{
-                      mouseover: (e) => {
-                        e.target.setStyle({
-                          weight: circleProps.weight + 2,
-                          fillOpacity: 0.85,
-                          opacity: 1
-                        });
-                      },
-                      mouseout: (e) => {
-                        e.target.setStyle({
-                          weight: circleProps.weight,
-                          fillOpacity: circleProps.fillOpacity,
-                          opacity: circleProps.opacity
-                        });
-                      }
-                    }}
-                  >
-                    <Popup>
-                      <div className="text-center">
-                        <h4 className="font-semibold text-[#4d4725] mb-1">
-                          {circleProps.isCluster ? '🗺️ Cluster de IPH' : '📍 Lugar de IPH'}
-                        </h4>
-                        <p className="text-sm text-[#6b7280] mb-1">
-                          <strong>{count}</strong> {circleProps.isCluster ? 'IPH agrupados' : 'IPH registrados'}
+              {/* Marcadores de calor optimizados */}
+              {/* @performance Usa coordenadas pre-procesadas con useMemo */}
+              {circlePropsMap.map(({ lat, lng, count, originalIndex, circleProps }) => (
+                <CircleMarker
+                  key={`${lat}-${lng}-${originalIndex}`}
+                  center={[lat, lng]}
+                  radius={circleProps.radius}
+                  pathOptions={{
+                    color: circleProps.color,
+                    fillColor: circleProps.fillColor,
+                    fillOpacity: circleProps.fillOpacity,
+                    weight: circleProps.weight,
+                    opacity: circleProps.opacity
+                  }}
+                  eventHandlers={{
+                    mouseover: (e) => {
+                      e.target.setStyle({
+                        weight: circleProps.weight + 2,
+                        fillOpacity: 0.85,
+                        opacity: 1
+                      });
+                    },
+                    mouseout: (e) => {
+                      e.target.setStyle({
+                        weight: circleProps.weight,
+                        fillOpacity: circleProps.fillOpacity,
+                        opacity: circleProps.opacity
+                      });
+                    }
+                  }}
+                >
+                  <Popup>
+                    <div className="text-center">
+                      <h4 className="font-semibold text-[#4d4725] mb-1">
+                        {circleProps.isCluster ? '🗺️ Cluster de IPH' : '📍 Lugar de IPH'}
+                      </h4>
+                      <p className="text-sm text-[#6b7280] mb-1">
+                        <strong>{count}</strong> {circleProps.isCluster ? 'IPH agrupados' : 'IPH registrados'}
+                      </p>
+                      {circleProps.isCluster && (
+                        <p className="text-xs text-[#f59e0b] mb-1">
+                          ⚡ Zoom para ver detalles individuales
                         </p>
-                        {circleProps.isCluster && (
-                          <p className="text-xs text-[#f59e0b] mb-1">
-                            ⚡ Zoom para ver detalles individuales
-                          </p>
-                        )}
-                        <p className="text-xs text-[#6b7280]">
-                          Actividad: <span className="font-medium">{getActivityLevel(count)}</span>
-                        </p>
+                      )}
+                      <p className="text-xs text-[#6b7280]">
+                        Actividad: <span className="font-medium">{getActivityLevel(count)}</span>
+                      </p>
+                      <p className="text-xs text-[#9ca3af] mt-1">
+                        Lat: {lat.toFixed(4)}, Lng: {lng.toFixed(4)}
+                      </p>
+                      {circleProps.isCluster && (
                         <p className="text-xs text-[#9ca3af] mt-1">
-                          Lat: {lat.toFixed(4)}, Lng: {lng.toFixed(4)}
+                          Zoom: {currentZoom} (Cluster nivel {currentZoom < 12 ? 'Estado' : currentZoom < 15 ? 'Ciudad' : 'Calle'})
                         </p>
-                        {circleProps.isCluster && (
-                          <p className="text-xs text-[#9ca3af] mt-1">
-                            Zoom: {currentZoom} (Cluster nivel {currentZoom < 12 ? 'Estado' : currentZoom < 15 ? 'Ciudad' : 'Calle'})
-                          </p>
-                        )}
-                      </div>
-                    </Popup>
-                  </CircleMarker>
-                );
-              })}
+                      )}
+                    </div>
+                  </Popup>
+                </CircleMarker>
+              ))}
             </MapContainer>
-
-            {/* Loading overlay - Solo para carga inicial */}
-            {loading && coordenadas.length === 0 && (
-              <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-[999]">
-                <div className="bg-white rounded-lg shadow-lg p-4 flex items-center gap-3">
-                  <svg className="animate-spin h-6 w-6 text-[#4d4725]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span className="text-[#4d4725] font-medium">Cargando coordenadas...</span>
-                </div>
-              </div>
             )}
           </div>
         </div>

@@ -1,9 +1,11 @@
 /**
- * Componente Sidebar OPTIMIZADO
- * Optimizado para prevenir re-renders innecesarios
+ * Componente Sidebar SUPER OPTIMIZADO v2.0
+ * - Optimizado para prevenir re-renders innecesarios
+ * - Precarga inteligente de rutas on hover
+ * - Integración con RoutePreloader
  */
 
-import React, { useCallback, useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LogOut, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -13,9 +15,12 @@ import './sidebar-animations.css';
 // Helpers y configuración
 import { logInfo } from '../../../../helper/log/logger.helper';
 import { SIDEBAR_CONFIG, getFilteredSidebarItems } from './config/sidebarConfig';
+import { RoutePreloader } from '../../../../helper/route-preloader';
+import { getAllRoutes } from '../../../../config/app-routes.config';
 
 // Hooks
 import useUserSession from '../hooks/useUserSession';
+import { useRouteTransitionContext } from '../../../../IPHApp';
 
 // Interfaces
 import type {
@@ -32,7 +37,8 @@ const SIDEBAR_WIDTHS = {
 } as const;
 
 /**
- * Item individual del sidebar - SUPER OPTIMIZADO
+ * Item individual del sidebar - SUPER OPTIMIZADO v2.0
+ * - Con precarga inteligente on hover
  */
 interface SidebarItemProps {
   item: SidebarItemConfig;
@@ -42,14 +48,47 @@ interface SidebarItemProps {
 }
 
 const SidebarItem = React.memo<SidebarItemProps>(({ item, isActive, isCollapsed, onNavigate }) => {
+  const cancelPreloadRef = useRef<(() => void) | null>(null);
+  const allRoutes = useMemo(() => getAllRoutes(), []);
+  const { startTransition } = useRouteTransitionContext();
+
   // Memoizar handler para evitar re-creaciones
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (item.isDisabled) {
       e.preventDefault();
       return;
     }
+
+    // Activar overlay de transición inmediatamente
+    startTransition();
+
+    // Ejecutar navegación
     onNavigate?.();
-  }, [item.isDisabled, onNavigate]);
+  }, [item.isDisabled, onNavigate, startTransition]);
+
+  // Handler para precarga on hover
+  const handleMouseEnter = useCallback(() => {
+    if (item.isDisabled || isActive) return;
+
+    // Buscar ruta correspondiente
+    const route = allRoutes.find(r => r.id === item.id);
+    if (!route) return;
+
+    // Iniciar precarga con delay de 500ms
+    cancelPreloadRef.current = RoutePreloader.preloadOnHover(
+      route.id,
+      route.component,
+      500 // Delay de 500ms antes de precargar
+    );
+  }, [item.id, item.isDisabled, isActive, allRoutes]);
+
+  // Handler para cancelar precarga si sale antes del delay
+  const handleMouseLeave = useCallback(() => {
+    if (cancelPreloadRef.current) {
+      cancelPreloadRef.current();
+      cancelPreloadRef.current = null;
+    }
+  }, []);
 
   // Pre-calcular clases con estado collapsed optimizado - Transición más suave
   const baseClasses = 'flex items-center rounded min-h-[44px]';
@@ -75,6 +114,8 @@ const SidebarItem = React.memo<SidebarItemProps>(({ item, isActive, isCollapsed,
     <Link
       to={item.to || '#'}
       onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className={className}
       aria-label={`Navegar a ${item.label}`}
       title={title}

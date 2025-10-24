@@ -55,7 +55,7 @@ export const statisticsCardsConfig: IStatisticCard[] = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h.008v.008H9V12zm0-3h.008v.008H9V9zm6 3h.008v.008H15V12z" />
       </svg>
     ),
-    habilitado: true,
+    habilitado: false,
     color: STATISTICS_COLORS.IPH_SECONDARY,
   },
     {

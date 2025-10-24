@@ -34,6 +34,8 @@ interface UseHeatmapReturn {
   geolocationLoading: boolean;
   centerAddress: string | null;
   centerAddressLoading: boolean;
+  needsConsent: boolean; // Si necesita mostrar modal de consentimiento
+  handleConsent: (granted: boolean) => void; // Función para manejar consentimiento
 }
 
 const MODULE_NAME = 'useHeatmap';
@@ -55,8 +57,13 @@ export const useHeatmap = (): UseHeatmapReturn => {
   const [centerAddress, setCenterAddress] = useState<string | null>(null);
   const [centerAddressLoading, setCenterAddressLoading] = useState<boolean>(false);
 
-  // Hook de geolocalización
-  const { coordinates: geoCoords, loading: geoLoading } = useGeolocation();
+  // Hook de geolocalización con consentimiento
+  const { 
+    coordinates: geoCoords, 
+    loading: geoLoading,
+    needsConsent,
+    handleConsent 
+  } = useGeolocation({ autoRequest: false }); // No auto-request, esperar consentimiento
 
   // Ref para evitar múltiples llamadas simultáneas
   const fetchingRef = useRef<boolean>(false);
@@ -266,6 +273,8 @@ export const useHeatmap = (): UseHeatmapReturn => {
     userLocation: geoCoords ? { lat: geoCoords.latitude, lng: geoCoords.longitude } : null,
     geolocationLoading: geoLoading,
     centerAddress,
-    centerAddressLoading
+    centerAddressLoading,
+    needsConsent, // Nuevo: Si necesita mostrar modal de consentimiento
+    handleConsent // Nuevo: Función para manejar consentimiento
   };
 };

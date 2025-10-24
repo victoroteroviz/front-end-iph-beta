@@ -3,11 +3,33 @@
  *
  * @module useGeolocation
  * @description Obtiene la ubicación actual del usuario usando la API de Geolocation
+ * 
+ * @security
+ * - Consentimiento explícito requerido antes de solicitar ubicación
+ * - Cumplimiento GDPR/LFPDP
+ * - Consentimiento persiste 30 días en localStorage
+ * - Logs sanitizados sin coordenadas exactas
+ * 
+ * @performance
+ * - Caché de ubicación (5 minutos)
+ * - Precisión media (enableHighAccuracy: false)
+ * - Timeout de 5 segundos
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { logInfo, logError } from '../../../../../../helper/log/logger.helper';
 import { sanitizeCoordinatesForLog } from '../../../../../../helper/security/security.helper';
+
+const MODULE_NAME = 'useGeolocation';
+
+/**
+ * Datos de consentimiento almacenados
+ */
+interface ConsentData {
+  granted: boolean;
+  timestamp: number;
+  expiresIn: number;
+}
 
 interface GeolocationState {
   /** Coordenadas actuales del usuario */
@@ -23,7 +45,31 @@ interface GeolocationState {
   permissionDenied: boolean;
 }
 
-const MODULE_NAME = 'useGeolocation';
+/**
+ * Configuración del hook de geolocalización
+ */
+export interface UseGeolocationConfig {
+  /** Si debe solicitar ubicación automáticamente tras consentimiento (default: false) */
+  autoRequest?: boolean;
+  /** Callback cuando se obtiene ubicación exitosamente */
+  onSuccess?: (coords: { latitude: number; longitude: number }) => void;
+  /** Callback cuando hay error */
+  onError?: (error: string) => void;
+}
+
+/**
+ * Valor de retorno extendido del hook
+ */
+export interface UseGeolocationReturn extends GeolocationState {
+  /** Función para solicitar ubicación manualmente */
+  requestLocation: () => void;
+  /** Estado del consentimiento (true=aceptado, false=rechazado, null=pendiente) */
+  consentGiven: boolean | null;
+  /** Función para manejar consentimiento */
+  handleConsent: (granted: boolean) => void;
+  /** Si necesita mostrar modal de consentimiento */
+  needsConsent: boolean;
+}
 
 // Coordenadas por defecto (CDMX) si no se puede obtener ubicación
 const DEFAULT_COORDINATES = {
@@ -31,32 +77,56 @@ const DEFAULT_COORDINATES = {
   longitude: -99.1332
 };
 
+const CONSENT_STORAGE_KEY = 'geolocation_consent';
+const CONSENT_EXPIRY_DAYS = 30;
+
 /**
- * Hook para obtener la ubicación del dispositivo
+ * Hook para obtener la ubicación del dispositivo CON consentimiento explícito
  *
- * @returns {GeolocationState} Estado de la geolocalización
+ * @param config - Configuración opcional del hook
+ * @returns Estado de geolocalización y funciones de control
  *
  * @example
  * ```typescript
- * const { coordinates, loading, error, permissionDenied } = useGeolocation();
+ * const { 
+ *   coordinates, 
+ *   loading, 
+ *   needsConsent, 
+ *   handleConsent 
+ * } = useGeolocation({ autoRequest: true });
+ *
+ * if (needsConsent) {
+ *   return <GeolocationConsent onAccept={() => handleConsent(true)} onReject={() => handleConsent(false)} />;
+ * }
  *
  * if (loading) return <div>Obteniendo ubicación...</div>;
- * if (error) return <div>Error: {error}</div>;
  * if (coordinates) {
  *   console.log(`Lat: ${coordinates.latitude}, Lng: ${coordinates.longitude}`);
  * }
  * ```
  */
-export const useGeolocation = (): GeolocationState => {
+export const useGeolocation = (config?: UseGeolocationConfig): UseGeolocationReturn => {
   const [state, setState] = useState<GeolocationState>({
     coordinates: null,
-    loading: true,
+    loading: false, // NO loading automático - espera consentimiento
     error: null,
     permissionDenied: false
   });
 
+  const [consentGiven, setConsentGiven] = useState<boolean | null>(null);
+
+  // Usar ref para estabilizar config y evitar recreación de callbacks
+  const configRef = useRef(config);
+  
+  // Actualizar ref cuando config cambie (sin causar re-render)
   useEffect(() => {
-    // Verificar si la API de Geolocation está disponible
+    configRef.current = config;
+  }, [config]);
+
+  /**
+   * Solicita ubicación del usuario (solo se llama tras consentimiento)
+   */
+  const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
       logError(MODULE_NAME, new Error('Geolocation not supported'), 'API no disponible en este navegador');
       setState({
@@ -65,12 +135,14 @@ export const useGeolocation = (): GeolocationState => {
         error: 'Geolocalización no soportada por el navegador',
         permissionDenied: false
       });
+      configRef.current?.onError?.('Geolocalización no soportada');
       return;
     }
 
-    logInfo(MODULE_NAME, 'Solicitando ubicación del dispositivo');
+    setState(prev => ({ ...prev, loading: true }));
 
-    // Obtener ubicación actual
+    logInfo(MODULE_NAME, 'Usuario autorizó geolocalización, solicitando ubicación');
+
     navigator.geolocation.getCurrentPosition(
       // Success callback
       (position) => {
@@ -79,19 +151,21 @@ export const useGeolocation = (): GeolocationState => {
           longitude: position.coords.longitude
         };
 
-        // Sanitizar coordenadas antes de loggear (seguridad y privacidad)
-        const sanitizedLocation = sanitizeCoordinatesForLog(coords.latitude, coords.longitude);
-
-        logInfo(MODULE_NAME, 'Ubicación obtenida exitosamente', {
-          ...sanitizedLocation,
-          accuracy: position.coords.accuracy
-        });
-
         setState({
           coordinates: coords,
           loading: false,
           error: null,
           permissionDenied: false
+        });
+
+        configRef.current?.onSuccess?.(coords);
+
+        // Sanitizar coordenadas antes de loggear (privacidad)
+        const sanitizedLocation = sanitizeCoordinatesForLog(coords.latitude, coords.longitude);
+        logInfo(MODULE_NAME, 'Ubicación obtenida con consentimiento', {
+          ...sanitizedLocation,
+          accuracy: position.coords.accuracy
+          // NO loggear coordenadas exactas
         });
       },
       // Error callback
@@ -103,7 +177,7 @@ export const useGeolocation = (): GeolocationState => {
           case error.PERMISSION_DENIED:
             errorMessage = 'Permiso de ubicación denegado por el usuario';
             permissionDenied = true;
-            logInfo(MODULE_NAME, 'Usuario denegó permiso de ubicación');
+            logInfo(MODULE_NAME, 'Usuario denegó permiso de ubicación en navegador');
             break;
           case error.POSITION_UNAVAILABLE:
             errorMessage = 'Información de ubicación no disponible';
@@ -117,13 +191,14 @@ export const useGeolocation = (): GeolocationState => {
             logError(MODULE_NAME, error, 'Error en geolocalización');
         }
 
-        // Usar coordenadas por defecto en caso de error
         setState({
           coordinates: DEFAULT_COORDINATES,
           loading: false,
           error: errorMessage,
           permissionDenied
         });
+
+        configRef.current?.onError?.(errorMessage);
       },
       // Options
       {
@@ -132,7 +207,92 @@ export const useGeolocation = (): GeolocationState => {
         maximumAge: 300000 // Cache de 5 minutos
       }
     );
-  }, []);
+  }, []); // Sin dependencias - usa configRef en lugar de config
 
-  return state;
+  /**
+   * Maneja consentimiento del usuario
+   * Guarda preferencia en localStorage con expiración de 30 días
+   */
+  const handleConsent = useCallback((granted: boolean) => {
+    setConsentGiven(granted);
+
+    // Guardar preferencia en localStorage (válido 30 días)
+    try {
+      const consentData: ConsentData = {
+        granted,
+        timestamp: Date.now(),
+        expiresIn: CONSENT_EXPIRY_DAYS * 24 * 60 * 60 * 1000 // 30 días en ms
+      };
+
+      localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(consentData));
+      
+      logInfo(MODULE_NAME, `Consentimiento de geolocalización ${granted ? 'aceptado' : 'rechazado'}`, {
+        granted,
+        expiresIn: `${CONSENT_EXPIRY_DAYS} días`
+      });
+    } catch (error) {
+      logError(MODULE_NAME, error as Error, 'Error guardando consentimiento');
+    }
+
+    if (granted) {
+      requestLocation();
+    } else {
+      // Usuario rechazó, usar coordenadas por defecto
+      setState({
+        coordinates: DEFAULT_COORDINATES,
+        loading: false,
+        error: null,
+        permissionDenied: true
+      });
+    }
+  }, [requestLocation]);
+
+  /**
+   * Verifica consentimiento previo al montar
+   * Carga consentimiento desde localStorage si existe y es válido
+   */
+  useEffect(() => {
+    // Flag para evitar ejecución múltiple
+    let hasRequested = false;
+
+    try {
+      const savedConsent = localStorage.getItem(CONSENT_STORAGE_KEY);
+      if (savedConsent) {
+        const data: ConsentData = JSON.parse(savedConsent);
+
+        // Verificar si el consentimiento sigue válido
+        const now = Date.now();
+        if (now - data.timestamp < data.expiresIn) {
+          setConsentGiven(data.granted);
+
+          logInfo(MODULE_NAME, 'Consentimiento previo cargado', {
+            granted: data.granted,
+            age: Math.floor((now - data.timestamp) / (24 * 60 * 60 * 1000)) + ' días'
+          });
+
+          // Si hay consentimiento previo, solicitar ubicación UNA SOLA VEZ
+          if (data.granted && !hasRequested) {
+            hasRequested = true;
+            requestLocation();
+          }
+          return;
+        } else {
+          // Expiró, eliminar
+          localStorage.removeItem(CONSENT_STORAGE_KEY);
+          logInfo(MODULE_NAME, 'Consentimiento expirado, solicitando nuevo');
+        }
+      }
+    } catch (error) {
+      logError(MODULE_NAME, error as Error, 'Error leyendo consentimiento');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Solo ejecutar al montar, NO depender de requestLocation
+
+  return {
+    ...state,
+    requestLocation,
+    consentGiven,
+    handleConsent,
+    needsConsent: consentGiven === null
+  };
 };

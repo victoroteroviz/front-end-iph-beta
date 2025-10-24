@@ -11,7 +11,7 @@ import GraficaSemanaCard from '../statistics/components/cards/GraficaSemanaCard'
 import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 
 // Componentes comunes
-import { LoadingSpinner, ErrorMessage } from '../../common';
+import { LoadingSpinner, ErrorMessage, Heatmap } from '../../common';
 
 /**
  * Props interface for Inicio component
@@ -358,7 +358,9 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
       </div>
       
      
-      
+      {/* Acceso al mapa de calor */}
+          <Heatmap className='pg-2 mb-5'></Heatmap>
+        {/* Quick Access Cards Grid */}
 
       {/* Quick Access Section - Mantenida con estilo mejorado */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -382,7 +384,7 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
           )}
         </button>
 
-        {/* Quick Access Cards Grid */}
+        
         {!quickAccessCollapsed && (
           <div className="p-4 lg:p-6">
             {/* Nota informativa */}
