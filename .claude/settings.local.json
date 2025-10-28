@@ -10,7 +10,9 @@
       "Bash(grep:*)",
       "Bash(tree:*)",
       "Bash(bash /mnt/d/Okip/codigo-fuente/front-end-iph-beta/REFACTOR_STATISTICS_SCRIPT.sh:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)"
     ],
     "deny": [],
     "ask": []

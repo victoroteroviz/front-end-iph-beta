@@ -5,25 +5,32 @@
  * @pattern Atomic Design + Custom Hook
  * @uses useStatisticsModal - Hook personalizado para lógica del modal
  * @uses useEstadisticasPermissions - Hook personalizado para control de acceso
- * @version 2.1.0 - Agregado control de acceso por roles
+ * @version 2.2.0 - Reorganización en componentes atómicos
  *
  * Roles permitidos:
  * - SuperAdmin: Acceso completo + exportación
  * - Administrador: Acceso completo + exportación
  * - Superior: Acceso completo (sin exportación)
  * - Elemento: SIN ACCESO (redirige a /inicio)
+ *
+ * @structure
+ * - EstadisticasHeader: Header con título y métricas
+ * - EstadisticasGrid: Grid de tarjetas
+ * - StatCard: Tarjeta individual (atómico)
+ * - StatisticsModal: Modal de contenido
  */
 
-import React, { useState } from 'react';
-import { BarChart3 } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
 import type { IStatisticCard } from '../../../../interfaces/IStatistic';
 import { statisticsCardsConfig } from './config';
 import StatisticsModal from './components/modals/StatisticsModal';
+import EstadisticasHeader from './components/layout/EstadisticasHeader';
+import EstadisticasGrid from './components/layout/EstadisticasGrid';
 import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 import { useStatisticsModal } from './hooks/useStatisticsModal';
 import { useEstadisticasPermissions } from './hooks/useEstadisticasPermissions';
-import { logDebug, logWarning } from '../../../../helper/log/logger.helper';
-import './Estadisticas.css';
+import { logDebug } from '../../../../helper/log/logger.helper';
+import './styles/Estadisticas.css';
 
 const Estadisticas: React.FC = () => {
   // Control de acceso por roles
@@ -63,9 +70,11 @@ const Estadisticas: React.FC = () => {
     { label: 'Panel de Estadísticas', isActive: true }
   ];
 
-  // Calcular métricas rápidas
-  const enabledCount = statistics.filter(s => s.habilitado).length;
-  const totalCount = statistics.length;
+  // Calcular métricas rápidas (memoizado para evitar recálculo innecesario)
+  const { enabledCount, totalCount } = useMemo(() => ({
+    enabledCount: statistics.filter(s => s.habilitado).length,
+    totalCount: statistics.length
+  }), [statistics]);
 
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8" data-component="estadisticas">
@@ -76,79 +85,17 @@ const Estadisticas: React.FC = () => {
           <Breadcrumbs items={breadcrumbItems} />
         </div>
 
-        {/* Header principal mejorado */}
-        <div className="relative bg-gradient-to-br from-white via-[#fdf7f1] to-white rounded-2xl border border-[#c2b186]/30 p-6 mb-6 shadow-lg shadow-[#4d4725]/5 overflow-hidden">
-          {/* Patrón de fondo decorativo */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#948b54]/5 rounded-full blur-3xl -z-0" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#c2b186]/5 rounded-full blur-3xl -z-0" />
+        {/* Header con métricas */}
+        <EstadisticasHeader
+          enabledCount={enabledCount}
+          totalCount={totalCount}
+        />
 
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-xl shadow-lg shadow-[#4d4725]/20 transition-transform duration-300 hover:scale-110 hover:rotate-3">
-                  <BarChart3 className="h-7 w-7 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-[#4d4725] font-poppins tracking-tight">
-                    Panel de Estadísticas
-                  </h1>
-                  <p className="text-gray-600 font-poppins mt-1">
-                    Explora y analiza diferentes métricas del sistema IPH
-                  </p>
-                </div>
-              </div>
-
-              {/* Stats rápidas */}
-              <div className="hidden lg:flex items-center gap-4">
-                <div className="text-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-lg border border-[#c2b186]/20">
-                  <div className="text-2xl font-bold text-[#4d4725] font-poppins">{enabledCount}</div>
-                  <div className="text-xs text-gray-600 font-poppins">Disponibles</div>
-                </div>
-                <div className="text-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-lg border border-[#c2b186]/20">
-                  <div className="text-2xl font-bold text-gray-500 font-poppins">{totalCount - enabledCount}</div>
-                  <div className="text-xs text-gray-600 font-poppins">Próximamente</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Grid de estadísticas con estilos originales */}
-        <div className="estadisticas-content">
-          <div className="estadisticas-grid">
-            {statistics.map((stat) => (
-              <div
-                key={stat.id}
-                className={`stat-card ${!stat.habilitado ? 'disabled' : ''}`}
-                onClick={() => handleCardClick(stat)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleCardClick(stat);
-                  }
-                }}
-                role="button"
-                tabIndex={stat.habilitado ? 0 : -1}
-                aria-label={`${stat.titulo}: ${stat.descripcion}`}
-                aria-disabled={!stat.habilitado}
-                style={{ borderColor: stat.habilitado ? stat.color : undefined }}
-              >
-                <div className="stat-card-icon" style={{ backgroundColor: stat.habilitado ? stat.color : undefined }}>
-                  {stat.icono}
-                </div>
-                <div className="stat-card-content">
-                  <h3>{stat.titulo}</h3>
-                  <p>{stat.descripcion}</p>
-                </div>
-                {!stat.habilitado && (
-                  <div className="stat-card-badge">
-                    Próximamente
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Grid de tarjetas de estadísticas */}
+        <EstadisticasGrid
+          statistics={statistics}
+          onCardClick={handleCardClick}
+        />
 
         {/* Modal de estadísticas */}
         {selectedStat && (

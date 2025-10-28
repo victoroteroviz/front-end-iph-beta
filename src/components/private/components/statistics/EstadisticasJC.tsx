@@ -21,7 +21,7 @@ import {
   EstadisticasJCFooter
 } from './sections';
 import { logDebug } from '../../../../helper/log/logger.helper';
-import './EstadisticasJC.css';
+import './styles/EstadisticasJC.css';
 
 export interface EstadisticasJCProps {
   /** Filtros externos (cuando se renderizan fuera del componente) */

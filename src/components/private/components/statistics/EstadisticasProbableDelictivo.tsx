@@ -12,7 +12,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useEstadisticasProbableDelictivo } from './hooks/useEstadisticasProbableDelictivo';
 import GraficaBarrasJC from './components/charts/GraficaBarrasJC';
 import GraficaPromedioJC from './components/charts/GraficaPromedioJC';
-import './EstadisticasJC.css';
+import './styles/EstadisticasJC.css';
 
 interface EstadisticasProbableDelictivoProps {
   /** Filtros externos (cuando se renderizan fuera del componente) */
