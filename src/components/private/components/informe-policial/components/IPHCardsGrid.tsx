@@ -1,6 +1,7 @@
 /**
  * Componente IPHCardsGrid
  * Grid responsivo de tarjetas IPH con estados de carga y vacío
+ * ✅ OPTIMIZACIÓN: Muestra siempre 12 skeleton cards (3 filas x 4 cols) para evitar layout shift
  */
 
 import React from 'react';
@@ -8,7 +9,9 @@ import { FileX, AlertCircle } from 'lucide-react';
 import IPHCard from './IPHCard';
 import IPHSkeletonCard from './IPHSkeletonCard';
 import type { IIPHCardsGridProps } from '../../../../../interfaces/components/informe-policial.interface';
-import { INFORME_POLICIAL_CONFIG } from '../../../../../interfaces/components/informe-policial.interface';
+
+// Constante para skeleton cards: 3 filas x 4 columnas = 12 cards
+const SKELETON_CARDS_COUNT = 12;
 
 const IPHCardsGrid: React.FC<IIPHCardsGridProps> = ({
   registros,
@@ -17,15 +20,15 @@ const IPHCardsGrid: React.FC<IIPHCardsGridProps> = ({
   className = ''
 }) => {
 
-  // Estado de carga
+  // Estado de carga - siempre 12 skeleton cards para evitar rebote
   if (loading) {
     return (
-      <div 
+      <div
         className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ${className}`}
         aria-label="Cargando informes policiales"
         role="status"
       >
-        {Array.from({ length: INFORME_POLICIAL_CONFIG.SKELETON_CARDS_COUNT }).map((_, index) => (
+        {Array.from({ length: SKELETON_CARDS_COUNT }).map((_, index) => (
           <IPHSkeletonCard key={`skeleton-${index}`} />
         ))}
       </div>

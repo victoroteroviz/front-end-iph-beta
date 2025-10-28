@@ -448,21 +448,20 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
         </div>
       </aside>
 
-      {/* Botón pestaña flotante collapse/expand - MEJORADO UX */}
+      {/* Botón pestaña flotante collapse/expand - Estilo limpio con fondo blanco */}
       {!isMobile && (
         <button
           onClick={handleToggleCollapse}
           className="
             fixed top-1/2 -translate-y-1/2 z-50
             w-8 h-16
-            bg-white/90 backdrop-blur-md
-            hover:bg-white/95 hover:shadow-xl
-            shadow-lg
-            border-2 border-[rgb(121,85,72)] border-l-0
+            bg-white hover:bg-white/95
+            shadow-lg hover:shadow-xl
+            border-2 border-[#4d4725] border-l-0
             flex items-center justify-center
             transition-all duration-300 ease-in-out
             hover:w-9
-            focus:outline-none focus:ring-2 focus:ring-[rgb(121,85,72)] focus:ring-offset-2 focus:ring-offset-white
+            focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-2 focus:ring-offset-white
             cursor-pointer
           "
           style={{
@@ -476,9 +475,9 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
           title={shouldCollapse ? "Expandir sidebar" : "Colapsar sidebar"}
         >
           {shouldCollapse ? (
-            <ChevronRight size={20} className="text-[rgb(121,85,72)] transition-colors duration-300" />
+            <ChevronRight size={20} className="text-[#4d4725] transition-colors duration-300" />
           ) : (
-            <ChevronLeft size={20} className="text-[rgb(121,85,72)] transition-colors duration-300" />
+            <ChevronLeft size={20} className="text-[#4d4725] transition-colors duration-300" />
           )}
         </button>
       )}

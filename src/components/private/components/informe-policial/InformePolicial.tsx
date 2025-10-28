@@ -11,7 +11,7 @@
  */
 
 import React, { useEffect, useMemo } from 'react';
-import { AlertCircle, RefreshCw, FileText, Users, Loader2, SquareChartGantt, Filter, Shield } from 'lucide-react';
+import { AlertCircle, RefreshCw, FileText, Users, SquareChartGantt, Filter, Shield } from 'lucide-react';
 
 // Hook personalizado
 import useInformePolicial from './hooks/useInformePolicial';
@@ -20,10 +20,12 @@ import useInformePolicial from './hooks/useInformePolicial';
 import IPHFilters from './components/IPHFilters';
 import IPHTipoFilter from './components/IPHTipoFilter';
 import IPHCardsGrid from './components/IPHCardsGrid';
-import IPHPagination from './components/IPHPagination';
 import AutoRefreshIndicator from './components/AutoRefreshIndicator';
 import EstadisticasCards from './components/EstadisticasCards';
 import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
+
+// Componentes compartidos
+import Pagination from '../../../shared/components/pagination';
 
 // Helpers
 import { logInfo, logWarning } from '../../../../helper/log/logger.helper';
@@ -215,27 +217,9 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
     { label: 'Listado de Referencias', isActive: true }
   ];
 
-  // Estado de carga inicial
-  if (state.isLoading && !hasData) {
-    return (
-      <div className={`min-h-screen p-4 md:p-6 lg:p-8 ${className}`} data-component="informe-policial">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <Breadcrumbs items={breadcrumbItems} />
-          </div>
-          <div className="text-center py-16">
-            <Loader2 className="h-12 w-12 animate-spin mx-auto text-[#4d4725] mb-4" />
-            <h2 className="text-xl font-semibold text-[#4d4725] mb-2 font-poppins">
-              Cargando informes policiales...
-            </h2>
-            <p className="text-gray-600 font-poppins">
-              Obteniendo la lista actualizada de informes
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // ✅ OPTIMIZACIÓN UX: Pantalla de carga completa eliminada
+  // El componente padre ya maneja el loading inicial
+  // El grid muestra skeleton cards durante la carga (mejor UX)
 
   return (
     <div className={`min-h-screen p-4 md:p-6 lg:p-8 ${className}`} data-component="informe-policial">
@@ -436,22 +420,17 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
 
         
 
-        {/* Paginación - MEJORADA */}
-        {state.pagination.totalPages > 1 && (
-          <div className="bg-white rounded-xl border border-[#c2b186]/30 mb-6 p-5 shadow-md">
-            <IPHPagination
-              pagination={{
-                ...state.pagination,
-                currentPage: state.filters.page // Usar la página de los filtros, no del servidor
-              }}
-              loading={isAnyLoading}
-              onPageChange={handlePageChange}
-            />
-          </div>
-        )}
+        {/* Paginación - Componente genérico compartido */}
+        <Pagination
+          currentPage={state.filters.page}
+          totalPages={state.pagination.totalPages}
+          totalItems={state.pagination.totalItems}
+          onPageChange={handlePageChange}
+          loading={isAnyLoading}
+        />
 
         {/* Estadísticas - MEJORADAS */}
-        <div className="bg-white rounded-xl border border-[#c2b186]/30 mb-6 shadow-md overflow-hidden">
+        {/* <div className="bg-white rounded-xl border border-[#c2b186]/30 mb-6 shadow-md overflow-hidden">
           <div className="p-6 bg-gradient-to-r from-[#fdf7f1] to-white border-b border-[#c2b186]/20">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-lg shadow-sm">
@@ -470,7 +449,7 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
           <div className="p-6">
             <EstadisticasCards />
           </div>
-        </div>
+        </div> */}
 
         {/* Información de la sesión - MEJORADA */}
         <div className="bg-gradient-to-r from-white to-[#fdf7f1] rounded-xl border border-[#c2b186]/30 p-5 shadow-sm">
