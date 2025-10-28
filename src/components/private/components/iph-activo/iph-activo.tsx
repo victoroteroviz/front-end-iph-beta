@@ -11,17 +11,16 @@
  */
 
 import React, { useEffect, useMemo } from 'react';
-import { AlertCircle, RefreshCw, FileText, Users, SquareChartGantt, Filter, Shield } from 'lucide-react';
+import { AlertCircle, RefreshCw, FileText, Users, Filter, Shield } from 'lucide-react';
 
 // Hook personalizado
-import useInformePolicial from './hooks/useInformePolicial';
+import useInformePolicial from './hooks/useIphActivo';
 
 // Componentes atómicos
 import IPHFilters from './components/IPHFilters';
 import IPHTipoFilter from './components/IPHTipoFilter';
 import IPHCardsGrid from './components/IPHCardsGrid';
 import AutoRefreshIndicator from './components/AutoRefreshIndicator';
-import EstadisticasCards from './components/EstadisticasCards';
 import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 
 // Componentes compartidos
@@ -114,7 +113,6 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
     handleManualRefresh,
     toggleAutoRefresh,
     timeUntilNextRefresh,
-    hasData,
     isAnyLoading,
     visibleRecords
   } = useInformePolicial(autoRefreshInterval, roleValidation.hasAccess);
@@ -142,8 +140,8 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
         <div className="max-w-3xl mx-auto">
           <div className="bg-gradient-to-br from-white via-red-50/30 to-white rounded-2xl border border-red-200 p-8 text-center shadow-lg overflow-hidden relative">
             {/* Patrón decorativo */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-red-100/30 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-red-100/30 rounded-full blur-3xl" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-100/30 rounded-full blur-3xl -z-10" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-red-100/30 rounded-full blur-3xl -z-10" />
 
             <div className="relative z-10">
               <div className="flex justify-center mb-6">
@@ -233,13 +231,13 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
         {/* Header principal - MEJORADO VISUALMENTE */}
         <div className="relative bg-gradient-to-br from-white via-[#fdf7f1] to-white rounded-2xl border border-[#c2b186]/30 p-6 mb-6 shadow-lg shadow-[#4d4725]/5 overflow-hidden">
           {/* Patrón de fondo decorativo */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#948b54]/5 rounded-full blur-3xl -z-0" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#c2b186]/5 rounded-full blur-3xl -z-0" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#948b54]/5 rounded-full blur-3xl -z-10" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#c2b186]/5 rounded-full blur-3xl -z-10" />
 
           <div className="relative z-10">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-xl shadow-lg shadow-[#4d4725]/20 transition-transform duration-300 hover:scale-110 hover:rotate-3">
+                <div className="p-3 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-xl shadow-lg shadow-[#4d4725]/20 transition-transform duration-300 hover:scale-105 hover:rotate-3">
                   <FileText className="h-7 w-7 text-white" />
                 </div>
                 <div>
@@ -461,6 +459,11 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
                   <span className="text-gray-700">
                     Última actualización: <span className="font-semibold text-[#4d4725]">{state.lastUpdated.toLocaleTimeString('es-MX')}</span>
                   </span>
+                  {state.isFromCache && (
+                    <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-700 rounded-full border border-blue-300">
+                      📦 Cache
+                    </span>
+                  )}
                 </div>
               )}
               <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 rounded-lg border border-[#c2b186]/20">

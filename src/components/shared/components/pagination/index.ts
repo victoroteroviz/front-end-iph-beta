@@ -68,6 +68,6 @@ export {
   calculateTotalPages,
 
   // Helpers
-  getButtonStyles,
-  handleKeyboardNavigation
+  getButtonStyles
+  // handleKeyboardNavigation - ELIMINADO: Navegación solo con mouse
 } from './utils/pagination.utils';

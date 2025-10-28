@@ -14,9 +14,9 @@ import useUsuarios from './hooks/useUsuarios';
 import UsuariosFilters from './components/UsuariosFilters';
 import UsuariosTable from './components/UsuariosTable';
 import VirtualizedTable from './components/VirtualizedTable';
-import Pagination from './components/Pagination';
 import DeleteConfirmModal from './components/DeleteConfirmModal';
 import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
+import Pagination from '../../../shared/components/pagination'; // ✅ Componente compartido
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';
@@ -177,7 +177,7 @@ const Usuarios: React.FC<UsuariosProps> = ({
           </div>
 
           {/* Paginación - Solo mostrar si no se usa virtualización */}
-          {!shouldUseVirtualization && state.totalPages > 1 && (
+          {!shouldUseVirtualization && (
             <div className="px-6 pb-6 border-t border-gray-200 pt-4">
               <Pagination
                 currentPage={state.filters.page}

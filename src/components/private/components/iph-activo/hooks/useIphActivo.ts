@@ -2,6 +2,7 @@
  * Hook personalizado para InformePolicial
  * Maneja toda la lógica de negocio separada de la presentación
  * Incluye auto-refresh configurable y control de acceso por roles
+ * Cache LRU con límite de 10 páginas y TTL de 1 minuto
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -30,6 +31,195 @@ import {
 } from '../../../../../interfaces/components/informe-policial.interface';
 
 // =====================================================
+// CACHE MANAGER PARA IPH (LRU CON LÍMITE DE 10 PÁGINAS)
+// =====================================================
+
+/**
+ * Datos almacenados en el cache
+ */
+interface IPHCachedData {
+  data: IRegistroIPH[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  timestamp: number;
+}
+
+/**
+ * Interfaz para entradas del cache
+ */
+interface IPHCacheEntry {
+  data: IPHCachedData;
+  timestamp: number;
+  filters: IInformePolicialFilters;
+  accessCount: number;
+  lastAccess: number;
+}
+
+/**
+ * Cache Manager especializado para IPH
+ * - Límite: 10 páginas
+ * - TTL: 1 minuto (60,000 ms)
+ * - Estrategia: LRU (Least Recently Used)
+ */
+class IPHCacheManager {
+  private cache: Map<string, IPHCacheEntry> = new Map();
+  private readonly MAX_PAGES = 10;
+  private readonly TTL = 60 * 1000; // 1 minuto
+
+  /**
+   * Genera una clave única basada en página + filtros
+   */
+  private generateKey(page: number, filters: IInformePolicialFilters): string {
+    return JSON.stringify({
+      page,
+      search: filters.search || '',
+      searchBy: filters.searchBy || 'n_referencia',
+      tipoId: filters.tipoId || null
+    });
+  }
+
+  /**
+   * Verifica si una entrada está expirada
+   */
+  private isExpired(entry: IPHCacheEntry): boolean {
+    return Date.now() - entry.timestamp > this.TTL;
+  }
+
+  /**
+   * Elimina la entrada menos usada (LRU)
+   */
+  private evictLRU(): void {
+    if (this.cache.size === 0) return;
+
+    let lruKey: string | null = null;
+    let lruAccessCount = Infinity;
+    let lruLastAccess = Infinity;
+
+    // Encontrar la entrada menos usada
+    for (const [key, entry] of this.cache.entries()) {
+      if (entry.accessCount < lruAccessCount || 
+          (entry.accessCount === lruAccessCount && entry.lastAccess < lruLastAccess)) {
+        lruKey = key;
+        lruAccessCount = entry.accessCount;
+        lruLastAccess = entry.lastAccess;
+      }
+    }
+
+    if (lruKey) {
+      this.cache.delete(lruKey);
+      logDebug('IPHCache', 'LRU eviction', { evictedKey: lruKey });
+    }
+  }
+
+  /**
+   * Limpia entradas expiradas
+   */
+  private cleanExpired(): void {
+    let expiredCount = 0;
+
+    for (const [key, entry] of this.cache.entries()) {
+      if (this.isExpired(entry)) {
+        this.cache.delete(key);
+        expiredCount++;
+      }
+    }
+
+    if (expiredCount > 0) {
+      logDebug('IPHCache', 'Expired entries cleaned', { count: expiredCount });
+    }
+  }
+
+  /**
+   * Obtiene datos del cache si existen y no están expirados
+   */
+  get(page: number, filters: IInformePolicialFilters): IPHCachedData | null {
+    this.cleanExpired();
+
+    const key = this.generateKey(page, filters);
+    const entry = this.cache.get(key);
+
+    if (!entry) {
+      logDebug('IPHCache', 'Cache MISS', { page, filters });
+      return null;
+    }
+
+    if (this.isExpired(entry)) {
+      this.cache.delete(key);
+      logDebug('IPHCache', 'Cache EXPIRED', { page, filters });
+      return null;
+    }
+
+    // Actualizar métricas LRU
+    entry.accessCount++;
+    entry.lastAccess = Date.now();
+
+    logInfo('IPHCache', 'Cache HIT', { 
+      page, 
+      age: Math.floor((Date.now() - entry.timestamp) / 1000) + 's',
+      accessCount: entry.accessCount
+    });
+
+    return entry.data;
+  }
+
+  /**
+   * Guarda datos en el cache
+   */
+  set(page: number, filters: IInformePolicialFilters, data: IPHCachedData): void {
+    this.cleanExpired();
+
+    // Si alcanzamos el límite, eliminar LRU
+    if (this.cache.size >= this.MAX_PAGES) {
+      this.evictLRU();
+    }
+
+    const key = this.generateKey(page, filters);
+    const entry: IPHCacheEntry = {
+      data,
+      timestamp: Date.now(),
+      filters: { ...filters },
+      accessCount: 1,
+      lastAccess: Date.now()
+    };
+
+    this.cache.set(key, entry);
+
+    logInfo('IPHCache', 'Cache SET', { 
+      page, 
+      cacheSize: this.cache.size,
+      maxSize: this.MAX_PAGES 
+    });
+  }
+
+  /**
+   * Invalida todo el cache
+   */
+  clear(): void {
+    const previousSize = this.cache.size;
+    this.cache.clear();
+    
+    if (previousSize > 0) {
+      logInfo('IPHCache', 'Cache cleared', { previousSize });
+    }
+  }
+
+  /**
+   * Obtiene estadísticas del cache
+   */
+  getStats() {
+    return {
+      size: this.cache.size,
+      maxSize: this.MAX_PAGES,
+      ttl: this.TTL
+    };
+  }
+}
+
+// Instancia global del cache
+const iphCache = new IPHCacheManager();
+
+// =====================================================
 // ESTADO INICIAL
 // =====================================================
 
@@ -54,7 +244,8 @@ const createInitialState = (): IInformePolicialState => {
     userCanViewAll: userInfo.canViewAll,
     currentUserId: userInfo.userId,
     tiposIPH: [],
-    tiposLoading: false
+    tiposLoading: false,
+    isFromCache: false
   };
 };
 
@@ -100,10 +291,10 @@ const useInformePolicial = (
 
   const checkAccess = useCallback(() => {
     const userData = JSON.parse(sessionStorage.getItem('user_data') || '{}');
-    const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
+    const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]') as Array<{ nombre: string }>;
     
     // Verificar que el usuario tenga roles válidos para ver IPH
-    const hasValidRole = userRoles.some((role: any) => 
+    const hasValidRole = userRoles.some((role) => 
       ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'].includes(role.nombre)
     );
 
@@ -115,7 +306,7 @@ const useInformePolicial = (
 
     logInfo('InformePolicial', 'Access granted to user', {
       userId: userData?.id,
-      roles: userRoles.map((r: any) => r.nombre),
+      roles: userRoles.map((r) => r.nombre),
       canViewAll: state.userCanViewAll
     });
 
@@ -171,8 +362,53 @@ const useInformePolicial = (
     }
   }, []);
 
-  const loadIPHs = useCallback(async (showLoadingIndicator: boolean = true) => {
+  const loadIPHs = useCallback(async (showLoadingIndicator: boolean = true, bypassCache: boolean = false) => {
     try {
+      // Usar refs en lugar de state para evitar dependencias circulares
+      const filters = currentFiltersRef.current;
+      const canViewAll = userCanViewAllRef.current;
+      const userId = currentUserIdRef.current;
+
+      // =====================================================
+      // VERIFICAR CACHE PRIMERO (si no es bypass)
+      // =====================================================
+      
+      if (!bypassCache) {
+        const cachedData = iphCache.get(filters.page, filters);
+        
+        if (cachedData) {
+          // Datos encontrados en cache, actualizar estado sin API call
+          setState(prev => ({
+            ...prev,
+            registros: cachedData.data,
+            pagination: {
+              ...prev.pagination,
+              currentPage: cachedData.currentPage,
+              totalPages: cachedData.totalPages,
+              totalItems: cachedData.totalItems
+            },
+            isLoading: false,
+            isRefreshing: false,
+            lastUpdated: new Date(cachedData.timestamp), // Usar timestamp del cache
+            nextAutoRefresh: Date.now() + autoRefreshInterval,
+            error: null,
+            isFromCache: true // ✅ Marcar como datos del cache
+          }));
+
+          logInfo('InformePolicial', '✅ Data loaded from CACHE', {
+            page: filters.page,
+            recordsCount: cachedData.data.length,
+            cacheAge: Math.floor((Date.now() - cachedData.timestamp) / 1000) + 's'
+          });
+
+          return; // Salir sin hacer API call
+        }
+      }
+
+      // =====================================================
+      // CACHE MISS O BYPASS - HACER API CALL
+      // =====================================================
+
       if (showLoadingIndicator) {
         setState(prev => ({
           ...prev,
@@ -187,21 +423,29 @@ const useInformePolicial = (
         }));
       }
 
-      // Usar refs en lugar de state para evitar dependencias circulares
-      const filters = currentFiltersRef.current;
-      const canViewAll = userCanViewAllRef.current;
-      const userId = currentUserIdRef.current;
-
-      logDebug('InformePolicial', 'Loading IPH list', {
+      logDebug('InformePolicial', '🌐 Loading IPH list from API', {
         filters,
         userCanViewAll: canViewAll,
-        userId
+        userId,
+        bypassCache
       });
 
       const response = await informePolicialService.getIPHList(
         filters,
         canViewAll ? undefined : userId || undefined
       );
+
+      // =====================================================
+      // GUARDAR EN CACHE
+      // =====================================================
+      
+      iphCache.set(filters.page, filters, {
+        data: response.data,
+        currentPage: response.currentPage,
+        totalPages: response.totalPages,
+        totalItems: response.totalItems,
+        timestamp: Date.now()
+      });
 
       setState(prev => ({
         ...prev,
@@ -216,14 +460,16 @@ const useInformePolicial = (
         isRefreshing: false,
         lastUpdated: new Date(),
         nextAutoRefresh: Date.now() + autoRefreshInterval,
-        error: null
+        error: null,
+        isFromCache: false // ✅ Marcar como datos frescos de la API
       }));
 
-      logInfo('InformePolicial', 'IPH list loaded successfully', {
+      logInfo('InformePolicial', '✅ IPH list loaded from API and CACHED', {
         recordsCount: response.data.length,
         totalPages: response.totalPages,
         totalItems: response.totalItems,
-        currentPage: response.currentPage
+        currentPage: response.currentPage,
+        cacheStats: iphCache.getStats()
       });
 
     } catch (error) {
@@ -249,6 +495,16 @@ const useInformePolicial = (
   // =====================================================
 
   const updateFilters = useCallback((filters: Partial<IInformePolicialFilters>) => {
+    // ✅ Invalidar cache cuando cambian filtros (excepto página)
+    const filtersChanged = Object.keys(filters).some(key => 
+      key !== 'page' && filters[key as keyof IInformePolicialFilters] !== undefined
+    );
+    
+    if (filtersChanged) {
+      iphCache.clear();
+      logInfo('InformePolicial', '🗑️ Cache cleared due to filter change');
+    }
+
     setState(prev => {
       const newFilters = {
         ...prev.filters,
@@ -277,6 +533,10 @@ const useInformePolicial = (
       clearTimeout(debounceTimer.current);
     }
 
+    // ✅ Invalidar cache en búsqueda manual
+    iphCache.clear();
+    logInfo('InformePolicial', '🗑️ Cache cleared due to manual search');
+
     // Mostrar loading inmediatamente para mejor UX
     setState(prev => {
       // Log simplificado (solo en dev, se descarta en prod)
@@ -301,6 +561,10 @@ const useInformePolicial = (
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
+
+    // ✅ Invalidar cache cuando se limpian filtros
+    iphCache.clear();
+    logInfo('InformePolicial', '🗑️ Cache cleared due to filters reset');
 
     // Mostrar loading inmediatamente
     setState(prev => {
@@ -385,14 +649,18 @@ const useInformePolicial = (
   }, [autoRefreshInterval]);
 
   const handleManualRefresh = useCallback(async () => {
-    logInfo('InformePolicial', 'Manual refresh triggered by user');
+    logInfo('InformePolicial', '🔄 Manual refresh triggered by user');
+    
+    // ✅ Invalidar cache en refresh manual
+    iphCache.clear();
+    logInfo('InformePolicial', '🗑️ Cache cleared due to manual refresh');
     
     setState(prev => ({
       ...prev,
       nextAutoRefresh: Date.now() + autoRefreshInterval
     }));
 
-    await loadIPHs(false); // Sin loading indicator, usa refreshing
+    await loadIPHs(false, true); // Sin loading indicator, usa refreshing, bypass cache
     
     showSuccess('Lista actualizada correctamente', 'Actualización');
   }, [autoRefreshInterval, loadIPHs]);

@@ -59,7 +59,7 @@ const Inicio = lazy(() => import('../components/private/components/home/Inicio')
 const Estadisticas = lazy(() => import('../components/private/components/statistics/Estadisticas'));
 const HistorialIPH = lazy(() => import('../components/private/components/historial-iph/HistorialIPH'));
 const IphOficial = lazy(() => import('../components/private/components/iph-oficial/IphOficial'));
-const InformePolicial = lazy(() => import('../components/private/components/informe-policial/InformePolicial'));
+const InformePolicial = lazy(() => import('../components/private/components/iph-activo/iph-activo'));
 const PerfilUsuario = lazy(() => import('../components/private/components/perfil-usuario/PerfilUsuario'));
 const Usuarios = lazy(() => import('../components/private/components/usuarios/Usuarios'));
 const InformeEjecutivo = lazy(() => import('../components/private/components/informe-ejecutivo/InformeEjecutivo'));

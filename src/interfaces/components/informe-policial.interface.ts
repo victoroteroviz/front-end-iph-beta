@@ -136,6 +136,7 @@ export interface IInformePolicialState {
   currentUserId: string | null;
   tiposIPH: ITipoIPH[]; // Tipos de IPH disponibles
   tiposLoading: boolean; // Estado de carga de tipos
+  isFromCache: boolean; // true si los datos actuales vienen del cache
 }
 
 export interface IUseInformePolicialReturn {
