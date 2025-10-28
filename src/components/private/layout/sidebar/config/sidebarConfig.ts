@@ -25,7 +25,7 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       label: 'Inicio',
       to: '/inicio',
       icon: React.createElement(Home, { size: 20 }),
-      requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
+      requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
       order: 1
     },
     {
@@ -41,7 +41,7 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       label: 'IPH\'s Activos',
       to: '/informepolicial',
       icon: React.createElement(FileText, { size: 20 }),
-      requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
+      requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
       order: 3
     },
     {
@@ -49,7 +49,7 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       label: 'Historico IPH',
       to: '/historialiph',
       icon: React.createElement(Clock, { size: 20 }),
-      requiredRoles: ['SuperAdmin', 'Administrador'],
+      requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
       order: 4
     },
     {
@@ -64,9 +64,9 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       id: 'grupos',
       label: 'Gestión Grupos',
       to: '/gestion-grupos',
-      requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
+      requiredRoles: ['SuperAdmin'],
       order: 6,
-      isDisabled: false,
+      isDisabled: true,
       icon: React.createElement(UserCog, { size: 20 })
     },
     {
@@ -74,7 +74,7 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       label: 'Ajustes',
       to: '/ajustes',
       icon: React.createElement(Settings, { size: 20 }),
-      requiredRoles: ['SuperAdmin', 'Administrador'],
+      requiredRoles: ['SuperAdmin',],
       order: 7,
       isDisabled: true
     }
