@@ -11,7 +11,6 @@
 
 import React, { useEffect } from 'react';
 import { useEstadisticasJC } from './hooks/useEstadisticasJC';
-import { useScrollSticky } from './hooks/useScrollSticky';
 import FiltroFechaJC from './components/filters/FiltroFechaJC';
 import { ErrorMessage } from './components/shared/ErrorMessage';
 import {
@@ -45,13 +44,6 @@ export const EstadisticasJC: React.FC<EstadisticasJCProps> = ({ externalFilters 
     obtenerTodasLasEstadisticas,
     actualizarFecha
   } = useEstadisticasJC();
-
-  // Hook para scroll sticky (solo si no hay filtros externos)
-  const { filtrosRef } = useScrollSticky({
-    compactThreshold: 100,
-    expandThreshold: 20,
-    enabled: !externalFilters
-  });
 
   // Log solo en mount
   useEffect(() => {
@@ -103,36 +95,57 @@ export const EstadisticasJC: React.FC<EstadisticasJCProps> = ({ externalFilters 
         />
       )}
 
-      {/* Filtros de Fecha - Solo si NO son externos */}
+      {/* Contenedor principal con filtros y contenido */}
       {!externalFilters && (
-        <div className="estadisticas-jc-filtros" ref={filtrosRef}>
-          <FiltroFechaJC
-            anioInicial={fechaSeleccionada.anio}
-            mesInicial={fechaSeleccionada.mes}
-            diaInicial={fechaSeleccionada.dia}
-            onFechaChange={handleFechaChange}
-            loading={isLoading}
+        <div className="estadisticas-jc-content-wrapper">
+          {/* Filtros de Fecha */}
+          <div className="estadisticas-jc-filtros-section">
+            <FiltroFechaJC
+              anioInicial={fechaSeleccionada.anio}
+              mesInicial={fechaSeleccionada.mes}
+              diaInicial={fechaSeleccionada.dia}
+              onFechaChange={handleFechaChange}
+              loading={isLoading}
+            />
+          </div>
+
+          {/* Gráficas */}
+          <EstadisticasJCGraficas
+            diaria={estadisticas.diaria}
+            mensual={estadisticas.mensual}
+            anual={estadisticas.anual}
+            fechaSeleccionada={fechaSeleccionada}
           />
+
+          {/* Resumen General */}
+          <EstadisticasJCResumen
+            diaria={estadisticas.diaria}
+            mensual={estadisticas.mensual}
+            anual={estadisticas.anual}
+          />
+
+          {/* Footer */}
+          <EstadisticasJCFooter />
         </div>
       )}
 
-      {/* Gráficas */}
-      <EstadisticasJCGraficas
-        diaria={estadisticas.diaria}
-        mensual={estadisticas.mensual}
-        anual={estadisticas.anual}
-        fechaSeleccionada={fechaSeleccionada}
-      />
-
-      {/* Resumen General */}
-      <EstadisticasJCResumen
-        diaria={estadisticas.diaria}
-        mensual={estadisticas.mensual}
-        anual={estadisticas.anual}
-      />
-
-      {/* Footer */}
-      <EstadisticasJCFooter />
+      {/* Modo con filtros externos (deprecated - para compatibilidad) */}
+      {externalFilters && (
+        <>
+          <EstadisticasJCGraficas
+            diaria={estadisticas.diaria}
+            mensual={estadisticas.mensual}
+            anual={estadisticas.anual}
+            fechaSeleccionada={fechaSeleccionada}
+          />
+          <EstadisticasJCResumen
+            diaria={estadisticas.diaria}
+            mensual={estadisticas.mensual}
+            anual={estadisticas.anual}
+          />
+          <EstadisticasJCFooter />
+        </>
+      )}
     </div>
   );
 };

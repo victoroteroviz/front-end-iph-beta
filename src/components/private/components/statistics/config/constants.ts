@@ -57,7 +57,11 @@ export const CARD_STATUS = {
  * Rutas base para las diferentes secciones de estadísticas
  */
 export const STATISTICS_ROUTES = {
-  BASE: '/estadisticas',
+  BASE: '/estadisticasusuario',
+  USUARIOS_IPH: '/estadisticasusuario/usuarios-iph',
+  JUSTICIA_CIVICA: '/estadisticasusuario/justicia-civica',
+  PROBABLE_DELICTIVO: '/estadisticasusuario/probable-delictivo',
+  // Legacy routes (deprecadas)
   VENTAS: '/estadisticas/ventas',
   USUARIOS: '/estadisticas/usuarios',
   INVENTARIO: '/estadisticas/inventario',

@@ -20,14 +20,13 @@
  * - StatisticsModal: Modal de contenido
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { IStatisticCard } from '../../../../interfaces/IStatistic';
 import { statisticsCardsConfig } from './config';
-import StatisticsModal from './components/modals/StatisticsModal';
 import EstadisticasHeader from './components/layout/EstadisticasHeader';
 import EstadisticasGrid from './components/layout/EstadisticasGrid';
 import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
-import { useStatisticsModal } from './hooks/useStatisticsModal';
 import { useEstadisticasPermissions } from './hooks/useEstadisticasPermissions';
 import { logDebug } from '../../../../helper/log/logger.helper';
 import './styles/Estadisticas.css';
@@ -36,22 +35,33 @@ const Estadisticas: React.FC = () => {
   // Control de acceso por roles
   const { hasAccess, canView, canExport, isLoading } = useEstadisticasPermissions();
 
+  // Hook de navegación
+  const navigate = useNavigate();
+
   // Configuración de las tarjetas de estadísticas (importada desde config)
   const [statistics] = useState<IStatisticCard[]>(statisticsCardsConfig);
 
-  // Hook personalizado para manejar lógica del modal
-  const { selectedStat, isModalOpen, handleCardClick, handleCloseModal } = useStatisticsModal({
-    closeDelay: 300,
-    onOpen: (stat) => {
-      logDebug('Estadisticas', 'Modal abierto', {
-        statId: stat.id,
-        statTitle: stat.titulo
-      });
-    },
-    onClose: () => {
-      logDebug('Estadisticas', 'Modal cerrado');
+  /**
+   * Maneja el click en una tarjeta de estadística
+   * Navega a la vista correspondiente si está habilitada
+   */
+  const handleCardClick = useCallback((stat: IStatisticCard) => {
+    if (!stat.habilitado) {
+      logDebug('Estadisticas', 'Tarjeta deshabilitada', { statId: stat.id });
+      return;
     }
-  });
+
+    logDebug('Estadisticas', 'Navegando a estadística', {
+      statId: stat.id,
+      statTitle: stat.titulo,
+      ruta: stat.ruta
+    });
+
+    // Navegar a la ruta de la estadística
+    if (stat.ruta) {
+      navigate(stat.ruta);
+    }
+  }, [navigate]);
 
   // Early return si no tiene acceso o está cargando permisos
   if (isLoading || !hasAccess || !canView) {
@@ -96,15 +106,6 @@ const Estadisticas: React.FC = () => {
           statistics={statistics}
           onCardClick={handleCardClick}
         />
-
-        {/* Modal de estadísticas */}
-        {selectedStat && (
-          <StatisticsModal
-            statistic={selectedStat}
-            isOpen={isModalOpen}
-            onClose={handleCloseModal}
-          />
-        )}
       </div>
     </div>
   );

@@ -17,7 +17,7 @@ export const statisticsCardsConfig: IStatisticCard[] = [
     ),
     habilitado: true,
     color: STATISTICS_COLORS.IPH_PRIMARY,
-    ruta: STATISTICS_ROUTES.VENTAS
+    ruta: STATISTICS_ROUTES.USUARIOS_IPH
   },
   {
     id: 'justicia-civica',
@@ -30,7 +30,7 @@ export const statisticsCardsConfig: IStatisticCard[] = [
     ),
     habilitado: true,
     color: STATISTICS_COLORS.IPH_SECONDARY,
-    ruta: STATISTICS_ROUTES.FINANCIERO
+    ruta: STATISTICS_ROUTES.JUSTICIA_CIVICA
   },
   {
     id: 'hecho-delictivo',
@@ -43,7 +43,7 @@ export const statisticsCardsConfig: IStatisticCard[] = [
     ),
     habilitado: true,
     color: STATISTICS_COLORS.IPH_DARK,
-    ruta: STATISTICS_ROUTES.RENDIMIENTO
+    ruta: STATISTICS_ROUTES.PROBABLE_DELICTIVO
   },
   {
     id: 'Mapas de calor',

@@ -67,6 +67,11 @@ const Ajustes = lazy(() => import('../components/private/components/ajustes/Ajus
 const AdministracionCatalogos = lazy(() => import('../components/private/components/ajustes/catalogos/AdministracionCatalogos'));
 const GestionGrupos = lazy(() => import('../components/private/components/gestion-grupos/GestionGrupos'));
 
+// Componentes de estadísticas (vistas hijas)
+const UsuariosIphView = lazy(() => import('../components/private/components/statistics/views/UsuariosIphView'));
+const JusticiaCivicaView = lazy(() => import('../components/private/components/statistics/views/JusticiaCivicaView'));
+const ProbableDelictivoView = lazy(() => import('../components/private/components/statistics/views/ProbableDelictivoView'));
+
 // =====================================================
 // CONFIGURACIÓN DE RUTAS
 // =====================================================
@@ -162,6 +167,35 @@ export const APP_ROUTES: AppRoute[] = [
   // =====================================================
   // RUTAS SIN SIDEBAR (No aparecen en navegación)
   // =====================================================
+
+  // Rutas hijas de Estadísticas
+  {
+    id: 'estadisticasUsuariosIph',
+    path: 'estadisticasusuario/usuarios-iph',
+    component: UsuariosIphView,
+    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
+    title: 'Usuarios y Creación de IPH',
+    description: 'Estadísticas de usuarios que más y menos IPH han creado',
+    showInSidebar: false
+  },
+  {
+    id: 'estadisticasJusticiaCivica',
+    path: 'estadisticasusuario/justicia-civica',
+    component: JusticiaCivicaView,
+    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
+    title: 'IPH de Justicia Cívica',
+    description: 'Estadísticas de informes de justicia cívica',
+    showInSidebar: false
+  },
+  {
+    id: 'estadisticasProbableDelictivo',
+    path: 'estadisticasusuario/probable-delictivo',
+    component: ProbableDelictivoView,
+    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
+    title: 'IPH de Probable Hecho Delictivo',
+    description: 'Estadísticas de informes de probable hecho delictivo',
+    showInSidebar: false
+  },
 
   {
     id: 'iphOficial',

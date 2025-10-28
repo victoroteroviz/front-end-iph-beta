@@ -1,6 +1,7 @@
 /**
  * Estilos para Estadísticas de Justicia Cívica
- * Diseño moderno y responsivo
+ * Diseño moderno y responsivo - Patrón HistorialIPH
+ * @version 2.0.0 - Eliminado sticky, aplicado diseño consistente
  */
 
 /* ===================================
@@ -10,148 +11,14 @@
 .estadisticas-jc-container {
   min-height: 100vh;
   padding: 2rem;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%);
+  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
 }
 
-/* Estilos cuando está dentro del modal */
-.statistics-modal-body .estadisticas-jc-container {
-  min-height: auto;
-  padding: 0;
-  background: transparent;
-  /* CRÍTICO: visible para que sticky funcione correctamente */
-  overflow: visible;
-  /* Asegurar contexto de posicionamiento */
-  position: relative;
-  /* NOTA: No usar "contain: layout style" aquí porque rompe position: sticky
-     CSS Containment crea un nuevo contexto que hace que el sticky busque 
-     el scroll en este contenedor (que tiene overflow: visible) en lugar de
-     en .statistics-modal-body (que tiene overflow-y: auto).
-     Ver: SCROLL_FILTROS_JC_DIAGNOSTIC.md para más detalles */
-}
-
-.statistics-modal-body .estadisticas-jc-header {
-  display: none; /* Ocultar header porque el modal ya tiene su propio header */
-}
-
-/* Filtros sticky - Simple */
-.statistics-modal-body .estadisticas-jc-filtros {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  margin: 0 0 1.5rem 0;
-  padding: 1.25rem 2rem;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  transition: box-shadow 0.2s;
-}
-
-/* Sombra en modo compacto */
-.statistics-modal-body .estadisticas-jc-filtros.is-compact {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  /* DEBUG: Agregar borde para visualizar cuando está en modo compacto */
-  border-left: 4px solid #4d4725;
-}
-
-/* Ocultar elementos en modo compacto - SIMPLE */
-.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-header,
-.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada,
-.statistics-modal-body .estadisticas-jc-filtros.is-compact .filtro-campo label {
-  display: none;
-  /* DEBUG: Estos elementos NO deben cambiar de tamaño, solo ocultarse */
-}
-
-.statistics-modal-body .filtro-fecha-jc {
-  box-shadow: none;
-  background: transparent;
-}
-
-/* Contenido con margen dentro del modal - SIMPLIFICADO */
-.statistics-modal-body .estadisticas-jc-graficas,
-.statistics-modal-body .estadisticas-jc-resumen {
-  margin: 1.5rem 2rem 0 2rem;
-}
-
-/* Primera sección necesita más margen superior */
-.statistics-modal-body .estadisticas-jc-graficas:first-of-type {
-  margin-top: 2rem;
-}
-
-/* Espaciado del último elemento */
-.statistics-modal-body .estadisticas-jc-footer {
-  margin: 1.5rem 2rem 2rem 2rem;
-}
-
-/* Error dentro del modal */
-.statistics-modal-body .estadisticas-jc-error {
-  margin: 1.5rem 2rem;
-}
-
-/* ===================================
-   HEADER
-   =================================== */
-
-.estadisticas-jc-header {
+/* Contenedor para modo sin filtros externos */
+.estadisticas-jc-content-wrapper {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.header-content {
-  flex: 1;
-}
-
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1a202c;
-  margin: 0 0 0.5rem 0;
-}
-
-.header-icon {
-  font-size: 2.5rem;
-}
-
-.header-subtitle {
-  font-size: 1rem;
-  color: #64748b;
-  margin: 0;
-}
-
-.btn-refresh {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: #4d4725;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-refresh:hover:not(:disabled) {
-  background: #3d3a1e;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(77, 71, 37, 0.3);
-}
-
-.btn-refresh:disabled {
-  background: #cbd5e0;
-  cursor: not-allowed;
-}
-
-.refresh-icon {
-  font-size: 1.2rem;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 /* ===================================
@@ -164,8 +31,8 @@
   align-items: center;
   margin-bottom: 2rem;
   padding: 1.25rem 1.5rem;
-  background: #fee;
-  border: 2px solid #fcc;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 2px solid #fca5a5;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
 }
@@ -179,6 +46,7 @@
 
 .error-icon {
   font-size: 1.75rem;
+  color: #dc2626;
   flex-shrink: 0;
 }
 
@@ -188,29 +56,33 @@
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
+  font-family: 'Poppins', sans-serif;
 }
 
 .error-text p {
   color: #dc2626;
   font-size: 0.875rem;
   margin: 0;
+  font-family: 'Poppins', sans-serif;
 }
 
 .error-retry-btn {
   padding: 0.625rem 1.25rem;
-  background: #dc2626;
+  background: linear-gradient(to right, #dc2626, #b91c1c);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: 600;
   font-size: 0.875rem;
+  font-family: 'Poppins', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
 }
 
 .error-retry-btn:hover:not(:disabled) {
-  background: #b91c1c;
+  background: linear-gradient(to right, #b91c1c, #991b1b);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
@@ -222,66 +94,33 @@
 }
 
 /* ===================================
-   FILTROS - Vista Normal (fuera del modal)
+   SECCIÓN DE FILTROS
    =================================== */
 
-.estadisticas-jc-filtros {
-  /* Solo sticky cuando NO está en modal */
-  position: relative;
-  margin-bottom: 2rem;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%);
-  padding: 1rem 0;
-  /* Transición optimizada */
-  transition: padding 0.25s ease-out;
-  /* Optimización de rendimiento */
-  contain: layout style;
-}
-
-/* Vista normal en página standalone */
-body:not(.in-modal) .estadisticas-jc-filtros {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-
-/* Modo compacto al hacer scroll - Vista normal (fuera del modal) */
-/* ⚠️ DEBUG: ESTAS REGLAS CAMBIAN TAMAÑOS - POSIBLE CAUSA DE LOOP */
-body:not(.in-modal) .estadisticas-jc-filtros.is-compact {
-  padding: 0.25rem 0;  /* ⚠️ CAMBIA TAMAÑO - REDUCE PADDING */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid orange; /* 🔶 DEBUG: Indicador visual de modo compacto */
-}
-
-body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-fecha-jc {
-  padding: 0.5rem 1.5rem;  /* ⚠️ CAMBIA TAMAÑO - REDUCE PADDING VERTICAL */
-}
-
-body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-header,
-body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-fecha-seleccionada,
-body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-campo label {
-  display: none;  /* ✅ CORRECTO - Solo oculta */
-}
-
-body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-campo {
-  margin-bottom: 0;  /* ⚠️ CAMBIA TAMAÑO - ELIMINA MARGIN */
-}
-
-body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-select {
-  font-size: 0.875rem;  /* ⚠️ CAMBIA TAMAÑO - REDUCE FONT-SIZE */
-  padding: 0.5rem 0.625rem;  /* ⚠️ CAMBIA TAMAÑO - REDUCE PADDING */
-}
-
-body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
-  gap: 0.5rem;  /* ⚠️ CAMBIA TAMAÑO - REDUCE GAP */
-  margin: 0;  /* ⚠️ CAMBIA TAMAÑO - ELIMINA MARGIN */
+.estadisticas-jc-filtros-section {
+  margin-bottom: 1.5rem;
 }
 
 .filtro-fecha-jc {
-  background: white;
+  background: linear-gradient(to bottom right, white, #fdf7f1, white);
   padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: padding 0.25s ease-out;
+  border-radius: 16px;
+  border: 1px solid #c2b186;
+  box-shadow: 0 2px 8px rgba(77, 71, 37, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Patrón decorativo de fondo */
+.filtro-fecha-jc::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(194, 177, 134, 0.03) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .filtro-header {
@@ -289,28 +128,35 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 .filtro-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1a202c;
+  color: #4d4725;
   margin: 0;
+  font-family: 'Poppins', sans-serif;
 }
 
 .btn-hoy {
   padding: 0.5rem 1rem;
-  background: #f8f9fa;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  background: linear-gradient(to right, #f8f9fa, #e2e8f0);
+  border: 1px solid #c2b186;
+  border-radius: 8px;
   font-weight: 500;
+  font-family: 'Poppins', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
+  color: #4d4725;
 }
 
 .btn-hoy:hover:not(:disabled) {
-  background: #e2e8f0;
-  border-color: #cbd5e0;
+  background: linear-gradient(to right, #e2e8f0, #cbd5e0);
+  border-color: #948b54;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(77, 71, 37, 0.15);
 }
 
 .btn-hoy:disabled {
@@ -323,6 +169,8 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1rem;
   padding: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .filtro-campo {
@@ -334,28 +182,32 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
 .filtro-campo label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #4a5568;
+  color: #4d4725;
+  font-family: 'Poppins', sans-serif;
 }
 
 .filtro-select {
   padding: 0.75rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border: 1px solid #c2b186;
+  border-radius: 8px;
   font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
   background: white;
   cursor: pointer;
   transition: all 0.2s;
+  color: #4d4725;
 }
 
 .filtro-select:focus {
   outline: none;
-  border-color: #4d4725;
-  box-shadow: 0 0 0 3px rgba(77, 71, 37, 0.1);
+  border-color: #948b54;
+  box-shadow: 0 0 0 3px rgba(148, 139, 84, 0.15);
 }
 
 .filtro-select:disabled {
   background: #f7fafc;
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .filtro-fecha-seleccionada {
@@ -363,21 +215,26 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
   align-items: center;
   gap: 0.75rem;
   padding: 1rem;
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #fdf7f1 0%, #f8f0e7 100%);
   border-radius: 8px;
+  border: 1px solid #c2b186;
   margin-top: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .fecha-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #4a5568;
+  color: #6b5d42;
+  font-family: 'Poppins', sans-serif;
 }
 
 .fecha-valor {
   font-size: 1rem;
   font-weight: 700;
-  color: #1a202c;
+  color: #4d4725;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* ===================================
@@ -396,17 +253,18 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
    =================================== */
 
 .estadistica-jc-card {
-  background: white;
-  border-radius: 12px;
+  background: linear-gradient(to bottom, white, #fefefe);
+  border-radius: 16px;
   border: 2px solid;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(77, 71, 37, 0.08);
   overflow: hidden;
   transition: all 0.3s;
 }
 
 .estadistica-jc-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 24px rgba(77, 71, 37, 0.15);
+  border-color: #948b54;
 }
 
 .card-header {
@@ -414,6 +272,8 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  background: linear-gradient(135deg, #fdf7f1 0%, transparent 100%);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .card-icon {
@@ -423,8 +283,9 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
 .card-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1a202c;
+  color: #4d4725;
   margin: 0;
+  font-family: 'Poppins', sans-serif;
 }
 
 .card-content {
@@ -444,7 +305,7 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
   width: 48px;
   height: 48px;
   border: 4px solid #f3f4f6;
-  border-top-color: #4d4725;
+  border-top-color: #948b54;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -456,6 +317,7 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
 .card-loading p {
   color: #64748b;
   font-size: 0.875rem;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* Error */
@@ -468,13 +330,14 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
   color: #dc2626;
 }
 
-.error-icon {
+.card-error .error-icon {
   font-size: 2rem;
 }
 
 .card-error p {
   font-size: 0.875rem;
   text-align: center;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* Empty */
@@ -493,6 +356,7 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
 
 .card-empty p {
   font-size: 0.875rem;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* Total */
@@ -501,16 +365,17 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #fdf7f1 0%, #f8f0e7 100%);
   border-left: 4px solid;
-  border-radius: 6px;
+  border-radius: 8px;
   margin-bottom: 1.5rem;
 }
 
 .total-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #4a5568;
+  color: #6b5d42;
+  font-family: 'Poppins', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -518,6 +383,7 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
 .total-value {
   font-size: 2rem;
   font-weight: 800;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* Breakdown */
@@ -542,17 +408,19 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
 .breakdown-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #4a5568;
+  color: #4d4725;
+  font-family: 'Poppins', sans-serif;
 }
 
 .breakdown-percentage {
   font-size: 0.875rem;
   font-weight: 700;
+  font-family: 'Poppins', sans-serif;
 }
 
 .breakdown-bar {
   height: 8px;
-  background: #f1f5f9;
+  background: linear-gradient(to right, #f8f9fa, #e2e8f0);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -566,6 +434,142 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
 .breakdown-value {
   font-size: 0.875rem;
   color: #64748b;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ===================================
+   GRÁFICAS
+   =================================== */
+
+.estadisticas-jc-graficas {
+  background: linear-gradient(to bottom right, white, #fdf7f1, white);
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid #c2b186;
+  box-shadow: 0 2px 8px rgba(77, 71, 37, 0.08);
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Patrón decorativo */
+.estadisticas-jc-graficas::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(148, 139, 84, 0.05) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.graficas-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4d4725;
+  margin: 0 0 2.5rem 0;
+  font-family: 'Poppins', sans-serif;
+  position: relative;
+  z-index: 1;
+}
+
+.graficas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.grafica-card {
+  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  transition: all 0.3s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.grafica-card:hover {
+  border-color: #c2b186;
+  box-shadow: 0 4px 12px rgba(77, 71, 37, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Estilos para gráfica de promedio */
+.grafica-promedio-container {
+  width: 100%;
+}
+
+.promedio-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.promedio-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, white 0%, #fdf7f1 100%);
+  border-left: 4px solid;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(77, 71, 37, 0.05);
+  transition: transform 0.2s;
+}
+
+.promedio-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(77, 71, 37, 0.1);
+}
+
+.promedio-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b5d42;
+  font-family: 'Poppins', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.promedio-valor {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1;
+}
+
+.promedio-valor small {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.promedio-info {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fdf7f1 0%, #f8f0e7 100%);
+  border-left: 4px solid #c2b186;
+  border-radius: 8px;
+}
+
+.promedio-info-text {
+  font-size: 0.875rem;
+  color: #6b5d42;
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+}
+
+.promedio-info-detail {
+  font-size: 0.813rem;
+  color: #8a7f5f;
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* ===================================
@@ -573,18 +577,20 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
    =================================== */
 
 .estadisticas-jc-resumen {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(to bottom right, white, #fdf7f1, white);
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid #c2b186;
+  box-shadow: 0 2px 8px rgba(77, 71, 37, 0.08);
   margin-bottom: 2rem;
 }
 
 .resumen-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1a202c;
+  color: #4d4725;
   margin: 0 0 1.5rem 0;
+  font-family: 'Poppins', sans-serif;
 }
 
 .resumen-grid {
@@ -598,20 +604,30 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem;
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #fdf7f1 0%, #f8f0e7 100%);
   border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s;
+}
+
+.resumen-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(77, 71, 37, 0.1);
+  border-color: #c2b186;
 }
 
 .resumen-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #64748b;
+  color: #6b5d42;
+  font-family: 'Poppins', sans-serif;
 }
 
 .resumen-valor {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1a202c;
+  color: #4d4725;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* ===================================
@@ -619,10 +635,11 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
    =================================== */
 
 .estadisticas-jc-footer {
-  background: white;
+  background: linear-gradient(to bottom right, white, #fdf7f1, white);
   padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  border: 1px solid #c2b186;
+  box-shadow: 0 2px 8px rgba(77, 71, 37, 0.08);
   text-align: center;
 }
 
@@ -630,13 +647,15 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
   font-size: 0.875rem;
   color: #64748b;
   margin: 0 0 0.5rem 0;
+  font-family: 'Poppins', sans-serif;
 }
 
 .footer-timestamp {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #8a7f5f;
   margin: 0;
   font-weight: 600;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* ===================================
@@ -648,51 +667,9 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
     padding: 1rem;
   }
 
-  /* Ajustar sticky en móviles */
-  .estadisticas-jc-filtros {
-    top: 0;
-    padding: 0.5rem 0;
-  }
-
   .filtro-fecha-jc {
     padding: 1rem;
-    border-radius: 8px;
-  }
-
-  /* Ajustes para el modal en móvil */
-  .statistics-modal-body .estadisticas-jc-filtros {
-    padding: 1rem;
-    margin-bottom: 1rem;
-    position: sticky;
-    top: 0;
-  }
-
-  .statistics-modal-body .estadisticas-jc-filtros.is-compact {
-    padding: 0.5rem 1rem;
-  }
-
-  .statistics-modal-body .estadisticas-jc-graficas,
-  .statistics-modal-body .estadisticas-jc-resumen {
-    margin-left: 1rem;
-    margin-right: 1rem;
-  }
-
-  .statistics-modal-body .estadisticas-jc-footer {
-    margin: 1rem 1rem 1.5rem 1rem;
-  }
-
-  .estadisticas-jc-header {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .btn-refresh {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .header-title {
-    font-size: 1.5rem;
+    border-radius: 12px;
   }
 
   .filtro-controls {
@@ -713,6 +690,15 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
     grid-template-columns: 1fr;
   }
 
+  .estadisticas-jc-graficas {
+    padding: 1.5rem;
+  }
+
+  .graficas-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
   .resumen-grid {
     grid-template-columns: 1fr;
   }
@@ -720,18 +706,10 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
   .promedio-cards {
     grid-template-columns: 1fr;
   }
-
-  .graficas-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* Tablet responsiveness */
 @media (max-width: 1024px) and (min-width: 769px) {
-  .estadisticas-jc-filtros {
-    padding: 0.35rem 0;
-  }
-
   .filtro-controls {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -739,106 +717,4 @@ body:not(.in-modal) .estadisticas-jc-filtros.is-compact .filtro-controls {
   .graficas-grid {
     grid-template-columns: 1fr;
   }
-}
-
-/* ===================================
-   GRÁFICAS
-   =================================== */
-
-.estadisticas-jc-graficas {
-  background: white;
-  padding: 2rem 1.5rem 1.5rem; /* Aumentado padding-top de 1.5rem a 2rem */
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  margin-bottom: 2rem;
-}
-
-.graficas-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1a202c;
-  margin: 0 0 2.5rem 0; /* Aumentado de 1.5rem a 2.5rem para más separación */
-}
-
-.graficas-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 2rem;
-}
-
-.grafica-card {
-  background: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 2px solid #e2e8f0;
-  transition: all 0.3s;
-}
-
-.grafica-card:hover {
-  border-color: #cbd5e0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-/* Estilos para gráfica de promedio */
-.grafica-promedio-container {
-  width: 100%;
-}
-
-.promedio-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.promedio-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: white;
-  border-left: 4px solid;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.promedio-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.promedio-valor {
-  font-size: 1.5rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.promedio-valor small {
-  font-size: 0.75rem;
-  font-weight: 600;
-  opacity: 0.7;
-}
-
-.promedio-info {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background: #fdf7f1;
-  border-left: 4px solid #c2b186;
-  border-radius: 8px;
-}
-
-.promedio-info-text {
-  font-size: 0.875rem;
-  color: #6b5d42;
-  margin: 0 0 0.5rem 0;
-  font-weight: 600;
-}
-
-.promedio-info-detail {
-  font-size: 0.813rem;
-  color: #8a7f5f;
-  margin: 0;
 }
