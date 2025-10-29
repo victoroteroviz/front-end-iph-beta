@@ -16,9 +16,10 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
 
 interface UsuariosIphStatsProps {
   onError: (message: string) => void;
+  refreshTrigger?: number;
 }
 
-const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
+const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTrigger }) => {
   // Estados principales
   const [activeTab, setActiveTab] = useState<'mayores' | 'menores' | 'totales'>('mayores');
   const [mayoresData, setMayoresData] = useState<RankingResponse | null>(null);
@@ -38,6 +39,13 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
   useEffect(() => {
     loadData();
   }, [filtros]);
+
+  // Recargar datos cuando se active el refresh desde el padre
+  useEffect(() => {
+    if (refreshTrigger && refreshTrigger > 0) {
+      loadData();
+    }
+  }, [refreshTrigger]);
 
   const loadData = async () => {
     setLoading(true);
@@ -304,16 +312,16 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
   return (
     <div className="space-y-6">
       {/* Filtros */}
-      <div className="bg-[#fdf7f1] p-4 rounded-lg border border-[#c2b186]">
-        <h3 className="text-lg font-semibold text-[#4d4725] mb-4">Filtros</h3>
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-[#4d4725] font-poppins mb-4">Filtros de Período</h3>
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           {/* Período */}
           <div>
-            <label className="block text-sm font-medium text-[#4d4725] mb-1">Período</label>
+            <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Período</label>
             <select
               value={filtros.periodo}
               onChange={(e) => handlePeriodoChange(e.target.value as PeriodoEnum)}
-              className="w-full px-3 py-2 border border-[#c2b186] rounded-md focus:outline-none focus:ring-2 focus:ring-[#948b54] cursor-pointer"
+              className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 cursor-pointer font-poppins"
             >
               <option value="anual">Anual</option>
               <option value="mensual">Mensual</option>
@@ -324,11 +332,11 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
 
           {/* Año */}
           <div>
-            <label className="block text-sm font-medium text-[#4d4725] mb-1">Año</label>
+            <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Año</label>
             <select
               value={filtros.anio}
               onChange={(e) => handleAnioChange(parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-[#c2b186] rounded-md focus:outline-none focus:ring-2 focus:ring-[#948b54] cursor-pointer"
+              className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 cursor-pointer font-poppins"
             >
               {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map(year => (
                 <option key={year} value={year}>{year}</option>
@@ -339,11 +347,11 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
           {/* Mes - Solo para mensual y diario */}
           {(filtros.periodo === 'mensual' || filtros.periodo === 'diario') && (
             <div>
-              <label className="block text-sm font-medium text-[#4d4725] mb-1">Mes</label>
+              <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Mes</label>
               <select
                 value={filtros.mes || ''}
                 onChange={(e) => handleMesChange(parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-[#c2b186] rounded-md focus:outline-none focus:ring-2 focus:ring-[#948b54] cursor-pointer"
+                className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 cursor-pointer font-poppins"
               >
                 <option value={1}>Enero</option>
                 <option value={2}>Febrero</option>
@@ -364,11 +372,11 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
           {/* Semana - Solo para semanal */}
           {filtros.periodo === 'semanal' && (
             <div>
-              <label className="block text-sm font-medium text-[#4d4725] mb-1">Semana</label>
+              <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Semana</label>
               <select
                 value={filtros.semana || ''}
                 onChange={(e) => handleSemanaChange(parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-[#c2b186] rounded-md focus:outline-none focus:ring-2 focus:ring-[#948b54] cursor-pointer"
+                className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 cursor-pointer font-poppins"
               >
                 {Array.from({length: 52}, (_, i) => i + 1).map(week => (
                   <option key={week} value={week}>Semana {week}</option>
@@ -380,11 +388,11 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
           {/* Día - Solo para diario */}
           {filtros.periodo === 'diario' && (
             <div>
-              <label className="block text-sm font-medium text-[#4d4725] mb-1">Día</label>
+              <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Día</label>
               <select
                 value={filtros.dia || ''}
                 onChange={(e) => handleDiaChange(parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-[#c2b186] rounded-md focus:outline-none focus:ring-2 focus:ring-[#948b54] cursor-pointer"
+                className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 cursor-pointer font-poppins"
               >
                 {Array.from({length: 31}, (_, i) => i + 1).map(day => (
                   <option key={day} value={day}>{day}</option>
@@ -395,11 +403,11 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
 
           {/* Límite */}
           <div>
-            <label className="block text-sm font-medium text-[#4d4725] mb-1">Mostrar</label>
+            <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Mostrar</label>
             <select
               value={filtros.limite}
               onChange={(e) => handleLimiteChange(parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-[#c2b186] rounded-md focus:outline-none focus:ring-2 focus:ring-[#948b54] cursor-pointer"
+              className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 cursor-pointer font-poppins"
             >
               <option value={5}>5 usuarios</option>
               <option value={10}>10 usuarios</option>
@@ -413,7 +421,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
             <button
               onClick={loadData}
               disabled={loading}
-              className="w-full px-4 py-2 bg-[#948b54] text-white rounded-md hover:bg-[#4d4725] transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 bg-[#4d4725] text-white rounded-lg hover:bg-[#3a3519] transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed font-poppins font-medium"
             >
               Actualizar
             </button>
@@ -422,16 +430,16 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
       </div>
 
       {/* Tabs */}
-      <div className="border-b-2 border-[#c2b186] bg-[#fdf7f1]">
+      <div className="border-b-2 border-gray-200 bg-white rounded-t-xl">
         <nav className="flex space-x-2 px-4">
           {['mayores', 'menores', 'totales'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
-              className={`py-3 px-6 font-semibold text-sm transition-all duration-200 relative cursor-pointer ${
+              className={`py-3 px-6 font-semibold text-sm transition-all duration-200 relative cursor-pointer font-poppins ${
                 activeTab === tab
                   ? 'bg-white text-[#4d4725] border-t-4 border-l border-r border-[#948b54] rounded-t-lg shadow-md -mb-0.5'
-                  : 'text-[#6b7280] hover:text-[#4d4725] hover:bg-[#f3f2f0] rounded-t-lg'
+                  : 'text-gray-600 hover:text-[#4d4725] hover:bg-gray-50 rounded-t-lg'
               }`}
             >
               {tab === 'mayores' && '🏆 Top Usuarios'}
@@ -443,14 +451,14 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
       </div>
 
       {/* Contenido de tabs */}
-      <div className="min-h-[400px] bg-white border-l border-r border-b border-[#c2b186] rounded-b-lg shadow-sm">
+      <div className="min-h-[400px] bg-white border-l border-r border-b border-gray-200 rounded-b-xl shadow-sm">
         {activeTab === 'mayores' && mayoresData && (
           <div className="p-6 space-y-6">
-            <div className="bg-[#fdf7f1] p-4 rounded-lg border-l-4 border-[#948b54]">
-              <h3 className="text-lg font-semibold text-[#4d4725] mb-2">🏆 Usuarios con Mayor Productividad</h3>
-              <p className="text-sm text-[#6b7280]">Ranking de usuarios que han creado más informes IPH</p>
+            <div className="bg-amber-50 p-4 rounded-lg border-l-4 border-[#948b54]">
+              <h3 className="text-lg font-semibold text-[#4d4725] font-poppins mb-2">🏆 Usuarios con Mayor Productividad</h3>
+              <p className="text-sm text-gray-600 font-poppins">Ranking de usuarios que han creado más informes IPH</p>
             </div>
-            <div className="h-96 bg-white p-4 rounded-lg border border-[#e5e7eb]">
+            <div className="h-96 bg-white p-4 rounded-lg border border-gray-200">
               <Bar
                 data={getBarChartData(mayoresData.data, 'mayores')}
                 options={barChartOptions}
@@ -461,11 +469,11 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
 
         {activeTab === 'menores' && menoresData && (
           <div className="p-6 space-y-6">
-            <div className="bg-[#fef2f2] p-4 rounded-lg border-l-4 border-[#dc2626]">
-              <h3 className="text-lg font-semibold text-[#4d4725] mb-2">📊 Usuarios con Menor Actividad</h3>
-              <p className="text-sm text-[#6b7280]">Ranking de usuarios que han creado menos informes IPH</p>
+            <div className="bg-red-50 p-4 rounded-lg border-l-4 border-red-600">
+              <h3 className="text-lg font-semibold text-[#4d4725] font-poppins mb-2">📊 Usuarios con Menor Actividad</h3>
+              <p className="text-sm text-gray-600 font-poppins">Ranking de usuarios que han creado menos informes IPH</p>
             </div>
-            <div className="h-96 bg-white p-4 rounded-lg border border-[#e5e7eb]">
+            <div className="h-96 bg-white p-4 rounded-lg border border-gray-200">
               <Bar
                 data={getBarChartData(menoresData.data, 'menores')}
                 options={barChartOptions}
@@ -476,44 +484,44 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError }) => {
 
         {activeTab === 'totales' && totalesData && (
           <div className="p-6 space-y-6">
-            <div className="bg-[#eff6ff] p-4 rounded-lg border-l-4 border-[#0891b2]">
-              <h3 className="text-lg font-semibold text-[#4d4725] mb-2">📈 Resumen General del Sistema</h3>
-              <p className="text-sm text-[#6b7280]">Métricas generales y comparativa de productividad</p>
+            <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-cyan-600">
+              <h3 className="text-lg font-semibold text-[#4d4725] font-poppins mb-2">📈 Resumen General del Sistema</h3>
+              <p className="text-sm text-gray-600 font-poppins">Métricas generales y comparativa de productividad</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Métricas */}
               <div className="space-y-4">
-                <h4 className="text-md font-semibold text-[#4d4725] mb-3">📊 Métricas Clave</h4>
+                <h4 className="text-md font-semibold text-[#4d4725] font-poppins mb-3">📊 Métricas Clave</h4>
                 <div className="grid grid-cols-1 gap-4">
-                  <div className="bg-[#fdf7f1] p-4 rounded-lg border border-[#c2b186] hover:shadow-md transition-shadow">
-                    <div className="text-4xl font-bold text-[#dc2626]">{totalesData.total_iphs}</div>
-                    <div className="text-sm text-[#4d4725] font-medium">Total IPH Creados</div>
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                    <div className="text-4xl font-bold text-red-600 font-poppins">{totalesData.total_iphs}</div>
+                    <div className="text-sm text-[#4d4725] font-medium font-poppins">Total IPH Creados</div>
                   </div>
-                  <div className="bg-[#fdf7f1] p-4 rounded-lg border border-[#c2b186] hover:shadow-md transition-shadow">
-                    <div className="text-4xl font-bold text-[#0891b2]">{totalesData.total_usuarios_creadores}</div>
-                    <div className="text-sm text-[#4d4725] font-medium">Usuarios Creadores de IPH</div>
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                    <div className="text-4xl font-bold text-cyan-600 font-poppins">{totalesData.total_usuarios_creadores}</div>
+                    <div className="text-sm text-[#4d4725] font-medium font-poppins">Usuarios Creadores de IPH</div>
                   </div>
-                  <div className="bg-[#fdf7f1] p-4 rounded-lg border border-[#c2b186] hover:shadow-md transition-shadow">
-                    <div className="text-4xl font-bold text-[#f59e0b]">{totalesData.promedio_iphs_por_usuario}</div>
-                    <div className="text-sm text-[#4d4725] font-medium">Promedio IPH por Usuario</div>
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                    <div className="text-4xl font-bold text-amber-600 font-poppins">{totalesData.promedio_iphs_por_usuario}</div>
+                    <div className="text-sm text-[#4d4725] font-medium font-poppins">Promedio IPH por Usuario</div>
                   </div>
                 </div>
               </div>
 
               {/* Gráfico comparativo */}
               <div className="space-y-4">
-                <h4 className="text-md font-semibold text-[#4d4725] mb-3">⚖️ Comparativa de Productividad</h4>
+                <h4 className="text-md font-semibold text-[#4d4725] font-poppins mb-3">⚖️ Comparativa de Productividad</h4>
                 {comparativaData ? (
-                  <div className="h-80 bg-white p-4 rounded-lg border border-[#e5e7eb]">
+                  <div className="h-80 bg-white p-4 rounded-lg border border-gray-200">
                     <Bar data={comparativaData} options={comparativaOptions} />
                   </div>
                 ) : (
-                  <div className="h-80 bg-[#f9fafb] p-4 rounded-lg border border-[#e5e7eb] flex items-center justify-center">
-                    <p className="text-[#6b7280]">Cargando datos comparativos...</p>
+                  <div className="h-80 bg-gray-50 p-4 rounded-lg border border-gray-200 flex items-center justify-center">
+                    <p className="text-gray-600 font-poppins">Cargando datos comparativos...</p>
                   </div>
                 )}
-                <div className="text-xs text-[#6b7280] text-center bg-[#f9fafb] p-2 rounded">
+                <div className="text-xs text-gray-600 text-center bg-gray-50 p-2 rounded font-poppins">
                   🏆 Comparación entre el usuario más productivo vs el menos productivo
                 </div>
               </div>

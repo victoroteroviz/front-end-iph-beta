@@ -1,19 +1,19 @@
 /**
- * Estilos para Estadísticas de Justicia Cívica
- * Diseño moderno y responsivo - Patrón ProbableDelictivo (Tailwind CSS)
- * @version 5.0.0 - Agregados estilos para FiltroFechaJC
+ * Estilos para Estadísticas de Probable Delictivo
+ * Diseño moderno y responsivo - Patrón Usuarios.tsx
+ * @version 3.0.0 - Agregados estilos para FiltroFechaJC
  */
 
 /* ===================================
    CONTENEDOR PRINCIPAL
    =================================== */
 
-.estadisticas-jc-container {
+.estadisticas-pd-container {
   min-height: 100vh;
 }
 
 /* Sección de filtros */
-.estadisticas-jc-filtros-section {
+.estadisticas-pd-filtros-section {
   margin-bottom: 1.5rem;
 }
 
@@ -117,11 +117,11 @@
    =================================== */
 
 @media (max-width: 768px) {
-  .estadisticas-jc-container {
+  .estadisticas-pd-container {
     padding: 0;
   }
 
-  .estadisticas-jc-filtros-section {
+  .estadisticas-pd-filtros-section {
     margin-bottom: 1rem;
   }
 

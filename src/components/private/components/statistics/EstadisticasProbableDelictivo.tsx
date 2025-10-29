@@ -4,15 +4,17 @@
  *
  * @pattern Atomic Design + Custom Hook
  * @uses useEstadisticasProbableDelictivo - Hook personalizado con lógica de negocio
- * @uses EstadisticaJCCard - Componente atómico de card (reutilizado)
- * @uses FiltroFechaJC - Componente atómico de filtros (reutilizado)
+ * @version 3.0.0 - Corregido: Agregado FiltroFechaJC para cambiar fechas
  */
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
+import { AlertCircle } from 'lucide-react';
 import { useEstadisticasProbableDelictivo } from './hooks/useEstadisticasProbableDelictivo';
+import FiltroFechaJC from './components/filters/FiltroFechaJC';
 import GraficaBarrasJC from './components/charts/GraficaBarrasJC';
 import GraficaPromedioJC from './components/charts/GraficaPromedioJC';
-import './styles/EstadisticasJC.css';
+import ProbableDelictivoHeader from './sections/ProbableDelictivoHeader';
+import './styles/EstadisticasProbableDelictivo.css';
 
 interface EstadisticasProbableDelictivoProps {
   /** Filtros externos (cuando se renderizan fuera del componente) */
@@ -53,127 +55,11 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
   // Estado para controlar si hay errores críticos
   const [hayErrorCritico, setHayErrorCritico] = useState(false);
 
-  // Ref para el contenedor de filtros (sticky)
-  const filtrosRef = useRef<HTMLDivElement>(null);
-
   // Detectar errores críticos
   useEffect(() => {
     const tieneErrores = error.diaria || error.mensual || error.anual;
     setHayErrorCritico(!!tieneErrores);
   }, [error]);
-
-  // Sistema de scroll sticky con compensación dinámica de altura
-  // Solo se activa si NO hay filtros externos
-  useEffect(() => {
-    if (externalFilters) {
-      console.log('⏭️ [EstadisticasProbableDelictivo] Scroll sticky deshabilitado (filtros externos)');
-      return;
-    }
-
-    console.log('🎬 [EstadisticasProbableDelictivo] Inicializando scroll sticky');
-
-    const filtrosElement = filtrosRef.current;
-    if (!filtrosElement) return;
-
-    const scrollContainer = filtrosElement.closest('.statistics-modal-body') as HTMLElement | null;
-    if (!scrollContainer) return;
-
-    // Estado del scroll
-    let isCompact = false;
-    let lastScrollTop = 0;
-    let isTransitioning = false;
-    const COMPACT_THRESHOLD = 80;  // Aumentado para dar más margen
-    const EXPAND_THRESHOLD = 20;   // Reducido para expandir antes
-    const TRANSITION_COOLDOWN = 300; // Más tiempo para transiciones
-
-    console.log('✅ Sticky configurado: COMPACT=80px, EXPAND=20px');
-
-    const handleScroll = () => {
-      const scrollTop = scrollContainer.scrollTop;
-      const scrollDiff = Math.abs(scrollTop - lastScrollTop);
-
-      // Prevenir cambios durante transiciones activas
-      if (isTransitioning) {
-        return;
-      }
-
-      // 🔥 PREVENIR LOOPS: Detectar saltos causados por cambios de altura del sticky
-      // Aumentado a 60px para ser más conservador
-      if (scrollDiff > 60) {
-        console.log(`⚠️ Salto grande detectado (${scrollDiff.toFixed(0)}px) - ignorando`);
-        lastScrollTop = scrollTop;
-        return;
-      }
-
-      // Ignorar cambios mínimos
-      if (scrollDiff < 1) {
-        return;
-      }
-
-      // Compactar al bajar (solo si estamos scrolleando hacia abajo)
-      const scrollingDown = scrollTop > lastScrollTop;
-      if (scrollTop >= COMPACT_THRESHOLD && !isCompact && scrollingDown) {
-        console.log(`🔽 Compactando en ${scrollTop.toFixed(0)}px`);
-
-        isTransitioning = true;
-        isCompact = true;
-
-        // Guardar scroll actual ANTES del cambio
-        const scrollBefore = scrollContainer.scrollTop;
-
-        filtrosElement.classList.add('is-compact');
-
-        // Restaurar posición exacta DESPUÉS del cambio para evitar saltos
-        requestAnimationFrame(() => {
-          scrollContainer.scrollTop = scrollBefore;
-          lastScrollTop = scrollBefore;
-        });
-
-        setTimeout(() => {
-          isTransitioning = false;
-        }, TRANSITION_COOLDOWN);
-      }
-      // Expandir al subir (solo si estamos scrolleando hacia arriba)
-      else {
-        const scrollingUp = scrollTop < lastScrollTop;
-        if (scrollTop < EXPAND_THRESHOLD && isCompact && scrollingUp) {
-          console.log(`🔼 Expandiendo en ${scrollTop.toFixed(0)}px`);
-
-          isTransitioning = true;
-          isCompact = false;
-
-          filtrosElement.classList.remove('is-compact');
-
-          // Restaurar posición a 0 cuando expandimos cerca del top
-          requestAnimationFrame(() => {
-            scrollContainer.scrollTop = 0;
-            lastScrollTop = 0;
-          });
-
-          setTimeout(() => {
-            isTransitioning = false;
-          }, TRANSITION_COOLDOWN);
-        }
-      }
-
-      lastScrollTop = scrollTop;
-    };
-
-    console.log('🎧 [EstadisticasProbableDelictivo] Agregando event listener de scroll');
-
-    // Agregar listener con passive para mejor performance
-    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-
-    console.log('✅ [EstadisticasProbableDelictivo] Sistema de scroll inicializado correctamente');
-
-    // Cleanup
-    return () => {
-      console.log('🧹 [EstadisticasProbableDelictivo] Limpiando sistema de scroll');
-      scrollContainer.removeEventListener('scroll', handleScroll);
-      filtrosElement.classList.remove('is-compact');
-      console.log('✅ [EstadisticasProbableDelictivo] Sistema de scroll limpiado');
-    };
-  }, []); // Solo ejecutar una vez al montar
 
   /**
    * Manejar cambio de fecha en los filtros
@@ -193,47 +79,36 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
   };
 
   return (
-    <div className="estadisticas-jc-container">
+    <div className="estadisticas-pd-container">
       {/* Header */}
-      <div className="estadisticas-jc-header">
-        <div className="header-content">
-          <h1 className="header-title">
-            <span className="header-icon">🔍</span>
-            Estadísticas de Probable Delictivo
-          </h1>
-          <p className="header-subtitle">
-            Análisis de IPH probablemente delictivos por período: diario, mensual y anual
-          </p>
-        </div>
-
-        <button
-          className="btn-refresh"
-          onClick={handleRefresh}
-          disabled={loading.diaria || loading.mensual || loading.anual}
-          title="Actualizar estadísticas"
-          aria-label="Actualizar estadísticas"
-        >
-          <span className="refresh-icon">🔄</span>
-          Actualizar
-        </button>
-      </div>
+      {!externalFilters && (
+        <ProbableDelictivoHeader
+          onRefresh={handleRefresh}
+          isLoading={loading.diaria || loading.mensual || loading.anual}
+        />
+      )}
 
       {/* Mensaje de error crítico */}
       {hayErrorCritico && (
-        <div className="estadisticas-jc-error">
-          <div className="error-content">
-            <span className="error-icon">⚠️</span>
-            <div className="error-text">
-              <strong>Error al cargar estadísticas</strong>
-              <p>
-                {error.diaria || error.mensual || error.anual}
-              </p>
-            </div>
+        <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg mb-6">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <div>
+            <p className="text-sm font-medium text-red-800 font-poppins">
+              Error al cargar estadísticas
+            </p>
+            <p className="text-xs text-red-700 font-poppins">
+              {error.diaria || error.mensual || error.anual}
+            </p>
           </div>
           <button
-            className="error-retry-btn"
             onClick={handleRefresh}
             disabled={loading.diaria || loading.mensual || loading.anual}
+            className="
+              ml-auto px-3 py-1.5 text-xs font-medium
+              text-white bg-red-600 rounded-lg
+              hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed
+              transition-colors duration-200 font-poppins
+            "
           >
             Reintentar
           </button>
@@ -242,22 +117,25 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
 
       {/* Filtros de Fecha - Solo mostrar si NO hay filtros externos */}
       {!externalFilters && (
-        <div className="estadisticas-jc-filtros" ref={filtrosRef}>
-          {/* Nota: Este filtro se mantiene para compatibilidad, pero será removido gradualmente */}
-          <div className="filtro-fecha-placeholder">
-            <p>Filtros internos deshabilitados - Use EstadisticasFilters en el modal</p>
-          </div>
+        <div className="estadisticas-pd-filtros-section mb-6">
+          <FiltroFechaJC
+            anioInicial={fechaSeleccionada.anio}
+            mesInicial={fechaSeleccionada.mes}
+            diaInicial={fechaSeleccionada.dia}
+            onFechaChange={handleFechaChange}
+            loading={loading.diaria || loading.mensual || loading.anual}
+          />
         </div>
       )}
 
       {/* Gráficas de Barras */}
       {(estadisticas.diaria || estadisticas.mensual || estadisticas.anual) && (
-        <div className="estadisticas-jc-graficas">
-          <h2 className="graficas-title">📊 Visualización de Datos</h2>
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <h2 className="text-xl font-semibold text-[#4d4725] font-poppins mb-6">📊 Visualización de Datos</h2>
 
-          <div className="graficas-grid">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {estadisticas.diaria && (
-              <div className="grafica-card">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <GraficaBarrasJC
                   tipo="diaria"
                   datos={estadisticas.diaria}
@@ -268,7 +146,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
             )}
 
             {estadisticas.mensual && (
-              <div className="grafica-card">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <GraficaBarrasJC
                   tipo="mensual"
                   datos={estadisticas.mensual}
@@ -279,7 +157,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
             )}
 
             {estadisticas.anual && (
-              <div className="grafica-card">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <GraficaBarrasJC
                   tipo="anual"
                   datos={estadisticas.anual}
@@ -294,8 +172,8 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
 
       {/* Gráfica de Promedio Diario Mensual */}
       {estadisticas.mensual && (
-        <div className="estadisticas-jc-graficas">
-          <h2 className="graficas-title">📈 Promedio Diario del Mes</h2>
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <h2 className="text-xl font-semibold text-[#4d4725] font-poppins mb-6">📈 Promedio Diario del Mes</h2>
           <GraficaPromedioJC
             datosMensuales={estadisticas.mensual}
             anio={fechaSeleccionada.anio}
@@ -307,37 +185,37 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
 
       {/* Resumen General */}
       {estadisticas.diaria && estadisticas.mensual && estadisticas.anual && (
-        <div className="estadisticas-jc-resumen">
-          <h2 className="resumen-title">📋 Resumen Comparativo</h2>
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <h2 className="text-xl font-semibold text-[#4d4725] font-poppins mb-6">📋 Resumen Comparativo</h2>
 
-          <div className="resumen-grid">
-            <div className="resumen-item">
-              <span className="resumen-label">Total Diario</span>
-              <span className="resumen-valor">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <span className="text-sm font-semibold text-gray-600 font-poppins block mb-2">Total Diario</span>
+              <span className="text-2xl font-bold text-[#4d4725] font-poppins">
                 {(estadisticas.diaria.data.totalConDetenido +
                   estadisticas.diaria.data.totalSinDetenido).toLocaleString()}
               </span>
             </div>
 
-            <div className="resumen-item">
-              <span className="resumen-label">Total Mensual</span>
-              <span className="resumen-valor">
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <span className="text-sm font-semibold text-gray-600 font-poppins block mb-2">Total Mensual</span>
+              <span className="text-2xl font-bold text-[#4d4725] font-poppins">
                 {(estadisticas.mensual.data.totalConDetenido +
                   estadisticas.mensual.data.totalSinDetenido).toLocaleString()}
               </span>
             </div>
 
-            <div className="resumen-item">
-              <span className="resumen-label">Total Anual</span>
-              <span className="resumen-valor">
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <span className="text-sm font-semibold text-gray-600 font-poppins block mb-2">Total Anual</span>
+              <span className="text-2xl font-bold text-[#4d4725] font-poppins">
                 {(estadisticas.anual.data.totalConDetenido +
                   estadisticas.anual.data.totalSinDetenido).toLocaleString()}
               </span>
             </div>
 
-            <div className="resumen-item">
-              <span className="resumen-label">Promedio Diario (Año)</span>
-              <span className="resumen-valor">
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <span className="text-sm font-semibold text-gray-600 font-poppins block mb-2">Promedio Diario (Año)</span>
+              <span className="text-2xl font-bold text-[#4d4725] font-poppins">
                 {Math.round(
                   (estadisticas.anual.data.totalConDetenido +
                     estadisticas.anual.data.totalSinDetenido) / 365
@@ -349,11 +227,11 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
       )}
 
       {/* Footer con información */}
-      <div className="estadisticas-jc-footer">
-        <p className="footer-info">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
+        <p className="text-sm text-gray-600 font-poppins mb-1">
           ℹ️ Las estadísticas se actualizan automáticamente al cambiar la fecha seleccionada
         </p>
-        <p className="footer-timestamp">
+        <p className="text-xs text-gray-500 font-poppins font-semibold">
           Última actualización: {new Date().toLocaleString('es-MX')}
         </p>
       </div>

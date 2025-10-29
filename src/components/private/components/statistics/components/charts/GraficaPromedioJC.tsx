@@ -234,48 +234,56 @@ export const GraficaPromedioJC: React.FC<GraficaPromedioJCProps> = ({
   };
 
   return (
-    <div className="grafica-promedio-container">
+    <div className="w-full">
       <div style={{ height: `${height}px`, width: '100%' }}>
         <Bar data={chartData} options={options} />
       </div>
 
       {/* Tarjetas de resumen */}
-      <div className="promedio-cards">
-        <div className="promedio-card" style={{ borderLeftColor: '#4d4725' }}>
-          <span className="promedio-label">Promedio Con Detenido</span>
-          <span className="promedio-valor" style={{ color: '#4d4725' }}>
-            {promedioConDetenido.toFixed(2)} <small>IPH/día</small>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+        <div className="bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[#4d4725]">
+          <span className="text-xs font-semibold text-gray-600 font-poppins block mb-2 uppercase tracking-wider">
+            Promedio Con Detenido
+          </span>
+          <span className="text-2xl font-bold text-[#4d4725] font-poppins">
+            {promedioConDetenido.toFixed(2)} <small className="text-xs font-semibold opacity-70">IPH/día</small>
           </span>
         </div>
 
-        <div className="promedio-card" style={{ borderLeftColor: '#b8ab84' }}>
-          <span className="promedio-label">Promedio Sin Detenido</span>
-          <span className="promedio-valor" style={{ color: '#8a7f5f' }}>
-            {promedioSinDetenido.toFixed(2)} <small>IPH/día</small>
+        <div className="bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[#b8ab84]">
+          <span className="text-xs font-semibold text-gray-600 font-poppins block mb-2 uppercase tracking-wider">
+            Promedio Sin Detenido
+          </span>
+          <span className="text-2xl font-bold text-[#8a7f5f] font-poppins">
+            {promedioSinDetenido.toFixed(2)} <small className="text-xs font-semibold opacity-70">IPH/día</small>
           </span>
         </div>
 
-        <div className="promedio-card" style={{ borderLeftColor: '#c2b186' }}>
-          <span className="promedio-label">Promedio Total</span>
-          <span className="promedio-valor" style={{ color: '#9d8c68' }}>
-            {promedioTotal.toFixed(2)} <small>IPH/día</small>
+        <div className="bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[#c2b186]">
+          <span className="text-xs font-semibold text-gray-600 font-poppins block mb-2 uppercase tracking-wider">
+            Promedio Total
+          </span>
+          <span className="text-2xl font-bold text-[#9d8c68] font-poppins">
+            {promedioTotal.toFixed(2)} <small className="text-xs font-semibold opacity-70">IPH/día</small>
           </span>
         </div>
 
-        <div className="promedio-card" style={{ borderLeftColor: '#6b5d42' }}>
-          <span className="promedio-label">Total Mensual</span>
-          <span className="promedio-valor" style={{ color: '#6b5d42' }}>
-            {totalMensual.toLocaleString()} <small>IPH</small>
+        <div className="bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[#6b5d42]">
+          <span className="text-xs font-semibold text-gray-600 font-poppins block mb-2 uppercase tracking-wider">
+            Total Mensual
+          </span>
+          <span className="text-2xl font-bold text-[#6b5d42] font-poppins">
+            {totalMensual.toLocaleString()} <small className="text-xs font-semibold opacity-70">IPH</small>
           </span>
         </div>
       </div>
 
       {/* Información adicional */}
-      <div className="promedio-info">
-        <p className="promedio-info-text">
+      <div className="mt-6 p-4 bg-amber-50 border-l-4 border-amber-400 rounded-lg">
+        <p className="text-sm text-amber-900 font-poppins font-semibold mb-2">
           📊 Este cálculo divide el total mensual entre los {diasDelMes} días de {nombreMes}
         </p>
-        <p className="promedio-info-detail">
+        <p className="text-xs text-amber-800 font-poppins">
           Total mensual: <strong>{totalMensual.toLocaleString()} IPH</strong> ÷
           Días del mes: <strong>{diasDelMes}</strong> =
           Promedio: <strong>{promedioTotal.toFixed(2)} IPH/día</strong>

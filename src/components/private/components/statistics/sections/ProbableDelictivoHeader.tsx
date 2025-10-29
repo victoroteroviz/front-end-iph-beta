@@ -3,11 +3,11 @@
  * Incluye título, subtítulo y botón de refresh
  *
  * @module ProbableDelictivoHeader
- * @version 1.0.0
+ * @version 2.0.0 - Actualizado con patrón limpio de Usuarios.tsx
  */
 
 import React from 'react';
-import { RefreshButton } from '../components/shared/RefreshButton';
+import { Search, RefreshCw } from 'lucide-react';
 
 export interface ProbableDelictivoHeaderProps {
   /** Handler para refrescar estadísticas */
@@ -18,6 +18,7 @@ export interface ProbableDelictivoHeaderProps {
 
 /**
  * Header del componente de Estadísticas de Probable Delictivo
+ * Usa el mismo patrón visual que Usuarios.tsx para consistencia
  *
  * @example
  * ```tsx
@@ -32,21 +33,37 @@ export const ProbableDelictivoHeader: React.FC<ProbableDelictivoHeaderProps> = (
   isLoading
 }) => {
   return (
-    <div className="estadisticas-jc-header">
-      <div className="header-content">
-        <h1 className="header-title">
-          <span className="header-icon">🔍</span>
-          Estadísticas de Probable Delictivo
-        </h1>
-        <p className="header-subtitle">
-          Análisis de IPH probablemente delictivos por período: diario, mensual y anual
-        </p>
+    <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <div className="p-3 bg-[#948b54] rounded-lg">
+            <Search className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-[#4d4725] font-poppins">
+              Estadísticas de Probable Delictivo
+            </h1>
+            <p className="text-gray-600 font-poppins">
+              Análisis de IPH probablemente delictivos por período: diario, mensual y anual
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={onRefresh}
+            disabled={isLoading}
+            className="
+              flex items-center gap-2 px-4 py-2 text-sm font-medium
+              text-white bg-[#4d4725] rounded-lg
+              hover:bg-[#3a3519] disabled:opacity-50 disabled:cursor-not-allowed
+              transition-colors duration-200 font-poppins
+            "
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Actualizar</span>
+          </button>
+        </div>
       </div>
-
-      <RefreshButton
-        onClick={onRefresh}
-        disabled={isLoading}
-      />
     </div>
   );
 };
