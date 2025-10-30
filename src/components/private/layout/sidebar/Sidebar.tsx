@@ -16,7 +16,7 @@ import './sidebar-animations.css';
 import { logInfo } from '../../../../helper/log/logger.helper';
 import { SIDEBAR_CONFIG, getFilteredSidebarItems } from './config/sidebarConfig';
 import { RoutePreloader } from '../../../../helper/route-preloader';
-import { getAllRoutes } from '../../../../config/app-routes.config';
+import { getAllRoutes, getParentSidebarId } from '../../../../config/app-routes.config';
 
 // Hooks
 import useUserSession from '../hooks/useUserSession';
@@ -35,6 +35,40 @@ const SIDEBAR_WIDTHS = {
   collapsed: '64px',
   expanded: '240px'
 } as const;
+
+/**
+ * Helper para detectar si una ruta está activa (incluyendo rutas hijas y relacionadas)
+ *
+ * @description Compara la ruta actual con la ruta del item del sidebar.
+ * Soporta tres tipos de detección:
+ * 1. Ruta exacta: /usuarios === /usuarios
+ * 2. Ruta hija directa: /usuarios/nuevo empieza con /usuarios/
+ * 3. Ruta relacionada: /informeejecutivo/:id tiene parentSidebarId='iphActivo'
+ *
+ * @param currentPath - Path actual de la URL (location.pathname)
+ * @param itemPath - Path del item del sidebar
+ * @param itemId - ID del item del sidebar para verificar parentSidebarId
+ * @returns true si la ruta está activa (exacta, hija o relacionada)
+ *
+ * @example
+ * isRouteActive('/usuarios', '/usuarios', 'usuarios') // true - ruta exacta
+ * isRouteActive('/usuarios/nuevo', '/usuarios', 'usuarios') // true - ruta hija
+ * isRouteActive('/informeejecutivo/123', '/informepolicial', 'iphActivo') // true - relacionada
+ * isRouteActive('/inicio', '/iniciador', 'inicio') // false - no coincide
+ */
+const isRouteActive = (currentPath: string, itemPath: string, itemId: string): boolean => {
+  // 1. Comparación exacta - caso más común
+  if (currentPath === itemPath) return true;
+
+  // 2. Detectar ruta hija directa: debe empezar con itemPath seguido de "/"
+  if (currentPath.startsWith(`${itemPath}/`)) return true;
+
+  // 3. Detectar ruta relacionada vía parentSidebarId
+  const parentId = getParentSidebarId(currentPath);
+  if (parentId && parentId === itemId) return true;
+
+  return false;
+};
 
 /**
  * Item individual del sidebar - SUPER OPTIMIZADO v2.0
@@ -393,7 +427,7 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
                 <SidebarItem
                   key={item.id}
                   item={item}
-                  isActive={location.pathname === item.to}
+                  isActive={isRouteActive(location.pathname, item.to, item.id)}
                   isCollapsed={shouldCollapse}
                   onNavigate={isMobile ? handleNavigation : undefined}
                 />

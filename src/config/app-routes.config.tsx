@@ -48,6 +48,8 @@ export interface AppRoute {
   isDisabled?: boolean;
   /** Rutas hijas (para rutas anidadas) */
   children?: AppRoute[];
+  /** ID del item del sidebar que debe estar activo cuando se navega a esta ruta */
+  parentSidebarId?: string;
 }
 
 // =====================================================
@@ -176,7 +178,8 @@ export const APP_ROUTES: AppRoute[] = [
     requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
     title: 'Usuarios y Creación de IPH',
     description: 'Estadísticas de usuarios que más y menos IPH han creado',
-    showInSidebar: false
+    showInSidebar: false,
+    parentSidebarId: 'estadisticas' // Pertenece a Estadísticas
   },
   {
     id: 'estadisticasJusticiaCivica',
@@ -185,7 +188,8 @@ export const APP_ROUTES: AppRoute[] = [
     requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
     title: 'IPH de Justicia Cívica',
     description: 'Estadísticas de informes de justicia cívica',
-    showInSidebar: false
+    showInSidebar: false,
+    parentSidebarId: 'estadisticas' // Pertenece a Estadísticas
   },
   {
     id: 'estadisticasProbableDelictivo',
@@ -194,7 +198,8 @@ export const APP_ROUTES: AppRoute[] = [
     requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
     title: 'IPH de Probable Hecho Delictivo',
     description: 'Estadísticas de informes de probable hecho delictivo',
-    showInSidebar: false
+    showInSidebar: false,
+    parentSidebarId: 'estadisticas' // Pertenece a Estadísticas
   },
 
   {
@@ -204,7 +209,8 @@ export const APP_ROUTES: AppRoute[] = [
     requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
     title: 'IPH Oficial',
     description: 'Vista detallada del informe policial',
-    showInSidebar: false
+    showInSidebar: false,
+    parentSidebarId: 'iphActivo' // Pertenece a IPH's Activos
   },
   {
     id: 'informeEjecutivo',
@@ -213,7 +219,8 @@ export const APP_ROUTES: AppRoute[] = [
     requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
     title: 'Informe Ejecutivo',
     description: 'Informe ejecutivo detallado',
-    showInSidebar: false
+    showInSidebar: false,
+    parentSidebarId: 'iphActivo' // Pertenece a IPH's Activos
   },
   {
     id: 'usuariosNuevo',
@@ -222,7 +229,8 @@ export const APP_ROUTES: AppRoute[] = [
     requiredRoles: ['SuperAdmin', 'Administrador'],
     title: 'Nuevo Usuario',
     description: 'Crear nuevo usuario del sistema',
-    showInSidebar: false
+    showInSidebar: false,
+    parentSidebarId: 'usuarios' // Pertenece a Usuarios
   },
   {
     id: 'usuariosEditar',
@@ -231,7 +239,8 @@ export const APP_ROUTES: AppRoute[] = [
     requiredRoles: ['SuperAdmin', 'Administrador'],
     title: 'Editar Usuario',
     description: 'Editar información de usuario',
-    showInSidebar: false
+    showInSidebar: false,
+    parentSidebarId: 'usuarios' // Pertenece a Usuarios
   },
   {
     id: 'perfil',
@@ -249,7 +258,8 @@ export const APP_ROUTES: AppRoute[] = [
     requiredRoles: ['SuperAdmin', 'Administrador'],
     title: 'Administración de Catálogos',
     description: 'Gestión de catálogos del sistema',
-    showInSidebar: false
+    showInSidebar: false,
+    parentSidebarId: 'ajustes' // Pertenece a Ajustes
   }
 ];
 
@@ -341,6 +351,41 @@ export const getRouteTitle = (path: string): string => {
 };
 
 /**
+ * Obtiene el ID del item del sidebar padre para una ruta dada
+ *
+ * @description Busca en todas las rutas si alguna coincide con el pathname dado
+ * y retorna su parentSidebarId. Soporta rutas con parámetros dinámicos.
+ *
+ * @param pathname - Path completo de la URL (ej: /informeejecutivo/387d1b0e-...)
+ * @returns ID del sidebar padre o undefined si no tiene
+ *
+ * @example
+ * getParentSidebarId('/informeejecutivo/387d1b0e-...') // → 'iphActivo'
+ * getParentSidebarId('/usuarios/nuevo') // → 'usuarios'
+ * getParentSidebarId('/inicio') // → undefined
+ */
+export const getParentSidebarId = (pathname: string): string | undefined => {
+  // Limpiar pathname - remover slash inicial si existe
+  const cleanPath = pathname.startsWith('/') ? pathname.substring(1) : pathname;
+
+  // Buscar ruta que coincida
+  for (const route of APP_ROUTES) {
+    // Si tiene parentSidebarId, verificar si el path coincide
+    if (route.parentSidebarId) {
+      // Convertir pattern de ruta a regex (reemplazar :param por regex)
+      const pattern = route.path.replace(/:[^/]+/g, '[^/]+');
+      const regex = new RegExp(`^${pattern}$`);
+
+      if (regex.test(cleanPath)) {
+        return route.parentSidebarId;
+      }
+    }
+  }
+
+  return undefined;
+};
+
+/**
  * Convierte configuración de rutas para usar con Sidebar legacy
  * (mantiene compatibilidad con sidebarConfig.ts existente)
  *
@@ -366,5 +411,6 @@ export default {
   getRouteById,
   getRouteByPath,
   userHasAccessToRoute,
-  getRouteTitle
+  getRouteTitle,
+  getParentSidebarId
 };

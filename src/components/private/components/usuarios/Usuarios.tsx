@@ -20,6 +20,7 @@ import Pagination from '../../../shared/components/pagination'; // ✅ Component
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';
+import { getUserRoles, canRead } from '../../../../helper/role/role.helper';
 
 // Configuración
 const USE_VIRTUALIZATION = false; // Cambiar a true para tablas con >100 usuarios
@@ -54,6 +55,31 @@ const Usuarios: React.FC<UsuariosProps> = ({
       canDeleteUsers: state.canDeleteUsers
     });
   }, [state.usuarios.length, state.canCreateUsers, state.canEditUsers, state.canDeleteUsers]);
+
+  //#region validacion rol
+  const userRoles = getUserRoles();
+  const hasAccess = canRead(userRoles);
+
+  if (!hasAccess || userRoles.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl border border-red-200 p-8 max-w-md w-full">
+          <div className="flex items-center justify-center mb-4">
+            <div className="p-3 bg-red-100 rounded-full">
+              <AlertCircle className="h-8 w-8 text-red-600" />
+            </div>
+          </div>
+          <h2 className="text-xl font-bold text-center text-gray-900 mb-2 font-poppins">
+            Acceso Denegado
+          </h2>
+          <p className="text-center text-gray-600 font-poppins">
+            No tienes permisos para acceder a este módulo.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  // #endregion validacion rol
 
   // Determinar si usar tabla virtualizada
   const shouldUseVirtualization = USE_VIRTUALIZATION && state.usuarios.length > 50;

@@ -116,14 +116,60 @@ export const getRoleNames = (): string[] => getSystemRoleTypes();
 
 /**
  * Obtiene roles completos dinámicamente desde la configuración (.env)
+ * Con validación de estructura completa
+ *
  * @returns Array con roles permitidos según ALLOWED_ROLES
+ * @security Valida que cada elemento sea un IRole válido
  */
 export const getSystemRoles = (): IRole[] => {
+  // Validación 1: Verificar que sea array
   if (!Array.isArray(ALLOWED_ROLES)) {
-    logWarning('RoleHelper', 'ALLOWED_ROLES no es un array válido');
+    logError(
+      'RoleHelper',
+      new Error('ALLOWED_ROLES no es un array'),
+      `Tipo recibido: ${typeof ALLOWED_ROLES}`
+    );
     return [];
   }
-  return ALLOWED_ROLES as IRole[];
+
+  // Validación 2: Verificar que no esté vacío
+  if (ALLOWED_ROLES.length === 0) {
+    logWarning(
+      'RoleHelper',
+      'ALLOWED_ROLES está vacío - No hay roles configurados en el sistema'
+    );
+    return [];
+  }
+
+  // Validación 3: Filtrar solo roles válidos
+  const validRoles = ALLOWED_ROLES.filter((role: any) => {
+    // Verificar que sea objeto
+    if (typeof role !== 'object' || role === null) {
+      return false;
+    }
+
+    // Verificar que tenga propiedades requeridas con tipos correctos
+    if (typeof role.id !== 'number' || typeof role.nombre !== 'string') {
+      return false;
+    }
+
+    // Verificar que no sean undefined/null
+    if (role.id === undefined || role.nombre === undefined) {
+      return false;
+    }
+
+    return true;
+  });
+
+  // Log si hubo filtrado
+  if (validRoles.length !== ALLOWED_ROLES.length) {
+    logWarning(
+      'RoleHelper',
+      `${ALLOWED_ROLES.length - validRoles.length} rol(es) inválido(s) filtrado(s) en getSystemRoles()`
+    );
+  }
+
+  return validRoles as IRole[];
 };
 
 /**
@@ -215,30 +261,104 @@ class RoleHelper {
 
   /**
    * Obtiene Map de roles permitidos para lookup O(1)
-   * Implementa lazy initialization
-   * 
+   * Implementa lazy initialization con validación robusta
+   *
    * @private
    * @returns {Map<string, IRole>} Map de roles permitidos
+   * @security Valida estructura de cada elemento antes de crear Map
    */
   private getAllowedRolesMap(): Map<string, IRole> {
     if (!this.allowedRolesMap) {
       const allowed = ALLOWED_ROLES as IRole[];
-      
-      if (!Array.isArray(allowed) || allowed.length === 0) {
-        logWarning('RoleHelper', 'ALLOWED_ROLES vacío al crear Map');
+
+      // Validación 1: Verificar que sea array
+      if (!Array.isArray(allowed)) {
+        logError(
+          'RoleHelper',
+          new Error('ALLOWED_ROLES no es un array'),
+          'Tipo recibido: ' + typeof allowed
+        );
         this.allowedRolesMap = new Map();
         return this.allowedRolesMap;
       }
 
-      this.allowedRolesMap = new Map(
-        allowed.map(role => [`${role.id}-${role.nombre}`, role])
-      );
-      
-      logInfo('RoleHelper', 'Map de roles permitidos creado', {
-        size: this.allowedRolesMap.size
-      });
+      // Validación 2: Verificar que no esté vacío
+      if (allowed.length === 0) {
+        logError(
+          'RoleHelper',
+          new Error('ALLOWED_ROLES está vacío'),
+          'El sistema no tiene roles válidos configurados. Verifica tu .env'
+        );
+        this.allowedRolesMap = new Map();
+        return this.allowedRolesMap;
+      }
+
+      // Validación 3: Filtrar elementos inválidos y crear Map
+      const validEntries: [string, IRole][] = [];
+      let invalidCount = 0;
+
+      for (const role of allowed) {
+        // Verificar que sea objeto
+        if (typeof role !== 'object' || role === null) {
+          logWarning(
+            'RoleHelper',
+            `Elemento inválido en ALLOWED_ROLES (tipo: ${typeof role}). Ignorando.`
+          );
+          invalidCount++;
+          continue;
+        }
+
+        // Verificar que tenga propiedades requeridas
+        if (typeof role.id !== 'number' || typeof role.nombre !== 'string') {
+          logWarning(
+            'RoleHelper',
+            `Rol con estructura inválida (id: ${typeof role.id}, nombre: ${typeof role.nombre}). Ignorando.`
+          );
+          invalidCount++;
+          continue;
+        }
+
+        // Verificar que id y nombre no sean undefined/null
+        if (role.id === undefined || role.nombre === undefined) {
+          logWarning(
+            'RoleHelper',
+            `Rol con propiedades undefined (id: ${role.id}, nombre: ${role.nombre}). Ignorando.`
+          );
+          invalidCount++;
+          continue;
+        }
+
+        // Agregar entrada válida
+        const key = `${role.id}-${role.nombre}`;
+        validEntries.push([key, role]);
+      }
+
+      // Crear Map con entradas válidas
+      this.allowedRolesMap = new Map(validEntries);
+
+      // Logs informativos
+      if (invalidCount > 0) {
+        logWarning(
+          'RoleHelper',
+          `${invalidCount} rol(es) inválido(s) filtrado(s) de ALLOWED_ROLES`
+        );
+      }
+
+      if (this.allowedRolesMap.size === 0) {
+        logError(
+          'RoleHelper',
+          new Error('Map de roles vacío después de validación'),
+          'Ningún rol válido encontrado en ALLOWED_ROLES. El sistema no funcionará correctamente.'
+        );
+      } else {
+        logInfo('RoleHelper', 'Map de roles permitidos creado exitosamente', {
+          rolesValidos: this.allowedRolesMap.size,
+          rolesInvalidos: invalidCount,
+          roles: Array.from(this.allowedRolesMap.keys())
+        });
+      }
     }
-    
+
     return this.allowedRolesMap;
   }
 
@@ -917,17 +1037,68 @@ export const getPermissionsFor = {
  */
 export const invalidateRoleCache = (): void => roleHelper.invalidateCache();
 
-// Logging de inicialización
-logInfo('RoleHelper', 'Role Helper v2.1.0 inicializado correctamente', {
-  availableRoles: getSystemRoleTypes(),
-  totalRoles: getSystemRoles().length,
-  features: [
-    'Validación Zod runtime',
-    'Cache con TTL 5s',
-    'Optimización Map O(1)',
-    'Protección datos corruptos'
-  ]
-});
+// ==================== INICIALIZACIÓN Y VALIDACIÓN ====================
+
+/**
+ * Validación inicial del sistema de roles
+ * Se ejecuta al importar el módulo
+ */
+const initializeRoleSystem = () => {
+  const systemRoles = getSystemRoles();
+  const roleNames = getSystemRoleTypes();
+
+  // Validación crítica: sistema debe tener roles
+  if (systemRoles.length === 0) {
+    logError(
+      'RoleHelper',
+      new Error('Sistema de roles sin configuración válida'),
+      'CRÍTICO: ALLOWED_ROLES está vacío o corrupto. ' +
+      'El sistema de permisos NO FUNCIONARÁ. ' +
+      'Revisa tu archivo .env y asegúrate de usar el formato correcto: ' +
+      '[{"id":1,"nombre":"NombreRol"}]'
+    );
+    return false;
+  }
+
+  // Validación de roles esperados
+  const expectedRoles = ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'];
+  const missingRoles = expectedRoles.filter(role => !roleNames.includes(role as any));
+
+  if (missingRoles.length > 0) {
+    logWarning(
+      'RoleHelper',
+      `Roles faltantes en configuración: ${missingRoles.join(', ')}. ` +
+      'Algunas funcionalidades pueden no estar disponibles.'
+    );
+  }
+
+  // Log exitoso con detalles
+  logInfo('RoleHelper', '✅ Role Helper v2.1.0 inicializado correctamente', {
+    rolesConfigurados: systemRoles.length,
+    rolesDisponibles: roleNames,
+    features: [
+      'Validación Zod runtime en env.config',
+      'Validación de estructura en getAllowedRolesMap',
+      'Cache con TTL 5s',
+      'Optimización Map O(1)',
+      'Protección datos corruptos',
+      'Filtrado automático de roles inválidos'
+    ],
+    security: [
+      'Validación doble ID + nombre',
+      'Detección temprana de .env mal configurado',
+      'Logs descriptivos sin exponer datos sensibles'
+    ]
+  });
+
+  return true;
+};
+
+// Ejecutar validación inicial
+const isSystemValid = initializeRoleSystem();
+
+// Exportar estado del sistema para debugging
+export const isRoleSystemValid = (): boolean => isSystemValid;
 
 // Exportaciones principales
 export { RoleHelper, roleHelper };
