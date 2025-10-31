@@ -151,6 +151,7 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
   /**
    * Control de permisos (memoizado para evitar recálculos)
    * @refactored v2.0.0 - Usa getUserRoles() centralizado
+   * @security Solo SuperAdmin y Administrador pueden acceder
    */
   const permisos = useMemo(() => {
     const userRoles = getUserRoles();
@@ -159,7 +160,7 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
       canCreate: canAccessAdmin(userRoles),
       canEdit: canAccessAdmin(userRoles),
       canDelete: canAccessAdmin(userRoles),
-      canView: canAccessSuperior(userRoles)
+      canView: canAccessAdmin(userRoles)
     };
   }, []);
 

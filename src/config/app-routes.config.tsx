@@ -145,7 +145,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'grupos',
     path: 'gestion-grupos',
     component: GestionGrupos,
-    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
+    requiredRoles: ['SuperAdmin', 'Administrador'],
     title: 'Gestión Grupos',
     description: 'Gestión de grupos y equipos',
     showInSidebar: true,

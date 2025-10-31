@@ -2,7 +2,7 @@
 
 ## ESTADO ACTUAL DEL PROYECTO
 
-**Versión:** 3.4.4
+**Versión:** 3.4.5
 **Componentes migrados:** Login, Dashboard, Inicio, EstadisticasUsuario, HistorialIPH, IphOficial, InformePolicial, PerfilUsuario, Usuarios, InformeEjecutivo
 
 ## ARQUITECTURA IMPLEMENTADA
@@ -636,6 +636,170 @@ const USE_MOCK_DATA = false;
 ---
 
 ## 📝 CHANGELOG RECIENTE
+
+### **v3.4.5 - Corrección de Permisos en GestionGrupos** (2025-01-30)
+
+#### 🎯 Problema Solucionado
+
+**Inconsistencia de permisos en módulo de Gestión de Grupos**
+
+- ❌ **Configuración de ruta** permitía acceso a rol **Superior** (no autorizado)
+- ❌ **3 hooks** con permisos de vista para **Superior** (canView/canViewGroups)
+- ❌ **Requisito**: Solo SuperAdmin y Administrador deben tener acceso
+- ❌ **Realidad**: Superior tenía acceso de solo lectura
+
+#### ✨ Solución Implementada
+
+**Patrón: Restricción de Permisos según Requisitos de Seguridad**
+
+- ✅ **app-routes.config.tsx**: Eliminado 'Superior' de requiredRoles
+- ✅ **useGestionGruposUnificado.ts**: canView ahora usa `canAccessAdmin()`
+- ✅ **useGestionGrupos.ts**: canView ahora usa `canAccessAdmin()`
+- ✅ **useUsuarioGrupo.ts**: canViewGroups ahora usa `canAccessAdmin()`
+
+#### 🔧 Cambios por Archivo
+
+**1. app-routes.config.tsx (línea 148)**
+
+```typescript
+// ❌ ANTES
+requiredRoles: ['SuperAdmin', 'Administrador', 'Superior']
+
+// ✅ DESPUÉS
+requiredRoles: ['SuperAdmin', 'Administrador']
+```
+
+**Impacto**: Superior ya no puede acceder a la ruta `/gestion-grupos`
+
+---
+
+**2. useGestionGruposUnificado.ts (línea 172)**
+
+```typescript
+// ❌ ANTES
+canView: canAccessSuperior(userRoles)
+
+// ✅ DESPUÉS
+canView: canAccessAdmin(userRoles)
+```
+
+**Impacto**: Solo SuperAdmin y Admin pueden ver grupos
+
+---
+
+**3. useGestionGrupos.ts (línea 163)**
+
+```typescript
+// ❌ ANTES
+canView: canAccessSuperior(userRoles)
+
+// ✅ DESPUÉS
+canView: canAccessAdmin(userRoles)
+```
+
+**Impacto**: Hook base ahora valida correctamente permisos
+
+---
+
+**4. useUsuarioGrupo.ts (línea 150)**
+
+```typescript
+// ❌ ANTES
+canViewGroups: canAccessSuperior(userRoles)
+
+// ✅ DESPUÉS
+canViewGroups: canAccessAdmin(userRoles)
+```
+
+**Impacto**: Vista de usuarios-grupo restringida correctamente
+
+---
+
+#### 📊 Comparación: Antes vs Después
+
+**ANTES (Inconsistente):**
+| Rol | Acceder | Ver Lista | Crear | Editar | Eliminar |
+|-----|---------|-----------|-------|--------|----------|
+| SuperAdmin | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Admin | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Superior** | **✅** | **✅** | ❌ | ❌ | ❌ |
+| Elemento | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+**DESPUÉS (Correcto):**
+| Rol | Acceder | Ver Lista | Crear | Editar | Eliminar |
+|-----|---------|-----------|-------|--------|----------|
+| SuperAdmin | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Admin | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Superior** | **❌** | **❌** | ❌ | ❌ | ❌ |
+| Elemento | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+#### 🗂️ Archivos Afectados
+
+**Modificados (4 archivos):**
+- `src/config/app-routes.config.tsx` (línea 148)
+- `src/components/private/components/gestion-grupos/hooks/useGestionGruposUnificado.ts` (línea 172)
+- `src/components/private/components/gestion-grupos/hooks/useGestionGrupos.ts` (línea 163)
+- `src/components/private/components/gestion-grupos/hooks/useUsuarioGrupo.ts` (línea 150)
+
+**Total:** 4 archivos, 4 líneas modificadas
+
+#### ✅ Verificación de Integridad
+
+**Verificaciones realizadas:**
+```bash
+# ✅ Configuración de ruta actualizada
+requiredRoles: ['SuperAdmin', 'Administrador']
+
+# ✅ useGestionGruposUnificado.ts
+canView: canAccessAdmin(userRoles)
+
+# ✅ useGestionGrupos.ts
+canView: canAccessAdmin(userRoles)
+
+# ✅ useUsuarioGrupo.ts
+canViewGroups: canAccessAdmin(userRoles)
+```
+
+**Resultados:**
+- ✅ **4 de 4 archivos** correctamente actualizados
+- ✅ **Superior bloqueado** en ruta (PrivateRoute)
+- ✅ **Superior bloqueado** en vista (hooks)
+- ✅ **SuperAdmin y Admin** mantienen acceso completo
+- ✅ **Comentarios @security** agregados en los hooks
+
+#### 📚 Documentación
+
+- **Actualizado**: 4 archivos con corrección de permisos
+  - JSDoc con anotación `@security Solo SuperAdmin y Administrador pueden acceder`
+  - Regiones #region mantienen estructura consistente
+
+- **Actualizado**: `CLAUDE.md`
+  - Changelog v3.4.5 completo
+  - Versión del proyecto: 3.4.4 → 3.4.5
+
+#### 🎯 Impacto de Seguridad
+
+**Vulnerabilidad corregida:** 🔴 **ALTA**
+- Rol no autorizado (Superior) tenía acceso de lectura al módulo
+- Potencial exposición de información de grupos
+- Inconsistencia entre requisitos y implementación
+
+**Severidad:** Media-Alta (acceso de lectura, no escritura)
+
+**Usuarios afectados:**
+- ❌ **Superior**: Pierde acceso completamente (esperado)
+- ✅ **SuperAdmin y Admin**: Sin cambios
+- ✅ **Elemento**: Sin cambios (nunca tuvo acceso)
+
+#### 📈 Métricas de Corrección
+
+| Aspecto | Antes | Después |
+|---------|-------|---------|
+| **Roles con acceso** | 3 (SuperAdmin, Admin, Superior) | 2 (SuperAdmin, Admin) |
+| **Inconsistencias** | 4 archivos | 0 archivos ✅ |
+| **Compliance con requisitos** | ❌ No cumple | ✅ Cumple 100% |
+
+---
 
 ### **v3.4.4 - Refactorización Fase 3: Baja Prioridad (Consistencia Total)** (2025-01-30)
 
