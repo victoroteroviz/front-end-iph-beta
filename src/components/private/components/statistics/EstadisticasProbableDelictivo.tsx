@@ -7,13 +7,16 @@
  * @version 3.0.0 - Corregido: Agregado FiltroFechaJC para cambiar fechas
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { useEstadisticasProbableDelictivo } from './hooks/useEstadisticasProbableDelictivo';
 import FiltroFechaJC from './components/filters/FiltroFechaJC';
 import GraficaBarrasJC from './components/charts/GraficaBarrasJC';
 import GraficaPromedioJC from './components/charts/GraficaPromedioJC';
 import ProbableDelictivoHeader from './sections/ProbableDelictivoHeader';
+import AccessDenied from '../../../shared/components/access-denied';
+import { getUserRoles, isElemento, validateExternalRoles } from '../../../../helper/role/role.helper';
+import { logDebug } from '../../../../helper/log/logger.helper';
 import './styles/EstadisticasProbableDelictivo.css';
 
 interface EstadisticasProbableDelictivoProps {
@@ -29,11 +32,24 @@ interface EstadisticasProbableDelictivoProps {
  * Componente de Estadísticas de Probable Delictivo
  */
 export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelictivoProps> = ({ externalFilters }) => {
-  // Log solo en la primera carga, no en cada render
-  useEffect(() => {
-    console.log('📊 EstadisticasProbableDelictivo montado', { externalFilters });
-  }, [externalFilters]);
+  // #region validacion rol
+  // ✅ PASO 1: Validar roles ANTES de ejecutar cualquier lógica
+  const userRoles = getUserRoles();
 
+  // ✅ Memoizar validRoles para evitar re-renders innecesarios
+  const validRoles = useMemo(
+    () => validateExternalRoles(userRoles),
+    [userRoles]
+  );
+
+  // ✅ Verificar que NO sea Elemento (todos excepto Elemento pueden acceder)
+  const hasAccess = useMemo(
+    () => !isElemento(validRoles) && validRoles.length > 0,
+    [validRoles]
+  );
+  // #endregion validacion rol
+
+  // ✅ PASO 2: TODOS los hooks ANTES del return condicional (Rules of Hooks)
   // Hook personalizado con toda la lógica de negocio
   const {
     estadisticas,
@@ -44,16 +60,23 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
     actualizarFecha
   } = useEstadisticasProbableDelictivo();
 
-  // Sincronizar con filtros externos si existen
-  useEffect(() => {
-    if (externalFilters) {
-      console.log('🔄 [EstadisticasProbableDelictivo] Sincronizando con filtros externos:', externalFilters);
-      actualizarFecha(externalFilters.anio, externalFilters.mes, externalFilters.dia);
-    }
-  }, [externalFilters, actualizarFecha]);
-
   // Estado para controlar si hay errores críticos
   const [hayErrorCritico, setHayErrorCritico] = useState(false);
+
+  // Log solo en mount
+  useEffect(() => {
+    if (hasAccess) {
+      logDebug('EstadisticasProbableDelictivo', 'Component mounted with access');
+    }
+  }, [hasAccess]);
+
+  // Sincronizar con filtros externos si existen
+  useEffect(() => {
+    if (externalFilters && hasAccess) {
+      logDebug('EstadisticasProbableDelictivo', 'Syncing with external filters', externalFilters);
+      actualizarFecha(externalFilters.anio, externalFilters.mes, externalFilters.dia);
+    }
+  }, [externalFilters, actualizarFecha, hasAccess]);
 
   // Detectar errores críticos
   useEffect(() => {
@@ -65,7 +88,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
    * Manejar cambio de fecha en los filtros
    */
   const handleFechaChange = async (anio: number, mes: number, dia: number) => {
-    console.log('📅 [EstadisticasProbableDelictivo] Cambio de fecha solicitado:', { anio, mes, dia });
+    logDebug('EstadisticasProbableDelictivo', 'Date change requested', { anio, mes, dia });
     actualizarFecha(anio, mes, dia);
   };
 
@@ -73,10 +96,22 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
    * Refrescar todas las estadísticas
    */
   const handleRefresh = async () => {
-    console.log('🔄 [EstadisticasProbableDelictivo] Refrescando estadísticas...');
+    logDebug('EstadisticasProbableDelictivo', 'Refreshing statistics');
     await obtenerTodasLasEstadisticas();
-    console.log('✅ [EstadisticasProbableDelictivo] Estadísticas refrescadas');
   };
+
+  const isLoading = loading.diaria || loading.mensual || loading.anual;
+
+  // ✅ PASO 3: Validación DESPUÉS de todos los hooks
+  if (!hasAccess) {
+    return (
+      <AccessDenied
+        title="Acceso Restringido"
+        message="Esta sección está disponible solo para Administradores, SuperAdmins y Superiores."
+        iconType="shield"
+      />
+    );
+  }
 
   return (
     <div className="estadisticas-pd-container">
@@ -84,7 +119,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
       {!externalFilters && (
         <ProbableDelictivoHeader
           onRefresh={handleRefresh}
-          isLoading={loading.diaria || loading.mensual || loading.anual}
+          isLoading={isLoading}
         />
       )}
 
@@ -102,7 +137,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
           </div>
           <button
             onClick={handleRefresh}
-            disabled={loading.diaria || loading.mensual || loading.anual}
+            disabled={isLoading}
             className="
               ml-auto px-3 py-1.5 text-xs font-medium
               text-white bg-red-600 rounded-lg
@@ -123,7 +158,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
             mesInicial={fechaSeleccionada.mes}
             diaInicial={fechaSeleccionada.dia}
             onFechaChange={handleFechaChange}
-            loading={loading.diaria || loading.mensual || loading.anual}
+            loading={isLoading}
           />
         </div>
       )}

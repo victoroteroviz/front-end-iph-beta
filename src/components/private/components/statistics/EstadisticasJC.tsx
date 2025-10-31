@@ -7,13 +7,15 @@
  * @version 3.0.0 - Normalizado con patrón de ProbableDelictivo (Tailwind CSS)
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { useEstadisticasJC } from './hooks/useEstadisticasJC';
 import FiltroFechaJC from './components/filters/FiltroFechaJC';
 import GraficaBarrasJC from './components/charts/GraficaBarrasJC';
 import GraficaPromedioJC from './components/charts/GraficaPromedioJC';
 import EstadisticasJCHeader from './sections/EstadisticasJCHeader';
+import AccessDenied from '../../../shared/components/access-denied';
+import { getUserRoles, isElemento, validateExternalRoles } from '../../../../helper/role/role.helper';
 import { JC_COLORS } from './config/colorsConfig';
 import { logDebug } from '../../../../helper/log/logger.helper';
 import './styles/EstadisticasJC.css';
@@ -31,6 +33,24 @@ export interface EstadisticasJCProps {
  * Componente de Estadísticas de Justicia Cívica
  */
 export const EstadisticasJC: React.FC<EstadisticasJCProps> = ({ externalFilters }) => {
+  // #region validacion rol
+  // ✅ PASO 1: Validar roles ANTES de ejecutar cualquier lógica
+  const userRoles = getUserRoles();
+
+  // ✅ Memoizar validRoles para evitar re-renders innecesarios
+  const validRoles = useMemo(
+    () => validateExternalRoles(userRoles),
+    [userRoles]
+  );
+
+  // ✅ Verificar que NO sea Elemento (todos excepto Elemento pueden acceder)
+  const hasAccess = useMemo(
+    () => !isElemento(validRoles) && validRoles.length > 0,
+    [validRoles]
+  );
+  // #endregion validacion rol
+
+  // ✅ PASO 2: TODOS los hooks ANTES del return condicional (Rules of Hooks)
   // Hook personalizado con toda la lógica de negocio
   const {
     estadisticas,
@@ -41,18 +61,29 @@ export const EstadisticasJC: React.FC<EstadisticasJCProps> = ({ externalFilters 
     actualizarFecha
   } = useEstadisticasJC();
 
+  // Estado para controlar si hay errores críticos
+  const [hayErrorCritico, setHayErrorCritico] = useState(false);
+
   // Log solo en mount
   useEffect(() => {
-    logDebug('EstadisticasJC', 'Component mounted');
-  }, []);
+    if (hasAccess) {
+      logDebug('EstadisticasJC', 'Component mounted with access');
+    }
+  }, [hasAccess]);
 
   // Sincronizar con filtros externos si existen
   useEffect(() => {
-    if (externalFilters) {
+    if (externalFilters && hasAccess) {
       logDebug('EstadisticasJC', 'Syncing with external filters', externalFilters);
       actualizarFecha(externalFilters.anio, externalFilters.mes, externalFilters.dia);
     }
-  }, [externalFilters, actualizarFecha]);
+  }, [externalFilters, actualizarFecha, hasAccess]);
+
+  // Detectar errores críticos
+  useEffect(() => {
+    const tieneErrores = error.diaria || error.mensual || error.anual;
+    setHayErrorCritico(!!tieneErrores);
+  }, [error]);
 
   /**
    * Manejar cambio de fecha en los filtros
@@ -70,16 +101,18 @@ export const EstadisticasJC: React.FC<EstadisticasJCProps> = ({ externalFilters 
     await obtenerTodasLasEstadisticas();
   };
 
-  // Estado para controlar si hay errores críticos
-  const [hayErrorCritico, setHayErrorCritico] = useState(false);
-
-  // Detectar errores críticos
-  useEffect(() => {
-    const tieneErrores = error.diaria || error.mensual || error.anual;
-    setHayErrorCritico(!!tieneErrores);
-  }, [error]);
-
   const isLoading = loading.diaria || loading.mensual || loading.anual;
+
+  // ✅ PASO 3: Validación DESPUÉS de todos los hooks
+  if (!hasAccess) {
+    return (
+      <AccessDenied
+        title="Acceso Restringido"
+        message="Esta sección está disponible solo para Administradores, SuperAdmins y Superiores."
+        iconType="shield"
+      />
+    );
+  }
 
   return (
     <div className="estadisticas-jc-container">

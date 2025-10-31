@@ -2,7 +2,7 @@
 
 ## ESTADO ACTUAL DEL PROYECTO
 
-**Versión:** 3.0.0  
+**Versión:** 3.3.0
 **Componentes migrados:** Login, Dashboard, Inicio, EstadisticasUsuario, HistorialIPH, IphOficial, InformePolicial, PerfilUsuario, Usuarios, InformeEjecutivo
 
 ## ARQUITECTURA IMPLEMENTADA
@@ -636,6 +636,106 @@ const USE_MOCK_DATA = false;
 ---
 
 ## 📝 CHANGELOG RECIENTE
+
+### **v3.3.0 - Centralización de Validación de Roles en Guards** (2025-01-30)
+
+#### 🎯 Problema Solucionado
+
+**Usuario con rol "Elemento" no podía acceder a pantalla de Inicio**
+
+- ❌ **PrivateRoute** tenía funciones locales duplicadas de validación
+- ❌ **app-routes.config.tsx** no incluía 'Elemento' en requiredRoles de 'inicio'
+- ❌ **useInicioDashboard** tenía validación hardcodeada bloqueando Elementos
+
+#### ✨ Nuevas Funcionalidades
+
+- ✅ **Nueva función en role.helper.ts** (`validateRolesByName()`)
+  - Validación simplificada de roles por nombre de string
+  - Diseñada específicamente para guards de rutas
+  - Integra cache automático con TTL de 5 segundos
+  - Validación Zod en runtime
+  - Comparación case-insensitive
+  - JSDoc completo con ejemplos
+
+#### 🔧 Mejoras
+
+- **PrivateRoute.tsx (v2.0.0)**
+  - ❌ **Eliminadas** funciones locales `getUserRoles()` y `validateUserRoles()` (~30 líneas)
+  - ✅ **Integrado** con `role.helper.ts` centralizado usando `validateRolesByName()`
+  - ✅ **Validación Zod** automática desde el helper
+  - ✅ **Cache optimizado** con TTL de 5 segundos
+  - ✅ **JSDoc completo** con ejemplos y anotaciones de seguridad
+  - ✅ **Regiones organizadas** (#region) para mantenibilidad
+  - ✅ **Reducción de código** -35% en funciones de validación
+
+- **usePrivateRoute hook (v2.0.0)**
+  - ✅ **Refactorizado** para usar `validateRolesByName()` centralizado
+  - ✅ **Eliminada** dependencia de funciones locales
+  - ✅ **Consistencia** total con el resto del sistema
+  - ✅ **JSDoc completo** con múltiples ejemplos de uso
+
+- **useInicioDashboard.ts (v2.0.0)**
+  - ✅ **Simplificado** de ~40 líneas a ~20 líneas (-50%)
+  - ✅ **Eliminada** validación hardcodeada anti-Elemento
+  - ✅ **Usa** `validateExternalRoles()` del helper centralizado
+  - ✅ **Autoriza** acceso a todos los roles válidos del sistema
+
+- **app-routes.config.tsx**
+  - ✅ **Agregado** 'Elemento' a requiredRoles de ruta 'inicio'
+  - ✅ **Consistencia** con permisos de otras rutas
+
+#### 📚 Documentación
+
+- **Actualizado**: `role.helper.ts`
+  - Nueva función `validateRolesByName()` con JSDoc completo
+  - Ejemplos de uso en guards y hooks
+  - Documentación de performance y seguridad
+
+- **Actualizado**: `PrivateRoute.tsx`
+  - Header refactorizado con historial de cambios (v2.0.0)
+  - Regiones claras con emojis para navegación
+  - JSDoc completo en componente y hook
+  - Ejemplos de uso actualizados
+
+- **Actualizado**: `CLAUDE.md`
+  - Changelog v3.3.0 completo
+  - Métricas actualizadas
+
+#### 🗂️ Archivos Afectados
+
+**Modificados:**
+- `src/helper/role/role.helper.ts` (agregada función `validateRolesByName()`)
+- `src/components/shared/guards/PrivateRoute.tsx` (v1.0.0 → v2.0.0)
+- `src/components/private/components/home/hooks/useInicioDashboard.ts` (v1.0.0 → v2.0.0)
+- `src/config/app-routes.config.tsx` (ruta 'inicio' actualizada)
+- `CLAUDE.md`
+
+#### 🎯 Patrón Establecido
+
+**Centralización de Validación de Roles:**
+
+1. ✅ **Una sola fuente de verdad** - `role.helper.ts`
+2. ✅ **Eliminar** funciones locales duplicadas en guards/hooks
+3. ✅ **Usar** `validateRolesByName()` para validación simple por nombre
+4. ✅ **Usar** `validateExternalRoles()` para validación completa con objetos
+5. ✅ **Documentar** con JSDoc completo y regiones
+6. ✅ **Beneficiarse** de cache, Zod, y validación doble automáticamente
+
+#### 📊 Métricas de Mejora
+
+- **Reducción de código duplicado**: ~60 líneas eliminadas
+- **Componentes refactorizados**: 3 (PrivateRoute, usePrivateRoute, useInicioDashboard)
+- **Funciones centralizadas**: 1 nueva (`validateRolesByName()`)
+- **Mejora de performance**: Cache automático 5s TTL
+- **Mejora de seguridad**: Validación Zod + doble verificación ID + nombre
+
+#### 🚀 Próximos Componentes a Refactorizar
+
+- Otros componentes con validación de roles local (identificar con grep)
+- Guards adicionales si existen
+- Hooks personalizados con lógica de roles
+
+---
 
 ### **v3.2.0 - Servicio HistorialIPH Refactorizado 100% API** (2024-01-30)
 

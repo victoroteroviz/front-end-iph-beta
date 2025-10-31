@@ -64,16 +64,17 @@ const useUsuarios = (): IUseUsuariosReturn => {
   // =====================================================
 
   /**
-   * Verifica y establece permisos del usuario actual
-   * Usa el sistema centralizado de validación de roles (role.helper v2.0.0)
+   * Calcula y establece permisos del usuario actual
+   * NOTA: La validación de acceso básico ahora se hace en el componente padre
+   * Este hook solo calcula permisos específicos para funcionalidades
    *
-   * @returns true si tiene acceso, false si debe redirigir
+   * @version 2.0.0 - Simplificado sin navegación automática
    */
   const checkPermissions = useCallback(() => {
     // Obtener roles desde sessionStorage usando el helper
     const userRoles = getUserRoles();
 
-    logInfo('UsuariosHook', 'Validando permisos de usuario', {
+    logInfo('UsuariosHook', 'Calculando permisos de usuario', {
       rolesCount: userRoles.length
     });
 
@@ -86,8 +87,6 @@ const useUsuarios = (): IUseUsuariosReturn => {
         new Error('Roles inválidos'),
         'Usuario sin roles válidos en el sistema'
       );
-      showWarning('No tienes roles válidos para acceder a esta sección', 'Acceso Restringido');
-      navigate('/inicio');
       return false;
     }
 
@@ -124,29 +123,8 @@ const useUsuarios = (): IUseUsuariosReturn => {
       canViewAllUsers: canAccessAdminFeatures
     });
 
-    // Verificar acceso básico a la sección de usuarios
-    // Solo Admin y SuperAdmin pueden acceder
-    if (!canAccessAdminFeatures) {
-      logAuth('access_denied', false, {
-        section: 'usuarios',
-        reason: 'Requiere permisos de Administrador',
-        userRoles: validRoles.map(r => r.nombre)
-      });
-      showWarning(
-        'Solo Administradores y SuperAdmins pueden acceder a la gestión de usuarios',
-        'Acceso Restringido'
-      );
-      navigate('/inicio');
-      return false;
-    }
-
-    logAuth('access_granted', true, {
-      section: 'usuarios',
-      userRoles: validRoles.map(r => r.nombre)
-    });
-
     return true;
-  }, [navigate]);
+  }, []);
 
   // =====================================================
   // FUNCIONES DE CARGA DE DATOS
@@ -454,12 +432,13 @@ const useUsuarios = (): IUseUsuariosReturn => {
   /**
    * Efecto de inicialización
    * Se ejecuta UNA SOLA VEZ al montar el componente
+   * NOTA: La validación de acceso ahora se hace en el componente padre
    */
   useEffect(() => {
-    const hasAccess = checkPermissions();
-    if (!hasAccess) return;
+    // Calcular permisos del usuario
+    checkPermissions();
 
-    // Carga inicial
+    // Carga inicial de datos
     loadUsuarios();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // ✅ Array vacío = solo se ejecuta al montar

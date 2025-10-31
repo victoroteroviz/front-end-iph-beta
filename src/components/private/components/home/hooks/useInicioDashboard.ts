@@ -13,7 +13,7 @@ import {
 
 // Sistema de roles
 import { isUserAuthenticated, getUserFromStorage } from '../../../../../helper/navigation/navigation.helper';
-import { ALLOWED_ROLES } from '../../../../../config/env.config';
+import { validateExternalRoles } from '../../../../../helper/role/role.helper';
 
 // Notificaciones y logging
 import { showError } from '../../../../../helper/notification/notification.helper';
@@ -160,35 +160,20 @@ const useInicioDashboard = () => {
         return false;
       }
 
-      // Verificar que el usuario tenga roles válidos del sistema
-      const tieneRolesValidos = userData.roles.some(userRole => 
-        ALLOWED_ROLES.some(allowedRole => allowedRole.id === userRole.id)
-      );
+      // ✅ Validar roles usando el helper centralizado (valida contra ALLOWED_ROLES)
+      const validRoles = validateExternalRoles(userData.roles);
 
-      if (!tieneRolesValidos) {
-        logError('useInicioDashboard', 'Usuario no tiene roles válidos', 'Acceso denegado');
+      if (validRoles.length === 0) {
+        logError('useInicioDashboard', 'Usuario no tiene roles válidos según el sistema', 'Acceso denegado');
         setState(prev => ({ ...prev, autorizado: false }));
         return false;
       }
 
-      // Verificar que NO sea solo "elemento" (acceso restringido)
-      const esElementoUnicamente = userData.roles.length === 1 && 
-        userData.roles.some(userRole =>
-          ALLOWED_ROLES.some(allowedRole => 
-            allowedRole.id === userRole.id && 
-            allowedRole.nombre.toLowerCase() === 'elemento'
-          )
-        );
-
-      // Otorgar acceso si no es elemento únicamente
-      const autorizado = !esElementoUnicamente;
-      setState(prev => ({ ...prev, autorizado }));
-
-      if (esElementoUnicamente) {
-        logError('useInicioDashboard', 'Usuario con rol elemento únicamente', 'Acceso restringido');
-      }
-
-      return autorizado;
+      // ✅ Autorizar acceso a todos los roles válidos del sistema
+      // El dashboard de Inicio es accesible a todos los roles autenticados
+      // (SuperAdmin, Administrador, Superior, Elemento)
+      setState(prev => ({ ...prev, autorizado: true }));
+      return true;
 
     } catch (error) {
       logError('useInicioDashboard', error, 'Error verificando autorización');

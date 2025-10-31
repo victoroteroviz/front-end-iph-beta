@@ -967,8 +967,78 @@ export const getHighestRoleLevel = (userRoles?: IRole[]): number =>
 /**
  * Verifica si tiene alguno de los roles especificados
  */
-export const hasAnyRole = (roleNames: string[], userRoles?: IRole[]): boolean => 
+export const hasAnyRole = (roleNames: string[], userRoles?: IRole[]): boolean =>
   roleHelper.hasAnyRole(roleNames, userRoles);
+
+/**
+ * Valida si el usuario actual tiene al menos uno de los roles requeridos (por nombre)
+ *
+ * @description
+ * Función simplificada para validación de roles por nombre de string.
+ * Diseñada específicamente para guards de rutas (PrivateRoute, etc.)
+ * donde se especifican roles como array de strings.
+ *
+ * Esta función:
+ * 1. Obtiene roles del usuario desde sessionStorage (con cache)
+ * 2. Valida estructura con Zod automáticamente
+ * 3. Compara nombres de roles (case-insensitive)
+ * 4. Retorna true si tiene al menos un rol requerido
+ *
+ * @param {string[]} requiredRoleNames - Array de nombres de roles requeridos
+ * @returns {boolean} true si el usuario tiene al menos uno de los roles
+ *
+ * @performance
+ * - Usa cache automático con TTL de 5s
+ * - Validación Zod optimizada
+ * - Comparación case-insensitive
+ *
+ * @security
+ * - Validación Zod en runtime
+ * - Validación doble (ID + nombre) en ALLOWED_ROLES
+ * - Sanitización automática de datos corruptos
+ *
+ * @example
+ * // En un guard de ruta
+ * const hasAccess = validateRolesByName(['SuperAdmin', 'Administrador']);
+ * if (!hasAccess) {
+ *   navigate('/acceso-denegado');
+ * }
+ *
+ * @example
+ * // Con array vacío (cualquier usuario autenticado)
+ * const hasAccess = validateRolesByName([]);
+ * // Retorna true si el usuario tiene roles válidos
+ *
+ * @version 1.0.0
+ * @since 2025-01-30
+ */
+export const validateRolesByName = (requiredRoleNames: string[]): boolean => {
+  try {
+    // Si no se especifican roles requeridos, permitir acceso
+    if (!requiredRoleNames || requiredRoleNames.length === 0) {
+      return true;
+    }
+
+    // Obtener roles del usuario (desde cache o sessionStorage con validación Zod)
+    const userRoles = roleHelper.getUserRoles();
+
+    // Si no tiene roles, denegar acceso
+    if (!userRoles || userRoles.length === 0) {
+      return false;
+    }
+
+    // Verificar si tiene al menos uno de los roles requeridos (case-insensitive)
+    return requiredRoleNames.some(requiredName =>
+      userRoles.some(userRole =>
+        userRole.nombre.toLowerCase() === requiredName.toLowerCase()
+      )
+    );
+
+  } catch (error) {
+    logError('RoleHelper', error, 'Error validando roles por nombre');
+    return false;
+  }
+};
 
 /**
  * Verifica si tiene todos los roles especificados

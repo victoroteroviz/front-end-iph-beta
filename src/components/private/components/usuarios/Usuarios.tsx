@@ -4,7 +4,7 @@
  * Migrado completamente a TypeScript con arquitectura moderna
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Users, AlertCircle, RefreshCw } from 'lucide-react';
 
 // Hooks
@@ -17,10 +17,11 @@ import VirtualizedTable from './components/VirtualizedTable';
 import DeleteConfirmModal from './components/DeleteConfirmModal';
 import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 import Pagination from '../../../shared/components/pagination'; // ✅ Componente compartido
+import AccessDenied from '../../../shared/components/access-denied';
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';
-import { getUserRoles, canRead } from '../../../../helper/role/role.helper';
+import { getUserRoles, isAdministrative, validateExternalRoles } from '../../../../helper/role/role.helper';
 
 // Configuración
 const USE_VIRTUALIZATION = false; // Cambiar a true para tablas con >100 usuarios
@@ -29,9 +30,27 @@ interface UsuariosProps {
   className?: string;
 }
 
-const Usuarios: React.FC<UsuariosProps> = ({ 
-  className = '' 
+const Usuarios: React.FC<UsuariosProps> = ({
+  className = ''
 }) => {
+  // #region validacion rol
+  // ✅ PASO 1: Obtener y validar roles (sin hooks custom aún)
+  const userRoles = getUserRoles();
+
+  // ✅ Memoizar validRoles para evitar re-renders innecesarios
+  const validRoles = useMemo(
+    () => validateExternalRoles(userRoles),
+    [userRoles]
+  );
+
+  // ✅ Calcular acceso
+  const hasAccess = useMemo(
+    () => isAdministrative(validRoles),
+    [validRoles]
+  );
+  // #endregion validacion rol
+
+  // ✅ PASO 2: TODOS los hooks ANTES del return condicional (Rules of Hooks)
   const {
     state,
     updateFilters,
@@ -47,48 +66,44 @@ const Usuarios: React.FC<UsuariosProps> = ({
     refreshData
   } = useUsuarios();
 
+  // ✅ useEffect con condicional INTERNO (no antes del hook)
   useEffect(() => {
-    logInfo('Usuarios', 'Componente montado', {
-      totalUsuarios: state.usuarios.length,
-      canCreateUsers: state.canCreateUsers,
-      canEditUsers: state.canEditUsers,
-      canDeleteUsers: state.canDeleteUsers
-    });
-  }, [state.usuarios.length, state.canCreateUsers, state.canEditUsers, state.canDeleteUsers]);
+    // Solo hacer logging si tiene acceso
+    if (hasAccess && validRoles.length > 0) {
+      logInfo('Usuarios', 'Componente montado con permisos validados', {
+        totalUsuarios: state.usuarios.length,
+        canCreateUsers: state.canCreateUsers,
+        canEditUsers: state.canEditUsers,
+        canDeleteUsers: state.canDeleteUsers,
+        userRoles: validRoles.map(r => r.nombre)
+      });
+    }
+  }, [hasAccess, validRoles, state.usuarios.length, state.canCreateUsers, state.canEditUsers, state.canDeleteUsers]);
 
-  //#region validacion rol
-  const userRoles = getUserRoles();
-  const hasAccess = canRead(userRoles);
+  // ✅ Memoizar breadcrumbItems para evitar re-creación
+  const breadcrumbItems = useMemo<BreadcrumbItem[]>(
+    () => [{ label: 'Gestión de Usuarios', isActive: true }],
+    []
+  );
 
-  if (!hasAccess || userRoles.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl border border-red-200 p-8 max-w-md w-full">
-          <div className="flex items-center justify-center mb-4">
-            <div className="p-3 bg-red-100 rounded-full">
-              <AlertCircle className="h-8 w-8 text-red-600" />
-            </div>
-          </div>
-          <h2 className="text-xl font-bold text-center text-gray-900 mb-2 font-poppins">
-            Acceso Denegado
-          </h2>
-          <p className="text-center text-gray-600 font-poppins">
-            No tienes permisos para acceder a este módulo.
-          </p>
-        </div>
-      </div>
-    );
-  }
-  // #endregion validacion rol
+  // ✅ Memoizar cálculo de virtualización
+  const shouldUseVirtualization = useMemo(
+    () => USE_VIRTUALIZATION && state.usuarios.length > 50,
+    [state.usuarios.length]
+  );
 
-  // Determinar si usar tabla virtualizada
-  const shouldUseVirtualization = USE_VIRTUALIZATION && state.usuarios.length > 50;
   const TableComponent = shouldUseVirtualization ? VirtualizedTable : UsuariosTable;
 
-  // Breadcrumbs
-  const breadcrumbItems: BreadcrumbItem[] = [
-    { label: 'Gestión de Usuarios', isActive: true }
-  ];
+  // ✅ PASO 3: Validación DESPUÉS de todos los hooks
+  if (!hasAccess || validRoles.length === 0) {
+    return (
+      <AccessDenied
+        title="Acceso Restringido"
+        message="Solo Administradores y SuperAdmins pueden acceder a la gestión de usuarios."
+        iconType="lock"
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8" data-component="usuarios">

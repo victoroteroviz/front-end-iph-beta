@@ -27,14 +27,30 @@ import { statisticsCardsConfig } from './config';
 import EstadisticasHeader from './components/layout/EstadisticasHeader';
 import EstadisticasGrid from './components/layout/EstadisticasGrid';
 import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
-import { useEstadisticasPermissions } from './hooks/useEstadisticasPermissions';
+import AccessDenied from '../../../shared/components/access-denied';
+import { getUserRoles, isElemento, validateExternalRoles } from '../../../../helper/role/role.helper';
 import { logDebug } from '../../../../helper/log/logger.helper';
 import './styles/Estadisticas.css';
 
 const Estadisticas: React.FC = () => {
-  // Control de acceso por roles
-  const { hasAccess, canView, canExport, isLoading } = useEstadisticasPermissions();
+  // #region validacion rol
+  // ✅ PASO 1: Validar roles ANTES de ejecutar cualquier lógica
+  const userRoles = getUserRoles();
 
+  // ✅ Memoizar validRoles para evitar re-renders innecesarios
+  const validRoles = useMemo(
+    () => validateExternalRoles(userRoles),
+    [userRoles]
+  );
+
+  // ✅ Verificar que NO sea Elemento (todos excepto Elemento pueden acceder)
+  const hasAccess = useMemo(
+    () => !isElemento(validRoles) && validRoles.length > 0,
+    [validRoles]
+  );
+  // #endregion validacion rol
+
+  // ✅ PASO 2: TODOS los hooks ANTES del return condicional (Rules of Hooks)
   // Hook de navegación
   const navigate = useNavigate();
 
@@ -63,28 +79,28 @@ const Estadisticas: React.FC = () => {
     }
   }, [navigate]);
 
-  // Early return si no tiene acceso o está cargando permisos
-  if (isLoading || !hasAccess || !canView) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#948b54] mx-auto mb-4"></div>
-          <p className="text-gray-600 font-poppins">Verificando permisos...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Breadcrumbs
-  const breadcrumbItems: BreadcrumbItem[] = [
-    { label: 'Panel de Estadísticas', isActive: true }
-  ];
+  // ✅ Memoizar breadcrumbItems
+  const breadcrumbItems = useMemo<BreadcrumbItem[]>(
+    () => [{ label: 'Panel de Estadísticas', isActive: true }],
+    []
+  );
 
   // Calcular métricas rápidas (memoizado para evitar recálculo innecesario)
   const { enabledCount, totalCount } = useMemo(() => ({
     enabledCount: statistics.filter(s => s.habilitado).length,
     totalCount: statistics.length
   }), [statistics]);
+
+  // ✅ PASO 3: Validación DESPUÉS de todos los hooks
+  if (!hasAccess) {
+    return (
+      <AccessDenied
+        title="Acceso Restringido"
+        message="Esta sección está disponible solo para Administradores, SuperAdmins y Superiores."
+        iconType="shield"
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8" data-component="estadisticas">

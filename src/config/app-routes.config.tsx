@@ -90,7 +90,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'inicio',
     path: 'inicio',
     component: Inicio,
-    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
+    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
     title: 'Inicio',
     description: 'Dashboard principal con estadísticas generales',
     showInSidebar: true,

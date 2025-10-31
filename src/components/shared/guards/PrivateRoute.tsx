@@ -3,16 +3,40 @@
  *
  * Componente de protección de rutas con validación de autenticación y roles
  *
- * Características:
- * - Validación de JWT
- * - Validación de autenticación
+ * @description
+ * Guard de rutas que valida JWT, autenticación y permisos de roles.
+ * Utiliza el sistema centralizado de roles (role.helper.ts) para garantizar
+ * consistencia, seguridad y rendimiento en toda la aplicación.
+ *
+ * @version 2.0.0
+ * @refactored 2025-01-30
+ *
+ * @changes v2.0.0
+ * - ✅ Centralizado con role.helper.ts
+ * - ✅ Eliminadas funciones locales getUserRoles() y validateUserRoles()
+ * - ✅ Usa validateRolesByName() del helper centralizado
+ * - ✅ Validación Zod automática desde helper
+ * - ✅ Cache optimizado con TTL de 5 segundos
+ * - ✅ Reducción de ~30 líneas de código duplicado
+ * - ✅ JSDoc completo con ejemplos
+ * - ✅ Regiones organizadas para mantenibilidad
+ *
+ * @features
+ * - Validación de JWT con expiración
+ * - Validación de autenticación básica
  * - Control de acceso basado en roles
  * - Redirección automática a login o inicio
- * - Estados de carga optimizados
- * - Logging de accesos
+ * - Logging estructurado de accesos
+ * - Performance optimizado con cache
+ *
+ * @security
+ * - Validación JWT con expiración
+ * - Validación de roles con Zod (desde helper)
+ * - Validación doble ID + nombre (desde helper)
+ * - Logging de intentos de acceso
+ * - Cache seguro con TTL
  *
  * @author Sistema IPH
- * @version 1.0.0
  */
 
 import React, { useMemo } from 'react';
@@ -21,28 +45,79 @@ import { Navigate } from 'react-router-dom';
 // Helpers
 import { isTokenExpired, getStoredToken } from '../../../helper/security/jwt.helper';
 import { isUserAuthenticated } from '../../../helper/navigation/navigation.helper';
+import { validateRolesByName } from '../../../helper/role/role.helper';
 import { logInfo, logWarning } from '../../../helper/log/logger.helper';
 
 // Components
 import { RouteLoadingFallback } from '../components/loading';
 
-// Interfaces
+// =====================================================
+// #region 📋 INTERFACES Y TYPES
+// =====================================================
+
+/**
+ * Props del componente PrivateRoute
+ *
+ * @interface PrivateRouteProps
+ */
 export interface PrivateRouteProps {
-  /** Componentes hijos a renderizar si tiene acceso */
+  /**
+   * Componentes hijos a renderizar si tiene acceso
+   */
   children: React.ReactNode;
-  /** Roles requeridos para acceder (opcional - si no se especifica, solo valida autenticación) */
+
+  /**
+   * Roles requeridos para acceder a la ruta
+   *
+   * @description
+   * - Array vacío o undefined: Solo valida autenticación (cualquier usuario autenticado)
+   * - Con valores: Valida que el usuario tenga AL MENOS UNO de los roles especificados
+   *
+   * @example
+   * requiredRoles={['SuperAdmin', 'Administrador']}
+   */
   requiredRoles?: string[];
-  /** Ruta de redirección si no tiene acceso (default: '/') */
+
+  /**
+   * Ruta de redirección si no tiene acceso
+   *
+   * @default '/'
+   */
   redirectTo?: string;
-  /** Mostrar loader mientras valida (default: true) */
+
+  /**
+   * Mostrar loader mientras valida (reservado para futura implementación)
+   *
+   * @default true
+   * @deprecated No implementado en v2.0
+   */
   showLoading?: boolean;
 }
+
+// #endregion
+
+// =====================================================
+// #region 🛡️ COMPONENTE PRINCIPAL - PrivateRoute v2.0
+// =====================================================
 
 /**
  * Componente de ruta privada con validación de roles
  *
+ * @description
+ * Guard que protege rutas validando JWT, autenticación y roles.
+ * Usa el sistema centralizado de roles para garantizar consistencia.
+ *
+ * @param {PrivateRouteProps} props - Propiedades del componente
+ * @returns {React.ReactElement} Componente protegido o redirección
+ *
+ * @refactored v2.0.0
+ * - ✅ Usa validateRolesByName() del helper centralizado
+ * - ✅ Eliminadas funciones locales duplicadas
+ * - ✅ Validación Zod automática
+ * - ✅ Cache optimizado
+ *
  * @example
- * // Solo autenticación
+ * // Solo autenticación (cualquier usuario autenticado)
  * <PrivateRoute>
  *   <MiComponente />
  * </PrivateRoute>
@@ -67,6 +142,14 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
 }) => {
   /**
    * Valida si el usuario tiene acceso a la ruta
+   *
+   * @description
+   * Implementa validación en tres capas:
+   * 1. JWT - Verifica que el token no esté expirado
+   * 2. Autenticación - Verifica que el usuario esté autenticado
+   * 3. Roles - Verifica que tenga al menos uno de los roles requeridos
+   *
+   * @refactored v2.0.0 - Usa helper centralizado para validación de roles
    */
   const accessValidation = useMemo(() => {
     // 1️⃣ Validar JWT expirado
@@ -91,14 +174,13 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
     }
 
     // 3️⃣ Validar roles (si se especificaron)
+    // ✅ v2.0.0: Usa helper centralizado con validación Zod y cache
     if (requiredRoles && requiredRoles.length > 0) {
-      const userRoles = getUserRoles();
-      const hasRequiredRole = validateUserRoles(userRoles, requiredRoles);
+      const hasRequiredRole = validateRolesByName(requiredRoles);
 
       if (!hasRequiredRole) {
         logWarning('PrivateRoute', 'Acceso denegado: Rol insuficiente', {
-          requiredRoles,
-          userRoles
+          requiredRoles
         });
         return {
           hasAccess: false,
@@ -108,8 +190,7 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
       }
 
       logInfo('PrivateRoute', 'Acceso concedido con validación de roles', {
-        requiredRoles,
-        userRoles
+        requiredRoles
       });
     } else {
       logInfo('PrivateRoute', 'Acceso concedido (solo autenticación)');
@@ -132,64 +213,87 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
   return <>{children}</>;
 };
 
-/**
- * Obtiene los roles del usuario desde sessionStorage
- */
-const getUserRoles = (): string[] => {
-  try {
-    const rolesData = sessionStorage.getItem('roles');
-    if (!rolesData) return [];
+// #endregion
 
-    const roles = JSON.parse(rolesData);
-    return Array.isArray(roles)
-      ? roles.map((role: { nombre: string }) => role.nombre || '').filter(Boolean)
-      : [];
-  } catch (error) {
-    logWarning('PrivateRoute', 'Error obteniendo roles del usuario', { error });
-    return [];
-  }
-};
+// =====================================================
+// #region 🪝 HOOK PERSONALIZADO - usePrivateRoute v2.0
+// =====================================================
 
 /**
- * Valida si el usuario tiene al menos uno de los roles requeridos
+ * Hook personalizado para validación programática de acceso a rutas
  *
- * @param userRoles - Roles del usuario
- * @param requiredRoles - Roles requeridos
- * @returns true si tiene al menos un rol requerido
- */
-const validateUserRoles = (userRoles: string[], requiredRoles: string[]): boolean => {
-  if (!userRoles || userRoles.length === 0) return false;
-  if (!requiredRoles || requiredRoles.length === 0) return true;
-
-  return requiredRoles.some(requiredRole =>
-    userRoles.some(userRole =>
-      userRole.toLowerCase() === requiredRole.toLowerCase()
-    )
-  );
-};
-
-/**
- * Hook personalizado para usar PrivateRoute programáticamente
+ * @description
+ * Permite validar acceso a rutas desde componentes sin usar el componente PrivateRoute.
+ * Útil para mostrar/ocultar elementos de UI según permisos.
+ *
+ * @param {string[]} [requiredRoles] - Array de nombres de roles requeridos (opcional)
+ * @returns {Object} Objeto con información de acceso
+ * @returns {boolean} canAccess - true si el usuario tiene acceso
+ * @returns {boolean} isAuthenticated - true si el usuario está autenticado
+ * @returns {boolean} isTokenExpired - true si el token JWT está expirado
+ *
+ * @refactored v2.0.0
+ * - ✅ Usa validateRolesByName() del helper centralizado
+ * - ✅ Eliminadas funciones locales duplicadas
+ * - ✅ Validación Zod automática
+ * - ✅ Cache optimizado
+ *
+ * @performance
+ * - Memoizado con useMemo
+ * - Cache automático del helper (TTL 5s)
+ * - Re-calcula solo si cambian dependencias
+ *
+ * @security
+ * - Validación JWT con expiración
+ * - Validación de roles con Zod
+ * - Validación doble ID + nombre
  *
  * @example
- * const { canAccess } = usePrivateRoute(['SuperAdmin']);
+ * // Validar acceso a funcionalidad específica
+ * const { canAccess } = usePrivateRoute(['SuperAdmin', 'Administrador']);
  * if (!canAccess) {
- *   navigate('/inicio');
+ *   navigate('/acceso-denegado');
  * }
+ *
+ * @example
+ * // Mostrar/ocultar botón según permisos
+ * const { canAccess } = usePrivateRoute(['SuperAdmin']);
+ * return (
+ *   <>
+ *     {canAccess && <button>Eliminar Usuario</button>}
+ *   </>
+ * );
+ *
+ * @example
+ * // Solo validar autenticación
+ * const { isAuthenticated, isTokenExpired } = usePrivateRoute();
+ * if (isTokenExpired) {
+ *   showWarning('Tu sesión ha expirado');
+ * }
+ *
+ * @version 2.0.0
+ * @since 2025-01-30
  */
 export const usePrivateRoute = (requiredRoles?: string[]) => {
   const token = getStoredToken();
   const isAuthenticated = isUserAuthenticated();
   const isExpired = isTokenExpired(token);
 
+  /**
+   * Calcula si el usuario tiene acceso
+   * Memoizado para optimizar re-renders
+   */
   const canAccess = useMemo(() => {
+    // Validar autenticación y token
     if (isExpired || !isAuthenticated) return false;
 
+    // Si se especificaron roles, validar con helper centralizado
+    // ✅ v2.0.0: Usa validateRolesByName() con validación Zod y cache
     if (requiredRoles && requiredRoles.length > 0) {
-      const userRoles = getUserRoles();
-      return validateUserRoles(userRoles, requiredRoles);
+      return validateRolesByName(requiredRoles);
     }
 
+    // Sin roles requeridos = solo autenticación
     return true;
   }, [isExpired, isAuthenticated, requiredRoles]);
 
@@ -199,5 +303,7 @@ export const usePrivateRoute = (requiredRoles?: string[]) => {
     isTokenExpired: isExpired
   };
 };
+
+// #endregion
 
 export default PrivateRoute;
