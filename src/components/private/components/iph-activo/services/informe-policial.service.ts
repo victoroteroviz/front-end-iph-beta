@@ -2,6 +2,15 @@
  * Servicio InformePolicial
  * Integración con servicios existentes getAllIph y getIphByUser
  * Maneja control de acceso por roles (global vs personal)
+ *
+ * @version 2.0.0
+ * @since 2024-01-29
+ * @updated 2025-01-30
+ *
+ * @changes v2.0.0
+ * - ✅ Eliminada función duplicada getCurrentUserRoles()
+ * - ✅ Usa getUserRoles() centralizado del role.helper
+ * - ✅ Reducción de código (8 líneas eliminadas)
  */
 
 import type { 
@@ -15,6 +24,7 @@ import { getAllIph, getIphByUser } from '../../iph-oficial/services/get-iph.serv
 
 // Helpers
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
+import { getUserRoles } from '../../../../../helper/role/role.helper';
 
 // =====================================================
 // TRANSFORMADORES DE DATOS
@@ -137,18 +147,7 @@ const getCurrentUserId = (): string | null => {
   }
 };
 
-/**
- * Obtiene los roles del usuario actual
- * @returns Array de roles o array vacío
- */
-const getCurrentUserRoles = (): any[] => {
-  try {
-    const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
-    return userRoles || [];
-  } catch {
-    return [];
-  }
-};
+// ✅ Función getCurrentUserRoles() eliminada - usar getUserRoles() del helper centralizado
 
 // =====================================================
 // SERVICIO PRINCIPAL
@@ -170,7 +169,7 @@ const getIPHList = async (
   currentPage: number;
 }> => {
   try {
-    const userRoles = getCurrentUserRoles();
+    const userRoles = getUserRoles();
     const currentUserId = getCurrentUserId();
     const serviceParams = transformFiltersToServiceParams(params);
 
@@ -318,7 +317,7 @@ export const informePolicialService: IInformePolicialService = {
  * @returns true si puede ver todos
  */
 export const currentUserCanViewAll = (): boolean => {
-  const userRoles = getCurrentUserRoles();
+  const userRoles = getUserRoles();
   return canUserViewAll(userRoles);
 };
 
@@ -332,7 +331,7 @@ export const getCurrentUserInfo = (): {
   canViewAll: boolean;
 } => {
   const userId = getCurrentUserId();
-  const roles = getCurrentUserRoles();
+  const roles = getUserRoles();
   const canViewAll = canUserViewAll(roles);
   
   return {
@@ -353,7 +352,7 @@ export {
   transformSingleRecord,
   canUserViewAll,
   getCurrentUserId,
-  getCurrentUserRoles,
+  // getCurrentUserRoles - ✅ Eliminado: usar getUserRoles() del helper centralizado
   haveFiltersChanged,
   executeWithRetry
 };

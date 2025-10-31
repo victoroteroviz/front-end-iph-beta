@@ -1,12 +1,20 @@
 /**
  * Hook personalizado para el manejo del IphOficial
- * 
+ *
  * @fileoverview Hook que encapsula toda la lógica de negocio para el componente
  * IphOficial, incluyendo obtención de datos por ID, gestión de estados y navegación.
- * 
- * @version 1.0.0
+ *
+ * @version 2.0.0
  * @since 2024-01-29
- * 
+ * @updated 2025-01-30
+ *
+ * @changes v2.0.0
+ * - ✅ Validación de roles centralizada (de 31 líneas a 3 - reducción 90%)
+ * - ✅ Usa canAccessSuperior() del helper con cache + Zod
+ * - ✅ Eliminada lógica manual de parsing de sessionStorage
+ * - ✅ Usa getUserRoles() centralizado del role.helper
+ * - ✅ Logging movido a useEffect separado para mejor performance
+ *
  * @author Sistema IPH Frontend
  */
 
@@ -16,6 +24,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 // Helpers
 import { logInfo, logError, logWarning } from '../../../../../helper/log/logger.helper';
 import { showSuccess, showError, showWarning } from '../../../../../helper/notification/notification.helper';
+import { getUserRoles } from '../../../../../helper/role/role.helper';
+import { canAccessSuperior } from '../../../../../config/permissions.config';
 
 // Services
 import {
@@ -78,41 +88,29 @@ export const useIphOficial = (): UseIphOficialReturn => {
   const [retryCount, setRetryCount] = useState<number>(0);
 
   // ==================== VALIDACIONES DE ROLES ====================
+  // #region 🔐 VALIDACIÓN DE ACCESO v2.0 - Centralizado
 
   /**
    * Verifica si el usuario tiene permisos para ver IPH oficial
+   * Todos excepto Elemento pueden acceder (SuperAdmin, Administrador, Superior)
+   *
+   * @refactored v2.0.0 - Reducido de 31 líneas a 3 (-90%)
+   * @security Validación Zod + cache 5s + jerarquía automática
    */
-  const hasAccess = useMemo(() => {
-    const userDataStr = sessionStorage.getItem('user_data');
-    const rolesStr = sessionStorage.getItem('roles');
-    
-    if (!userDataStr || !rolesStr) {
-      logWarning('useIphOficial', 'No hay datos de usuario en sessionStorage');
-      return false;
+  const hasAccess = useMemo(() => canAccessSuperior(getUserRoles()), []);
+
+  // #endregion
+
+  /**
+   * Logging de acceso - separado del useMemo para mejor performance
+   */
+  useEffect(() => {
+    if (hasAccess) {
+      logInfo('useIphOficial', 'Hook inicializado con acceso autorizado');
+    } else {
+      logWarning('useIphOficial', 'Hook inicializado sin acceso - usuario sin roles válidos');
     }
-
-    try {
-      const userData = JSON.parse(userDataStr);
-      const userRoles = JSON.parse(rolesStr) || [];
-      
-      // Todos excepto Elemento pueden acceder
-      const allowedRoleNames = ['SuperAdmin', 'Administrador', 'Superior'];
-      const hasPermission = userRoles.some((role: any) => 
-        allowedRoleNames.includes(role.nombre)
-      );
-
-      if (!hasPermission) {
-        logWarning('useIphOficial', 'Usuario sin permisos para ver IPH oficial', {
-          userRoles: userRoles.map((r: any) => r.nombre)
-        });
-      }
-
-      return hasPermission;
-    } catch (error) {
-      logError('useIphOficial', error, 'Error parseando datos de usuario');
-      return false;
-    }
-  }, []);
+  }, [hasAccess]);
 
   // ==================== FUNCIONES INTERNAS ====================
 

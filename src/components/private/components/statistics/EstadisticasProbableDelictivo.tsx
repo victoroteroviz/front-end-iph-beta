@@ -4,7 +4,24 @@
  *
  * @pattern Atomic Design + Custom Hook
  * @uses useEstadisticasProbableDelictivo - Hook personalizado con lógica de negocio
- * @version 3.0.0 - Corregido: Agregado FiltroFechaJC para cambiar fechas
+ * @version 4.0.0 - Validación centralizada con role.helper
+ *
+ * @changes v4.0.0
+ * - ✅ Validación de roles centralizada (de 15 líneas a 3)
+ * - ✅ Usa canAccessSuperior() del helper con cache + Zod
+ * - ✅ Eliminada lógica manual duplicada
+ * - ✅ Defense in depth: PrivateRoute + validación interna
+ *
+ * @security
+ * - Primera línea: PrivateRoute valida en guard de ruta
+ * - Segunda línea: Validación defensiva interna con helper
+ * - Validación Zod automática + cache 5s
+ *
+ * @roles
+ * - SuperAdmin: Acceso completo
+ * - Administrador: Acceso completo
+ * - Superior: Acceso completo
+ * - Elemento: SIN ACCESO
  */
 
 import React, { useEffect, useState, useMemo } from 'react';
@@ -15,7 +32,8 @@ import GraficaBarrasJC from './components/charts/GraficaBarrasJC';
 import GraficaPromedioJC from './components/charts/GraficaPromedioJC';
 import ProbableDelictivoHeader from './sections/ProbableDelictivoHeader';
 import AccessDenied from '../../../shared/components/access-denied';
-import { getUserRoles, isElemento, validateExternalRoles } from '../../../../helper/role/role.helper';
+import { getUserRoles } from '../../../../helper/role/role.helper';
+import { canAccessSuperior } from '../../../../config/permissions.config';
 import { logDebug } from '../../../../helper/log/logger.helper';
 import './styles/EstadisticasProbableDelictivo.css';
 
@@ -32,24 +50,19 @@ interface EstadisticasProbableDelictivoProps {
  * Componente de Estadísticas de Probable Delictivo
  */
 export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelictivoProps> = ({ externalFilters }) => {
-  // #region validacion rol
-  // ✅ PASO 1: Validar roles ANTES de ejecutar cualquier lógica
-  const userRoles = getUserRoles();
+  // =====================================================
+  // #region 🔐 VALIDACIÓN DE ACCESO v4.0 - Centralizado
+  // =====================================================
+  /**
+   * Validación defensiva usando helper centralizado
+   *
+   * @refactored v4.0.0 - Reducido de 15 líneas a 3 (-80%)
+   * @security Validación Zod + cache 5s + jerarquía automática
+   */
+  const hasAccess = useMemo(() => canAccessSuperior(getUserRoles()), []);
+  // #endregion
 
-  // ✅ Memoizar validRoles para evitar re-renders innecesarios
-  const validRoles = useMemo(
-    () => validateExternalRoles(userRoles),
-    [userRoles]
-  );
-
-  // ✅ Verificar que NO sea Elemento (todos excepto Elemento pueden acceder)
-  const hasAccess = useMemo(
-    () => !isElemento(validRoles) && validRoles.length > 0,
-    [validRoles]
-  );
-  // #endregion validacion rol
-
-  // ✅ PASO 2: TODOS los hooks ANTES del return condicional (Rules of Hooks)
+  // ✅ TODOS los hooks ANTES del return condicional (Rules of Hooks)
   // Hook personalizado con toda la lógica de negocio
   const {
     estadisticas,
@@ -102,7 +115,9 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
 
   const isLoading = loading.diaria || loading.mensual || loading.anual;
 
-  // ✅ PASO 3: Validación DESPUÉS de todos los hooks
+  // =====================================================
+  // #region 🚫 VALIDACIÓN DEFENSIVA - Return Early Pattern
+  // =====================================================
   if (!hasAccess) {
     return (
       <AccessDenied
@@ -112,7 +127,11 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
       />
     );
   }
+  // #endregion
 
+  // =====================================================
+  // #region 🎨 RENDERIZADO PRINCIPAL
+  // =====================================================
   return (
     <div className="estadisticas-pd-container">
       {/* Header */}
@@ -272,6 +291,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
       </div>
     </div>
   );
+  // #endregion
 };
 
 export default EstadisticasProbableDelictivo;

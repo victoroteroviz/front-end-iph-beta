@@ -1,12 +1,20 @@
 /**
  * Hook personalizado para el manejo del HistorialIPH
- * 
+ *
  * @fileoverview Hook que encapsula toda la lógica de negocio para el componente
  * HistorialIPH, incluyendo gestión de estado, filtros, paginación y operaciones CRUD.
- * 
- * @version 1.0.0
+ *
+ * @version 2.0.0
  * @since 2024-01-29
- * 
+ * @updated 2024-01-30
+ *
+ * @changes v2.0.0
+ * - ✅ Validación de roles centralizada (de 41 líneas a 3)
+ * - ✅ Usa canAccessElemento() del helper con cache + Zod
+ * - ✅ Eliminada lógica manual de parsing de sessionStorage
+ * - ✅ Usa getUserRoles() centralizado del role.helper
+ * - ✅ Logging movido a useEffect separado
+ *
  * @author Sistema IPH Frontend
  */
 
@@ -15,6 +23,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 // Helpers
 import { logInfo, logError, logWarning } from '../../../../../helper/log/logger.helper';
 import { showSuccess, showError, showWarning } from '../../../../../helper/notification/notification.helper';
+import { getUserRoles } from '../../../../../helper/role/role.helper';
+import { canAccessElemento } from '../../../../../config/permissions.config';
 
 // Services
 import {
@@ -128,46 +138,29 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
   const [estatusOptions, setEstatusOptions] = useState<string[]>([]);
 
   // ==================== VALIDACIONES DE ROLES ====================
+  // #region 🔐 VALIDACIÓN DE ACCESO v2.0 - Centralizado
 
   /**
    * Verifica si el usuario tiene permisos para acceder al historial
    * TODOS los roles tienen acceso (SuperAdmin, Admin, Superior, Elemento)
+   *
+   * @refactored v2.0.0 - Reducido de 41 líneas a 3 (-93%)
+   * @security Validación Zod + cache 5s + jerarquía automática
    */
-  const hasAccess = useMemo(() => {
-    const userDataStr = sessionStorage.getItem('user_data');
-    const rolesStr = sessionStorage.getItem('roles');
+  const hasAccess = useMemo(() => canAccessElemento(getUserRoles()), []);
 
-    if (!userDataStr || !rolesStr) {
-      logWarning('useHistorialIPH', 'No hay datos de usuario en sessionStorage');
-      return false;
+  // #endregion
+
+  /**
+   * Logging de acceso - separado del useMemo para mejor performance
+   */
+  useEffect(() => {
+    if (hasAccess) {
+      logInfo('useHistorialIPH', 'Hook inicializado con acceso autorizado');
+    } else {
+      logWarning('useHistorialIPH', 'Hook inicializado sin acceso - usuario sin roles válidos');
     }
-
-    try {
-      JSON.parse(userDataStr);
-      const userRoles = JSON.parse(rolesStr) || [];
-
-      // TODOS los roles pueden acceder al historial
-      const allowedRoleNames = ['Administrador', 'SuperAdmin', 'Superior', 'Elemento'];
-      const hasPermission = userRoles.some((role: {id: number; nombre: string}) =>
-        allowedRoleNames.includes(role.nombre)
-      );
-
-      if (!hasPermission) {
-        logWarning('useHistorialIPH', 'Usuario sin permisos para acceder al historial', {
-          userRoles: userRoles.map((r: {id: number; nombre: string}) => r.nombre)
-        });
-      } else {
-        logInfo('useHistorialIPH', 'Usuario con acceso al historial', {
-          userRoles: userRoles.map((r: {id: number; nombre: string}) => r.nombre)
-        });
-      }
-
-      return hasPermission;
-    } catch (error) {
-      logError('useHistorialIPH', error, 'Error parseando datos de usuario');
-      return false;
-    }
-  }, []);
+  }, [hasAccess]);
 
   // ==================== FUNCIONES INTERNAS ====================
 

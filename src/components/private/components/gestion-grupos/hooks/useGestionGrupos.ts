@@ -1,7 +1,12 @@
 /**
  * @fileoverview Hook personalizado para gestión de grupos
- * @version 1.0.0
+ * @version 2.0.0
  * @description Lógica de negocio separada del componente de gestión de grupos
+ *
+ * @changes v2.0.0
+ * - ✅ Refactorizado control de permisos usando getUserRoles() centralizado
+ * - ✅ Eliminado parsing manual de sessionStorage
+ * - ✅ Consistencia con helpers centralizados del sistema
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -45,6 +50,7 @@ import {
 //+ Helpers
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 import { showSuccess, showError, showInfo } from '../../../../../helper/notification/notification.helper';
+import { getUserRoles } from '../../../../../helper/role/role.helper';
 
 //+ Control de roles
 import { canAccessAdmin, canAccessSuperior } from '../../../../../config/permissions.config';
@@ -140,9 +146,14 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
   // Debounce para la búsqueda (optimización: evita filtrar en cada tecla)
   const debouncedSearch = useDebounce(filtros.search, 300);
 
-  // Control de permisos (memoizado para evitar recálculos)
+  // #region 🔐 VALIDACIÓN DE ACCESO v2.0 - Centralizado
+
+  /**
+   * Control de permisos (memoizado para evitar recálculos)
+   * @refactored v2.0.0 - Usa getUserRoles() centralizado
+   */
   const permisos = useMemo(() => {
-    const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
+    const userRoles = getUserRoles();
 
     return {
       canCreate: canAccessAdmin(userRoles),
@@ -151,6 +162,8 @@ export const useGestionGrupos = (): UseGestionGruposReturn => {
       canView: canAccessSuperior(userRoles)
     };
   }, []);
+
+  // #endregion
 
   // Grupos filtrados con debounce optimizado
   const gruposFiltrados = useMemo(() => {

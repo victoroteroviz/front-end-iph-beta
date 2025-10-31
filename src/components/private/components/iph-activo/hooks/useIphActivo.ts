@@ -3,6 +3,17 @@
  * Maneja toda la lógica de negocio separada de la presentación
  * Incluye auto-refresh configurable y control de acceso por roles
  * Cache LRU con límite de 10 páginas y TTL de 1 minuto
+ *
+ * @version 2.0.0
+ * @since 2024-01-29
+ * @updated 2025-01-30
+ *
+ * @changes v2.0.0
+ * - ✅ Validación de roles refactorizada usando helpers centralizados
+ * - ✅ Usa canAccessElemento() del helper con cache + Zod
+ * - ✅ Eliminada lógica manual de parsing de sessionStorage
+ * - ✅ Usa getUserRoles() centralizado del role.helper
+ * - ✅ Reducción de código en función checkAccess()
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -15,6 +26,8 @@ import { getTiposIPH } from '../services/tipos-iph.service';
 // Helpers
 import { showSuccess, showError, showWarning } from '../../../../../helper/notification/notification.helper';
 import { logInfo, logError, logAuth, logDebug } from '../../../../../helper/log/logger.helper';
+import { getUserRoles } from '../../../../../helper/role/role.helper';
+import { canAccessElemento } from '../../../../../config/permissions.config';
 
 // Interfaces
 import type { 
@@ -288,30 +301,34 @@ const useInformePolicial = (
   // =====================================================
   // FUNCIONES DE CONTROL DE ACCESO
   // =====================================================
+  // #region 🔐 VALIDACIÓN DE ACCESO v2.0 - Centralizado
+
+  /**
+   * Verifica si el usuario tiene permisos para ver informes policiales
+   * TODOS los roles tienen acceso (SuperAdmin, Admin, Superior, Elemento)
+   *
+   * @refactored v2.0.0 - Validación centralizada con helper
+   * @security Validación Zod + cache 5s + jerarquía automática
+   */
+  const hasAccess = useMemo(() => canAccessElemento(getUserRoles()), []);
+
+  // #endregion
 
   const checkAccess = useCallback(() => {
-    const userData = JSON.parse(sessionStorage.getItem('user_data') || '{}');
-    const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]') as Array<{ nombre: string }>;
-    
-    // Verificar que el usuario tenga roles válidos para ver IPH
-    const hasValidRole = userRoles.some((role) => 
-      ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'].includes(role.nombre)
-    );
-
-    if (!hasValidRole) {
+    if (!hasAccess) {
       showWarning('No tienes permisos para ver informes policiales', 'Acceso Restringido');
       navigate('/inicio');
       return false;
     }
 
+    const userData = JSON.parse(sessionStorage.getItem('user_data') || '{}');
     logInfo('InformePolicial', 'Access granted to user', {
       userId: userData?.id,
-      roles: userRoles.map((r) => r.nombre),
       canViewAll: state.userCanViewAll
     });
 
     return true;
-  }, [navigate, state.userCanViewAll]);
+  }, [hasAccess, navigate, state.userCanViewAll]);
 
   const canViewRecord = useCallback((registro: IRegistroIPH): boolean => {
     // Los SuperAdmin, Admin y Superior pueden ver todos los registros

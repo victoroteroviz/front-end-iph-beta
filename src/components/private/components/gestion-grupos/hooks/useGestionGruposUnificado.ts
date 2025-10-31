@@ -1,7 +1,12 @@
 /**
  * @fileoverview Hook unificado para gestión de grupos con datos de usuario-grupo API
- * @version 2.0.0
+ * @version 2.1.0
  * @description Hook que usa la API de usuario-grupo para obtener grupos con información de usuarios
+ *
+ * @changes v2.1.0
+ * - ✅ Refactorizado control de permisos usando getUserRoles() centralizado
+ * - ✅ Eliminado parsing manual de sessionStorage
+ * - ✅ Consistencia con helpers centralizados del sistema
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -36,6 +41,7 @@ import {
 //+ Helpers
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 import { showSuccess, showError } from '../../../../../helper/notification/notification.helper';
+import { getUserRoles } from '../../../../../helper/role/role.helper';
 
 //+ Control de roles
 import { canAccessAdmin, canAccessSuperior } from '../../../../../config/permissions.config';
@@ -149,9 +155,14 @@ export const useGestionGruposUnificado = (): UseGestionGruposUnificadoReturn => 
     scrollToTopOnNavigation: true
   });
 
-  // Control de permisos
+  // #region 🔐 VALIDACIÓN DE ACCESO v2.1 - Centralizado
+
+  /**
+   * Control de permisos (memoizado para evitar recálculos)
+   * @refactored v2.1.0 - Usa getUserRoles() centralizado
+   */
   const permisos = useMemo(() => {
-    const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
+    const userRoles = getUserRoles();
 
     return {
       canCreate: canAccessAdmin(userRoles),
@@ -160,6 +171,8 @@ export const useGestionGruposUnificado = (): UseGestionGruposUnificadoReturn => 
       canView: canAccessSuperior(userRoles)
     };
   }, []);
+
+  // #endregion
 
   // Funciones básicas (declaradas antes de las funciones de navegación)
   // Seleccionar grupo para vista/edición

@@ -4,14 +4,24 @@
  *
  * @pattern Atomic Design + Custom Hook
  * @uses useStatisticsModal - Hook personalizado para lógica del modal
- * @uses useEstadisticasPermissions - Hook personalizado para control de acceso
- * @version 2.2.0 - Reorganización en componentes atómicos
+ * @version 3.0.0 - Validación centralizada con role.helper
  *
- * Roles permitidos:
+ * @changes v3.0.0
+ * - ✅ Validación de roles centralizada (de 15 líneas a 3)
+ * - ✅ Usa canAccessSuperior() del helper con cache + Zod
+ * - ✅ Eliminada lógica manual duplicada
+ * - ✅ Defense in depth: PrivateRoute + validación interna
+ *
+ * @security
+ * - Primera línea: PrivateRoute valida en guard de ruta
+ * - Segunda línea: Validación defensiva interna con helper
+ * - Validación Zod automática + cache 5s
+ *
+ * @roles
  * - SuperAdmin: Acceso completo + exportación
  * - Administrador: Acceso completo + exportación
  * - Superior: Acceso completo (sin exportación)
- * - Elemento: SIN ACCESO (redirige a /inicio)
+ * - Elemento: SIN ACCESO
  *
  * @structure
  * - EstadisticasHeader: Header con título y métricas
@@ -28,29 +38,34 @@ import EstadisticasHeader from './components/layout/EstadisticasHeader';
 import EstadisticasGrid from './components/layout/EstadisticasGrid';
 import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 import AccessDenied from '../../../shared/components/access-denied';
-import { getUserRoles, isElemento, validateExternalRoles } from '../../../../helper/role/role.helper';
+import { getUserRoles } from '../../../../helper/role/role.helper';
+import { canAccessSuperior } from '../../../../config/permissions.config';
 import { logDebug } from '../../../../helper/log/logger.helper';
 import './styles/Estadisticas.css';
 
 const Estadisticas: React.FC = () => {
-  // #region validacion rol
-  // ✅ PASO 1: Validar roles ANTES de ejecutar cualquier lógica
-  const userRoles = getUserRoles();
+  // =====================================================
+  // #region 🔐 VALIDACIÓN DE ACCESO v3.0 - Centralizado
+  // =====================================================
+  /**
+   * Validación defensiva usando helper centralizado
+   *
+   * @description
+   * - Primera línea: PrivateRoute (guard de ruta en app-routes.config.tsx)
+   * - Segunda línea: Validación defensiva interna (defense in depth)
+   *
+   * @refactored v3.0.0
+   * - Reducido de 15 líneas a 3 (-80%)
+   * - Usa canAccessSuperior() con jerarquía automática
+   * - Validación Zod + cache 5s incluidos
+   * - Elimina duplicación con PrivateRoute
+   *
+   * @security Validación doble (ID + nombre) automática desde helper
+   */
+  const hasAccess = useMemo(() => canAccessSuperior(getUserRoles()), []);
+  // #endregion
 
-  // ✅ Memoizar validRoles para evitar re-renders innecesarios
-  const validRoles = useMemo(
-    () => validateExternalRoles(userRoles),
-    [userRoles]
-  );
-
-  // ✅ Verificar que NO sea Elemento (todos excepto Elemento pueden acceder)
-  const hasAccess = useMemo(
-    () => !isElemento(validRoles) && validRoles.length > 0,
-    [validRoles]
-  );
-  // #endregion validacion rol
-
-  // ✅ PASO 2: TODOS los hooks ANTES del return condicional (Rules of Hooks)
+  // ✅ TODOS los hooks ANTES del return condicional (Rules of Hooks)
   // Hook de navegación
   const navigate = useNavigate();
 
@@ -91,7 +106,14 @@ const Estadisticas: React.FC = () => {
     totalCount: statistics.length
   }), [statistics]);
 
-  // ✅ PASO 3: Validación DESPUÉS de todos los hooks
+  // =====================================================
+  // #region 🚫 VALIDACIÓN DEFENSIVA - Return Early Pattern
+  // =====================================================
+  /**
+   * Si no tiene acceso, mostrar pantalla de acceso denegado
+   *
+   * @pattern Return Early - Manejo de error antes de lógica principal
+   */
   if (!hasAccess) {
     return (
       <AccessDenied
@@ -101,7 +123,11 @@ const Estadisticas: React.FC = () => {
       />
     );
   }
+  // #endregion
 
+  // =====================================================
+  // #region 🎨 RENDERIZADO PRINCIPAL
+  // =====================================================
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8" data-component="estadisticas">
       <div className="max-w-7xl mx-auto">
@@ -125,6 +151,7 @@ const Estadisticas: React.FC = () => {
       </div>
     </div>
   );
+  // #endregion
 };
 
 export default Estadisticas;

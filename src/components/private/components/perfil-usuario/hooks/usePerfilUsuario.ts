@@ -1,6 +1,17 @@
 /**
  * Hook personalizado para manejo del componente PerfilUsuario
  * Maneja toda la lógica de negocio separada de la presentación
+ *
+ * @version 2.0.0
+ * @since 2024-01-29
+ * @updated 2025-01-30
+ *
+ * @changes v2.0.0
+ * - ✅ Validación de roles refactorizada usando helpers centralizados
+ * - ✅ Usa isSuperAdmin() e isAdmin() del helper con cache + Zod
+ * - ✅ Eliminada lógica manual de parsing de sessionStorage
+ * - ✅ Usa getUserRoles() centralizado del role.helper
+ * - ✅ Reducción de código en función checkPermissions()
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -22,6 +33,8 @@ import {
 import { showSuccess, showError, showWarning } from '../../../../../helper/notification/notification.helper';
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 import { sanitizeInput } from '../../../../../helper/security/security.helper';
+import { getUserRoles } from '../../../../../helper/role/role.helper';
+import { isSuperAdmin, isAdmin } from '../../../../../config/permissions.config';
 import { ALLOWED_ROLES } from '../../../../../config/env.config';
 
 // Interfaces
@@ -256,30 +269,39 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
   // =====================================================
   // FUNCIONES DE CONTROL DE ACCESO
   // =====================================================
+  // #region 🔐 VALIDACIÓN DE ACCESO v2.0 - Centralizado
 
+  /**
+   * Verifica los permisos del usuario para operaciones en perfiles
+   * - SuperAdmin y Admin: Pueden crear, editar y ver datos sensibles
+   * - Usuario actual: Puede editar su propio perfil
+   *
+   * @refactored v2.0.0 - Usa helpers centralizados
+   * @security Validación Zod + cache 5s + jerarquía automática
+   */
   const checkPermissions = useCallback(() => {
     const userData = JSON.parse(sessionStorage.getItem('user_data') || '{}');
-    const userRoles = JSON.parse(sessionStorage.getItem('roles') || '[]');
-    
-    // Determinar permisos basado en roles
-    const isSuperAdmin = userRoles.some((role: any) => role.nombre === 'SuperAdmin');
-    const isAdmin = userRoles.some((role: any) => role.nombre === 'Administrador');
+    const userRoles = getUserRoles();
+
+    // Determinar permisos basado en roles usando helpers centralizados
+    const hasAdminRole = isSuperAdmin(userRoles) || isAdmin(userRoles);
     const isCurrentUser = userData?.id?.toString() === id;
 
     setState(prev => ({
       ...prev,
-      canCreate: isSuperAdmin || isAdmin,
-      canEdit: isSuperAdmin || isAdmin || isCurrentUser,
-      canViewSensitiveData: isSuperAdmin || isAdmin
+      canCreate: hasAdminRole,
+      canEdit: hasAdminRole || isCurrentUser,
+      canViewSensitiveData: hasAdminRole
     }));
 
     logInfo('PerfilUsuarioHook', 'Permisos calculados', {
-      isSuperAdmin,
-      isAdmin,
+      hasAdminRole,
       isCurrentUser,
-      canEdit: isSuperAdmin || isAdmin || isCurrentUser
+      canEdit: hasAdminRole || isCurrentUser
     });
   }, [id]);
+
+  // #endregion
 
   // =====================================================
   // FUNCIONES DE CARGA DE DATOS
