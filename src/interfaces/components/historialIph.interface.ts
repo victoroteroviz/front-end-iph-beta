@@ -7,10 +7,19 @@
 
 /**
  * Interface para la ubicación de un IPH
+ * Soporta tanto coordenadas geográficas como dirección textual
  */
 export interface UbicacionHistorialIPH {
-  latitud: number;
-  longitud: number;
+  // Coordenadas geográficas (opcionales)
+  latitud?: number;
+  longitud?: number;
+
+  // Dirección textual (opcionales)
+  calle?: string;
+  colonia?: string;
+  estado?: string;
+  municipio?: string;
+  ciudad?: string;
 }
 
 /**
@@ -264,4 +273,51 @@ export interface ResHistoryData {
   tipoDelito: string | undefined;
   estatus: string;
   usuario: string;
+}
+
+// ==================== INTERFACES DEL BACKEND (BasicDataDto) ====================
+
+/**
+ * Interface para ubicación textual del backend
+ * Basado en UbicacionDto del backend
+ */
+export interface UbicacionDto {
+  calle?: string;
+  colonia?: string;
+  estado?: string;
+  municipio?: string;
+  ciudad?: string;
+}
+
+/**
+ * Interface para usuario del backend
+ * Basado en UsuarioDto del backend
+ */
+export interface UsuarioDto {
+  nombre?: string;
+  apellidoPaterno?: string;
+  apellidoMaterno?: string;
+}
+
+/**
+ * Interface para datos básicos de IPH del backend
+ * Basado en BasicDataDto del backend
+ * Endpoint: /api/iph-web/getBasicDataByIph/:uuid
+ */
+export interface BasicDataDto {
+  id: string;
+  tipoIph?: string;
+  delito?: string;
+  detenido?: string;
+  horaDetencion?: string;
+  horaPuestaDisposicion?: Date;
+  numRND?: string;
+  numero: string;
+  ubicacion?: UbicacionDto;
+  fechaCreacion: Date | string;
+  tipoDelito?: string;
+  primerRespondiente?: UsuarioDto;
+  estatus?: string;
+  evidencias?: string[];
+  observaciones?: string;
 }

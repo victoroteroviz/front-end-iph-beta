@@ -18,7 +18,10 @@ import type {
   PaginacionHistorial,
   HistorialIPHResponse,
   info,
-  PaginatedResHistory
+  PaginatedResHistory,
+  BasicDataDto,
+  UbicacionDto,
+  UsuarioDto
 } from '../../interfaces/components/historialIph.interface';
 
 // ==================== COORDENADAS ====================
@@ -43,7 +46,7 @@ export const transformCoordenadasToUbicacion = (coordenadas?: Coordenadas): Ubic
  * @returns {Coordenadas | undefined}
  */
 export const transformUbicacionToCoordenadas = (ubicacion?: UbicacionHistorialIPH): Coordenadas | undefined => {
-  if (!ubicacion) return undefined;
+  if (!ubicacion || ubicacion.latitud === undefined || ubicacion.longitud === undefined) return undefined;
 
   return {
     latitud: ubicacion.latitud.toString(),
@@ -251,5 +254,144 @@ export const transformPaginatedResponseToHistorialResponse = (apiResponse: Pagin
     registros,
     estadisticas,
     paginacion
+  };
+};
+
+// ==================== TRANSFORMACIÓN BASICDATADTO ====================
+
+/**
+ * Verifica si un valor es null, undefined o string vacío
+ * @param value - Valor a verificar
+ * @returns true si el valor está vacío
+ */
+const isEmpty = (value: any): boolean => {
+  return value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
+};
+
+/**
+ * Transforma ubicación del backend a ubicación interna
+ * Maneja casos donde no hay coordenadas, solo dirección textual
+ *
+ * @param ubicacion - UbicacionDto del backend
+ * @returns UbicacionHistorialIPH o undefined si no hay datos
+ *
+ * @example
+ * transformUbicacionDto({ calle: "Av. Principal", colonia: "Centro" })
+ * // → { calle: "Av. Principal", colonia: "Centro" }
+ *
+ * transformUbicacionDto({ calle: null })
+ * // → undefined
+ */
+export const transformUbicacionDto = (ubicacion?: UbicacionDto): UbicacionHistorialIPH | undefined => {
+  if (!ubicacion) return undefined;
+
+  // Verificar si al menos un campo tiene datos
+  const hasData = Object.values(ubicacion).some(value => !isEmpty(value));
+
+  if (!hasData) return undefined;
+
+  return {
+    calle: !isEmpty(ubicacion.calle) ? ubicacion.calle : undefined,
+    colonia: !isEmpty(ubicacion.colonia) ? ubicacion.colonia : undefined,
+    estado: !isEmpty(ubicacion.estado) ? ubicacion.estado : undefined,
+    municipio: !isEmpty(ubicacion.municipio) ? ubicacion.municipio : undefined,
+    ciudad: !isEmpty(ubicacion.ciudad) ? ubicacion.ciudad : undefined
+  };
+};
+
+/**
+ * Construye nombre completo del usuario desde UsuarioDto
+ * Maneja casos donde nombre, apellidos pueden ser null, undefined o ""
+ *
+ * @param usuario - UsuarioDto del backend
+ * @returns Nombre completo o 'N/D' si no hay datos
+ *
+ * @example
+ * buildFullName({ nombre: "Juan", apellidoPaterno: "Pérez", apellidoMaterno: "García" })
+ * // → "Juan Pérez García"
+ *
+ * buildFullName({ nombre: "Juan", apellidoPaterno: null })
+ * // → "Juan"
+ *
+ * buildFullName(null)
+ * // → "N/D"
+ */
+export const buildFullName = (usuario?: UsuarioDto): string => {
+  if (!usuario) return 'N/D';
+
+  const partes = [
+    usuario.nombre,
+    usuario.apellidoPaterno,
+    usuario.apellidoMaterno
+  ]
+    .filter(parte => !isEmpty(parte))
+    .map(parte => parte!.trim());
+
+  return partes.length > 0 ? partes.join(' ') : 'N/D';
+};
+
+/**
+ * Transforma BasicDataDto del backend a RegistroHistorialIPH
+ * Maneja todos los casos de datos vacíos (null, undefined, "")
+ *
+ * @param data - BasicDataDto del backend
+ * @returns RegistroHistorialIPH con campos mapeados correctamente
+ *
+ * @example
+ * ```typescript
+ * const backendData: BasicDataDto = {
+ *   id: "uuid-123",
+ *   numero: "12GN01039141020250918",
+ *   tipoDelito: "",  // vacío
+ *   primerRespondiente: { nombre: "Juan", apellidoPaterno: null },
+ *   ubicacion: { calle: "Av. Principal", colonia: null },
+ *   // ...
+ * };
+ *
+ * const registro = transformBasicDataDtoToRegistro(backendData);
+ * // registro.tipoDelito === "N/D"
+ * // registro.usuario === "Juan"
+ * // registro.ubicacion === { calle: "Av. Principal" }
+ * ```
+ *
+ * @throws Error si el ID es inválido
+ */
+export const transformBasicDataDtoToRegistro = (data: BasicDataDto): RegistroHistorialIPH => {
+  // Validar que el ID exista
+  if (!data.id) {
+    throw new Error('BasicDataDto debe contener un ID válido');
+  }
+
+  // Construir nombre completo del usuario
+  const usuario = buildFullName(data.primerRespondiente);
+
+  // Transformar ubicación
+  const ubicacion = transformUbicacionDto(data.ubicacion);
+
+  // Transformar fecha de creación
+  let fechaCreacion: Date;
+  try {
+    fechaCreacion = typeof data.fechaCreacion === 'string'
+      ? new Date(data.fechaCreacion)
+      : data.fechaCreacion;
+
+    // Validar que la fecha sea válida
+    if (isNaN(fechaCreacion.getTime())) {
+      fechaCreacion = new Date();
+    }
+  } catch {
+    fechaCreacion = new Date();
+  }
+
+  return {
+    id: data.id,
+    numeroReferencia: !isEmpty(data.numero) ? data.numero! : 'N/D',
+    fechaCreacion,
+    ubicacion,
+    tipoDelito: !isEmpty(data.tipoDelito) ? data.tipoDelito! : 'N/D',
+    estatus: !isEmpty(data.estatus) ? data.estatus! : 'N/D',
+    usuario,
+    observaciones: !isEmpty(data.observaciones) ? data.observaciones! : '',
+    archivosAdjuntos: Array.isArray(data.evidencias) ? data.evidencias : []
   };
 };

@@ -9,14 +9,19 @@
  * - ✅ Fácil mantenimiento (agregar ruta en 1 lugar)
  * - ✅ TypeScript type-safe
  * - ✅ Lazy loading automático
- * - ✅ Control de acceso por roles
+ * - ✅ Control de acceso por roles centralizado
+ * - ✅ Validación de roles con helper (cache + Zod)
  *
  * @author Sistema IPH
- * @version 1.0.0
+ * @version 2.0.0
+ * @refactored v2.0.0 - Centralización de roles con role.helper
  */
 
 import { lazy, type ComponentType, type LazyExoticComponent, type ReactElement } from 'react';
 import { Home, BarChart, FileText, Clock, Users, Settings, UserPen, UserCog, ChartNoAxesCombined } from 'lucide-react';
+
+// Helpers de roles
+import { getUserRoles, hasAnyRole } from '../helper/role/role.helper';
 
 // =====================================================
 // INTERFACES
@@ -75,6 +80,31 @@ const JusticiaCivicaView = lazy(() => import('../components/private/components/s
 const ProbableDelictivoView = lazy(() => import('../components/private/components/statistics/views/ProbableDelictivoView'));
 
 // =====================================================
+// CONSTANTES DE GRUPOS DE ROLES
+// =====================================================
+
+/**
+ * Grupos de roles comunes reutilizables
+ * Evita duplicación de arrays y facilita mantenimiento
+ *
+ * @version 2.0.0
+ * @refactored Centralizado para evitar hardcoded arrays
+ */
+export const ROLE_GROUPS = {
+  /** Todos los roles autenticados (SuperAdmin, Admin, Superior, Elemento) */
+  ALL_AUTHENTICATED: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
+
+  /** Roles de gestión/management (SuperAdmin, Admin, Superior) */
+  MANAGEMENT: ['SuperAdmin', 'Administrador', 'Superior'],
+
+  /** Solo roles administrativos (SuperAdmin, Admin) */
+  ADMIN_ONLY: ['SuperAdmin', 'Administrador'],
+
+  /** Solo SuperAdmin */
+  SUPER_ADMIN_ONLY: ['SuperAdmin']
+} as const;
+
+// =====================================================
 // CONFIGURACIÓN DE RUTAS
 // =====================================================
 
@@ -90,7 +120,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'inicio',
     path: 'inicio',
     component: Inicio,
-    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
+    requiredRoles: ROLE_GROUPS.ALL_AUTHENTICATED,
     title: 'Inicio',
     description: 'Dashboard principal con estadísticas generales',
     showInSidebar: true,
@@ -101,7 +131,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'estadisticas',
     path: 'estadisticasusuario',
     component: Estadisticas,
-    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
+    requiredRoles: ROLE_GROUPS.MANAGEMENT,
     title: 'Estadísticas',
     description: 'Estadísticas por usuario y rendimiento',
     showInSidebar: true,
@@ -112,7 +142,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'iphActivo',
     path: 'informepolicial',
     component: InformePolicial,
-    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
+    requiredRoles: ROLE_GROUPS.ALL_AUTHENTICATED,
     title: "IPH's Activos",
     description: 'Lista de informes policiales homologados activos',
     showInSidebar: true,
@@ -123,7 +153,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'historial',
     path: 'historialiph',
     component: HistorialIPH,
-    requiredRoles: ['SuperAdmin', 'Administrador'],
+    requiredRoles: ROLE_GROUPS.ALL_AUTHENTICATED,
     title: 'Histórico IPH',
     description: 'Historial completo de informes policiales',
     showInSidebar: true,
@@ -134,7 +164,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'usuarios',
     path: 'usuarios',
     component: Usuarios,
-    requiredRoles: ['SuperAdmin', 'Administrador'],
+    requiredRoles: ROLE_GROUPS.ADMIN_ONLY,
     title: 'Usuarios',
     description: 'Gestión de usuarios del sistema',
     showInSidebar: true,
@@ -145,7 +175,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'grupos',
     path: 'gestion-grupos',
     component: GestionGrupos,
-    requiredRoles: ['SuperAdmin', 'Administrador'],
+    requiredRoles: ROLE_GROUPS.ADMIN_ONLY,
     title: 'Gestión Grupos',
     description: 'Gestión de grupos y equipos',
     showInSidebar: true,
@@ -157,7 +187,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'ajustes',
     path: 'ajustes',
     component: Ajustes,
-    requiredRoles: ['SuperAdmin', 'Administrador'],
+    requiredRoles: ROLE_GROUPS.ADMIN_ONLY,
     title: 'Ajustes',
     description: 'Configuración del sistema',
     showInSidebar: true,
@@ -175,7 +205,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'estadisticasUsuariosIph',
     path: 'estadisticasusuario/usuarios-iph',
     component: UsuariosIphView,
-    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
+    requiredRoles: ROLE_GROUPS.MANAGEMENT,
     title: 'Usuarios y Creación de IPH',
     description: 'Estadísticas de usuarios que más y menos IPH han creado',
     showInSidebar: false,
@@ -185,7 +215,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'estadisticasJusticiaCivica',
     path: 'estadisticasusuario/justicia-civica',
     component: JusticiaCivicaView,
-    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
+    requiredRoles: ROLE_GROUPS.MANAGEMENT,
     title: 'IPH de Justicia Cívica',
     description: 'Estadísticas de informes de justicia cívica',
     showInSidebar: false,
@@ -195,7 +225,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'estadisticasProbableDelictivo',
     path: 'estadisticasusuario/probable-delictivo',
     component: ProbableDelictivoView,
-    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
+    requiredRoles: ROLE_GROUPS.MANAGEMENT,
     title: 'IPH de Probable Hecho Delictivo',
     description: 'Estadísticas de informes de probable hecho delictivo',
     showInSidebar: false,
@@ -206,7 +236,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'iphOficial',
     path: 'iphoficial/:id',
     component: IphOficial,
-    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
+    requiredRoles: ROLE_GROUPS.ALL_AUTHENTICATED,
     title: 'IPH Oficial',
     description: 'Vista detallada del informe policial',
     showInSidebar: false,
@@ -216,7 +246,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'informeEjecutivo',
     path: 'informeejecutivo/:id',
     component: InformeEjecutivo,
-    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
+    requiredRoles: ROLE_GROUPS.ALL_AUTHENTICATED,
     title: 'Informe Ejecutivo',
     description: 'Informe ejecutivo detallado',
     showInSidebar: false,
@@ -226,7 +256,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'usuariosNuevo',
     path: 'usuarios/nuevo',
     component: PerfilUsuario,
-    requiredRoles: ['SuperAdmin', 'Administrador'],
+    requiredRoles: ROLE_GROUPS.ADMIN_ONLY,
     title: 'Nuevo Usuario',
     description: 'Crear nuevo usuario del sistema',
     showInSidebar: false,
@@ -236,7 +266,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'usuariosEditar',
     path: 'usuarios/editar/:id',
     component: PerfilUsuario,
-    requiredRoles: ['SuperAdmin', 'Administrador'],
+    requiredRoles: ROLE_GROUPS.ADMIN_ONLY,
     title: 'Editar Usuario',
     description: 'Editar información de usuario',
     showInSidebar: false,
@@ -246,7 +276,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'perfil',
     path: 'perfil',
     component: PerfilUsuario,
-    requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
+    requiredRoles: ROLE_GROUPS.ALL_AUTHENTICATED,
     title: 'Mi Perfil',
     description: 'Información personal del usuario',
     showInSidebar: false
@@ -255,7 +285,7 @@ export const APP_ROUTES: AppRoute[] = [
     id: 'catalogos',
     path: 'ajustes/catalogos',
     component: AdministracionCatalogos,
-    requiredRoles: ['SuperAdmin', 'Administrador'],
+    requiredRoles: ROLE_GROUPS.ADMIN_ONLY,
     title: 'Administración de Catálogos',
     description: 'Gestión de catálogos del sistema',
     showInSidebar: false,
@@ -270,21 +300,33 @@ export const APP_ROUTES: AppRoute[] = [
 /**
  * Obtiene rutas filtradas para mostrar en el sidebar
  *
- * @param userRole - Rol del usuario actual
- * @returns Array de rutas visibles en sidebar
+ * @returns Array de rutas visibles en sidebar según roles del usuario
+ * @refactored v2.0.0 - Usa role.helper centralizado (cache 5s + Zod)
+ *
+ * @security
+ * - Validación Zod automática en getUserRoles()
+ * - Cache de 5 segundos para performance
+ * - Validación contra ALLOWED_ROLES del sistema
+ *
+ * @performance
+ * - Cache automático reduce lecturas de sessionStorage
+ * - hasAnyRole() optimizado con validación O(n)
  */
-export const getSidebarRoutes = (userRole: string): AppRoute[] => {
-  if (!userRole) return [];
+export const getSidebarRoutes = (): AppRoute[] => {
+  const userRoles = getUserRoles(); // ← Cache 5s + Zod + Validación
+
+  // Si no hay roles, retornar vacío
+  if (!userRoles || userRoles.length === 0) return [];
 
   return APP_ROUTES
     .filter(route => route.showInSidebar)
     .filter(route => {
+      // Si no requiere roles específicos, permitir acceso
       if (!route.requiredRoles || route.requiredRoles.length === 0) {
         return true;
       }
-      return route.requiredRoles.some(
-        role => role.toLowerCase() === userRole.toLowerCase()
-      );
+      // Usar helper centralizado para validación
+      return hasAnyRole(route.requiredRoles, userRoles);
     })
     .sort((a, b) => (a.order || 999) - (b.order || 999));
 };
@@ -323,20 +365,42 @@ export const getRouteByPath = (path: string): AppRoute | undefined => {
  * Verifica si un usuario tiene acceso a una ruta
  *
  * @param routeId - ID de la ruta
- * @param userRole - Rol del usuario
- * @returns true si tiene acceso
+ * @returns true si tiene acceso según roles del usuario actual
+ * @refactored v2.0.0 - Usa role.helper centralizado (sin parámetro userRole)
+ *
+ * @security
+ * - Validación Zod automática en getUserRoles()
+ * - Cache de 5 segundos para performance
+ * - Validación contra ALLOWED_ROLES del sistema
+ *
+ * @performance
+ * - Cache automático reduce lecturas de sessionStorage
+ * - hasAnyRole() optimizado con validación O(n)
+ *
+ * @example
+ * ```typescript
+ * if (userHasAccessToRoute('usuarios')) {
+ *   // Usuario puede acceder a gestión de usuarios
+ * }
+ * ```
  */
-export const userHasAccessToRoute = (routeId: string, userRole: string): boolean => {
+export const userHasAccessToRoute = (routeId: string): boolean => {
   const route = getRouteById(routeId);
   if (!route || route.isDisabled) return false;
 
+  // Si no requiere roles específicos, permitir acceso
   if (!route.requiredRoles || route.requiredRoles.length === 0) {
     return true;
   }
 
-  return route.requiredRoles.some(
-    role => role.toLowerCase() === userRole.toLowerCase()
-  );
+  // Obtener roles del usuario actual (con cache + Zod)
+  const userRoles = getUserRoles();
+
+  // Si no tiene roles, denegar acceso
+  if (!userRoles || userRoles.length === 0) return false;
+
+  // Usar helper centralizado para validación
+  return hasAnyRole(route.requiredRoles, userRoles);
 };
 
 /**
@@ -390,9 +454,10 @@ export const getParentSidebarId = (pathname: string): string | undefined => {
  * (mantiene compatibilidad con sidebarConfig.ts existente)
  *
  * @deprecated Usar getSidebarRoutes directamente
+ * @refactored v2.0.0 - Sin parámetro userRole (obtiene automáticamente)
  */
-export const convertToLegacySidebarFormat = (userRole: string) => {
-  return getSidebarRoutes(userRole).map(route => ({
+export const convertToLegacySidebarFormat = () => {
+  return getSidebarRoutes().map(route => ({
     id: route.id,
     label: route.title,
     to: `/${route.path}`,

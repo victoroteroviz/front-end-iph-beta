@@ -61,11 +61,20 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       order: 5
     },
     {
+      id: 'reportes',
+      label: 'Reportes',
+      to: '/reportes',
+      icon: React.createElement(FileCheck, { size: 20 }),
+      requiredRoles: ['SuperAdmin'],
+      order: 6,
+      isDisabled: true
+    },
+    {
       id: 'grupos',
       label: 'Gestión Grupos',
       to: '/gestion-grupos',
       requiredRoles: ['SuperAdmin'],
-      order: 6,
+      order: 7,
       isDisabled: true,
       icon: React.createElement(UserCog, { size: 20 })
     },
@@ -75,7 +84,7 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       to: '/ajustes',
       icon: React.createElement(Settings, { size: 20 }),
       requiredRoles: ['SuperAdmin',],
-      order: 7,
+      order: 8,
       isDisabled: true
     }
   ]

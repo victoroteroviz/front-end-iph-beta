@@ -2,16 +2,15 @@
  * Componente HistorialTable
  * Tabla principal para mostrar los registros del historial de IPH
  *
- * @version 2.0.0
+ * @version 2.1.0
  * @since 2024-01-30
  *
- * @changes v2.0.0
- * - ✅ Eliminado objeto `predefinedColors` hardcodeado (legacy)
- * - ✅ Eliminada función `generateEstatusColors()` duplicada
- * - ✅ Eliminado cache de colores innecesario (`colorCache`)
- * - ✅ Refactorizado `EstatusComponent` para usar `getStatusConfig()` centralizado
- * - ✅ Reducido de 421 a 381 líneas (-9.5%)
- * - ✅ Usa configuración de `status.config.ts` (Procesando, Supervisión, Finalizado)
+ * @changes v2.1.0
+ * - ✅ Refactorizado formateo de fechas para usar funciones centralizadas
+ * - ✅ Soporte para ubicación textual (calle, colonia, etc.) además de coordenadas
+ * - ✅ Manejo robusto de datos vacíos (null, undefined, "")
+ * - ✅ Visualización de "N/D" cuando no hay datos disponibles
+ * - ✅ Mejoras visuales en presentación de datos
  */
 
 import React, { useMemo, useCallback } from 'react';
@@ -27,7 +26,8 @@ import {
 // Interfaces
 import type {
   HistorialTableProps,
-  RegistroHistorialIPH
+  RegistroHistorialIPH,
+  UbicacionHistorialIPH
 } from '../../../../../interfaces/components/historialIph.interface';
 
 // Configuración de estatus centralizada
@@ -36,39 +36,64 @@ import { getStatusConfig } from '../../../../../config/status.config';
 // Helpers
 import { logInfo } from '../../../../../helper/log/logger.helper';
 
-// Formatters memoizados fuera del componente para mejor performance
-const formatDate = (dateString: string | undefined | null): string => {
-  if (!dateString) return '-';
+// ==================== FORMATTERS OPTIMIZADOS ====================
+
+/**
+ * Formatea una fecha en formato localizado mexicano
+ *
+ * @param dateInput - String de fecha ISO o objeto Date
+ * @returns Fecha formateada (DD/MM/YYYY) o '-' si es inválida
+ *
+ * @example
+ * formatDate(new Date()) // "30/01/2024"
+ * formatDate("2024-01-30T10:30:00") // "30/01/2024"
+ * formatDate(null) // "-"
+ */
+const formatDate = (dateInput: string | Date | undefined | null): string => {
+  if (!dateInput) return '-';
   try {
-    const date = new Date(dateString);
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    if (isNaN(date.getTime())) return '-';
+
     return date.toLocaleDateString('es-MX', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     });
   } catch {
-    return dateString || '-';
+    return '-';
   }
 };
 
-const formatTime = (timeString: string | undefined | null): string => {
-  if (!timeString) return '-';
+/**
+ * Formatea una hora en formato localizado mexicano con AM/PM
+ *
+ * @param dateInput - String de fecha ISO o objeto Date
+ * @returns Hora formateada (HH:MM AM/PM) o '-' si es inválida
+ *
+ * @example
+ * formatTime(new Date()) // "10:30 AM"
+ * formatTime("2024-01-30T14:30:00") // "02:30 PM"
+ * formatTime(null) // "-"
+ */
+const formatTime = (dateInput: string | Date | undefined | null): string => {
+  if (!dateInput) return '-';
   try {
-    const [hours, minutes] = timeString.split(':');
-    const date = new Date();
-    date.setHours(parseInt(hours), parseInt(minutes));
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    if (isNaN(date.getTime())) return '-';
+
     return date.toLocaleTimeString('es-MX', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true
     });
   } catch {
-    return timeString || '-';
+    return '-';
   }
 };
 
 /**
- * Componente de tabla del historial - SUPER OPTIMIZADO
+ * Componente de tabla del historial - OPTIMIZADO v2.1
  *
  * @param props - Props del componente de tabla
  * @returns JSX.Element de la tabla
@@ -81,22 +106,110 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
   className = ''
 }) => {
 
-  // Funciones optimizadas con useCallback
+  // ==================== CALLBACKS OPTIMIZADOS ====================
+
+  /**
+   * Trunca texto a una longitud máxima
+   */
   const truncateText = useCallback((text: string | undefined | null, maxLength: number = 30): string => {
-    if (!text) return '-';
+    if (!text) return 'N/D';
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
   }, []);
 
-  const formatUbicacion = useCallback((ubicacion?: { latitud: number; longitud: number }): string => {
-    if (!ubicacion) return '-';
-    return `${ubicacion.latitud.toFixed(6)}, ${ubicacion.longitud.toFixed(6)}`;
-  }, []);
+  /**
+   * Formatea una ubicación inteligentemente
+   * Soporta tanto coordenadas geográficas como dirección textual
+   *
+   * @param ubicacion - Ubicación con coordenadas o dirección textual
+   * @returns JSX con ubicación formateada
+   */
+  const formatUbicacionInteligente = useCallback((ubicacion?: UbicacionHistorialIPH) => {
+    if (!ubicacion) {
+      return (
+        <div className="text-sm text-gray-500 italic">
+          <MapPin size={12} className="inline mr-1" />
+          N/D
+        </div>
+      );
+    }
 
+    // Caso 1: Tiene coordenadas (latitud y longitud)
+    if (ubicacion.latitud !== undefined && ubicacion.longitud !== undefined) {
+      const lat = ubicacion.latitud.toFixed(6);
+      const lng = ubicacion.longitud.toFixed(6);
+      const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+
+      return (
+        <div className="text-sm group">
+          <div className="flex items-start gap-1">
+            <MapPin size={12} className="text-gray-400 mt-0.5 flex-shrink-0" />
+            <div className="flex flex-col">
+              <span className="text-gray-900 font-mono text-xs" title={`${lat}, ${lng}`}>
+                {lat}, {lng}
+              </span>
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#4d4725] hover:text-[#3a3519] text-xs underline-offset-2 hover:underline opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Ver en mapa ↗
+              </a>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Caso 2: Tiene dirección textual (calle, colonia, etc.)
+    const direccionParts = [
+      ubicacion.calle,
+      ubicacion.colonia,
+      ubicacion.municipio,
+      ubicacion.estado,
+      ubicacion.ciudad
+    ].filter(part => part && part.trim() !== '');
+
+    if (direccionParts.length > 0) {
+      const direccionCompleta = direccionParts.join(', ');
+      const direccionCorta = truncateText(direccionCompleta, 35);
+
+      return (
+        <div className="text-sm">
+          <div className="flex items-start gap-1">
+            <MapPin size={12} className="text-gray-400 mt-0.5 flex-shrink-0" />
+            <span
+              className="text-gray-900"
+              title={direccionCompleta}
+            >
+              {direccionCorta}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // Caso 3: No tiene ningún dato útil
+    return (
+      <div className="text-sm text-gray-500 italic">
+        <MapPin size={12} className="inline mr-1" />
+        N/D
+      </div>
+    );
+  }, [truncateText]);
+
+  /**
+   * Handler para ver detalle de un registro
+   */
   const handleVerDetalle = useCallback((registro: RegistroHistorialIPH) => {
     logInfo('HistorialTable', 'Solicitando ver detalle de registro', { registroId: registro.id });
     onVerDetalle(registro);
   }, [onVerDetalle]);
 
+  /**
+   * Handler para cambio de estatus
+   */
   const handleEstatusChange = useCallback((registro: RegistroHistorialIPH, nuevoEstatus: RegistroHistorialIPH['estatus']) => {
     if (onEditarEstatus && nuevoEstatus !== registro.estatus) {
       logInfo('HistorialTable', 'Cambiando estatus de registro', {
@@ -108,9 +221,12 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
     }
   }, [onEditarEstatus]);
 
-  // Componente de estatus memoizado usando configuración centralizada
+  // ==================== COMPONENTES MEMOIZADOS ====================
+
+  /**
+   * Componente de estatus memoizado usando configuración centralizada
+   */
   const EstatusComponent = React.memo<{registro: RegistroHistorialIPH}>(({ registro }) => {
-    // Usar configuración centralizada de status.config.ts
     const statusConfig = getStatusConfig(registro.estatus);
 
     return (
@@ -126,27 +242,28 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
       </span>
     );
   }, (prevProps, nextProps) => {
-    // Solo re-renderizar si cambia el estatus
-    return prevProps.registro.estatus === nextProps.registro.estatus;
+    // Solo re-renderizar si cambia el estatus o el ID
+    return prevProps.registro.estatus === nextProps.registro.estatus &&
+           prevProps.registro.id === nextProps.registro.id;
   });
 
   EstatusComponent.displayName = 'EstatusComponent';
 
-  const getEstatusComponent = useCallback((registro: RegistroHistorialIPH) => {
-    return <EstatusComponent registro={registro} />;
-  }, []);
+  // ==================== DEFINICIÓN DE COLUMNAS ====================
 
   /**
-   * Columnas de la tabla
+   * Columnas de la tabla - memoizadas con dependencias correctas
    */
   const columns = useMemo(() => [
     {
       key: 'numeroReferencia',
       label: 'No. Referencia',
-      width: 'w-28',
+      width: 'w-32',
       render: (registro: RegistroHistorialIPH) => (
-        <div className="font-mono text-sm text-[#4d4725]">
-          {registro.numeroReferencia}
+        <div className="flex items-center gap-1">
+          <span className="inline-flex items-center px-2 py-1 rounded-md bg-[#fdf7f1] border border-[#c2b186]/30 font-mono text-sm text-[#4d4725] font-semibold">
+            #{registro.numeroReferencia}
+          </span>
         </div>
       )
     },
@@ -154,39 +271,24 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
       key: 'fechaCreacion',
       label: 'Fecha/Hora',
       width: 'w-32',
-      render: (registro: RegistroHistorialIPH) => {
-        const fecha = new Date(registro.fechaCreacion);
-        return (
-          <div className="text-sm">
-            <div className="flex items-center gap-1 text-gray-900">
-              <Calendar size={12} className="text-gray-400" />
-              {fecha.toLocaleDateString()}
-            </div>
-            <div className="flex items-center gap-1 text-gray-500 text-xs">
-              <Clock size={12} className="text-gray-400" />
-              {fecha.toLocaleTimeString()}
-            </div>
+      render: (registro: RegistroHistorialIPH) => (
+        <div className="text-sm">
+          <div className="flex items-center gap-1 text-gray-900">
+            <Calendar size={12} className="text-gray-400" />
+            {formatDate(registro.fechaCreacion)}
           </div>
-        );
-      }
+          <div className="flex items-center gap-1 text-gray-500 text-xs">
+            <Clock size={12} className="text-gray-400" />
+            {formatTime(registro.fechaCreacion)}
+          </div>
+        </div>
+      )
     },
     {
       key: 'ubicacion',
       label: 'Ubicación',
       width: 'w-48',
-      render: (registro: RegistroHistorialIPH) => {
-        const ubicacionString = formatUbicacion(registro.ubicacion);
-        return (
-          <div className="text-sm">
-            <div className="flex items-start gap-1">
-              <MapPin size={12} className="text-gray-400 mt-0.5 flex-shrink-0" />
-              <span className="text-gray-900" title={ubicacionString}>
-                {truncateText(ubicacionString, 40)}
-              </span>
-            </div>
-          </div>
-        );
-      }
+      render: (registro: RegistroHistorialIPH) => formatUbicacionInteligente(registro.ubicacion)
     },
     {
       key: 'tipoDelito',
@@ -194,12 +296,15 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
       width: 'w-40',
       render: (registro: RegistroHistorialIPH) => (
         <div className="text-sm">
-          <span
-            className="text-gray-900 font-medium"
-            title={registro.tipoDelito}
-          >
-            {truncateText(registro.tipoDelito, 25)}
-          </span>
+          <div className="flex items-center gap-1">
+            <FileText size={12} className="text-gray-400 flex-shrink-0" />
+            <span
+              className="text-gray-900 font-medium"
+              title={registro.tipoDelito}
+            >
+              {truncateText(registro.tipoDelito, 25)}
+            </span>
+          </div>
         </div>
       )
     },
@@ -207,7 +312,9 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
       key: 'estatus',
       label: 'Estatus',
       width: 'w-32',
-      render: (registro: RegistroHistorialIPH) => getEstatusComponent(registro)
+      render: (registro: RegistroHistorialIPH) => (
+        <EstatusComponent registro={registro} />
+      )
     },
     {
       key: 'usuario',
@@ -217,7 +324,7 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
         <div className="text-sm">
           <div className="flex items-center gap-1">
             <User size={12} className="text-gray-400" />
-            <span 
+            <span
               className="text-gray-900"
               title={registro.usuario}
             >
@@ -252,10 +359,12 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
         </div>
       )
     }
-  ], [loading]);
+  ], [loading, truncateText, formatUbicacionInteligente, handleVerDetalle]);
 
+  // ==================== RENDER STATES ====================
+
+  // Loading skeleton
   if (loading && registros.length === 0) {
-    // Loading skeleton
     return (
       <div className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${className}`}>
         <div className="overflow-x-auto">
@@ -289,8 +398,8 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
     );
   }
 
+  // Empty state
   if (!registros.length) {
-    // Empty state
     return (
       <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center ${className}`}>
         <FileText size={48} className="mx-auto text-gray-400 mb-4" />
@@ -304,8 +413,10 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
     );
   }
 
+  // ==================== MAIN RENDER ====================
+
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden relative ${className}`}>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -346,12 +457,12 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
         </table>
       </div>
 
-      {/* Loading overlay */}
+      {/* Loading overlay mejorado con backdrop blur */}
       {loading && registros.length > 0 && (
-        <div className="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center">
-          <div className="flex items-center gap-3">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#4d4725]"></div>
-            <span className="text-[#4d4725]">Actualizando tabla...</span>
+        <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-10">
+          <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-lg shadow-lg border border-[#c2b186]/30">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#4d4725]/20 border-t-[#4d4725]"></div>
+            <span className="text-[#4d4725] font-medium">Actualizando tabla...</span>
           </div>
         </div>
       )}

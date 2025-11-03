@@ -59,6 +59,8 @@ export const validateIphId = (id: string): void => {
 
 /**
  * Valida que la respuesta del servidor contenga los datos mínimos requeridos
+ * IMPORTANTE: Solo valida que los campos EXISTAN, no que tengan contenido
+ * Los campos vacíos (null, undefined, "") se transforman a "N/D" en la transformación
  *
  * @param data - Datos recibidos del servidor
  * @throws Error si los datos son inválidos o incompletos
@@ -67,7 +69,7 @@ export const validateIphId = (id: string): void => {
  * ```typescript
  * validateBasicDataResponse(null); // Error: Respuesta vacía del servidor
  * validateBasicDataResponse({}); // Error: ID del IPH no presente en la respuesta
- * validateBasicDataResponse({ id: '123', ... }); // OK
+ * validateBasicDataResponse({ id: '123', numero: '', tipoIph: '', ... }); // OK (campos vacíos permitidos)
  * ```
  */
 export const validateBasicDataResponse = (data: I_BasicDataDto | null | undefined): void => {
@@ -75,41 +77,48 @@ export const validateBasicDataResponse = (data: I_BasicDataDto | null | undefine
     throw new Error('Respuesta vacía del servidor');
   }
 
-  // Validar campos obligatorios según I_BasicDataDto
-  if (!data.id) {
+  // Validar solo que los campos EXISTAN en la respuesta
+  // No importa si están vacíos (null, undefined, "") - se transformarán a "N/D"
+
+  // Campo obligatorio: ID (debe existir y no estar vacío)
+  if (!data.id || (typeof data.id === 'string' && data.id.trim() === '')) {
     throw new Error('ID del IPH no presente en la respuesta');
   }
 
-  if (!data.numero) {
+  // Campo obligatorio: Número de referencia (debe existir en la respuesta, puede estar vacío)
+  if (!('numero' in data)) {
     throw new Error('Número de referencia del IPH no presente en la respuesta');
   }
 
-  if (!data.tipoIph) {
-    throw new Error('Tipo de IPH no presente en la respuesta');
+  // Campos opcionales: Solo verificar que existan en la respuesta (pueden ser null, undefined o "")
+  if (!('tipoIph' in data)) {
+    throw new Error('Campo tipoIph no presente en la respuesta');
   }
 
-  if (!data.delito) {
-    throw new Error('Delito no presente en la respuesta');
+  if (!('delito' in data)) {
+    throw new Error('Campo delito no presente en la respuesta');
   }
 
-  if (!data.estatus) {
-    throw new Error('Estatus no presente en la respuesta');
+  if (!('estatus' in data)) {
+    throw new Error('Campo estatus no presente en la respuesta');
   }
 
-  if (!data.tipoDelito) {
-    throw new Error('Tipo de delito no presente en la respuesta');
+  if (!('tipoDelito' in data)) {
+    throw new Error('Campo tipoDelito no presente en la respuesta');
   }
 
-  if (!data.fechaCreacion) {
+  if (!('fechaCreacion' in data)) {
     throw new Error('Fecha de creación no presente en la respuesta');
   }
 
-  if (!Array.isArray(data.evidencias)) {
+  // Evidencias: debe ser un array (puede estar vacío)
+  if (!('evidencias' in data) || !Array.isArray(data.evidencias)) {
     throw new Error('Evidencias deben ser un arreglo');
   }
 
-  if (typeof data.observaciones !== 'string') {
-    throw new Error('Observaciones deben ser una cadena de texto');
+  // Observaciones: debe ser un string (puede estar vacío)
+  if (!('observaciones' in data) || (data.observaciones !== null && data.observaciones !== undefined && typeof data.observaciones !== 'string')) {
+    throw new Error('Observaciones deben ser una cadena de texto o null');
   }
 };
 

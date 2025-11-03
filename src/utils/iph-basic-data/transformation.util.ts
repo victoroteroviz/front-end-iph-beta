@@ -142,8 +142,26 @@ export const normalizeObservaciones = (observaciones: string | undefined | null)
 };
 
 /**
+ * Verifica si un valor es vacío (null, undefined o string vacío)
+ * @param value - Valor a verificar
+ * @returns true si está vacío
+ */
+const isEmpty = (value: any): boolean => {
+  return value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
+};
+
+/**
+ * Normaliza un campo de texto a "N/D" si está vacío
+ * @param value - Valor a normalizar
+ * @returns Valor normalizado o "N/D"
+ */
+const normalizeField = (value: string | null | undefined): string => {
+  return isEmpty(value) ? 'N/D' : value!.trim();
+};
+
+/**
  * Transforma y normaliza completamente los datos básicos del IPH
- * Aplica todas las transformaciones necesarias
+ * Aplica todas las transformaciones necesarias y maneja campos vacíos
  *
  * @param data - Datos básicos del IPH recibidos del servidor
  * @returns Datos transformados y normalizados
@@ -152,6 +170,10 @@ export const normalizeObservaciones = (observaciones: string | undefined | null)
  * ```typescript
  * const rawData = {
  *   id: '123',
+ *   numero: '12GN01039141020250918',
+ *   tipoIph: '',  // vacío
+ *   delito: null,  // null
+ *   primerRespondiente: { nombre: 'Juan', apellidoPaterno: null, apellidoMaterno: '' },
  *   fechaCreacion: '2024-01-30T10:30:00Z',
  *   evidencias: ['url1.jpg', '', 'url2.jpg'],
  *   observaciones: '  Observación  ',
@@ -159,6 +181,8 @@ export const normalizeObservaciones = (observaciones: string | undefined | null)
  * };
  *
  * const normalized = transformBasicData(rawData);
+ * // normalized.tipoIph → 'N/D'
+ * // normalized.delito → 'N/D'
  * // normalized.fechaCreacion → Date object
  * // normalized.evidencias → ['url1.jpg', 'url2.jpg']
  * // normalized.observaciones → 'Observación'
@@ -171,8 +195,26 @@ export const transformBasicData = (data: I_BasicDataDto): I_BasicDataDto => {
   // Normalizar evidencias
   data.evidencias = normalizeEvidencias(data.evidencias);
 
-  // Normalizar observaciones
+  // Normalizar observaciones (puede estar vacío)
   data.observaciones = normalizeObservaciones(data.observaciones);
+
+  // Normalizar campos de texto que pueden estar vacíos
+  data.tipoIph = normalizeField(data.tipoIph);
+  data.delito = normalizeField(data.delito);
+  data.tipoDelito = normalizeField(data.tipoDelito);
+  data.estatus = normalizeField(data.estatus);
+  data.numero = normalizeField(data.numero);
+
+  // Normalizar campos opcionales
+  if (data.detenido !== undefined) {
+    data.detenido = normalizeField(data.detenido);
+  }
+  if (data.horaDetencion !== undefined) {
+    data.horaDetencion = normalizeField(data.horaDetencion);
+  }
+  if (data.numRND !== undefined) {
+    data.numRND = normalizeField(data.numRND);
+  }
 
   return data;
 };

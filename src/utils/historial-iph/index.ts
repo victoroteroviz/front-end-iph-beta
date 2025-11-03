@@ -17,7 +17,11 @@ export {
   calcularEstatusPorIph,
   transformInfoToHistorialResponse,
   transformPaginatedResponseToHistorialResponse,
-  validateCoordinates
+  validateCoordinates,
+  // Nuevas transformaciones para BasicDataDto
+  transformUbicacionDto,
+  buildFullName,
+  transformBasicDataDtoToRegistro
 } from './transformations.util';
 
 // Validaciones
