@@ -3,52 +3,62 @@
  * Lista de informes policiales con filtros, paginación y auto-refresh
  * Migrado completamente a TypeScript con arquitectura moderna
  * Auto-refresh cada 5 minutos con control manual
- * 
+ *
  * @security Control de acceso por roles
  * - Solo SuperAdmin, Administrador y Superior tienen acceso
  * - Validación con Role Helper v2.1.0 (Zod + Cache)
  * - Elemento no tiene acceso a este módulo
  */
 
-import React, { useEffect, useMemo } from 'react';
-import { AlertCircle, RefreshCw, FileText, Users, Filter, Shield } from 'lucide-react';
+import React, { useEffect, useMemo } from "react";
+import {
+  AlertCircle,
+  RefreshCw,
+  FileText,
+  Users,
+  Filter,
+  Shield,
+} from "lucide-react";
 
 // Hook personalizado
-import useInformePolicial from './hooks/useIphActivo';
+import useInformePolicial from "./hooks/useIphActivo";
 
 // Componentes atómicos
-import IPHFilters from './components/IPHFilters';
-import IPHTipoFilter from './components/IPHTipoFilter';
-import IPHCardsGrid from './components/IPHCardsGrid';
-import AutoRefreshIndicator from './components/AutoRefreshIndicator';
-import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
+import IPHFilters from "./components/IPHFilters";
+import IPHTipoFilter from "./components/IPHTipoFilter";
+import IPHCardsGrid from "./components/IPHCardsGrid";
+import AutoRefreshIndicator from "./components/AutoRefreshIndicator";
+import {
+  Breadcrumbs,
+  type BreadcrumbItem,
+} from "../../../shared/components/breadcrumbs";
 
 // Componentes compartidos
-import Pagination from '../../../shared/components/pagination';
+import Pagination from "../../../shared/components/pagination";
 
 // Helpers
-import { logInfo, logWarning } from '../../../../helper/log/logger.helper';
-import { 
-  getUserRoles, 
+import { logInfo, logWarning } from "../../../../helper/log/logger.helper";
+import {
+  getUserRoles,
   validateCurrentUserRoles,
-  hasAnyRole 
-} from '../../../../helper/role/role.helper';
+  hasAnyRole,
+} from "../../../../helper/role/role.helper";
 
 // Interfaces
-import type { IInformePolicialProps } from '../../../../interfaces/components/informe-policial.interface';
-import { INFORME_POLICIAL_CONFIG } from '../../../../interfaces/components/informe-policial.interface';
+import type { IInformePolicialProps } from "../../../../interfaces/components/informe-policial.interface";
+import { INFORME_POLICIAL_CONFIG } from "../../../../interfaces/components/informe-policial.interface";
 
 const InformePolicial: React.FC<IInformePolicialProps> = ({
-  className = '',
+  className = "",
   autoRefreshInterval = INFORME_POLICIAL_CONFIG.AUTO_REFRESH_INTERVAL,
-  showAutoRefreshIndicator = true
+  showAutoRefreshIndicator = true,
 }) => {
   // ==================== VALIDACIÓN DE ROLES (Debe ejecutarse primero) ====================
-  
+
   /**
    * Valida permisos de acceso al componente
    * Solo SuperAdmin, Administrador y Superior tienen acceso
-   * 
+   *
    * @security Usa Role Helper v2.1.0 con:
    * - Validación Zod automática
    * - Cache de 5 segundos
@@ -57,48 +67,57 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
   const roleValidation = useMemo(() => {
     // Obtener roles del usuario (usa cache automáticamente)
     const userRoles = getUserRoles();
-    
+
     // Validar estructura de roles
     const validation = validateCurrentUserRoles();
-    
+
     if (!validation.isValid) {
-      logWarning('InformePolicial', 'Acceso denegado - Roles inválidos');
+      logWarning("InformePolicial", "Acceso denegado - Roles inválidos");
       return {
         hasAccess: false,
-        reason: 'invalid_roles',
-        message: 'No se pudieron validar tus credenciales. Por favor, cierra sesión e inicia sesión nuevamente.'
+        reason: "invalid_roles",
+        message:
+          "No se pudieron validar tus credenciales. Por favor, cierra sesión e inicia sesión nuevamente.",
       };
     }
-    
+
     // Verificar si tiene alguno de los roles permitidos
-    const allowedRoles = ['SuperAdmin', 'Administrador', 'Superior'];
+    const allowedRoles = ["SuperAdmin", "Administrador", "Superior"];
     const hasPermission = hasAnyRole(allowedRoles, userRoles);
-    
+
     if (!hasPermission) {
-      logWarning('InformePolicial', 'Acceso denegado - Sin permisos suficientes');
+      logWarning(
+        "InformePolicial",
+        "Acceso denegado - Sin permisos suficientes"
+      );
       return {
         hasAccess: false,
-        reason: 'insufficient_permissions',
-        message: 'No tienes permisos para acceder al módulo de Informe Policial. Este módulo requiere permisos de Supervisor o superiores.'
+        reason: "insufficient_permissions",
+        message:
+          "No tienes permisos para acceder al módulo de Informe Policial. Este módulo requiere permisos de Supervisor o superiores.",
       };
     }
-    
+
     // Acceso concedido
-    logInfo('InformePolicial', 'Acceso concedido al módulo de Informe Policial', {
-      matchedRole: validation.matchedRole,
-      rolesCount: userRoles.length
-    });
-    
+    logInfo(
+      "InformePolicial",
+      "Acceso concedido al módulo de Informe Policial",
+      {
+        matchedRole: validation.matchedRole,
+        rolesCount: userRoles.length,
+      }
+    );
+
     return {
       hasAccess: true,
-      reason: 'authorized',
-      message: 'Acceso autorizado',
-      userRole: validation.matchedRole
+      reason: "authorized",
+      message: "Acceso autorizado",
+      userRole: validation.matchedRole,
     };
   }, []); // Solo se ejecuta una vez (cache se mantiene por 5s en el helper)
 
   // ==================== HOOKS (Se ejecutan DESPUÉS de validación) ====================
-  
+
   /**
    * Hook principal con parámetro 'enabled' basado en permisos
    * Si no tiene acceso, el hook NO ejecutará API calls
@@ -114,29 +133,37 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
     toggleAutoRefresh,
     timeUntilNextRefresh,
     isAnyLoading,
-    visibleRecords
+    visibleRecords,
   } = useInformePolicial(autoRefreshInterval, roleValidation.hasAccess);
 
   // Log cuando el componente se monta
   useEffect(() => {
     if (roleValidation.hasAccess) {
-      logInfo('InformePolicial', 'Component mounted', {
+      logInfo("InformePolicial", "Component mounted", {
         autoRefreshInterval: autoRefreshInterval / 1000 / 60, // en minutos
         showAutoRefreshIndicator,
         userCanViewAll: state.userCanViewAll,
-        userRole: roleValidation.userRole
+        userRole: roleValidation.userRole,
       });
     }
-  }, [autoRefreshInterval, showAutoRefreshIndicator, state.userCanViewAll, roleValidation]);
+  }, [
+    autoRefreshInterval,
+    showAutoRefreshIndicator,
+    state.userCanViewAll,
+    roleValidation,
+  ]);
 
   // ==================== COMPONENTE DE ACCESO DENEGADO ====================
-  
+
   /**
    * Muestra mensaje de error cuando no tiene permisos
    */
   if (!roleValidation.hasAccess) {
     return (
-      <div className="min-h-screen p-4 md:p-6 lg:p-8" data-component="informe-policial">
+      <div
+        className="min-h-screen p-4 md:p-6 lg:p-8"
+        data-component="informe-policial"
+      >
         <div className="max-w-3xl mx-auto">
           <div className="bg-gradient-to-br from-white via-red-50/30 to-white rounded-2xl border border-red-200 p-8 text-center shadow-lg overflow-hidden relative">
             {/* Patrón decorativo */}
@@ -160,11 +187,13 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
 
               <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 shadow-sm">
                 <p className="text-sm text-red-800 font-poppins">
-                  <strong className="font-bold">Permisos requeridos:</strong> SuperAdmin, Administrador o Superior
+                  <strong className="font-bold">Permisos requeridos:</strong>{" "}
+                  SuperAdmin, Administrador o Superior
                 </p>
-                {roleValidation.reason === 'invalid_roles' && (
+                {roleValidation.reason === "invalid_roles" && (
                   <p className="text-sm text-red-700 font-poppins mt-2">
-                    Tus credenciales no pudieron ser validadas. Esto puede deberse a datos corruptos en la sesión.
+                    Tus credenciales no pudieron ser validadas. Esto puede
+                    deberse a datos corruptos en la sesión.
                   </p>
                 )}
               </div>
@@ -185,7 +214,7 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
                 <button
                   onClick={() => {
                     sessionStorage.clear();
-                    window.location.href = '/login';
+                    window.location.href = "/login";
                   }}
                   className="
                     px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg
@@ -199,7 +228,8 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
               </div>
 
               <p className="text-sm text-gray-500 mt-6 font-poppins">
-                Si crees que esto es un error, contacta al administrador del sistema.
+                Si crees que esto es un error, contacta al administrador del
+                sistema.
               </p>
             </div>
           </div>
@@ -212,7 +242,7 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
 
   // Breadcrumbs
   const breadcrumbItems: BreadcrumbItem[] = [
-    { label: 'Listado de Referencias', isActive: true }
+    { label: "Listado de Referencias", isActive: true },
   ];
 
   // ✅ OPTIMIZACIÓN UX: Pantalla de carga completa eliminada
@@ -220,9 +250,11 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
   // El grid muestra skeleton cards durante la carga (mejor UX)
 
   return (
-    <div className={`min-h-screen p-4 md:p-6 lg:p-8 ${className}`} data-component="informe-policial">
+    <div
+      className={`min-h-screen p-4 md:p-6 lg:p-8 ${className}`}
+      data-component="informe-policial"
+    >
       <div className="max-w-7xl mx-auto">
-
         {/* Breadcrumbs */}
         <div className="mb-8">
           <Breadcrumbs items={breadcrumbItems} />
@@ -246,9 +278,8 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
                   </h1>
                   <p className="text-gray-600 font-poppins mt-1">
                     {state.userCanViewAll
-                      ? 'Vista global de todos los informes policiales por semana'
-                      : 'Vista de mis informes policiales hechos por semana'
-                    }
+                      ? "Vista global de todos los informes policiales por semana"
+                      : "Vista de mis informes policiales hechos por semana"}
                   </p>
                   <p className="text-sm text-gray-500 font-poppins mt-1 flex items-center gap-2">
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#4d4725]/10 text-[#4d4725] font-medium">
@@ -257,16 +288,17 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
                     {(() => {
                       const now = new Date();
                       const currentDay = now.getDay();
-                      const daysToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+                      const daysToMonday =
+                        currentDay === 0 ? -6 : 1 - currentDay;
                       const monday = new Date(now);
                       monday.setDate(now.getDate() + daysToMonday);
                       const sunday = new Date(monday);
                       sunday.setDate(monday.getDate() + 6);
                       const formatDate = (date: Date) => {
-                        return date.toLocaleDateString('es-MX', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric'
+                        return date.toLocaleDateString("es-MX", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
                         });
                       };
                       return `${formatDate(monday)} al ${formatDate(sunday)}`;
@@ -311,17 +343,6 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
           </div>
         </div>
 
-        {/* Indicador de auto-refresh - MEJORADO */}
-        {showAutoRefreshIndicator && (
-          <div className="bg-white rounded-xl border border-[#c2b186]/30 p-5 mb-6 shadow-md">
-            <AutoRefreshIndicator
-              isActive={state.autoRefreshEnabled}
-              nextRefreshIn={timeUntilNextRefresh}
-              onToggle={toggleAutoRefresh}
-            />
-          </div>
-        )}
-
         {/* Filtros y Búsqueda - MEJORADOS */}
         <div className="bg-white rounded-xl border border-[#c2b186]/30 mb-6 shadow-md overflow-hidden">
           <div className="p-6 bg-gradient-to-r from-[#fdf7f1] to-white border-b border-[#c2b186]/20">
@@ -351,7 +372,7 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
               {/* Filtro por tipo de IPH */}
               <IPHTipoFilter
                 tipos={state.tiposIPH}
-                selectedTipoId={state.filters.tipoId || ''}
+                selectedTipoId={state.filters.tipoId || ""}
                 loading={state.tiposLoading}
                 onTipoChange={(tipoId) => updateFilters({ tipoId })}
               />
@@ -416,17 +437,25 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
           </div>
         </div>
 
-        
-
         {/* Paginación - Componente genérico compartido */}
         <Pagination
+          className="mb-6"
           currentPage={state.filters.page}
           totalPages={state.pagination.totalPages}
           totalItems={state.pagination.totalItems}
           onPageChange={handlePageChange}
           loading={isAnyLoading}
         />
-
+        {/* Indicador de auto-refresh - MEJORADO */}
+        {showAutoRefreshIndicator && (
+          <div className="bg-white rounded-xl border border-[#c2b186]/30 p-5 mb-6 shadow-md">
+            <AutoRefreshIndicator
+              isActive={state.autoRefreshEnabled}
+              nextRefreshIn={timeUntilNextRefresh}
+              onToggle={toggleAutoRefresh}
+            />
+          </div>
+        )}
         {/* Estadísticas - MEJORADAS */}
         {/* <div className="bg-white rounded-xl border border-[#c2b186]/30 mb-6 shadow-md overflow-hidden">
           <div className="p-6 bg-gradient-to-r from-[#fdf7f1] to-white border-b border-[#c2b186]/20">
@@ -457,7 +486,10 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 rounded-lg border border-[#c2b186]/20">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                   <span className="text-gray-700">
-                    Última actualización: <span className="font-semibold text-[#4d4725]">{state.lastUpdated.toLocaleTimeString('es-MX')}</span>
+                    Última actualización:{" "}
+                    <span className="font-semibold text-[#4d4725]">
+                      {state.lastUpdated.toLocaleTimeString("es-MX")}
+                    </span>
                   </span>
                   {state.isFromCache && (
                     <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-700 rounded-full border border-blue-300">
@@ -469,7 +501,10 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
               <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 rounded-lg border border-[#c2b186]/20">
                 <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                 <span className="text-gray-700">
-                  Modo: <span className="font-semibold text-[#4d4725]">{state.userCanViewAll ? 'Vista global' : 'Vista personal'}</span>
+                  Modo:{" "}
+                  <span className="font-semibold text-[#4d4725]">
+                    {state.userCanViewAll ? "Vista global" : "Vista personal"}
+                  </span>
                 </span>
               </div>
             </div>
@@ -477,11 +512,16 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 rounded-lg border border-[#c2b186]/20">
               <div
                 className={`w-2 h-2 rounded-full ${
-                  state.autoRefreshEnabled ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
+                  state.autoRefreshEnabled
+                    ? "bg-green-500 animate-pulse"
+                    : "bg-gray-400"
                 }`}
               />
               <span className="text-sm font-poppins text-gray-700">
-                Auto-refresh <span className="font-semibold text-[#4d4725]">{state.autoRefreshEnabled ? 'activo' : 'pausado'}</span>
+                Auto-refresh{" "}
+                <span className="font-semibold text-[#4d4725]">
+                  {state.autoRefreshEnabled ? "activo" : "pausado"}
+                </span>
               </span>
             </div>
           </div>
