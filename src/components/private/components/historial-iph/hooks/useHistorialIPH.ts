@@ -4,9 +4,9 @@
  * @fileoverview Hook que encapsula toda la lógica de negocio para el componente
  * HistorialIPH, incluyendo gestión de estado, filtros, paginación y operaciones CRUD.
  *
- * @version 2.0.0
+ * @version 2.1.0
  * @since 2024-01-29
- * @updated 2024-01-30
+ * @updated 2025-01-31
  *
  * @changes v2.0.0
  * - ✅ Validación de roles centralizada (de 41 líneas a 3)
@@ -14,6 +14,11 @@
  * - ✅ Eliminada lógica manual de parsing de sessionStorage
  * - ✅ Usa getUserRoles() centralizado del role.helper
  * - ✅ Logging movido a useEffect separado
+ *
+ * @changes v2.1.0 (2025-01-31)
+ * - ✅ Persistencia de paginación con hook compartido usePaginationPersistence
+ * - ✅ Solución centralizada y reutilizable para todo el proyecto
+ * - ✅ Mantiene posición de usuario al navegar entre vistas/modales
  *
  * @author Sistema IPH Frontend
  */
@@ -25,6 +30,9 @@ import { logInfo, logError, logWarning } from '../../../../../helper/log/logger.
 import { showSuccess, showError, showWarning } from '../../../../../helper/notification/notification.helper';
 import { getUserRoles } from '../../../../../helper/role/role.helper';
 import { canAccessElemento } from '../../../../../config/permissions.config';
+
+// Hook compartido para persistencia de paginación
+import { usePaginationPersistence } from '../../../../shared/components/pagination';
 
 // Services
 import {
@@ -117,7 +125,31 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
     itemsPerPage = DEFAULT_CONFIG.itemsPerPage
   } = params;
 
-  // ==================== ESTADO ====================
+  // ==================== HOOK COMPARTIDO PARA PERSISTENCIA DE PAGINACIÓN ====================
+
+  /**
+   * ✅ SOLUCIÓN CENTRALIZADA: Hook reutilizable para persistir paginación
+   *
+   * Beneficios:
+   * - Restaura automáticamente la página al volver de un modal/detalle
+   * - Persiste entre navegaciones dentro de la sesión
+   * - Validación y TTL automático (1 hora)
+   * - Logging opcional para debugging
+   * - Reutilizable en CUALQUIER componente con paginación del proyecto
+   *
+   * @see src/components/shared/components/pagination/hooks/usePaginationPersistence.ts
+   */
+  const {
+    currentPage,
+    setCurrentPage: setPaginationPage,
+    resetPagination: resetPaginationPersistence
+  } = usePaginationPersistence({
+    key: 'historial-iph-pagination',
+    itemsPerPage,
+    logging: false // Desactivado en producción
+  });
+
+  // ==================== ESTADO LOCAL ====================
 
   const [registros, setRegistros] = useState<RegistroHistorialIPH[]>([]);
   const [estadisticas, setEstadisticas] = useState<EstadisticasHistorial>(INITIAL_ESTADISTICAS);
@@ -127,15 +159,27 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
     ...INITIAL_FILTERS,
     ...initialFilters
   });
-  const [paginacion, setPaginacion] = useState<PaginacionHistorial>({
-    page: 1,
-    limit: itemsPerPage,
+  // Metadata de paginación que viene del backend (total, totalPages)
+  const [paginacionMeta, setPaginacionMeta] = useState<Pick<PaginacionHistorial, 'total' | 'totalPages'>>({
     total: 0,
     totalPages: 0
   });
   const [registroSeleccionado, setRegistroSeleccionado] = useState<RegistroHistorialIPH | null>(null);
   const [retryCount, setRetryCount] = useState<number>(0);
   const [estatusOptions, setEstatusOptions] = useState<string[]>([]);
+
+  // ==================== PAGINACIÓN COMBINADA ====================
+
+  /**
+   * Combinar paginación persistida (page, limit) con metadata del backend (total, totalPages)
+   * Esto permite mantener la página actual mientras se obtienen los totales del servidor
+   */
+  const paginacion: PaginacionHistorial = useMemo(() => ({
+    page: currentPage,
+    limit: itemsPerPage,
+    total: paginacionMeta.total,
+    totalPages: paginacionMeta.totalPages
+  }), [currentPage, itemsPerPage, paginacionMeta]);
 
   // ==================== VALIDACIONES DE ROLES ====================
   // #region 🔐 VALIDACIÓN DE ACCESO v2.0 - Centralizado
@@ -272,8 +316,11 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
       const historialResponse = await getHistorialIPH(params);
 
       setRegistros(historialResponse.registros);
-      // NO setear estadísticas aquí - se obtienen independientemente
-      setPaginacion(historialResponse.paginacion);
+      // Actualizar solo metadata (total, totalPages) - page y limit vienen del hook compartido
+      setPaginacionMeta({
+        total: historialResponse.paginacion.total,
+        totalPages: historialResponse.paginacion.totalPages
+      });
 
       // Reset retry count on success solo si es diferente de 0
       if (currentRetryCount > 0) {
@@ -385,12 +432,9 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
       ...nuevosFiltros
     }));
 
-    // Resetear página al cambiar filtros
-    setPaginacion(prev => ({
-      ...prev,
-      page: 1
-    }));
-  }, []);
+    // Resetear página al cambiar filtros usando hook compartido
+    resetPaginationPersistence();
+  }, [resetPaginationPersistence]);
 
   /**
    * Limpia todos los filtros
@@ -408,26 +452,22 @@ export const useHistorialIPH = (params: UseHistorialIPHParams = {}): UseHistoria
       busqueda: ''
     });
 
-    // Resetear página al limpiar filtros
-    setPaginacion(prev => ({
-      ...prev,
-      page: 1
-    }));
-  }, []);
+    // Resetear página al limpiar filtros usando hook compartido
+    resetPaginationPersistence();
+  }, [resetPaginationPersistence]);
 
   /**
    * Cambia la página actual
+   * Delega al hook compartido que maneja la persistencia automáticamente
    */
   const setCurrentPage = useCallback((page: number) => {
     if (page < 1 || page > paginacion.totalPages) return;
-    
+
     logInfo('useHistorialIPH', 'Cambiando página', { page, totalPages: paginacion.totalPages });
-    
-    setPaginacion(prev => ({
-      ...prev,
-      page
-    }));
-  }, [paginacion.totalPages]);
+
+    // Usar función del hook compartido que persiste automáticamente
+    setPaginationPage(page);
+  }, [paginacion.totalPages, setPaginationPage]);
 
   /**
    * Recarga los datos manualmente

@@ -1,10 +1,16 @@
 /**
  * Hook personalizado para manejo del componente Usuarios
  * Maneja toda la lógica de negocio separada de la presentación
+ *
+ * @version 2.1.0
+ * @changes v2.1.0 - Integración de usePaginationPersistence
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// Hook de paginación persistente
+import { usePaginationPersistence } from '../../../../shared/components/pagination';
 
 // Servicios
 import { getUsuarios, deleteUsuario } from '../services/crud-user.service';
@@ -58,6 +64,40 @@ const initialState: IUsuariosState = {
 const useUsuarios = (): IUseUsuariosReturn => {
   const navigate = useNavigate();
   const [state, setState] = useState<IUsuariosState>(initialState);
+
+  // =====================================================
+  // PAGINACIÓN PERSISTENTE v2.1.0
+  // =====================================================
+
+  /**
+   * Hook de paginación con persistencia en sessionStorage
+   * Mantiene la página actual al navegar entre vistas
+   *
+   * @see src/components/shared/components/pagination/hooks/usePaginationPersistence.ts
+   */
+  const {
+    currentPage,
+    setCurrentPage: setPaginationPage,
+    resetPagination: resetPaginationPersistence
+  } = usePaginationPersistence({
+    key: 'usuarios-pagination',
+    itemsPerPage: DEFAULT_USUARIOS_FILTERS.limit,
+    logging: false // Desactivado en producción
+  });
+
+  // ✅ SINCRONIZAR página del hook persistente con filtros
+  useEffect(() => {
+    setState(prev => {
+      // Solo actualizar si cambió
+      if (prev.filters.page !== currentPage) {
+        return {
+          ...prev,
+          filters: { ...prev.filters, page: currentPage }
+        };
+      }
+      return prev;
+    });
+  }, [currentPage]);
 
   // =====================================================
   // FUNCIONES DE CONTROL DE ACCESO
@@ -179,24 +219,40 @@ const useUsuarios = (): IUseUsuariosReturn => {
   // =====================================================
 
   const updateFilters = useCallback((filters: Partial<IUsuariosFilters>) => {
+    // ✅ Resetear paginación cuando cambian filtros (excepto si solo cambia la página)
+    const filtersChanged = Object.keys(filters).some(key =>
+      key !== 'page' && filters[key as keyof IUsuariosFilters] !== undefined
+    );
+
+    if (filtersChanged) {
+      resetPaginationPersistence();
+    }
+
     setState(prev => ({
       ...prev,
       filters: { ...prev.filters, ...filters, page: 1 } // Reset page when filtering
     }));
-  }, []);
+  }, [resetPaginationPersistence]);
 
   const handleSearch = useCallback(() => {
+    // ✅ Resetear paginación en búsqueda manual
+    resetPaginationPersistence();
+
     setState(prev => ({ ...prev, filters: { ...prev.filters, page: 1 } }));
     // loadUsuarios se ejecutará por el useEffect de dependencias
-  }, []);
+  }, [resetPaginationPersistence]);
 
   const handleClearFilters = useCallback(() => {
+    // ✅ Resetear paginación al limpiar filtros
+    resetPaginationPersistence();
+
     setState(prev => ({
       ...prev,
       filters: DEFAULT_USUARIOS_FILTERS
     }));
+
     logInfo('UsuariosHook', 'Filtros limpiados');
-  }, []);
+  }, [resetPaginationPersistence]);
 
   const handleSort = useCallback((column: SortableColumn) => {
     setState(prev => {
@@ -223,15 +279,21 @@ const useUsuarios = (): IUseUsuariosReturn => {
   // =====================================================
 
   const handlePageChange = useCallback((page: number) => {
-    if (page < 1 || page > state.totalPages) return;
-    
-    setState(prev => ({
-      ...prev,
-      filters: { ...prev.filters, page }
-    }));
+    // Validación básica
+    if (!Number.isInteger(page) || page < 1 || page > state.totalPages) {
+      return;
+    }
 
-    logInfo('UsuariosHook', 'Página cambiada', { page });
-  }, [state.totalPages]);
+    logInfo('UsuariosHook', 'Página cambiada', {
+      from: currentPage,
+      to: page
+    });
+
+    // ✅ Actualizar en el hook persistente (se guarda automáticamente en sessionStorage)
+    setPaginationPage(page);
+
+    // El efecto de sincronización actualizará state.filters.page automáticamente
+  }, [state.totalPages, currentPage, setPaginationPage]);
 
   // =====================================================
   // FUNCIONES DE ACCIONES

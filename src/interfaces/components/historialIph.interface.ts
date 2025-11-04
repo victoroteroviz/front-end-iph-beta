@@ -126,18 +126,20 @@ export interface FiltrosHistorialProps {
 
 /**
  * Props para el componente de paginación del historial
+ * @deprecated Usar componente compartido Pagination en su lugar
+ * @see src/components/shared/components/pagination/Pagination.tsx
  */
-export interface PaginacionHistorialProps {
-  currentPage: number;
-  totalPages: number;
-  canGoToNext: boolean;
-  canGoToPrevious: boolean;
-  onPageChange: (page: number) => void;
-  onNext: () => void;
-  onPrevious: () => void;
-  loading?: boolean;
-  className?: string;
-}
+// export interface PaginacionHistorialProps {
+//   currentPage: number;
+//   totalPages: number;
+//   canGoToNext: boolean;
+//   canGoToPrevious: boolean;
+//   onPageChange: (page: number) => void;
+//   onNext: () => void;
+//   onPrevious: () => void;
+//   loading?: boolean;
+//   className?: string;
+// }
 
 /**
  * Props para la vista de detalle de IPH

@@ -4,9 +4,15 @@
  * Incluye auto-refresh configurable y control de acceso por roles
  * Cache LRU con límite de 10 páginas y TTL de 1 minuto
  *
- * @version 2.0.0
+ * @version 2.1.0
  * @since 2024-01-29
- * @updated 2025-01-30
+ * @updated 2025-01-31
+ *
+ * @changes v2.1.0
+ * - ✅ Integrado usePaginationPersistence para mantener página al navegar
+ * - ✅ Separación de estado de paginación (UI vs metadata)
+ * - ✅ Persistencia automática en sessionStorage
+ * - ✅ Logging activado para debugging
  *
  * @changes v2.0.0
  * - ✅ Validación de roles refactorizada usando helpers centralizados
@@ -18,6 +24,9 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// Hook de paginación persistente
+import { usePaginationPersistence } from '../../../../shared/components/pagination';
 
 // Servicios
 import { informePolicialService, getCurrentUserInfo } from '../services/informe-policial.service';
@@ -238,16 +247,16 @@ const iphCache = new IPHCacheManager();
 
 const createInitialState = (): IInformePolicialState => {
   const userInfo = getCurrentUserInfo();
-  
+
   return {
     registros: [],
     pagination: {
-      currentPage: 1,
+      currentPage: 1, // ⚠️ Ahora solo metadata, la página actual viene del hook
       totalPages: 1,
       totalItems: 0,
       itemsPerPage: INFORME_POLICIAL_CONFIG.ITEMS_PER_PAGE
     },
-    filters: { ...DEFAULT_FILTERS },
+    filters: { ...DEFAULT_FILTERS }, // page inicial será 1, luego viene del hook
     isLoading: false,
     isRefreshing: false,
     error: null,
@@ -282,6 +291,26 @@ const useInformePolicial = (
   const navigate = useNavigate();
   const [state, setState] = useState<IInformePolicialState>(createInitialState);
 
+  // =====================================================
+  // PAGINACIÓN PERSISTENTE v2.1.0
+  // =====================================================
+
+  /**
+   * Hook de paginación con persistencia en sessionStorage
+   * Mantiene la página actual al navegar entre vistas
+   *
+   * @see src/components/shared/components/pagination/hooks/usePaginationPersistence.ts
+   */
+  const {
+    currentPage,
+    setCurrentPage: setPaginationPage,
+    resetPagination: resetPaginationPersistence
+  } = usePaginationPersistence({
+    key: 'informe-policial-pagination',
+    itemsPerPage: INFORME_POLICIAL_CONFIG.ITEMS_PER_PAGE,
+    logging: false // Desactivado en producción
+  });
+
   // Referencias para timers
   const autoRefreshTimer = useRef<NodeJS.Timeout | null>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
@@ -297,6 +326,20 @@ const useInformePolicial = (
     userCanViewAllRef.current = state.userCanViewAll;
     currentUserIdRef.current = state.currentUserId;
   }, [state.filters, state.userCanViewAll, state.currentUserId]);
+
+  // ✅ SINCRONIZAR página del hook persistente con filtros
+  useEffect(() => {
+    setState(prev => {
+      // Solo actualizar si cambió
+      if (prev.filters.page !== currentPage) {
+        return {
+          ...prev,
+          filters: { ...prev.filters, page: currentPage }
+        };
+      }
+      return prev;
+    });
+  }, [currentPage]);
 
   // =====================================================
   // FUNCIONES DE CONTROL DE ACCESO
@@ -513,13 +556,16 @@ const useInformePolicial = (
 
   const updateFilters = useCallback((filters: Partial<IInformePolicialFilters>) => {
     // ✅ Invalidar cache cuando cambian filtros (excepto página)
-    const filtersChanged = Object.keys(filters).some(key => 
+    const filtersChanged = Object.keys(filters).some(key =>
       key !== 'page' && filters[key as keyof IInformePolicialFilters] !== undefined
     );
-    
+
     if (filtersChanged) {
       iphCache.clear();
       logInfo('InformePolicial', '🗑️ Cache cleared due to filter change');
+
+      // Reset paginación cuando cambian filtros (NO cuando cambia página)
+      resetPaginationPersistence();
     }
 
     setState(prev => {
@@ -542,7 +588,7 @@ const useInformePolicial = (
     });
 
     // La carga se maneja en el useEffect de filtros
-  }, []); // ✅ Sin dependencias - función estable
+  }, [resetPaginationPersistence]); // ✅ Agregada dependencia del hook persistente
 
   const handleSearch = useCallback(() => {
     // Cancelar debounce si existe para búsqueda inmediata
@@ -583,6 +629,9 @@ const useInformePolicial = (
     iphCache.clear();
     logInfo('InformePolicial', '🗑️ Cache cleared due to filters reset');
 
+    // ✅ Resetear paginación al limpiar filtros
+    resetPaginationPersistence();
+
     // Mostrar loading inmediatamente
     setState(prev => {
       // Log simplificado (solo en dev, se descarta en prod)
@@ -596,31 +645,30 @@ const useInformePolicial = (
     });
 
     // La recarga se maneja automáticamente por el useEffect de filtros
-  }, []); // ✅ Sin dependencias - función estable
+  }, [resetPaginationPersistence]); // ✅ Agregada dependencia del hook persistente
 
   // =====================================================
   // FUNCIONES DE PAGINACIÓN
   // =====================================================
 
   const handlePageChange = useCallback((page: number) => {
-    setState(prev => {
-      // Validar antes de cambiar
-      if (page < 1 || page > prev.pagination.totalPages || page === prev.filters.page) {
-        return prev; // No hay cambios
-      }
+    // Validación básica
+    if (!Number.isInteger(page) || page < 1) {
+      logWarning('InformePolicial', 'Invalid page number', { page });
+      return;
+    }
 
-      // Log simplificado (solo en dev, se descarta en prod)
-      logDebug('InformePolicial', 'Page changed', {
-        from: prev.filters.page,
-        to: page
-      });
-
-      return {
-        ...prev,
-        filters: { ...prev.filters, page }
-      };
+    // Log del cambio de página
+    logInfo('InformePolicial', 'Page changed', {
+      from: currentPage,
+      to: page
     });
-  }, []); // ✅ Sin dependencias - usa prev para validación
+
+    // ✅ Actualizar en el hook persistente (se guarda automáticamente en sessionStorage)
+    setPaginationPage(page);
+
+    // El efecto de sincronización actualizará state.filters.page automáticamente
+  }, [currentPage, setPaginationPage]); // ✅ Usa el hook persistente
 
   // =====================================================
   // FUNCIONES DE NAVEGACIÓN

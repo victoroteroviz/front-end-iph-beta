@@ -33,9 +33,11 @@ import useHistorialIPH from './hooks/useHistorialIPH';
 // Componentes atómicos
 import FiltrosHistorial from './components/FiltrosHistorial';
 import HistorialTable from './table/HistorialTable';
-import PaginacionHistorial from './components/PaginacionHistorial';
 import DetalleIPH from './components/DetalleIPH';
 import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
+
+// Componente compartido de paginación
+import Pagination from '../../../shared/components/pagination';
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';
@@ -48,8 +50,13 @@ import type { HistorialIPHProps } from '../../../../interfaces/components/histor
  *
  * @param props - Props del componente
  * @returns JSX.Element del componente completo
+ *
+ * @note React.memo ELIMINADO intencionalmente en v2.1.0
+ * El estado interno del hook (registroSeleccionado, paginación) cambia frecuentemente,
+ * haciendo que React.memo no prevenga re-renders efectivamente.
+ * La optimización real está en los hooks personalizados y componentes hijos memoizados.
  */
-const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
+const HistorialIPH: React.FC<HistorialIPHProps> = ({
   className = '',
   initialFilters,
   itemsPerPage = 10
@@ -71,10 +78,8 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
     verDetalle,
     cerrarDetalle,
     editarEstatus,
-    canGoToNextPage,
-    canGoToPreviousPage,
-    goToNextPage,
-    goToPreviousPage,
+    // Funciones de navegación ya no necesarias con Pagination compartido
+    // canGoToNextPage, canGoToPreviousPage, goToNextPage, goToPreviousPage
     hasData
   } = useHistorialIPH({
     initialFilters,
@@ -287,17 +292,14 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
             ) : null}
           </div>
 
-          {/* Paginación - OPTIMIZADA */}
+          {/* Paginación - Componente Compartido */}
           {showPagination && (
             <div className="px-6 pb-6 border-t border-gray-200 pt-4">
-              <PaginacionHistorial
+              <Pagination
                 currentPage={paginacion.page}
                 totalPages={paginacion.totalPages}
-                canGoToNext={canGoToNextPage}
-                canGoToPrevious={canGoToPreviousPage}
+                totalItems={paginacion.total}
                 onPageChange={setCurrentPage}
-                onNext={goToNextPage}
-                onPrevious={goToPreviousPage}
                 loading={loading}
               />
             </div>
@@ -336,14 +338,7 @@ const HistorialIPH: React.FC<HistorialIPHProps> = React.memo(({
       </div>
     </div>
   );
-}, (prevProps, nextProps) => {
-  // Comparación optimizada para React.memo
-  return (
-    prevProps.className === nextProps.className &&
-    prevProps.itemsPerPage === nextProps.itemsPerPage &&
-    JSON.stringify(prevProps.initialFilters) === JSON.stringify(nextProps.initialFilters)
-  );
-});
+};
 
 // Nombre para debugging
 HistorialIPH.displayName = 'HistorialIPH';

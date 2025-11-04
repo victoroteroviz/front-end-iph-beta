@@ -11,6 +11,7 @@ import {HttpHelper} from "../../../../helper/http/http.helper";
 
 import {logger} from '../../../../helper/log/logger.helper';
 import type { IRole } from "../../../../interfaces/role/role.interface";
+import { clearAllPaginationPersistence } from '../../../shared/components/pagination';
 
 /**
  * Handler para decodificar JWT con manejo seguro de excepciones y validaciones
@@ -176,11 +177,16 @@ export const login = async (loginRequest : LoginRequest)
 export const logout = async () : Promise<void> => {
   logger.debug(logout.name,'Inicio del proceso de logout');
   try {
+    // Limpiar datos de usuario y autenticación
     sessionStorage.removeItem('user_data');
     sessionStorage.removeItem('roles');
     sessionStorage.removeItem('token');
 
-    logger.debug(logout.name,'Logout exitoso, se eliminaron los datos del usuario y roles de sessionStorage');
+    // ✅ SECURITY FIX: Limpiar todas las paginaciones persistidas
+    // Previene que el siguiente usuario vea la página del usuario anterior
+    clearAllPaginationPersistence();
+
+    logger.debug(logout.name,'Logout exitoso, se eliminaron los datos del usuario, roles y paginaciones de sessionStorage');
   } catch (error) {
     throw new Error((error as Error).message || 'Error desconocido, habla con soporte');
   }

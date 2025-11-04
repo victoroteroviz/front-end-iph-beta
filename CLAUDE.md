@@ -2,7 +2,7 @@
 
 ## 🎯 CONTEXTO DEL PROYECTO
 
-**Stack:** React 18 + TypeScript 5 + Vite 5 | **Versión:** 3.5.0
+**Stack:** React 18 + TypeScript 5 + Vite 5 | **Versión:** 3.6.0
 **Principios:** SOLID, KISS, DRY | **Patrones:** Singleton, Custom Hooks, Observer, Atomic Components
 
 ---
@@ -333,6 +333,70 @@ npm run lint     # Linting
 
 ## 📝 CHANGELOG
 
+### **v3.6.0** (2025-01-31) 🔄 PERSISTENCIA DE PAGINACIÓN
+**Implementación de usePaginationPersistence en InformePolicial**
+
+#### **Cambios Principales:**
+1. ✅ **Hook usePaginationPersistence** - Creado hook reutilizable compartido
+   - Persistencia automática en sessionStorage
+   - TTL de 1 hora para datos guardados
+   - Validación de datos con versión
+   - Logging detallado para debugging
+   - Zero dependencies (solo React)
+
+2. ✅ **Integración en InformePolicial** (v2.1.0)
+   - Hook `useIphActivo.ts` actualizado
+   - Separación de estado de paginación (UI vs metadata)
+   - Sincronización bidireccional con filtros
+   - Reset automático al cambiar filtros (no al cambiar página)
+   - Debug panel agregado temporalmente
+
+3. ✅ **Integración en HistorialIPH** (v2.1.0)
+   - Hook `useHistorialIPH.ts` actualizado
+   - Misma arquitectura que InformePolicial
+   - Debug panel agregado temporalmente
+   - Logging activado para diagnosticar problemas
+
+4. ✅ **Componente PaginationDebugPanel**
+   - Panel visual para debugging en tiempo real
+   - Muestra página actual vs storage
+   - Validación de consistencia
+   - Botones para log y clear storage
+
+#### **Componentes Afectados:**
+| Componente | Versión | Cambios |
+|------------|---------|---------|
+| `useHistorialIPH.ts` | v2.1.0 | Integración completa de persistencia |
+| `useIphActivo.ts` | v2.1.0 | Integración completa de persistencia |
+| `HistorialIPH.tsx` | - | Agregado debug panel |
+| `iph-activo.tsx` | - | Agregado debug panel |
+
+#### **Nuevos Archivos:**
+- `/src/components/shared/components/pagination/hooks/usePaginationPersistence.ts` (~500 líneas)
+- `/src/components/shared/components/pagination/hooks/PaginationDebugPanel.tsx` (~200 líneas)
+- `/DEBUGGING_PAGINATION.md` - Guía completa de debugging
+
+#### **Métricas:**
+| Métrica | Valor |
+|---------|-------|
+| Storage Key Format | `pagination:{key}` |
+| TTL Default | 1 hora (3600000ms) |
+| Version System | v1 (con soporte para migraciones) |
+| Logging | Activado en desarrollo |
+| Cache | 5s TTL en getUserRoles() |
+
+**Archivos modificados:**
+- `/src/components/private/components/iph-activo/hooks/useIphActivo.ts` - v2.1.0
+- `/src/components/private/components/iph-activo/iph-activo.tsx` - Debug panel agregado
+- `/src/components/private/components/historial-iph/hooks/useHistorialIPH.ts` - v2.1.0
+- `/src/components/private/components/historial-iph/HistorialIPH.tsx` - Debug panel agregado
+- `/src/components/shared/components/pagination/index.ts` - Exports actualizados
+
+**Issue resuelto:**
+✅ Paginación se mantiene al navegar entre vistas (HistorialIPH e InformePolicial)
+
+---
+
 ### **v3.5.0** (2025-01-31) 🎯 REFACTORIZACIÓN MAYOR
 **Centralización Completa de Roles en app-routes.config.tsx**
 
@@ -387,5 +451,5 @@ npm run lint     # Linting
 ---
 
 **Última actualización:** 2025-01-31
-**Versión:** 3.5.0
-**Estado:** ✅ Sistema funcional con arquitectura moderna centralizada
+**Versión:** 3.6.0
+**Estado:** ✅ Sistema funcional con arquitectura moderna centralizada + persistencia de paginación

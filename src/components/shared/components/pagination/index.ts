@@ -71,3 +71,17 @@ export {
   getButtonStyles
   // handleKeyboardNavigation - ELIMINADO: Navegación solo con mouse
 } from './utils/pagination.utils';
+
+// =====================================================
+// HOOKS
+// =====================================================
+
+export {
+  usePaginationPersistence,
+  clearAllPaginationPersistence
+} from './hooks/usePaginationPersistence';
+
+export type {
+  UsePaginationPersistenceConfig,
+  UsePaginationPersistenceReturn
+} from './hooks/usePaginationPersistence';
