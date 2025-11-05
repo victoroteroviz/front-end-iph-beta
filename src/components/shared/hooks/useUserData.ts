@@ -12,11 +12,13 @@ import {
   getUserInitials,
   hasAvatar,
   getUserContext,
-  invalidateUserCache,
-  type UserData,
-  type UserContext,
-  type FormatNameOptions
+  invalidateUserCache
 } from '@/helper/user/user.helper';
+import type {
+  UserData,
+  UserContext,
+  FormatNameOptions
+} from '@/interfaces/user/user-data.interface';
 import { logDebug } from '@/helper/log/logger.helper';
 
 /**

@@ -95,17 +95,17 @@ const ReportesPdf = lazy(() => import('../components/private/components/reportes
  */
 export const ROLE_GROUPS = {
   /** Todos los roles autenticados (SuperAdmin, Admin, Superior, Elemento) */
-  ALL_AUTHENTICATED: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
+  ALL_AUTHENTICATED: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'] as string[],
 
   /** Roles de gestión/management (SuperAdmin, Admin, Superior) */
-  MANAGEMENT: ['SuperAdmin', 'Administrador', 'Superior'],
+  MANAGEMENT: ['SuperAdmin', 'Administrador', 'Superior'] as string[],
 
   /** Solo roles administrativos (SuperAdmin, Admin) */
-  ADMIN_ONLY: ['SuperAdmin', 'Administrador'],
+  ADMIN_ONLY: ['SuperAdmin', 'Administrador'] as string[],
 
   /** Solo SuperAdmin */
-  SUPER_ADMIN_ONLY: ['SuperAdmin']
-} as const;
+  SUPER_ADMIN_ONLY: ['SuperAdmin'] as string[]
+};
 
 // =====================================================
 // CONFIGURACIÓN DE RUTAS

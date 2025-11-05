@@ -15,6 +15,12 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path aliases */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": false,
@@ -24,5 +30,5 @@
     "noUncheckedSideEffectImports": true
   },
   "include": ["src"],
-  "exclude": ["src/helper/role/EJEMPLOS_USO_V2.1.tsx"]
+  "exclude": ["src/helper/role/EJEMPLOS_USO_V2.1.tsx", "**/*.test.ts", "**/*.test.tsx"]
 }

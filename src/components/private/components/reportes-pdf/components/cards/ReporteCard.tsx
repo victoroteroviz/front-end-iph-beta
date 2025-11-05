@@ -23,7 +23,7 @@
  * @author Senior Full-Stack Developer
  */
 
-import React, { useCallback, KeyboardEvent } from 'react';
+import React, { useCallback, type KeyboardEvent } from 'react';
 import type { IReporteCard } from '../../../../../../interfaces/IReporte';
 
 /**

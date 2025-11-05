@@ -11,6 +11,8 @@
 import { logError, logInfo, logWarning } from '../log/logger.helper';
 import { generateSecureToken, encryptData, decryptData } from '../encrypt/encrypt.helper';
 import type { EncryptionResult } from '../encrypt/encrypt.helper';
+import { validatePassword, BASIC_VALIDATION } from '@/utils/validators/password-validator.util';
+import type { ValidationResult } from '@/utils/validators/password-validator.util';
 
 // Tipos para configuración de seguridad
 export interface SecurityConfig {
@@ -92,27 +94,33 @@ class SecurityHelper {
   }
 
   /**
-   * Valida fortaleza de contraseña
-   * Configurable según requerimientos
+   * Valida fortaleza de contraseña usando password-validator utility
+   *
+   * Usa el validator centralizado para mantener consistencia
+   * y eliminar duplicación de código (DRY).
+   *
+   * @param password Contraseña a validar
+   * @returns Objeto con isValid y lista de errores
+   *
+   * @example
+   * ```typescript
+   * const validation = securityHelper.isValidPassword('MyPass123');
+   * if (!validation.isValid) {
+   *   console.log('Errores:', validation.errors);
+   * }
+   * ```
    */
-  public isValidPassword(password: string): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-    
-    if (!password || typeof password !== 'string') {
-      errors.push('La contraseña es requerida');
-      return { isValid: false, errors };
-    }
-
-    if (password.length < this.config.passwordMinLength) {
-      errors.push(`La contraseña debe tener al menos ${this.config.passwordMinLength} caracteres`);
-    }
-
-    if (password.length > this.config.passwordMaxLength) {
-      errors.push(`La contraseña no puede tener más de ${this.config.passwordMaxLength} caracteres`);
-    }
-
-    // Validaciones adicionales pueden agregarse aquí
-    return { isValid: errors.length === 0, errors };
+  public isValidPassword(password: string): ValidationResult {
+    return validatePassword(password, {
+      rules: {
+        minLength: this.config.passwordMinLength,
+        maxLength: this.config.passwordMaxLength
+      },
+      customMessages: {
+        minLength: `La contraseña debe tener al menos ${this.config.passwordMinLength} caracteres`,
+        maxLength: `La contraseña no puede tener más de ${this.config.passwordMaxLength} caracteres`
+      }
+    });
   }
 
   /**

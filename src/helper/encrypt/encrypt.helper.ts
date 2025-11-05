@@ -19,6 +19,7 @@
  */
 
 import { logInfo, logError, logWarning } from '../log/logger.helper';
+import { validatePasswordOrThrow, PASSPHRASE_VALIDATION } from '@/utils/validators/password-validator.util';
 
 // =====================================================
 // INTERFACES Y TIPOS
@@ -405,22 +406,27 @@ export class EncryptHelper {
 
   /**
    * Valida que una passphrase cumpla con los requisitos mínimos
+   *
+   * Usa el password-validator utility centralizado para mantener
+   * consistencia y eliminar duplicación de código (DRY).
+   *
    * @param passphrase Passphrase a validar
    * @throws Error si la passphrase no es válida
+   *
+   * @example
+   * ```typescript
+   * // Internamente usado por encryptData() y otros métodos
+   * this.validatePassphrase('my-secure-passphrase-2024');
+   * ```
    */
   private validatePassphrase(passphrase: string): void {
-    if (!passphrase || typeof passphrase !== 'string') {
-      throw new Error('Passphrase debe ser una cadena no vacía');
-    }
-
-    if (passphrase.length < 8) {
-      throw new Error('Passphrase debe tener al menos 8 caracteres');
-    }
-
-    // Sin límite máximo para permitir encriptación de datos grandes de sessionStorage
-    // if (passphrase.length > 256) {
-    //   throw new Error('Passphrase demasiado larga (máximo 256 caracteres)');
-    // }
+    // Usa PASSPHRASE_VALIDATION preset (min 8 chars, sin max)
+    validatePasswordOrThrow(passphrase, {
+      rules: PASSPHRASE_VALIDATION,
+      customMessages: {
+        minLength: 'Passphrase debe tener al menos 8 caracteres'
+      }
+    });
   }
 
   /**

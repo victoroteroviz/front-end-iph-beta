@@ -15,21 +15,28 @@ export type {
 
 // Interfaces de CRUD de usuarios
 export type {
-  User,
-  CreateUserRequest,
-  UpdateUserRequest,
-  UserResponse
+  ICreateUser,
+  ICreatedUser,
+  IUpdateUser,
+  UserRole,
+  IGetUserById,
+  Grado,
+  Cargo,
+  Municipio,
+  Adscripcion,
+  Sexo,
+  UserRoleGet
 } from './crud/crud-user.interface';
 
 export type {
-  GetPaginatedUsersRequest,
-  GetPaginatedUsersResponse,
-  PaginatedUsersMetadata
+  IPaginatedUsers,
+  IPaginatedUsersResponse
 } from './crud/get-paginated.users.interface';
 
 export type {
-  BuscarUsuarioPorNombreRequest,
-  BuscarUsuarioPorNombreResponse
+  IBuscarUsuarioNombreParams,
+  IUsuarioBusqueda,
+  IBuscarUsuarioNombreResponse
 } from './crud/buscar-usuario-nombre.interface';
 
 // Enums

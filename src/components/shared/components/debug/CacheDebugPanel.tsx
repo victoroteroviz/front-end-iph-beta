@@ -24,8 +24,8 @@
  */
 
 import React from 'react';
-import { useCacheMonitorAdvanced } from '@/components/shared/hooks';
-import { showWarning } from '@/helper/notification/notification.helper';
+import { useCacheMonitorAdvanced } from '../../hooks';
+import { showWarning } from '../../../../helper/notification/notification.helper';
 import './CacheDebugPanel.css';
 
 /**

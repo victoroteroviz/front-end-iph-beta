@@ -34,7 +34,7 @@ import { getTiposIPH } from '../services/tipos-iph.service';
 
 // Helpers
 import { showSuccess, showError, showWarning } from '../../../../../helper/notification/notification.helper';
-import { logInfo, logError, logAuth, logDebug } from '../../../../../helper/log/logger.helper';
+import { logInfo, logError, logAuth, logDebug, logWarning } from '../../../../../helper/log/logger.helper';
 import { getUserRoles } from '../../../../../helper/role/role.helper';
 import { canAccessElemento } from '../../../../../config/permissions.config';
 

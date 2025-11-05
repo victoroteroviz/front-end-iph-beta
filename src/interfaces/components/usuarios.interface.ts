@@ -17,6 +17,7 @@ export interface IUsuariosFilters {
   orderBy: SortableColumn;
   order: 'ASC' | 'DESC';
   page: number;
+  limit: number; // Items per page for pagination
 }
 
 export interface IUsuariosParams {
@@ -258,7 +259,8 @@ export const DEFAULT_USUARIOS_FILTERS: IUsuariosFilters = {
   searchBy: 'nombre',
   orderBy: 'nombre',
   order: 'ASC',
-  page: 1
+  page: 1,
+  limit: 20 // Default items per page
 };
 
 // =====================================================

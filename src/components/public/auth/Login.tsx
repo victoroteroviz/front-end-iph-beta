@@ -257,8 +257,8 @@ const useLoginLogic = () => {
 
     const emailForTracking = state.formData.email || 'unknown';
 
-    // Verificar si está bloqueada la cuenta
-    if (isAccountLocked(emailForTracking)) {
+    // Verificar si está bloqueada la cuenta (función async desde SecurityHelper v2)
+    if (await isAccountLocked(emailForTracking)) {
       const remainingTime = getLockoutTimeRemaining(emailForTracking);
       showError(`Cuenta bloqueada temporalmente. Espera ${remainingTime} minutos antes de intentar nuevamente.`, 'Acceso Restringido');
       return;

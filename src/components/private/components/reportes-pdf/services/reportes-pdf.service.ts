@@ -17,7 +17,7 @@
  * @author Senior Full-Stack Developer
  */
 
-import httpHelper from '../../../../../helper/http/http_helper';
+import httpHelper from '../../../../../helper/http/http.helper';
 import { sanitizeInput } from '../../../../../helper/security/security.helper';
 import { logInfo, logError, logHttp } from '../../../../../helper/log/logger.helper';
 import type { IReportePdfResponse, IReporteFiltros } from '../../../../../interfaces/IReporte';
@@ -67,12 +67,13 @@ export const generarReportePdf = async (
     const filtrosSanitizados = filtros ? sanitizarFiltros(filtros) : {};
 
     // Realizar petición al backend
+    // NOTA: httpHelper detecta automáticamente el tipo de respuesta según Content-Type header
+    // Si el backend responde con 'application/pdf', httpHelper retornará un Blob automáticamente
     const response = await httpHelper.post<Blob>(
       endpoint,
       filtrosSanitizados,
       {
         timeout: REPORTES_TIEMPOS.TIMEOUT_GENERACION,
-        responseType: 'blob', // Importante para recibir el PDF como blob
         retries: 1 // Solo 1 reintento para generación de PDFs
       }
     );
@@ -104,11 +105,11 @@ export const generarReportePdf = async (
   } catch (error) {
     const duration = Date.now() - startTime;
 
-    logError('ReportesPdfService', error as Error, {
-      endpoint,
-      nombreReporte,
-      duration: `${duration}ms`
-    });
+    logError(
+      'ReportesPdfService',
+      error as Error,
+      `Error generando reporte ${nombreReporte} - endpoint: ${endpoint} - duration: ${duration}ms`
+    );
 
     // Log HTTP con error
     logHttp('POST', endpoint, 500, duration, {
@@ -160,10 +161,11 @@ export const descargarPdf = (blob: Blob, filename: string): void => {
 
     logInfo('ReportesPdfService', 'PDF descargado exitosamente', { filename });
   } catch (error) {
-    logError('ReportesPdfService', error as Error, {
-      accion: 'descargar PDF',
-      filename
-    });
+    logError(
+      'ReportesPdfService',
+      error as Error,
+      `Error al descargar PDF - filename: ${filename}`
+    );
     throw error;
   }
 };
@@ -251,7 +253,11 @@ export const validarFiltros = (filtros: IReporteFiltros): boolean => {
     const fin = new Date(filtros.fechaFin);
 
     if (inicio > fin) {
-      logError('ReportesPdfService', new Error('Fecha de inicio posterior a fecha de fin'), filtros);
+      logError(
+        'ReportesPdfService',
+        new Error('Fecha de inicio posterior a fecha de fin'),
+        `Validación de filtros - fechaInicio: ${filtros.fechaInicio}, fechaFin: ${filtros.fechaFin}`
+      );
       return false;
     }
   }
@@ -260,7 +266,11 @@ export const validarFiltros = (filtros: IReporteFiltros): boolean => {
   if (filtros.periodo) {
     const periodosValidos = ['dia', 'semana', 'mes', 'anio', 'personalizado'];
     if (!periodosValidos.includes(filtros.periodo)) {
-      logError('ReportesPdfService', new Error('Periodo inválido'), filtros);
+      logError(
+        'ReportesPdfService',
+        new Error('Periodo inválido'),
+        `Validación de periodo - valor recibido: ${filtros.periodo}`
+      );
       return false;
     }
   }
@@ -291,9 +301,11 @@ export const previsualizarPdf = (blob: Blob): void => {
     // Nota: No revocamos el URL inmediatamente porque la nueva ventana lo necesita
     // El navegador lo limpiará automáticamente cuando cierre la pestaña
   } catch (error) {
-    logError('ReportesPdfService', error as Error, {
-      accion: 'previsualizar PDF'
-    });
+    logError(
+      'ReportesPdfService',
+      error as Error,
+      'Error al previsualizar PDF'
+    );
     throw error;
   }
 };
