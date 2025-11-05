@@ -1,5 +1,5 @@
 /**
- * Cache Helper Optimizado v2.2.0 - TWO-LEVEL CACHE
+ * Cache Helper Optimizado v2.3.0 - TWO-LEVEL CACHE + ENCRYPTION
  *
  * Helper avanzado para manejo de cache con arquitectura de dos niveles:
  *
@@ -27,13 +27,22 @@
  * - Método destroy() para prevenir memory leaks
  * - Gestión robusta del ciclo de vida
  * - Safety checks para uso después de destroy
+ * - 🔐 Encriptación AES-GCM opcional para datos sensibles
  * - TypeScript strict mode
  * - Backward compatible
  *
  * @author Sistema IPH
- * @version 2.2.0
+ * @version 2.3.0
  *
  * @changelog
+ * v2.3.0 (2025-01-31) 🔐 ENCRYPTION SUPPORT
+ * - ✅ Encriptación AES-GCM opcional para datos sensibles
+ * - ✅ Integración con EncryptHelper existente
+ * - ✅ Opción `encrypt: true` en CacheSetOptions
+ * - ✅ Desencriptación automática en get()
+ * - ✅ Almacenamiento seguro de IV (Initialization Vector)
+ * - ✅ Backward compatible (encriptación opt-in)
+ *
  * v2.2.0 (2025-01-31) 🚀 TWO-LEVEL CACHE
  * - ✅ Implementado L1 cache en memoria (Map) para performance
  * - ✅ get() ahora busca en L1 primero, luego L2 (90-95% más rápido)
@@ -54,6 +63,7 @@
  */
 
 import { logInfo, logWarning, logError } from '../log/logger.helper';
+import EncryptHelper from '../encrypt/encrypt.helper';
 
 // =====================================================
 // TYPES Y CONSTANTES
@@ -93,6 +103,10 @@ export type CacheItem<T> = {
   lastAccess: number;
   /** Tamaño estimado en bytes */
   size: number;
+  /** Si los datos están encriptados */
+  encrypted?: boolean;
+  /** IV usado para encriptación (si encrypted es true) */
+  encryptionIV?: string;
   /** Metadata adicional opcional */
   metadata?: Record<string, unknown>;
 };
@@ -109,6 +123,8 @@ export type CacheSetOptions = {
   namespace?: CacheNamespace;
   /** Usar sessionStorage en lugar de localStorage */
   useSessionStorage?: boolean;
+  /** Encriptar los datos antes de guardarlos (recomendado para datos sensibles) */
+  encrypt?: boolean;
   /** Metadata adicional */
   metadata?: Record<string, unknown>;
 };
@@ -194,16 +210,26 @@ type CacheConfig = {
  *
  * @example
  * ```typescript
- * // Uso básico (compatible con versión anterior)
- * CacheHelper.set('myKey', myData);
- * const data = CacheHelper.get('myKey'); // ← Busca en L1, luego L2
+ * // Uso básico (ahora async)
+ * await CacheHelper.set('myKey', myData);
+ * const data = await CacheHelper.get('myKey'); // ← Busca en L1, luego L2
  *
  * // Uso avanzado con opciones
- * CacheHelper.set('routeData', data, {
+ * await CacheHelper.set('routeData', data, {
  *   expiresIn: 10 * 60 * 1000, // 10 minutos
  *   priority: 'high',
  *   namespace: 'routes'
  * });
+ *
+ * // Con encriptación para datos sensibles
+ * await CacheHelper.set('creditCard', cardData, {
+ *   expiresIn: 5 * 60 * 1000,
+ *   priority: 'critical',
+ *   namespace: 'user',
+ *   encrypt: true // 🔐 Encriptación AES-GCM automática
+ * });
+ *
+ * const card = await CacheHelper.get('creditCard'); // Desencriptación automática
  *
  * // Preload de datos
  * await CacheHelper.preload('userData', fetchUserData);
@@ -409,14 +435,23 @@ export class CacheHelper {
    * @param key - Clave del cache
    * @param data - Datos a almacenar
    * @param options - Opciones de cache
-   * @returns true si se guardó exitosamente
+   * @returns Promise<true> si se guardó exitosamente, Promise<false> en caso contrario
    *
    * @example
    * ```typescript
-   * CacheHelper.set('userData', user, {
+   * // Sin encriptación (backward compatible)
+   * await CacheHelper.set('userData', user, {
    *   expiresIn: 15 * 60 * 1000, // 15 minutos
    *   priority: 'high',
    *   namespace: 'user'
+   * });
+   *
+   * // Con encriptación (datos sensibles)
+   * await CacheHelper.set('creditCard', cardData, {
+   *   expiresIn: 5 * 60 * 1000, // 5 minutos
+   *   priority: 'critical',
+   *   namespace: 'user',
+   *   encrypt: true // 🔐 Encriptación AES-GCM
    * });
    * ```
    */
@@ -424,7 +459,7 @@ export class CacheHelper {
     key: string,
     data: T,
     options?: CacheSetOptions
-  ): boolean;
+  ): Promise<boolean>;
 
   /**
    * Guarda un item en cache (API v1.0 - backward compatible)
@@ -433,24 +468,24 @@ export class CacheHelper {
    * @param data - Datos a almacenar
    * @param expiresInMs - Tiempo de expiración en milisegundos
    * @param useSessionStorage - Si usar sessionStorage
-   * @returns true si se guardó exitosamente
+   * @returns Promise<true> si se guardó exitosamente
    */
   static set<T>(
     key: string,
     data: T,
     expiresInMs?: number,
     useSessionStorage?: boolean
-  ): boolean;
+  ): Promise<boolean>;
 
   /**
    * Implementación de set (sobrecarga)
    */
-  static set<T>(
+  static async set<T>(
     key: string,
     data: T,
     optionsOrExpiration?: CacheSetOptions | number,
     useSessionStorage?: boolean
-  ): boolean {
+  ): Promise<boolean> {
     // Auto-inicializar si no se ha hecho
     if (!this.initialized) {
       this.initialize();
@@ -493,9 +528,35 @@ export class CacheHelper {
         return false;
       }
 
+      // Encriptar datos si se solicita
+      let dataToStore: T = data;
+      let encryptionIV: string | undefined;
+      let isEncrypted = false;
+
+      if (options.encrypt === true) {
+        try {
+          // Convertir data a string para encriptar
+          const dataStr = JSON.stringify(data);
+
+          // Encriptar usando EncryptHelper
+          const encryptResult = await EncryptHelper.encryptData(dataStr);
+
+          // Guardar datos encriptados y el IV
+          dataToStore = encryptResult.encrypted as T;
+          encryptionIV = encryptResult.iv;
+          isEncrypted = true;
+
+          this.log('info', `Datos encriptados para "${key}" usando AES-GCM`);
+        } catch (error) {
+          this.log('error', `Error encriptando datos para "${key}"`, error);
+          // Si falla la encriptación, no guardar los datos (seguridad primero)
+          return false;
+        }
+      }
+
       // Crear item de cache
       const cacheItem: CacheItem<T> = {
-        data,
+        data: dataToStore,
         timestamp: Date.now(),
         expiresIn: options.expiresIn || this.config.defaultExpiration,
         priority: options.priority || 'normal',
@@ -503,6 +564,8 @@ export class CacheHelper {
         accessCount: 0,
         lastAccess: Date.now(),
         size,
+        encrypted: isEncrypted,
+        encryptionIV,
         metadata: options.metadata
       };
 
@@ -541,6 +604,7 @@ export class CacheHelper {
    * 1. Primero busca en L1 (memoria) - Ultra rápido O(1), ~0.1-1ms
    * 2. Si no está en L1, busca en L2 (storage) - Más lento (JSON parse), ~5-10ms
    * 3. Si encuentra en L2, lo guarda en L1 para próximas lecturas
+   * 4. Si los datos están encriptados, los desencripta automáticamente
    *
    * @param key - Clave del cache
    * @param useSessionStorage - Si usar sessionStorage
@@ -552,9 +616,13 @@ export class CacheHelper {
    * if (userData) {
    *   console.log('Cache hit!', userData);
    * }
+   *
+   * // Datos encriptados se desencriptan automáticamente
+   * const creditCard = CacheHelper.get<CardData>('creditCard');
+   * // creditCard ya está desencriptado y listo para usar
    * ```
    */
-  static get<T>(key: string, useSessionStorage: boolean = false): T | null {
+  static async get<T>(key: string, useSessionStorage: boolean = false): Promise<T | null> {
     // Auto-inicializar
     if (!this.initialized) {
       this.initialize();
@@ -586,6 +654,29 @@ export class CacheHelper {
         this.metrics.l1Hits++;
 
         this.log('info', `L1 Cache hit: "${key}" (${l1Item.accessCount} accesos)`);
+
+        // Desencriptar si es necesario
+        if (l1Item.encrypted && l1Item.encryptionIV) {
+          try {
+            const decryptResult = await EncryptHelper.decryptData({
+              encrypted: l1Item.data as string,
+              iv: l1Item.encryptionIV,
+              algorithm: 'AES-GCM',
+              timestamp: l1Item.timestamp
+            });
+
+            const decryptedData = JSON.parse(decryptResult.decrypted) as T;
+            this.log('info', `Datos desencriptados desde L1: "${key}"`);
+            return decryptedData;
+          } catch (error) {
+            this.log('error', `Error desencriptando desde L1: "${key}"`, error);
+            // Si falla la desencriptación, remover item corrupto
+            this.remove(key, useSessionStorage);
+            this.metrics.misses++;
+            return null;
+          }
+        }
+
         return l1Item.data;
       }
 
@@ -627,6 +718,29 @@ export class CacheHelper {
       this.metrics.l2Hits++;
 
       this.log('info', `L2 Cache hit: "${key}" → promoted to L1`);
+
+      // Desencriptar si es necesario
+      if (cacheItem.encrypted && cacheItem.encryptionIV) {
+        try {
+          const decryptResult = await EncryptHelper.decryptData({
+            encrypted: cacheItem.data as string,
+            iv: cacheItem.encryptionIV,
+            algorithm: 'AES-GCM',
+            timestamp: cacheItem.timestamp
+          });
+
+          const decryptedData = JSON.parse(decryptResult.decrypted) as T;
+          this.log('info', `Datos desencriptados desde L2: "${key}"`);
+          return decryptedData;
+        } catch (error) {
+          this.log('error', `Error desencriptando desde L2: "${key}"`, error);
+          // Si falla la desencriptación, remover item corrupto
+          this.remove(key, useSessionStorage);
+          this.metrics.misses++;
+          return null;
+        }
+      }
+
       return cacheItem.data;
 
     } catch (error) {
@@ -660,7 +774,7 @@ export class CacheHelper {
     options?: CacheSetOptions
   ): Promise<T> {
     // Intentar obtener desde cache
-    const cached = this.get<T>(key, options?.useSessionStorage);
+    const cached = await this.get<T>(key, options?.useSessionStorage);
     if (cached !== null) {
       return cached;
     }
@@ -669,7 +783,7 @@ export class CacheHelper {
     const data = await factory();
 
     // Guardar en cache
-    this.set(key, data, options);
+    await this.set(key, data, options);
 
     return data;
   }
@@ -699,14 +813,15 @@ export class CacheHelper {
   ): Promise<void> {
     try {
       // Si ya existe y no ha expirado, no hacer nada
-      if (this.has(key, options?.useSessionStorage)) {
+      const exists = await this.has(key, options?.useSessionStorage);
+      if (exists) {
         this.log('info', `Preload skipped (already cached): "${key}"`);
         return;
       }
 
       this.log('info', `Preloading: "${key}"`);
       const data = await factory();
-      this.set(key, data, options);
+      await this.set(key, data, options);
       this.log('info', `Preload complete: "${key}"`);
 
     } catch (error) {
@@ -742,10 +857,11 @@ export class CacheHelper {
    *
    * @param key - Clave del cache
    * @param useSessionStorage - Si usar sessionStorage
-   * @returns true si existe y es válido
+   * @returns Promise<true> si existe y es válido
    */
-  static has(key: string, useSessionStorage: boolean = false): boolean {
-    return this.get(key, useSessionStorage) !== null;
+  static async has(key: string, useSessionStorage: boolean = false): Promise<boolean> {
+    const result = await this.get(key, useSessionStorage);
+    return result !== null;
   }
 
   /**
