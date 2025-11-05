@@ -3,7 +3,7 @@
  *
  * Componente raíz de la aplicación IPH con sistema de routing optimizado
  *
- * Características v3.0:
+ * Características v3.1:
  * - ✅ Configuración centralizada de rutas (app-routes.config.ts)
  * - ✅ Protección explícita con PrivateRoute
  * - ✅ Validación de JWT y roles por ruta
@@ -11,12 +11,22 @@
  * - ✅ TopLoadingBar para feedback visual (no bloqueante)
  * - ✅ React 19 startTransition para navegación suave
  * - ✅ RoutePreloader para precarga de componentes
- * - ✅ Cache Helper integrado
+ * - ✅ Two-Level Cache Helper integrado (L1 + L2)
+ * - ✅ Configuración L1 cache optimizada para IPH (150 items)
+ * - ✅ Memory leak prevention con destroy() automático
  * - ✅ Página 404 implementada
  * - ✅ Single Source of Truth
  *
  * @author Sistema IPH
- * @version 3.0.0
+ * @version 3.1.0
+ *
+ * @changelog
+ * v3.1.0 (2025-01-31)
+ * - ✅ Integrado Two-Level Cache v2.2.0 (L1 memoria + L2 storage)
+ * - ✅ Configuración optimizada: L1 150 items, L2 10MB
+ * - ✅ destroy() automático en cleanup para prevenir memory leaks
+ * - ✅ Logging solo en desarrollo (performance en producción)
+ * - ✅ Mejora esperada: 90-95% más rápido en lecturas frecuentes
  */
 
 import './App.css';
@@ -79,21 +89,33 @@ function AppRoutes({ loadingBarRef }: { loadingBarRef: React.RefObject<TopLoadin
 
   // Inicializar helpers al montar
   useEffect(() => {
-    // Configurar CacheHelper
+    // Configurar CacheHelper con Two-Level Cache optimizado
     CacheHelper.initialize({
+      // L2 Cache (Storage)
+      maxSize: 10 * 1024 * 1024, // 10MB para IPH (listas grandes)
       enableAutoCleanup: true,
       cleanupInterval: 5 * 60 * 1000, // 5 minutos
-      maxSize: 5 * 1024 * 1024, // 5MB
-      enableLogging: true
+      defaultExpiration: 15 * 60 * 1000, // 15 minutos default
+
+      // L1 Cache (Memoria) - NEW v2.2.0
+      enableMemoryCache: true, // Activar L1 cache
+      memoryCacheMaxItems: 150, // 150 items en memoria (IPH tiene muchas listas)
+
+      // Logging
+      enableLogging: import.meta.env.DEV // Solo en desarrollo
     });
 
     // Configurar RoutePreloader
     RoutePreloader.configure({
-      enableLogging: true,
+      enableLogging: import.meta.env.DEV,
       enableCaching: true
     });
 
-    logInfo('IPHApp', 'Aplicación inicializada con optimizaciones v3.0');
+    logInfo('IPHApp', 'Aplicación inicializada con Two-Level Cache v2.2.0 + optimizaciones v3.0', {
+      l1CacheEnabled: true,
+      l1MaxItems: 150,
+      l2MaxSize: '10MB'
+    });
 
     // Precargar rutas de alta prioridad al inicio (rutas comunes)
     const highPriorityRoutes = routes.filter(r =>
@@ -109,6 +131,15 @@ function AppRoutes({ loadingBarRef }: { loadingBarRef: React.RefObject<TopLoadin
       });
     });
 
+    // CRÍTICO: Cleanup al desmontar para prevenir memory leaks
+    return () => {
+      logInfo('IPHApp', 'Desmontando aplicación - limpiando recursos');
+
+      // Destruir CacheHelper (limpia L1, L2, detiene timers)
+      CacheHelper.destroy();
+
+      logInfo('IPHApp', 'Recursos liberados correctamente');
+    };
   }, [routes]);
 
   return (

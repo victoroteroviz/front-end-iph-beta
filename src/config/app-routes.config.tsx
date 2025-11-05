@@ -18,7 +18,7 @@
  */
 
 import { lazy, type ComponentType, type LazyExoticComponent, type ReactElement } from 'react';
-import { Home, BarChart, FileText, Clock, Users, Settings, UserPen, UserCog, ChartNoAxesCombined } from 'lucide-react';
+import { Home, BarChart, FileText, Clock, Users, Settings, UserPen, UserCog, ChartNoAxesCombined, FileBarChart } from 'lucide-react';
 
 // Helpers de roles
 import { getUserRoles, hasAnyRole } from '../helper/role/role.helper';
@@ -78,6 +78,9 @@ const GestionGrupos = lazy(() => import('../components/private/components/gestio
 const UsuariosIphView = lazy(() => import('../components/private/components/statistics/views/UsuariosIphView'));
 const JusticiaCivicaView = lazy(() => import('../components/private/components/statistics/views/JusticiaCivicaView'));
 const ProbableDelictivoView = lazy(() => import('../components/private/components/statistics/views/ProbableDelictivoView'));
+
+// Componente de Reportes PDF
+const ReportesPdf = lazy(() => import('../components/private/components/reportes-pdf/ReportesPdf'));
 
 // =====================================================
 // CONSTANTES DE GRUPOS DE ROLES
@@ -139,6 +142,17 @@ export const APP_ROUTES: AppRoute[] = [
     order: 2
   },
   {
+    id: 'reportes-pdf',
+    path: 'reportes-pdf',
+    component: ReportesPdf,
+    requiredRoles: ROLE_GROUPS.MANAGEMENT,
+    title: 'Reportes PDF',
+    description: 'Generación y descarga de reportes en formato PDF',
+    showInSidebar: true,
+    icon: <FileBarChart size={20} />,
+    order: 3
+  },
+  {
     id: 'iphActivo',
     path: 'informepolicial',
     component: InformePolicial,
@@ -147,7 +161,7 @@ export const APP_ROUTES: AppRoute[] = [
     description: 'Lista de informes policiales homologados activos',
     showInSidebar: true,
     icon: <FileText size={20} />,
-    order: 3
+    order: 4
   },
   {
     id: 'historial',
@@ -158,7 +172,7 @@ export const APP_ROUTES: AppRoute[] = [
     description: 'Historial completo de informes policiales',
     showInSidebar: true,
     icon: <Clock size={20} />,
-    order: 4
+    order: 5
   },
   {
     id: 'usuarios',
@@ -169,7 +183,7 @@ export const APP_ROUTES: AppRoute[] = [
     description: 'Gestión de usuarios del sistema',
     showInSidebar: true,
     icon: <UserPen size={20} />,
-    order: 5
+    order: 6
   },
   {
     id: 'grupos',
@@ -180,7 +194,7 @@ export const APP_ROUTES: AppRoute[] = [
     description: 'Gestión de grupos y equipos',
     showInSidebar: true,
     icon: <UserCog size={20} />,
-    order: 6,
+    order: 7,
     isDisabled: false
   },
   {
@@ -192,7 +206,7 @@ export const APP_ROUTES: AppRoute[] = [
     description: 'Configuración del sistema',
     showInSidebar: true,
     icon: <Settings size={20} />,
-    order: 7,
+    order: 8,
     isDisabled: true
   },
 

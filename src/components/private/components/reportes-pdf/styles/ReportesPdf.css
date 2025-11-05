@@ -1,0 +1,234 @@
+/**
+ * Estilos para el módulo de Reportes PDF
+ *
+ * @description
+ * Estilos centralizados para el componente de Reportes PDF.
+ * Incluye estilos para tarjetas, animaciones y estados.
+ *
+ * @version 1.0.0
+ * @since 2025-11-04
+ */
+
+/* ============================================
+   CONTENEDOR PRINCIPAL
+   ============================================ */
+
+.reportes-content {
+  @apply animate-fadeIn;
+  animation-duration: 0.4s;
+}
+
+/* ============================================
+   TARJETAS DE REPORTE
+   ============================================ */
+
+.reporte-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efecto de brillo sutil en hover */
+.reporte-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.reporte-card:hover::before {
+  left: 100%;
+}
+
+/* Icono de reporte */
+.reporte-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.reporte-card-icon {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* ============================================
+   ANIMACIONES
+   ============================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ============================================
+   ESTADOS DE TARJETA
+   ============================================ */
+
+/* Tarjeta deshabilitada */
+.reporte-card[aria-disabled="true"] {
+  pointer-events: none;
+}
+
+/* Tarjeta en estado de generación */
+.reporte-card.generando {
+  position: relative;
+}
+
+.reporte-card.generando::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.5);
+  z-index: 5;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .reportes-content {
+    padding: 0;
+  }
+
+  .reporte-card {
+    margin-bottom: 1rem;
+  }
+
+  /* Reducir animaciones en móviles para mejor performance */
+  .reporte-card::before {
+    display: none;
+  }
+}
+
+/* Tablet */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .reporte-card {
+    font-size: 0.95rem;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1025px) {
+  .reportes-content {
+    max-width: 100%;
+  }
+}
+
+/* ============================================
+   ACCESIBILIDAD
+   ============================================ */
+
+/* Focus visible para navegación por teclado */
+.reporte-card:focus {
+  outline: 3px solid #c2b186;
+  outline-offset: 2px;
+}
+
+.reporte-card:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.reporte-card:focus-visible {
+  outline: 3px solid #c2b186;
+  outline-offset: 2px;
+}
+
+/* Reducir movimiento para usuarios con preferencias de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  .reporte-card,
+  .reporte-card::before,
+  .reporte-card-icon,
+  .animate-fadeIn,
+  .animate-pulse,
+  .animate-spin {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Alto contraste para accesibilidad */
+@media (prefers-contrast: high) {
+  .reporte-card {
+    border: 2px solid #4d4725;
+  }
+
+  .reporte-card:hover {
+    border-color: #948b54;
+  }
+}
+
+/* ============================================
+   DARK MODE (preparado para futuro)
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  /* Preparado para dark mode en el futuro */
+  /* .reporte-card {
+    background-color: #1f2937;
+    color: #f9fafb;
+  } */
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+
+/* Smooth scroll para toda la sección */
+.reportes-content {
+  scroll-behavior: smooth;
+}
+
+/* Mejora de rendering de fuentes */
+.reporte-card {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

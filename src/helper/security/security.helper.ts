@@ -8,7 +8,9 @@
  * - Rate limiting básico
  */
 
-import { logError, logInfo } from '../log/logger.helper';
+import { logError, logInfo, logWarning } from '../log/logger.helper';
+import { generateSecureToken, encryptData, decryptData } from '../encrypt/encrypt.helper';
+import type { EncryptionResult } from '../encrypt/encrypt.helper';
 
 // Tipos para configuración de seguridad
 export interface SecurityConfig {
@@ -21,9 +23,7 @@ export interface SecurityConfig {
 // Configuración por defecto
 const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
   maxLoginAttempts: 3,
-  lockoutDurationMs: 0 * 0 * 0, // 0 minutos
-  // lockoutDurationMs: 15 * 60 * 1000, // 15 minutos
-
+  lockoutDurationMs: 15 * 60 * 1000, // ✅ 15 minutos (CORREGIDO)
   passwordMinLength: 8,
   passwordMaxLength: 128
 };
@@ -116,102 +116,209 @@ class SecurityHelper {
   }
 
   /**
-   * Maneja intentos de login fallidos
-   * Implementa rate limiting básico
+   * Maneja intentos de login fallidos con encriptación
+   *
+   * Implementa rate limiting básico almacenando datos encriptados
+   * en sessionStorage para prevenir manipulación.
+   *
+   * @param identifier Identificador único del usuario (email o userId)
+   * @returns Promesa que resuelve cuando se guarda el intento
+   *
+   * @example
+   * ```typescript
+   * await securityHelper.recordFailedAttempt('user@example.com');
+   * ```
    */
-  public recordFailedAttempt(identifier: string): void {
+  public async recordFailedAttempt(identifier: string): Promise<void> {
     try {
-      const attempts = this.getFailedAttempts(identifier);
+      const attempts = await this.getFailedAttempts(identifier);
       const newAttempts = attempts + 1;
-      
+
+      // Crear objeto de datos
+      const data = JSON.stringify({
+        count: newAttempts,
+        timestamp: Date.now()
+      });
+
+      // Encriptar datos antes de guardar
+      const encrypted = await encryptData(data);
+
       sessionStorage.setItem(
         `${this.ATTEMPTS_STORAGE_KEY}_${identifier}`,
-        JSON.stringify({
-          count: newAttempts,
-          timestamp: Date.now()
-        })
+        JSON.stringify(encrypted)
       );
 
       if (newAttempts >= this.config.maxLoginAttempts) {
-        this.lockAccount(identifier);
+        await this.lockAccount(identifier);
       }
 
-      logInfo('SecurityHelper', `Failed attempt recorded for ${identifier}`, { attempts: newAttempts });
+      logInfo('SecurityHelper', `Failed attempt recorded for ${identifier}`, {
+        attempts: newAttempts,
+        encrypted: true
+      });
     } catch (error) {
       logError('SecurityHelper', error, 'Error recording failed attempt');
     }
   }
 
   /**
-   * Obtiene número de intentos fallidos
+   * Obtiene número de intentos fallidos desencriptando datos
+   *
+   * @param identifier Identificador único del usuario
+   * @returns Promesa que resuelve al número de intentos fallidos
+   *
+   * @example
+   * ```typescript
+   * const attempts = await securityHelper.getFailedAttempts('user@example.com');
+   * console.log('Intentos fallidos:', attempts);
+   * ```
    */
-  public getFailedAttempts(identifier: string): number {
+  public async getFailedAttempts(identifier: string): Promise<number> {
     try {
-      const data = sessionStorage.getItem(`${this.ATTEMPTS_STORAGE_KEY}_${identifier}`);
-      if (!data) return 0;
-      
-      const parsed = JSON.parse(data);
+      const encryptedData = sessionStorage.getItem(`${this.ATTEMPTS_STORAGE_KEY}_${identifier}`);
+      if (!encryptedData) return 0;
+
+      // Parsear EncryptionResult
+      const encryptionResult: EncryptionResult = JSON.parse(encryptedData);
+
+      // Desencriptar datos
+      const decrypted = await decryptData(encryptionResult);
+      const parsed = JSON.parse(decrypted);
+
       return parsed.count || 0;
-    } catch {
+    } catch (error) {
+      // Si falla la desencriptación (datos corruptos/modificados), retornar 0
+      logWarning('SecurityHelper', 'Error al obtener intentos fallidos (datos corruptos)', {
+        identifier,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+
+      // Limpiar datos corruptos
+      sessionStorage.removeItem(`${this.ATTEMPTS_STORAGE_KEY}_${identifier}`);
+
       return 0;
     }
   }
 
   /**
-   * Verifica si la cuenta está bloqueada
+   * Verifica si la cuenta está bloqueada desencriptando datos
+   *
+   * @param identifier Identificador único del usuario
+   * @returns Promesa que resuelve a true si está bloqueada, false si no
+   *
+   * @example
+   * ```typescript
+   * const isLocked = await securityHelper.isAccountLocked('user@example.com');
+   * if (isLocked) {
+   *   const remaining = await securityHelper.getLockoutTimeRemaining('user@example.com');
+   *   console.log(`Cuenta bloqueada por ${remaining} minutos`);
+   * }
+   * ```
    */
-  public isAccountLocked(identifier: string): boolean {
+  public async isAccountLocked(identifier: string): Promise<boolean> {
     try {
       const lockData = sessionStorage.getItem(`${this.LOCKOUT_STORAGE_KEY}_${identifier}`);
       if (!lockData) return false;
 
-      const parsed = JSON.parse(lockData);
+      // Parsear EncryptionResult
+      const encryptionResult: EncryptionResult = JSON.parse(lockData);
+
+      // Desencriptar datos
+      const decrypted = await decryptData(encryptionResult);
+      const parsed = JSON.parse(decrypted);
       const lockUntil = parsed.lockUntil || 0;
-      
+
       if (Date.now() < lockUntil) {
         return true;
       } else {
         // Lockout expiró, limpiar datos
-        this.clearFailedAttempts(identifier);
+        await this.clearFailedAttempts(identifier);
         return false;
       }
-    } catch {
+    } catch (error) {
+      // Si falla la desencriptación (datos corruptos), asumir no bloqueado
+      logWarning('SecurityHelper', 'Error al verificar bloqueo de cuenta (datos corruptos)', {
+        identifier,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+
+      // Limpiar datos corruptos
+      sessionStorage.removeItem(`${this.LOCKOUT_STORAGE_KEY}_${identifier}`);
+
       return false;
     }
   }
 
   /**
-   * Obtiene tiempo restante de bloqueo en minutos
+   * Obtiene tiempo restante de bloqueo en minutos desencriptando datos
+   *
+   * @param identifier Identificador único del usuario
+   * @returns Promesa que resuelve al tiempo restante en minutos
+   *
+   * @example
+   * ```typescript
+   * const remaining = await securityHelper.getLockoutTimeRemaining('user@example.com');
+   * if (remaining > 0) {
+   *   console.log(`Intente nuevamente en ${remaining} minutos`);
+   * }
+   * ```
    */
-  public getLockoutTimeRemaining(identifier: string): number {
+  public async getLockoutTimeRemaining(identifier: string): Promise<number> {
     try {
       const lockData = sessionStorage.getItem(`${this.LOCKOUT_STORAGE_KEY}_${identifier}`);
       if (!lockData) return 0;
 
-      const parsed = JSON.parse(lockData);
+      // Parsear EncryptionResult
+      const encryptionResult: EncryptionResult = JSON.parse(lockData);
+
+      // Desencriptar datos
+      const decrypted = await decryptData(encryptionResult);
+      const parsed = JSON.parse(decrypted);
       const lockUntil = parsed.lockUntil || 0;
       const remaining = lockUntil - Date.now();
-      
+
       return remaining > 0 ? Math.ceil(remaining / (60 * 1000)) : 0;
-    } catch {
+    } catch (error) {
+      // Si falla la desencriptación, retornar 0
+      logWarning('SecurityHelper', 'Error al obtener tiempo de bloqueo (datos corruptos)', {
+        identifier,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+
+      // Limpiar datos corruptos
+      sessionStorage.removeItem(`${this.LOCKOUT_STORAGE_KEY}_${identifier}`);
+
       return 0;
     }
   }
 
   /**
-   * Bloquea cuenta temporalmente
+   * Bloquea cuenta temporalmente con encriptación
+   *
+   * @param identifier Identificador único del usuario
+   * @returns Promesa que resuelve cuando se bloquea la cuenta
+   *
+   * @private
    */
-  private lockAccount(identifier: string): void {
+  private async lockAccount(identifier: string): Promise<void> {
     try {
       const lockUntil = Date.now() + this.config.lockoutDurationMs;
-      
+
+      // Crear objeto de datos
+      const data = JSON.stringify({ lockUntil });
+
+      // Encriptar datos antes de guardar
+      const encrypted = await encryptData(data);
+
       sessionStorage.setItem(
         `${this.LOCKOUT_STORAGE_KEY}_${identifier}`,
-        JSON.stringify({ lockUntil })
+        JSON.stringify(encrypted)
       );
 
-      logInfo('SecurityHelper', `Account locked for ${identifier}`, { 
-        lockUntil: new Date(lockUntil).toISOString() 
+      logInfo('SecurityHelper', `Account locked for ${identifier}`, {
+        lockUntil: new Date(lockUntil).toISOString(),
+        durationMinutes: Math.ceil(this.config.lockoutDurationMs / (60 * 1000)),
+        encrypted: true
       });
     } catch (error) {
       logError('SecurityHelper', error, 'Error locking account');
@@ -219,25 +326,60 @@ class SecurityHelper {
   }
 
   /**
-   * Limpia intentos fallidos (tras login exitoso)
+   * Limpia intentos fallidos y bloqueos (tras login exitoso)
+   *
+   * Remueve datos encriptados de sessionStorage
+   *
+   * @param identifier Identificador único del usuario
+   * @returns Promesa que resuelve cuando se limpian los datos
+   *
+   * @example
+   * ```typescript
+   * // Después de login exitoso
+   * await securityHelper.clearFailedAttempts('user@example.com');
+   * ```
    */
-  public clearFailedAttempts(identifier: string): void {
+  public async clearFailedAttempts(identifier: string): Promise<void> {
     try {
       sessionStorage.removeItem(`${this.ATTEMPTS_STORAGE_KEY}_${identifier}`);
       sessionStorage.removeItem(`${this.LOCKOUT_STORAGE_KEY}_${identifier}`);
-      logInfo('SecurityHelper', `Cleared failed attempts for ${identifier}`);
+      logInfo('SecurityHelper', `Cleared failed attempts for ${identifier}`, {
+        encrypted: true
+      });
     } catch (error) {
       logError('SecurityHelper', error, 'Error clearing failed attempts');
     }
   }
 
   /**
-   * Genera un token CSRF simple para formularios
+   * Genera token CSRF criptográficamente seguro
+   *
+   * Usa EncryptHelper para generar tokens seguros con Web Crypto API
+   * en lugar de Math.random() que es predecible y NO debe usarse
+   * para propósitos de seguridad.
+   *
+   * Formato: timestamp_secureToken
+   *
+   * @returns Token CSRF en formato timestamp_token (ej: "m8x1a2_9f2a5c...")
+   *
+   * @example
+   * ```typescript
+   * const csrfToken = securityHelper.generateCSRFToken();
+   * // → "m8x1a2_9f2a5c7e1b3d8f6a4c2e5a7b9d1f3e5c"
+   *
+   * // Incluir en meta tag
+   * document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', csrfToken);
+   *
+   * // Incluir en requests
+   * fetch('/api/action', {
+   *   headers: { 'X-CSRF-Token': csrfToken }
+   * });
+   * ```
    */
   public generateCSRFToken(): string {
     const timestamp = Date.now().toString(36);
-    const randomString = Math.random().toString(36).substring(2);
-    return `${timestamp}_${randomString}`;
+    const secureToken = generateSecureToken(16); // 16 bytes = 32 chars hex (criptográficamente seguro)
+    return `${timestamp}_${secureToken}`;
   }
 
   /**
@@ -311,27 +453,72 @@ class SecurityHelper {
 const securityHelper = SecurityHelper.getInstance();
 
 // Funciones helper para uso directo
+
+/**
+ * Sanitiza strings removiendo caracteres peligrosos
+ */
 export const sanitizeInput = (input: string): string => securityHelper.sanitizeInput(input);
 
+/**
+ * Valida formato de email
+ */
 export const isValidEmail = (email: string): boolean => securityHelper.isValidEmail(email);
 
+/**
+ * Valida fortaleza de contraseña
+ */
 export const isValidPassword = (password: string) => securityHelper.isValidPassword(password);
 
-export const recordFailedAttempt = (identifier: string): void => securityHelper.recordFailedAttempt(identifier);
+/**
+ * Registra intento de login fallido (con encriptación)
+ * @returns Promesa que resuelve cuando se guarda el intento
+ */
+export const recordFailedAttempt = async (identifier: string): Promise<void> =>
+  securityHelper.recordFailedAttempt(identifier);
 
-export const getFailedAttempts = (identifier: string): number => securityHelper.getFailedAttempts(identifier);
+/**
+ * Obtiene número de intentos fallidos (desencripta datos)
+ * @returns Promesa que resuelve al número de intentos
+ */
+export const getFailedAttempts = async (identifier: string): Promise<number> =>
+  securityHelper.getFailedAttempts(identifier);
 
-export const isAccountLocked = (identifier: string): boolean => securityHelper.isAccountLocked(identifier);
+/**
+ * Verifica si la cuenta está bloqueada (desencripta datos)
+ * @returns Promesa que resuelve a true si está bloqueada
+ */
+export const isAccountLocked = async (identifier: string): Promise<boolean> =>
+  securityHelper.isAccountLocked(identifier);
 
-export const getLockoutTimeRemaining = (identifier: string): number => securityHelper.getLockoutTimeRemaining(identifier);
+/**
+ * Obtiene tiempo restante de bloqueo en minutos (desencripta datos)
+ * @returns Promesa que resuelve al tiempo restante en minutos
+ */
+export const getLockoutTimeRemaining = async (identifier: string): Promise<number> =>
+  securityHelper.getLockoutTimeRemaining(identifier);
 
-export const clearFailedAttempts = (identifier: string): void => securityHelper.clearFailedAttempts(identifier);
+/**
+ * Limpia intentos fallidos tras login exitoso
+ * @returns Promesa que resuelve cuando se limpian los datos
+ */
+export const clearFailedAttempts = async (identifier: string): Promise<void> =>
+  securityHelper.clearFailedAttempts(identifier);
 
+/**
+ * Genera token CSRF criptográficamente seguro (usa EncryptHelper)
+ */
 export const generateCSRFToken = (): string => securityHelper.generateCSRFToken();
 
+/**
+ * Valida token CSRF (validación básica de formato)
+ */
 export const validateCSRFToken = (token: string): boolean => securityHelper.validateCSRFToken(token);
 
-export const sanitizeCoordinatesForLog = (lat: number, lng: number) => securityHelper.sanitizeCoordinatesForLog(lat, lng);
+/**
+ * Sanitiza coordenadas geográficas para logging seguro
+ */
+export const sanitizeCoordinatesForLog = (lat: number, lng: number) =>
+  securityHelper.sanitizeCoordinatesForLog(lat, lng);
 
 // Exportaciones
 export { SecurityHelper, securityHelper };

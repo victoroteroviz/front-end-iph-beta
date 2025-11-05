@@ -277,12 +277,13 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
 
           <div className="grid grid-cols-2 gap-4">
             {/* Con Detenidos */}
-            <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-[#e5dcc3]">
+            <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md transition-all duration-300  border border-[#e5dcc3]">
               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+               
               </div>
               <div className="text-5xl mb-2">🪪</div>
               <p className="text-sm font-semibold text-[#4d4725] mb-1">Con Detenidos</p>
+              
               <p className="text-4xl font-bold text-[#4d4725] mb-2">{resumen.justicia.conDetenido}</p>
               <div className="flex items-center gap-1 px-3 py-1 bg-green-100 rounded-full">
                 <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -290,12 +291,13 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
                 </svg>
                 <span className="text-xs font-bold text-green-700">+{Math.abs(variaciones.justicia.con)}%</span>
               </div>
+              <p className="text-xs text-[#6b6b47] mb-3 px-2">Aumento anual de personas detenidas bajo proceso judicial</p>
             </div>
+            
 
             {/* Sin Detenidos */}
-            <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-[#e5dcc3]">
+            <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md transition-all duration-300  border border-[#e5dcc3]">
               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
               </div>
               <div className="text-5xl mb-2">🧍‍♂️</div>
               <p className="text-sm font-semibold text-[#4d4725] mb-1">Sin Detenidos</p>
@@ -306,8 +308,11 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
                 </svg>
                 <span className="text-xs font-bold text-red-700">+{Math.abs(variaciones.justicia.sin)}%</span>
               </div>
+              <p className="text-xs text-[#6b6b47] mb-3 px-2">Aumento anual de casos de justicia civica sin detenidos</p>
             </div>
+            
           </div>
+          
         </div>
 
         {/* Probable Delictivo */}
@@ -323,9 +328,8 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
 
           <div className="grid grid-cols-2 gap-4">
             {/* Con Detenidos */}
-            <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-[#e5dcc3]">
+            <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md transition-all duration-300  border border-[#e5dcc3]">
               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               </div>
               <div className="text-5xl mb-2">👮</div>
               <p className="text-sm font-semibold text-[#4d4725] mb-1">Con Detenidos</p>
@@ -336,12 +340,13 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
                 </svg>
                 <span className="text-xs font-bold text-green-700">+{Math.abs(variaciones.delito.con)}%</span>
               </div>
+              <p className="text-xs text-[#6b6b47] mb-3 px-2">Aumento anual de casos de iph probable delictivo con detenidos</p>
             </div>
 
             {/* Sin Detenidos */}
-            <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-[#e5dcc3]">
+            <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md transition-all duration-300  border border-[#e5dcc3]">
               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              
               </div>
               <div className="text-5xl mb-2">⛓️</div>
               <p className="text-sm font-semibold text-[#4d4725] mb-1">Sin Detenidos</p>
@@ -352,6 +357,9 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
                 </svg>
                 <span className="text-xs font-bold text-green-700">+{Math.abs(variaciones.delito.sin)}%</span>
               </div>
+              <p className="text-xs text-[#6b6b47] mb-3 px-2">
+                Aumento anua l de casos de iph probable delictivo sin detenidos
+              </p>
             </div>
           </div>
         </div>
@@ -367,7 +375,7 @@ const Inicio: React.FC<InicioProps> = ({ className = '' }) => {
         {/* Header colapsable */}
         <button
           onClick={() => setQuickAccessCollapsed(!quickAccessCollapsed)}
-          className="w-full px-4 lg:px-6 py-4 bg-[#f8f0e7] hover:bg-[#ede8d4] transition-colors flex items-center justify-between cursor-pointer"
+          className="w-full px-4 lg:px-6 py-4 bg-[#f8f0e7] hover:bg-[#ede8d4] transition-colors flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
             <h2 className="text-xl lg:text-2xl font-bold text-[#4d4725]">
