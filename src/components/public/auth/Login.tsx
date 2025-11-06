@@ -258,11 +258,11 @@ const useLoginLogic = () => {
     const emailForTracking = state.formData.email || 'unknown';
 
     // Verificar si está bloqueada la cuenta (función async desde SecurityHelper v2)
-    if (await isAccountLocked(emailForTracking)) {
-      const remainingTime = getLockoutTimeRemaining(emailForTracking);
-      showError(`Cuenta bloqueada temporalmente. Espera ${remainingTime} minutos antes de intentar nuevamente.`, 'Acceso Restringido');
-      return;
-    }
+    // if (await isAccountLocked(emailForTracking)) {
+    //   const remainingTime = getLockoutTimeRemaining(emailForTracking);
+    //   showError(`Cuenta bloqueada temporalmente. Espera ${remainingTime} minutos antes de intentar nuevamente.`, 'Acceso Restringido');
+    //   return;
+    // }
 
     // Validar CSRF token
     if (state.csrfToken && !validateCSRFToken(state.csrfToken)) {
@@ -350,8 +350,10 @@ const useLoginLogic = () => {
   /**
    * Verifica autenticación al cargar
    */
-  const checkAuthentication = useCallback(() => {
-    if (isLoggedIn() && isUserAuthenticated()) {
+  const checkAuthentication = useCallback(async () => {
+    const hasCacheSession = await isLoggedIn();
+
+    if (hasCacheSession && isUserAuthenticated()) {
       logInfo('LoginComponent', 'Usuario ya autenticado, redirigiendo');
       showWarning('Ya tienes una sesión activa. Te estamos redirigiendo...');
       navigate('/inicio');
@@ -379,7 +381,7 @@ const Login: React.FC = () => {
 
   // Verificar autenticación al montar
   useEffect(() => {
-    checkAuthentication();
+    void checkAuthentication();
   }, [checkAuthentication]);
 
   const { formData, isLoading, isRedirecting, fieldErrors } = state;
