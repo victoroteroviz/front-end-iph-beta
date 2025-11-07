@@ -207,6 +207,7 @@ export const getRouteForUser = (userData: UserData | Token): string =>
 export const hasAccessToRoute = (userRoles: IRole[], targetRoute: string): boolean => 
   navigationHelper.hasAccessToRoute(userRoles, targetRoute);
 
+
 export const getUserFromStorage = (): UserData | null => 
   navigationHelper.getUserFromStorage();
 

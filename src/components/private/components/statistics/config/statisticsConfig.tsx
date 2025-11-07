@@ -46,6 +46,20 @@ export const statisticsCardsConfig: IStatisticCard[] = [
     ruta: STATISTICS_ROUTES.PROBABLE_DELICTIVO
   },
   {
+    id: 'iph-rango',
+    titulo: 'Iph\'s por fechas',
+    descripcion: 'El siguiente gráfico muestra la cantidad de Iph\'s creados en un rango de fechas específico. Se puede seleccionar a un usuario y mostrar sus estadísticas individuales.',
+    icono: (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="stat-icon">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 2.25H8.25a2.25 2.25 0 00-2.25 2.25v15A2.25 2.25 0 008.25 21h7.5a2.25 2.25 0 002.25-2.25V9.75L12 2.25z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 2.25v5.25c0 .621.504 1.125 1.125 1.125H18" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 13.5a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 20.25a4.5 4.5 0 019 0" />
+      </svg>
+    ),
+    habilitado: false
+  },
+  {
     id: 'Mapas de calor',
     titulo: 'Mapas de Calor',
     descripcion: 'Visualización de datos geoespaciales mediante mapas de calor para identificar zonas de alta incidencia delictiva',
