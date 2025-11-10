@@ -14,6 +14,7 @@ import {logger} from '../../../../helper/log/logger.helper';
 import type { IRole } from "../../../../interfaces/role/role.interface";
 import { clearAllPaginationPersistence } from '../../../shared/components/pagination';
 import { setUserRoles, clearRoles } from '../../../../helper/role/role.helper';
+import { hydrateUserDataCache, clearUserData } from '../../../../helper/user/user.helper';
 
 /**
  * Handler para decodificar JWT con manejo seguro de excepciones y validaciones
@@ -94,7 +95,7 @@ const AUTH_CACHE_CONFIG = {
  * Clave legacy utilizada por módulos que aún acceden directamente a sessionStorage
  * Mantener sincronizada mientras se realiza la migración completa hacia CacheHelper.
  */
-const LEGACY_AUTH_TOKEN_KEYS = ['token', 'auth_token'] as const;
+const LEGACY_AUTH_TOKEN_KEYS = ['token'] as const;
 
 // =====================================================
 // FUNCIONES AUXILIARES DE CACHE (DRY)
@@ -130,15 +131,7 @@ const saveUserData = async (userData: z.infer<typeof UserDataSchema>): Promise<v
     userId: validated.id
   });
 
-  // Compatibilidad temporal con módulos legacy que leen sessionStorage directamente
-  try {
-    sessionStorage.setItem('user_data', JSON.stringify(validated));
-  } catch (error) {
-    logger.warn('saveUserData', 'No se pudo sincronizar user_data en sessionStorage (legacy)', {
-      userId: validated.id,
-      error: error instanceof Error ? error.message : 'unknown'
-    });
-  }
+  hydrateUserDataCache(validated);
 };
 
 /**
@@ -244,13 +237,7 @@ const clearAuthCache = (): void => {
   // CacheHelper.remove(AUTH_CACHE_CONFIG.keys.ROLES, true); ← REMOVIDO - Ahora usa RoleHelper
   CacheHelper.remove(AUTH_CACHE_CONFIG.keys.TOKEN, true);
 
-  try {
-    sessionStorage.removeItem('user_data');
-  } catch (error) {
-    logger.warn('clearAuthCache', 'No se pudo eliminar user_data legacy de sessionStorage', {
-      error: error instanceof Error ? error.message : 'unknown'
-    });
-  }
+  clearUserData();
 
   // Limpiar roles con RoleHelper (limpia 'roles' y 'roles_encrypted')
   clearRoles();

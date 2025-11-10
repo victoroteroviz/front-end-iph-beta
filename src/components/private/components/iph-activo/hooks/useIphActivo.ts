@@ -36,6 +36,7 @@ import { getTiposIPH } from '../services/tipos-iph.service';
 import { showSuccess, showError, showWarning } from '../../../../../helper/notification/notification.helper';
 import { logInfo, logError, logAuth, logDebug, logWarning } from '../../../../../helper/log/logger.helper';
 import { getUserRoles } from '../../../../../helper/role/role.helper';
+import { getUserData } from '../../../../../helper/user/user.helper';
 import { canAccessElemento } from '../../../../../config/permissions.config';
 
 // Interfaces
@@ -364,7 +365,7 @@ const useInformePolicial = (
       return false;
     }
 
-    const userData = JSON.parse(sessionStorage.getItem('user_data') || '{}');
+    const userData = getUserData();
     logInfo('InformePolicial', 'Access granted to user', {
       userId: userData?.id,
       canViewAll: state.userCanViewAll

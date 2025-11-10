@@ -44,6 +44,7 @@
 
 import { z } from 'zod';
 import { logInfo, logError, logWarning } from '../log/logger.helper';
+import { getUserData } from '../user/user.helper';
 import { encryptData, decryptData } from '../encrypt/encrypt.helper';
 import type { EncryptionResult } from '../encrypt/encrypt.helper';
 import {
@@ -209,8 +210,7 @@ export type RoleName = string;
 class RoleHelper {
   private static instance: RoleHelper;
   private readonly STORAGE_KEYS = {
-    ROLES: 'roles',
-    USER_DATA: 'user_data'
+    ROLES: 'roles'
   } as const;
 
   // ==================== SISTEMA DE CACHING ====================
@@ -767,15 +767,12 @@ class RoleHelper {
    */
   public getUserRoleContext(): UserRoleContext | null {
     try {
-      const userData = sessionStorage.getItem(this.STORAGE_KEYS.USER_DATA);
+      const userData = getUserData();
       const roles = this.getUserRoles(); // Ya usa cache y validación Zod
 
       if (!userData || roles.length === 0) return null;
 
-      const parsed = JSON.parse(userData);
-
-      // Validación con Zod
-      const validationResult = UserDataSchema.safeParse(parsed);
+      const validationResult = UserDataSchema.safeParse(userData);
 
       if (!validationResult.success) {
         logError(
@@ -783,29 +780,16 @@ class RoleHelper {
           validationResult.error,
           'Datos de usuario inválidos según schema Zod'
         );
-
-        // Sanitizar sessionStorage corrupto
-        sessionStorage.removeItem(this.STORAGE_KEYS.USER_DATA);
         return null;
       }
 
-      const validatedUser = validationResult.data;
-
       return {
-        userId: validatedUser.id,
+        userId: validationResult.data.id,
         roles
       };
 
     } catch (error) {
       logError('RoleHelper', error, 'Error obteniendo contexto del usuario');
-      
-      // Intentar limpiar datos corruptos
-      try {
-        sessionStorage.removeItem(this.STORAGE_KEYS.USER_DATA);
-      } catch {
-        // Silenciar error de limpieza
-      }
-      
       return null;
     }
   }

@@ -34,6 +34,7 @@ import { showSuccess, showError, showWarning } from '../../../../../helper/notif
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 import { sanitizeInput } from '../../../../../helper/security/security.helper';
 import { getUserRoles } from '../../../../../helper/role/role.helper';
+import { getUserData } from '../../../../../helper/user/user.helper';
 import { isSuperAdmin, isAdmin } from '../../../../../config/permissions.config';
 import { ALLOWED_ROLES } from '../../../../../config/env.config';
 
@@ -280,12 +281,12 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
    * @security Validación Zod + cache 5s + jerarquía automática
    */
   const checkPermissions = useCallback(() => {
-    const userData = JSON.parse(sessionStorage.getItem('user_data') || '{}');
+  const userData = getUserData();
     const userRoles = getUserRoles();
 
     // Determinar permisos basado en roles usando helpers centralizados
     const hasAdminRole = isSuperAdmin(userRoles) || isAdmin(userRoles);
-    const isCurrentUser = userData?.id?.toString() === id;
+  const isCurrentUser = Boolean(userData?.id && userData.id.toString() === id);
 
     setState(prev => ({
       ...prev,

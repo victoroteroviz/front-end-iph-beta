@@ -23,6 +23,7 @@ import { logInfo, logError } from '../log/logger.helper';
 import type { Token } from '../../interfaces/token/token.interface';
 import CacheHelper from '../cache/cache.helper';
 import { getUserRoles, getUserRoleContext, validateExternalRoles, clearRoles } from '../role/role.helper';
+import { getUserData, clearUserData } from '../user/user.helper';
 
 // Tipos para el helper de navegación
 export interface NavigationConfig {
@@ -125,10 +126,10 @@ class NavigationHelper {
    */
   public getUserFromStorage(): UserData | null {
     try {
-      const userData = sessionStorage.getItem('user_data');
-      if (!userData) return null;
-
-      const user = JSON.parse(userData);
+      const user = getUserData();
+      if (!user) {
+        return null;
+      }
       const roleContext = getUserRoleContext();
 
       if (!roleContext || roleContext.roles.length === 0) {
@@ -174,8 +175,9 @@ class NavigationHelper {
       CacheHelper.remove('auth_user_data', true);
       CacheHelper.remove('auth_token', true);
       clearRoles();
-      sessionStorage.removeItem('user_data');
-      sessionStorage.removeItem('token');
+  clearUserData();
+  sessionStorage.removeItem('token');
+  sessionStorage.removeItem('auth_token');
       
       if (this.config.enableNavigationLogging) {
         logInfo('NavigationHelper', 'Datos de navegación limpiados');
