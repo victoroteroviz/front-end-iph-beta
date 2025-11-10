@@ -39,13 +39,17 @@
  * @author Sistema IPH
  */
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 
 // Helpers
 import { isTokenExpired, getStoredToken } from '../../../helper/security/jwt.helper';
 import { isUserAuthenticated } from '../../../helper/navigation/navigation.helper';
-import { validateRolesByName } from '../../../helper/role/role.helper';
+import {
+  validateRolesByName,
+  loadEncryptedRolesAsync,
+  getUserRoles
+} from '../../../helper/role/role.helper';
 import { logInfo, logWarning } from '../../../helper/log/logger.helper';
 
 // Components
@@ -137,9 +141,48 @@ export interface PrivateRouteProps {
 export const PrivateRoute: React.FC<PrivateRouteProps> = ({
   children,
   requiredRoles,
-  redirectTo = '/'
-  // showLoading parameter reservado para futura implementación
+  redirectTo = '/',
+  showLoading = true
+  // showLoading controla el fallback mientras se hidratan roles
 }) => {
+  const [isLoadingRoles, setIsLoadingRoles] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      setIsLoadingRoles(false);
+      return;
+    }
+
+    const cachedRoles = getUserRoles();
+    if (cachedRoles.length > 0) {
+      setIsLoadingRoles(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    const hydrateEncryptedRoles = async (): Promise<void> => {
+      try {
+        await loadEncryptedRolesAsync();
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'unknown';
+        logWarning('PrivateRoute', 'No se pudieron cargar roles encriptados', {
+          error: errorMessage
+        });
+      } finally {
+        if (isMounted) {
+          setIsLoadingRoles(false);
+        }
+      }
+    };
+
+    void hydrateEncryptedRoles();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   /**
    * Valida si el usuario tiene acceso a la ruta
    *
@@ -152,6 +195,10 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
    * @refactored v2.0.0 - Usa helper centralizado para validación de roles
    */
   const accessValidation = useMemo(() => {
+    if (isLoadingRoles) {
+      return null;
+    }
+
     // 1️⃣ Validar JWT expirado
     const token = getStoredToken();
     if (isTokenExpired(token)) {
@@ -202,7 +249,11 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
       reason: 'authorized',
       redirectTo: null
     };
-  }, [requiredRoles]);
+  }, [isLoadingRoles, requiredRoles]);
+
+  if (!accessValidation) {
+    return showLoading ? <RouteLoadingFallback /> : null;
+  }
 
   // Si no tiene acceso, redirigir
   if (!accessValidation.hasAccess) {
@@ -231,6 +282,7 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
  * @returns {boolean} canAccess - true si el usuario tiene acceso
  * @returns {boolean} isAuthenticated - true si el usuario está autenticado
  * @returns {boolean} isTokenExpired - true si el token JWT está expirado
+ * @returns {boolean} isLoadingRoles - true mientras se hidratan roles desde storage seguro
  *
  * @refactored v2.0.0
  * - ✅ Usa validateRolesByName() del helper centralizado
@@ -274,18 +326,78 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
  * @version 2.0.0
  * @since 2025-01-30
  */
-export const usePrivateRoute = (requiredRoles?: string[]) => {
-  const token = getStoredToken();
-  const isAuthenticated = isUserAuthenticated();
-  const isExpired = isTokenExpired(token);
+/* eslint-disable-next-line react-refresh/only-export-components */
+export function usePrivateRoute(requiredRoles?: string[]) {
+  const [isLoadingRoles, setIsLoadingRoles] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      setIsLoadingRoles(false);
+      return;
+    }
+
+    const cachedRoles = getUserRoles();
+    if (cachedRoles.length > 0) {
+      setIsLoadingRoles(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    const hydrateEncryptedRoles = async (): Promise<void> => {
+      try {
+        await loadEncryptedRolesAsync();
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'unknown';
+        logWarning('usePrivateRoute', 'No se pudieron cargar roles encriptados', {
+          error: errorMessage
+        });
+      } finally {
+        if (isMounted) {
+          setIsLoadingRoles(false);
+        }
+      }
+    };
+
+    void hydrateEncryptedRoles();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const authState = useMemo(() => {
+    if (isLoadingRoles) {
+      return {
+        token: null as string | null,
+        isAuthenticated: false,
+        isExpired: false
+      };
+    }
+
+    const token = getStoredToken();
+    const expired = isTokenExpired(token);
+    const authenticated = !expired && isUserAuthenticated();
+
+    return {
+      token,
+      isAuthenticated: authenticated,
+      isExpired: expired
+    };
+  }, [isLoadingRoles]);
 
   /**
    * Calcula si el usuario tiene acceso
    * Memoizado para optimizar re-renders
    */
   const canAccess = useMemo(() => {
-    // Validar autenticación y token
-    if (isExpired || !isAuthenticated) return false;
+    if (isLoadingRoles) {
+      return false;
+    }
+
+    if (authState.isExpired || !authState.isAuthenticated) {
+      return false;
+    }
 
     // Si se especificaron roles, validar con helper centralizado
     // ✅ v2.0.0: Usa validateRolesByName() con validación Zod y cache
@@ -295,14 +407,15 @@ export const usePrivateRoute = (requiredRoles?: string[]) => {
 
     // Sin roles requeridos = solo autenticación
     return true;
-  }, [isExpired, isAuthenticated, requiredRoles]);
+  }, [authState.isAuthenticated, authState.isExpired, isLoadingRoles, requiredRoles]);
 
   return {
     canAccess,
-    isAuthenticated,
-    isTokenExpired: isExpired
+    isAuthenticated: authState.isAuthenticated,
+    isTokenExpired: authState.isExpired,
+    isLoadingRoles
   };
-};
+}
 
 // #endregion
 
