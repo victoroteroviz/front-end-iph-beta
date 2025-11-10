@@ -13,6 +13,7 @@ import CacheHelper from "../../../../helper/cache/cache.helper";
 import {logger} from '../../../../helper/log/logger.helper';
 import type { IRole } from "../../../../interfaces/role/role.interface";
 import { clearAllPaginationPersistence } from '../../../shared/components/pagination';
+import { setUserRoles, clearRoles } from '../../../../helper/role/role.helper';
 
 /**
  * Handler para decodificar JWT con manejo seguro de excepciones y validaciones
@@ -64,14 +65,6 @@ const UserDataSchema = z.object({
   foto: z.string().optional()
 });
 
-/**
- * Schema para validar roles en cache
- */
-const RolesSchema = z.array(z.object({
-  id: z.number(),
-  nombre: z.string()
-}));
-
 // =====================================================
 // CONSTANTES DE CONFIGURACIÓN DE CACHE
 // =====================================================
@@ -80,11 +73,15 @@ const RolesSchema = z.array(z.object({
  * Configuración centralizada para cache de autenticación
  *
  * IMPORTANTE: Todas las keys y TTLs de auth centralizados aquí
+ *
+ * NOTA v3.0.0: La key ROLES fue removida. Los roles ahora se gestionan
+ * con RoleHelper (src/helper/role/role.helper.ts) que usa encriptación
+ * nativa con EncryptHelper y cache interno optimizado.
  */
 const AUTH_CACHE_CONFIG = {
   keys: {
     USER_DATA: 'auth_user_data',
-    ROLES: 'auth_roles',
+    // ROLES: 'auth_roles', ← REMOVIDO - Ahora usa RoleHelper
     TOKEN: 'auth_token'
   },
   ttl: {
@@ -132,38 +129,38 @@ const saveUserData = async (userData: z.infer<typeof UserDataSchema>): Promise<v
   logger.debug('saveUserData', 'Datos de usuario guardados en cache encriptado', {
     userId: validated.id
   });
+
+  // Compatibilidad temporal con módulos legacy que leen sessionStorage directamente
+  try {
+    sessionStorage.setItem('user_data', JSON.stringify(validated));
+  } catch (error) {
+    logger.warn('saveUserData', 'No se pudo sincronizar user_data en sessionStorage (legacy)', {
+      userId: validated.id,
+      error: error instanceof Error ? error.message : 'unknown'
+    });
+  }
 };
 
 /**
- * Guarda los roles del usuario en cache
+ * Guarda los roles del usuario usando RoleHelper
  *
+ * MODIFICADO v3.0.0: Ahora usa RoleHelper.setUserRoles() directamente
+ * en lugar de CacheHelper. RoleHelper tiene validación Zod interna,
+ * encriptación nativa y cache optimizado.
+ *
+ * @deprecated Esta función ya no es necesaria. Usar setUserRoles() directamente.
  * @param roles - Roles del usuario
  */
-const saveUserRoles = async (roles: IRole[]): Promise<void> => {
-  // Validar roles antes de guardar
-  const validated = RolesSchema.parse(roles);
-
-  const stored = await CacheHelper.setEncrypted(AUTH_CACHE_CONFIG.keys.ROLES, validated, {
-    expiresIn: AUTH_CACHE_CONFIG.ttl.SESSION,
-    priority: 'critical',
-    namespace: 'user',
-    useSessionStorage: true,
-    metadata: {
-      schema: 'RolesSchema'
-    }
-  });
-
-  if (!stored) {
-    logger.warn('saveUserRoles', 'No se pudieron guardar roles en cache encriptado', {
-      rolesCount: validated.length
-    });
-    return;
-  }
-
-  logger.debug('saveUserRoles', 'Roles guardados en cache encriptado', {
-    rolesCount: validated.length
-  });
-};
+// const saveUserRoles = async (roles: IRole[]): Promise<void> => {
+//   // NOTA: Esta función fue reemplazada por llamada directa a:
+//   // await setUserRoles(roles);
+//   //
+//   // RoleHelper proporciona:
+//   // - Validación Zod automática
+//   // - Encriptación con EncryptHelper (Web Crypto API)
+//   // - Cache interno optimizado (5s TTL)
+//   // - Gestión unificada de roles en toda la app
+// };
 
 /**
  * Guarda el token JWT en cache
@@ -237,12 +234,28 @@ export const getAuthToken = async (): Promise<string | null> => {
 
 /**
  * Limpia todos los datos de autenticación del cache
+ *
+ * MODIFICADO v3.0.0: Ahora usa clearRoles() del RoleHelper para limpiar
+ * roles (encrypted + legacy) en lugar de CacheHelper.
  */
 const clearAuthCache = (): void => {
+  // Limpiar datos de usuario y token con CacheHelper
   CacheHelper.remove(AUTH_CACHE_CONFIG.keys.USER_DATA, true);
-  CacheHelper.remove(AUTH_CACHE_CONFIG.keys.ROLES, true);
+  // CacheHelper.remove(AUTH_CACHE_CONFIG.keys.ROLES, true); ← REMOVIDO - Ahora usa RoleHelper
   CacheHelper.remove(AUTH_CACHE_CONFIG.keys.TOKEN, true);
 
+  try {
+    sessionStorage.removeItem('user_data');
+  } catch (error) {
+    logger.warn('clearAuthCache', 'No se pudo eliminar user_data legacy de sessionStorage', {
+      error: error instanceof Error ? error.message : 'unknown'
+    });
+  }
+
+  // Limpiar roles con RoleHelper (limpia 'roles' y 'roles_encrypted')
+  clearRoles();
+
+  // Limpiar tokens legacy de sessionStorage
   for (const legacyKey of LEGACY_AUTH_TOKEN_KEYS) {
     try {
       sessionStorage.removeItem(legacyKey);
@@ -253,7 +266,12 @@ const clearAuthCache = (): void => {
     }
   }
 
-  logger.debug('clearAuthCache', 'Cache de autenticación limpiado');
+  logger.debug('clearAuthCache', 'Cache de autenticación limpiado', {
+    userDataCleared: true,
+    rolesCleared: true,  // ← Con RoleHelper (encrypted + legacy)
+    tokenCleared: true,
+    legacyTokensCleared: true
+  });
 };
 
 // =====================================================
@@ -365,8 +383,10 @@ export const login = async (loginRequest : LoginRequest)
     if(rolesFiltrados.length <= 0) throw new Error('Roles no validos');
 
     // ========================================
-    // ✅ GUARDAR EN CACHE CON CACHEHELPER (DRY)
+    // ✅ GUARDAR DATOS DE AUTENTICACIÓN
     // ========================================
+    // MODIFICADO v3.0.0: Roles ahora se guardan con RoleHelper (encriptado)
+    // en lugar de CacheHelper para unificar la gestión de roles en toda la app.
 
     await Promise.all([
       saveUserData({
@@ -376,13 +396,16 @@ export const login = async (loginRequest : LoginRequest)
         segundo_apellido: token.data.segundo_apellido,
         foto: token.data.photo
       }),
-      saveUserRoles(rolesFiltrados),
+      setUserRoles(rolesFiltrados),  // ← RoleHelper v3.0.0 (encriptado + cache)
       saveAuthToken(loginResponse.token)
     ]);
 
-    logger.debug(login.name,'Login exitoso, datos guardados en cache con CacheHelper', {
+    logger.debug(login.name,'Login exitoso, datos guardados', {
       userId: token.data.id,
-      rolesCount: rolesFiltrados.length
+      rolesCount: rolesFiltrados.length,
+      rolesStorage: 'RoleHelper v3.0.0 (encrypted + cache)',
+      userDataStorage: 'CacheHelper (encrypted)',
+      tokenStorage: 'CacheHelper (encrypted) + sessionStorage (legacy)'
     });
 
     return token;

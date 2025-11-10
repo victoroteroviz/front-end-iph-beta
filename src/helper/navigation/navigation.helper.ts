@@ -1,16 +1,28 @@
 /**
  * Helper de Navegación - Principios SOLID, KISS, DRY
- * 
+ *
  * Maneja la navegación de la aplicación de forma consistente:
  * - Redirección basada en roles (simplificada)
  * - Validación de rutas
  * - Historial de navegación
  * - Logging de navegación
+ *
+ * @version 2.0.0
+ * @changelog
+ * v2.0.0 (2025-01-31)
+ * - ✅ Integración con RoleHelper v3.0.0 para gestión centralizada de roles
+ * - ✅ getUserFromStorage() ahora usa getUserRoles() y getUserRoleContext()
+ * - ✅ isUserAuthenticated() ahora usa getUserRoles() para validar roles
+ * - ✅ hasAccessToRoute() usa validateExternalRoles() de RoleHelper
+ * - ✅ clearNavigationData() usa clearRoles() de RoleHelper
+ * - ✅ Eliminado acceso directo a sessionStorage para roles
+ * - ✅ Performance mejorada (cache del RoleHelper)
  */
 
 import { logInfo, logError } from '../log/logger.helper';
 import type { Token } from '../../interfaces/token/token.interface';
-import { ALLOWED_ROLES } from '../../config/env.config';
+import CacheHelper from '../cache/cache.helper';
+import { getUserRoles, getUserRoleContext, validateExternalRoles, clearRoles } from '../role/role.helper';
 
 // Tipos para el helper de navegación
 export interface NavigationConfig {
@@ -88,10 +100,9 @@ class NavigationHelper {
    */
   public hasAccessToRoute(userRoles: IRole[], targetRoute: string): boolean {
     try {
-      // Por ahora validación básica - si tiene roles válidos, puede acceder
-      const hasValidRole = userRoles.some(userRole => 
-        ALLOWED_ROLES.some(allowedRole => allowedRole.id === userRole.id)
-      );
+      // Validar contra configuración del sistema utilizando RoleHelper
+      const validRoles = validateExternalRoles(userRoles);
+      const hasValidRole = validRoles.length > 0;
 
       if (this.config.enableNavigationLogging) {
         logInfo('NavigationHelper', 'Validando acceso a ruta', {
@@ -115,17 +126,19 @@ class NavigationHelper {
   public getUserFromStorage(): UserData | null {
     try {
       const userData = sessionStorage.getItem('user_data');
-      const rolesData = sessionStorage.getItem('roles');
-      
-      if (!userData || !rolesData) return null;
+      if (!userData) return null;
 
       const user = JSON.parse(userData);
-      const roles = JSON.parse(rolesData);
+      const roleContext = getUserRoleContext();
+
+      if (!roleContext || roleContext.roles.length === 0) {
+        return null;
+      }
 
       return {
         id: user.id,
         nombre: user.nombre,
-        roles: roles
+        roles: roleContext.roles
       };
 
     } catch (error) {
@@ -140,10 +153,12 @@ class NavigationHelper {
   public isUserAuthenticated(): boolean {
     try {
       const token = sessionStorage.getItem('token');
-      const userData = sessionStorage.getItem('user_data');
-      const roles = sessionStorage.getItem('roles');
+      if (!token) {
+        return false;
+      }
 
-      return !!(token && userData && roles);
+      const roles = getUserRoles();
+      return roles.length > 0;
 
     } catch (error) {
       logError('NavigationHelper', error, 'Error verificando autenticación');
@@ -156,8 +171,10 @@ class NavigationHelper {
    */
   public clearNavigationData(): void {
     try {
+      CacheHelper.remove('auth_user_data', true);
+      CacheHelper.remove('auth_token', true);
+      clearRoles();
       sessionStorage.removeItem('user_data');
-      sessionStorage.removeItem('roles');
       sessionStorage.removeItem('token');
       
       if (this.config.enableNavigationLogging) {
@@ -185,7 +202,7 @@ class NavigationHelper {
     if (!route || typeof route !== 'string') return false;
     
     // Validación básica de formato de ruta
-    const routeRegex = /^\/[a-zA-Z0-9\-_\/]*$/;
+    const routeRegex = /^\/[a-zA-Z0-9\-_\\/]*$/;
     return routeRegex.test(route) && route.length <= 100;
   }
 

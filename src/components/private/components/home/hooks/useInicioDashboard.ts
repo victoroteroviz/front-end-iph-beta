@@ -12,8 +12,8 @@ import {
 } from '../../statistics/services/statistics.service';
 
 // Sistema de roles
-import { isUserAuthenticated, getUserFromStorage } from '../../../../../helper/navigation/navigation.helper';
-import { validateExternalRoles } from '../../../../../helper/role/role.helper';
+import { isUserAuthenticated } from '../../../../../helper/navigation/navigation.helper';
+import { getUserRoles, getUserRoleContext } from '../../../../../helper/role/role.helper';
 
 // Notificaciones y logging
 import { showError } from '../../../../../helper/notification/notification.helper';
@@ -152,27 +152,35 @@ const useInicioDashboard = () => {
         return false;
       }
 
-      // Obtener datos del usuario desde sessionStorage
-      const userData = getUserFromStorage();
-      if (!userData || !userData.roles || userData.roles.length === 0) {
-        logError('useInicioDashboard', 'No se encontraron datos de usuario o roles', 'Redirigiendo a login');
+      // ✅ REFACTORIZADO v3.0.0: Obtener roles con RoleHelper
+      // - getUserRoles() lee desde cache interno (ultra rápido)
+      // - Ya valida con Zod automáticamente
+      // - Ya valida contra ALLOWED_ROLES internamente
+      const userRoles = getUserRoles();
+
+      if (userRoles.length === 0) {
+        logError(
+          'useInicioDashboard',
+          'Usuario no tiene roles válidos',
+          'Redirigiendo a login. Posibles causas: (1) no hay roles en storage, (2) roles corruptos, (3) roles no válidos según ALLOWED_ROLES'
+        );
         navigate('/');
         return false;
       }
 
-      // ✅ Validar roles usando el helper centralizado (valida contra ALLOWED_ROLES)
-      const validRoles = validateExternalRoles(userData.roles);
-
-      if (validRoles.length === 0) {
-        logError('useInicioDashboard', 'Usuario no tiene roles válidos según el sistema', 'Acceso denegado');
-        setState(prev => ({ ...prev, autorizado: false }));
-        return false;
-      }
+      // ✅ OPCIONAL: Obtener contexto completo (userId + roles)
+      // Si necesitas el userId para algo más adelante:
+      // const context = getUserRoleContext();
+      // if (!context) { ... }
 
       // ✅ Autorizar acceso a todos los roles válidos del sistema
       // El dashboard de Inicio es accesible a todos los roles autenticados
       // (SuperAdmin, Administrador, Superior, Elemento)
       setState(prev => ({ ...prev, autorizado: true }));
+
+      // 💡 Si necesitas los nombres de roles para props más adelante:
+      // const roleNames = userRoles.map(r => r.nombre);
+
       return true;
 
     } catch (error) {

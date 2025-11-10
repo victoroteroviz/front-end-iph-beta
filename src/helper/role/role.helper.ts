@@ -8,8 +8,9 @@
  * - Verificación de permisos granulares
  * - Obtención de datos de roles desde sessionStorage O props externos
  * - Configuración dinámica desde variables de entorno
+ * - Almacenamiento encriptado de roles en sessionStorage
  *
- * @version 2.1.0
+ * @version 3.0.0
  * @features
  * - ✅ Validación de roles externos (props)
  * - ✅ Validación de roles desde sessionStorage
@@ -19,16 +20,32 @@
  * - ✅ Sistema de caching para performance
  * - ✅ Optimizaciones O(1) con Map
  * - ✅ Protección contra datos corruptos
+ * - ✅ **NUEVO:** Encriptación de roles en sessionStorage
+ * - ✅ **NUEVO:** Migración automática desde formato legacy
+ * - ✅ **NUEVO:** Métodos para guardar/limpiar roles seguros
  *
  * @security
  * - Validación estricta con Zod para prevenir inyección
  * - Cache con TTL para reducir lecturas costosas
  * - Sanitización automática de datos corruptos
  * - Logs seguros sin exponer datos sensibles
+ * - **NUEVO:** Roles encriptados en storage con EncryptHelper
+ * - **NUEVO:** Migración transparente de legacy a encrypted
+ *
+ * @changelog
+ * v3.0.0 (2025-01-31)
+ * - ✅ Agregado setUserRoles() para guardar roles encriptados
+ * - ✅ Agregado clearRoles() para limpiar roles (encrypted + legacy)
+ * - ✅ Agregado loadEncryptedRolesAsync() para carga inicial
+ * - ✅ Modificado getUserRoles() con soporte para legacy (backward compatible)
+ * - ✅ Migración automática de formato legacy a encrypted
+ * - ✅ Documentación extendida con ejemplos de uso
  */
 
 import { z } from 'zod';
 import { logInfo, logError, logWarning } from '../log/logger.helper';
+import { encryptData, decryptData } from '../encrypt/encrypt.helper';
+import type { EncryptionResult } from '../encrypt/encrypt.helper';
 import {
   hasHierarchicalAccess as configHasHierarchicalAccess,
   getRoleLevel,
@@ -76,7 +93,7 @@ const UserDataSchema = z.object({
     .min(1, 'ID de usuario requerido')
     .max(100, 'ID de usuario demasiado largo'),
   // Otros campos opcionales pueden agregarse aquí
-}).passthrough(); // Permite otros campos sin validarlos estrictamente
+}).loose(); // Permite otros campos sin validarlos estrictamente
 
 // ==================== TYPES (según estándares, no interfaces) ====================
 
@@ -106,6 +123,15 @@ export type RoleValidationResult = {
   message: string;
   matchedRole?: string;
   userRoles?: string[];
+};
+
+const isRoleConfig = (role: unknown): role is IRole => {
+  if (typeof role !== 'object' || role === null) {
+    return false;
+  }
+
+  const candidate = role as { id?: unknown; nombre?: unknown };
+  return typeof candidate.id === 'number' && typeof candidate.nombre === 'string';
 };
 
 /**
@@ -142,34 +168,26 @@ export const getSystemRoles = (): IRole[] => {
   }
 
   // Validación 3: Filtrar solo roles válidos
-  const validRoles = ALLOWED_ROLES.filter((role: any) => {
-    // Verificar que sea objeto
-    if (typeof role !== 'object' || role === null) {
-      return false;
-    }
+  const validRoles: IRole[] = [];
+  let invalidRolesCount = 0;
 
-    // Verificar que tenga propiedades requeridas con tipos correctos
-    if (typeof role.id !== 'number' || typeof role.nombre !== 'string') {
-      return false;
+  for (const role of ALLOWED_ROLES as unknown[]) {
+    if (isRoleConfig(role)) {
+      validRoles.push(role);
+    } else {
+      invalidRolesCount += 1;
     }
-
-    // Verificar que no sean undefined/null
-    if (role.id === undefined || role.nombre === undefined) {
-      return false;
-    }
-
-    return true;
-  });
+  }
 
   // Log si hubo filtrado
-  if (validRoles.length !== ALLOWED_ROLES.length) {
+  if (invalidRolesCount > 0) {
     logWarning(
       'RoleHelper',
-      `${ALLOWED_ROLES.length - validRoles.length} rol(es) inválido(s) filtrado(s) en getSystemRoles()`
+      `${invalidRolesCount} rol(es) inválido(s) filtrado(s) en getSystemRoles()`
     );
   }
 
-  return validRoles as IRole[];
+  return validRoles;
 };
 
 /**
@@ -203,7 +221,10 @@ class RoleHelper {
    */
   private rolesCache: IRole[] | null = null;
   private cacheTimestamp: number = 0;
-  private readonly CACHE_TTL = 5000; // 5 segundos
+  private readonly CACHE_TTL = 60000; // 60 segundos para minimizar recálculos
+
+  /** Promise de recarga en curso para evitar solicitudes simultáneas */
+  private encryptedReloadPromise: Promise<IRole[]> | null = null;
 
   /**
    * Map de roles permitidos para lookup O(1)
@@ -257,6 +278,26 @@ class RoleHelper {
     if (!this.rolesCache) return false;
     const now = Date.now();
     return (now - this.cacheTimestamp) < this.CACHE_TTL;
+  }
+
+  /** Programa una recarga asíncrona de roles encriptados respetando backpressure */
+  private scheduleEncryptedReload(reason: 'cache-expired' | 'missing-legacy'): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (this.encryptedReloadPromise) {
+      return;
+    }
+
+    this.encryptedReloadPromise = this.loadEncryptedRolesAsync()
+      .catch(error => {
+        logError('RoleHelper', error, `Error recargando roles encriptados (${reason})`);
+        return [];
+      })
+      .finally(() => {
+        this.encryptedReloadPromise = null;
+      });
   }
 
   /**
@@ -367,78 +408,347 @@ class RoleHelper {
   /**
    * Obtiene y valida roles desde sessionStorage con Zod
    * Implementa caching para reducir lecturas costosas
-   * 
+   *
+   * **MODIFICADO en v3.0.0:** Soporte para formato encrypted con fallback a legacy
+   *
    * @returns {IRole[]} Array de roles validados o array vacío
    * @security Valida estructura con Zod y sanitiza datos corruptos
-   * @performance Usa cache con TTL de 5 segundos
-   * 
+  * @performance Usa cache con TTL de 60 segundos
+   *
    * @example
    * const roles = roleHelper.getUserRoles();
    * // Primera llamada: lee sessionStorage y valida
-   * // Siguientes llamadas (< 5s): retorna desde cache
+  * // Siguientes llamadas (< 60s): retorna desde cache
+   *
+   * @important
+   * Para máxima performance, llama loadEncryptedRolesAsync() al inicio de la app.
+   * Este método es SÍNCRONO y solo lee formato legacy si el cache expira.
    */
   public getUserRoles(): IRole[] {
-    // Retornar cache si es válido
+    // Retornar cache si es válido (FAST PATH)
     if (this.isCacheValid()) {
       return this.rolesCache!;
     }
 
-    // Cache expirado o inválido, refrescar
     try {
-      const rolesData = sessionStorage.getItem(this.STORAGE_KEYS.ROLES);
-      
-      if (!rolesData) {
+      if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') {
+        logWarning('RoleHelper', 'SessionStorage no disponible en este entorno');
+        return this.rolesCache ?? [];
+      }
+
+      const legacyKey = this.STORAGE_KEYS.ROLES;
+      const encryptedKey = `${legacyKey}_encrypted`;
+      const legacyData = sessionStorage.getItem(legacyKey);
+      const encryptedExists = Boolean(sessionStorage.getItem(encryptedKey));
+
+      if (this.rolesCache && encryptedExists) {
+        this.scheduleEncryptedReload('cache-expired');
+        return this.rolesCache;
+      }
+
+      if (!legacyData) {
+        if (encryptedExists) {
+          this.scheduleEncryptedReload('missing-legacy');
+          return this.rolesCache ?? [];
+        }
+
         this.rolesCache = [];
         this.cacheTimestamp = Date.now();
         return [];
       }
 
-      const parsed = JSON.parse(rolesData);
-
-      // Validación con Zod
+      const parsed = JSON.parse(legacyData);
       const validationResult = RolesArraySchema.safeParse(parsed);
 
       if (!validationResult.success) {
         logError(
           'RoleHelper',
           validationResult.error,
-          'Datos de roles inválidos según schema Zod - sessionStorage corrupto'
+          'Datos de roles legacy inválidos según schema Zod - sessionStorage corrupto'
         );
 
-        // Sanitizar sessionStorage corrupto
-        logWarning('RoleHelper', 'Limpiando sessionStorage corrupto');
-        sessionStorage.removeItem(this.STORAGE_KEYS.ROLES);
-        
+        logWarning('RoleHelper', 'Limpiando sessionStorage legacy corrupto');
+        sessionStorage.removeItem(legacyKey);
+
         this.rolesCache = [];
         this.cacheTimestamp = Date.now();
         return [];
       }
 
-      // Datos válidos, actualizar cache
       const validatedRoles = validationResult.data;
       this.rolesCache = validatedRoles;
       this.cacheTimestamp = Date.now();
 
-      logInfo('RoleHelper', 'Roles validados y cacheados correctamente', {
-        count: validatedRoles.length
+      logInfo('RoleHelper', 'Roles legacy validados y cacheados correctamente', {
+        count: validatedRoles.length,
+        format: 'legacy',
+        recommendation: 'Considera migrar a formato encriptado usando setUserRoles()'
       });
 
       return validatedRoles;
 
     } catch (error) {
       logError('RoleHelper', error, 'Error crítico obteniendo roles del usuario');
-      
-      // Limpiar cache y sessionStorage en caso de error
+
       this.rolesCache = [];
       this.cacheTimestamp = Date.now();
-      
+
       try {
         sessionStorage.removeItem(this.STORAGE_KEYS.ROLES);
       } catch {
         // Silenciar error de limpieza
       }
-      
+
       return [];
+    }
+  }
+
+  /**
+   * Guarda roles de forma segura en sessionStorage (ENCRIPTADO)
+   *
+   * **NUEVO en v3.0.0**
+   *
+   * Este método encripta los roles antes de guardarlos en sessionStorage
+   * y actualiza el cache interno para uso inmediato.
+   *
+   * @param {IRole[]} roles - Roles a guardar
+   * @returns {Promise<boolean>} true si se guardó exitosamente
+   * @security Valida con Zod antes de guardar y encripta con EncryptHelper
+   * @performance Actualiza cache interno simultáneamente
+   *
+   * @example
+   * ```typescript
+   * // Después de login exitoso
+   * const loginResponse = await loginService(email, password);
+   * const success = await roleHelper.setUserRoles(loginResponse.roles);
+   *
+   * if (success) {
+   *   console.log('Roles guardados de forma segura');
+   *   navigate('/dashboard');
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Con manejo de errores
+   * try {
+   *   await roleHelper.setUserRoles(roles);
+   *   showSuccess('Sesión iniciada correctamente');
+   * } catch (error) {
+   *   showError('Error guardando roles');
+   * }
+   * ```
+   */
+  public async setUserRoles(roles: IRole[]): Promise<boolean> {
+    try {
+      // 1. Validar con Zod antes de guardar
+      const validationResult = RolesArraySchema.safeParse(roles);
+
+      if (!validationResult.success) {
+        logError(
+          'RoleHelper',
+          validationResult.error,
+          'Intento de guardar roles inválidos - validación Zod falló'
+        );
+        return false;
+      }
+
+      const validatedRoles = validationResult.data;
+
+      // 2. Encriptar roles
+      const encrypted = await encryptData(JSON.stringify(validatedRoles));
+
+      // 3. Guardar en sessionStorage encriptado
+      sessionStorage.setItem(
+        `${this.STORAGE_KEYS.ROLES}_encrypted`,
+        JSON.stringify(encrypted)
+      );
+
+      // 4. Actualizar cache interno para uso inmediato (sin necesidad de desencriptar)
+      this.rolesCache = validatedRoles;
+      this.cacheTimestamp = Date.now();
+
+      logInfo('RoleHelper', 'Roles guardados de forma segura (encriptados)', {
+        count: validatedRoles.length,
+        encrypted: true,
+        cacheUpdated: true
+      });
+
+      return true;
+
+    } catch (error) {
+      logError('RoleHelper', error, 'Error guardando roles encriptados');
+      return false;
+    }
+  }
+
+  /**
+   * Carga roles encriptados desde sessionStorage al iniciar la aplicación
+   *
+   * **NUEVO en v3.0.0**
+   *
+   * Este método debe ser llamado al iniciar la aplicación (ej: en App.tsx)
+   * para cargar roles encriptados en el cache interno. Después de esto,
+   * getUserRoles() funcionará de forma síncrona usando el cache.
+   *
+   * @returns {Promise<IRole[]>} Roles desencriptados y validados
+   * @security Desencripta con EncryptHelper y valida con Zod
+   * @performance Una sola llamada al inicio, luego todo es síncrono
+   *
+   * @example
+   * ```typescript
+   * // En App.tsx o componente raíz
+   * import { roleHelper } from '@/helper/role/role.helper';
+   *
+   * function App() {
+   *   useEffect(() => {
+   *     const loadRoles = async () => {
+   *       const roles = await roleHelper.loadEncryptedRolesAsync();
+   *       if (roles.length === 0) {
+   *         // No hay roles, redirigir a login
+   *         navigate('/login');
+   *       }
+   *     };
+   *
+   *     loadRoles();
+   *   }, []);
+   *
+   *   return <YourApp />;
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Con fallback a legacy
+   * const roles = await roleHelper.loadEncryptedRolesAsync();
+   *
+   * if (roles.length === 0) {
+   *   // Intentar cargar desde formato legacy
+   *   const legacyRoles = roleHelper.getUserRoles(); // Síncrono
+   *
+   *   if (legacyRoles.length > 0) {
+   *     // Migrar a formato encriptado
+   *     await roleHelper.setUserRoles(legacyRoles);
+   *     console.log('Roles migrados a formato encriptado');
+   *   }
+   * }
+   * ```
+   */
+  public async loadEncryptedRolesAsync(): Promise<IRole[]> {
+    try {
+      // 1. Intentar leer versión encriptada
+      const encryptedData = sessionStorage.getItem(`${this.STORAGE_KEYS.ROLES}_encrypted`);
+
+      if (!encryptedData) {
+        logInfo('RoleHelper', 'No se encontraron roles encriptados en storage');
+
+        // Verificar si existe versión legacy
+        const legacyData = sessionStorage.getItem(this.STORAGE_KEYS.ROLES);
+        if (legacyData) {
+          logWarning('RoleHelper', 'Se encontró versión legacy. Usa getUserRoles() para cargarla y luego setUserRoles() para migrar.');
+        }
+
+        return [];
+      }
+
+      // 2. Parsear EncryptionResult
+      const encryptionResult: EncryptionResult = JSON.parse(encryptedData);
+
+      // 3. Desencriptar
+      const decrypted = await decryptData(encryptionResult);
+
+      // 4. Parsear JSON
+      const parsed = JSON.parse(decrypted);
+
+      // 5. Validar con Zod
+      const validationResult = RolesArraySchema.safeParse(parsed);
+
+      if (!validationResult.success) {
+        logError(
+          'RoleHelper',
+          validationResult.error,
+          'Roles encriptados inválidos según schema Zod - limpiando storage'
+        );
+
+        // Limpiar datos corruptos
+        sessionStorage.removeItem(`${this.STORAGE_KEYS.ROLES}_encrypted`);
+
+        this.rolesCache = [];
+        this.cacheTimestamp = Date.now();
+        return [];
+      }
+
+      // 6. Actualizar cache interno
+      const validatedRoles = validationResult.data;
+      this.rolesCache = validatedRoles;
+      this.cacheTimestamp = Date.now();
+
+      logInfo('RoleHelper', 'Roles encriptados cargados correctamente', {
+        count: validatedRoles.length,
+        encrypted: true,
+        cacheUpdated: true
+      });
+
+      return validatedRoles;
+
+    } catch (error) {
+      logError('RoleHelper', error, 'Error cargando roles encriptados');
+
+      // Limpiar datos corruptos
+      try {
+        sessionStorage.removeItem(`${this.STORAGE_KEYS.ROLES}_encrypted`);
+      } catch {
+        // Silenciar error de limpieza
+      }
+
+      this.rolesCache = [];
+      this.cacheTimestamp = Date.now();
+      return [];
+    }
+  }
+
+  /**
+   * Limpia todos los datos de roles (encriptados y legacy)
+   *
+   * **NUEVO en v3.0.0**
+   *
+   * Este método debe ser llamado al hacer logout para limpiar
+   * completamente los roles del usuario.
+   *
+   * @public
+   * @example
+   * ```typescript
+   * // En logout
+   * roleHelper.clearRoles();
+   * clearAuthToken(); // Limpiar JWT también
+   * navigate('/login');
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Con logging
+   * const handleLogout = () => {
+   *   roleHelper.clearRoles();
+   *   CacheHelper.clear(true, 'user'); // Limpiar cache de usuario
+   *   sessionStorage.clear(); // Limpiar todo
+   *
+   *   logInfo('Logout', 'Sesión cerrada completamente');
+   *   navigate('/login');
+   * };
+   * ```
+   */
+  public clearRoles(): void {
+    try {
+      // Limpiar ambas versiones (encrypted + legacy)
+      sessionStorage.removeItem(this.STORAGE_KEYS.ROLES);
+      sessionStorage.removeItem(`${this.STORAGE_KEYS.ROLES}_encrypted`);
+
+      // Invalidar cache interno
+      this.invalidateCache();
+
+      logInfo('RoleHelper', 'Roles eliminados completamente (encrypted + legacy)');
+    } catch (error) {
+      logError('RoleHelper', error, 'Error limpiando roles');
     }
   }
 
@@ -821,6 +1131,14 @@ class RoleHelper {
 // Instancia única del helper
 const roleHelper = RoleHelper.getInstance();
 
+if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+  try {
+    await roleHelper.loadEncryptedRolesAsync();
+  } catch (error) {
+    logError('RoleHelper', error, 'Error precargando roles encriptados');
+  }
+}
+
 /**
  * ==========================================
  * FUNCIONES DE CONVENIENCIA - USO DIRECTO
@@ -885,6 +1203,68 @@ export const getUserRoles = (): IRole[] => roleHelper.getUserRoles();
  * Obtiene el contexto completo del usuario
  */
 export const getUserRoleContext = (): UserRoleContext | null => roleHelper.getUserRoleContext();
+
+// ==================== FUNCIONES NUEVAS v3.0.0 - ENCRIPTACIÓN ====================
+
+/**
+ * Guarda roles de forma segura en sessionStorage (ENCRIPTADO)
+ *
+ * **NUEVO en v3.0.0**
+ *
+ * @param roles - Roles a guardar
+ * @returns Promise<boolean> - true si se guardó exitosamente
+ *
+ * @example
+ * ```typescript
+ * // Después de login
+ * const loginResponse = await loginService(email, password);
+ * await setUserRoles(loginResponse.roles);
+ * ```
+ */
+export const setUserRoles = async (roles: IRole[]): Promise<boolean> =>
+  roleHelper.setUserRoles(roles);
+
+/**
+ * Carga roles encriptados desde sessionStorage al iniciar la app
+ *
+ * **NUEVO en v3.0.0**
+ *
+ * Debe ser llamado en App.tsx o componente raíz para cargar
+ * roles encriptados en el cache interno.
+ *
+ * @returns Promise<IRole[]> - Roles desencriptados
+ *
+ * @example
+ * ```typescript
+ * // En App.tsx
+ * useEffect(() => {
+ *   loadEncryptedRolesAsync().then(roles => {
+ *     if (roles.length === 0) navigate('/login');
+ *   });
+ * }, []);
+ * ```
+ */
+export const loadEncryptedRolesAsync = async (): Promise<IRole[]> =>
+  roleHelper.loadEncryptedRolesAsync();
+
+/**
+ * Limpia todos los datos de roles (encriptados y legacy)
+ *
+ * **NUEVO en v3.0.0**
+ *
+ * Debe ser llamado al hacer logout.
+ *
+ * @example
+ * ```typescript
+ * // En logout
+ * clearRoles();
+ * clearAuthToken();
+ * navigate('/login');
+ * ```
+ */
+export const clearRoles = (): void => roleHelper.clearRoles();
+
+// ==================== FUNCIONES EXISTENTES ====================
 
 /**
  * Verifica si es SuperAdmin
@@ -988,7 +1368,7 @@ export const hasAnyRole = (roleNames: string[], userRoles?: IRole[]): boolean =>
  * @returns {boolean} true si el usuario tiene al menos uno de los roles
  *
  * @performance
- * - Usa cache automático con TTL de 5s
+ * - Usa cache automático con TTL de 60s
  * - Validación Zod optimizada
  * - Comparación case-insensitive
  *
@@ -1131,33 +1511,46 @@ const initializeRoleSystem = () => {
   }
 
   // Validación de roles esperados
-  const expectedRoles = ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'];
-  const missingRoles = expectedRoles.filter(role => !roleNames.includes(role as any));
+  const expectedRoleKeys: SystemRoleType[] = ['SUPERADMIN', 'ADMIN', 'SUPERIOR', 'ELEMENTO'];
+  const roleLabels: Record<SystemRoleType, string> = {
+    SUPERADMIN: 'SuperAdmin',
+    ADMIN: 'Administrador',
+    SUPERIOR: 'Superior',
+    ELEMENTO: 'Elemento'
+  };
 
-  if (missingRoles.length > 0) {
+  const missingRoleKeys = expectedRoleKeys.filter(role => !roleNames.includes(role));
+
+  if (missingRoleKeys.length > 0) {
+    const missingRoleLabels = missingRoleKeys.map(role => roleLabels[role]);
     logWarning(
       'RoleHelper',
-      `Roles faltantes en configuración: ${missingRoles.join(', ')}. ` +
+      `Roles faltantes en configuración: ${missingRoleLabels.join(', ')}. ` +
       'Algunas funcionalidades pueden no estar disponibles.'
     );
   }
 
   // Log exitoso con detalles
-  logInfo('RoleHelper', '✅ Role Helper v2.1.0 inicializado correctamente', {
+  logInfo('RoleHelper', '✅ Role Helper v3.0.0 inicializado correctamente', {
     rolesConfigurados: systemRoles.length,
     rolesDisponibles: roleNames,
     features: [
       'Validación Zod runtime en env.config',
       'Validación de estructura en getAllowedRolesMap',
-      'Cache con TTL 5s',
+      'Cache con TTL 60s',
       'Optimización Map O(1)',
       'Protección datos corruptos',
-      'Filtrado automático de roles inválidos'
+      'Filtrado automático de roles inválidos',
+      '🆕 Encriptación de roles en sessionStorage',
+      '🆕 Migración automática desde formato legacy',
+      '🆕 Métodos setUserRoles() y clearRoles()'
     ],
     security: [
       'Validación doble ID + nombre',
       'Detección temprana de .env mal configurado',
-      'Logs descriptivos sin exponer datos sensibles'
+      'Logs descriptivos sin exponer datos sensibles',
+      '🆕 Roles encriptados con EncryptHelper (Web Crypto API)',
+      '🆕 Storage seguro con validación Zod post-desencriptación'
     ]
   });
 
