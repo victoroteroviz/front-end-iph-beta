@@ -2,6 +2,7 @@
  * Hook personalizado para InformeEjecutivo
  * Consume getIphById con ResponseIphData
  * Maneja toda la lógica de negocio separada de la presentación
+import { getUserData } from '../../../../../helper/user/user.helper';
  * Solo lectura - sin funcionalidad de edición
  *
  * @version 2.0.0
@@ -18,7 +19,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-
 // Servicios
 import { getIphById } from '../../iph-oficial/services/get-iph.service';
 
@@ -26,6 +26,7 @@ import { getIphById } from '../../iph-oficial/services/get-iph.service';
 import { showWarning } from '../../../../../helper/notification/notification.helper';
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 import { getUserRoles } from '../../../../../helper/role/role.helper';
+import { getUserData } from '../../../../../helper/user/user.helper';
 import { canAccessElemento } from '../../../../../config/permissions.config';
 
 // Interfaces
@@ -91,7 +92,7 @@ const useInformeEjecutivo = (informeIdProp?: string): IUseInformeEjecutivoReturn
       return false;
     }
 
-    const userData = JSON.parse(sessionStorage.getItem('user_data') || '{}');
+    const userData = getUserData();
     logInfo('InformeEjecutivo', 'Access granted to user', {
       userId: userData?.id,
       informeId

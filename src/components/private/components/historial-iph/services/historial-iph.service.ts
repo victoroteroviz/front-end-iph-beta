@@ -13,6 +13,7 @@
 
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 import { HttpHelper } from '../../../../../helper/http/http.helper';
+import { getStoredToken } from '../../../../../helper/security/jwt.helper';
 import {
   API_BASE_URL
 } from '../../../../../config/env.config';
@@ -28,6 +29,13 @@ const http: HttpHelper = HttpHelper.getInstance({
     "Content-Type": "application/json"
   }
 });
+
+const buildAuthHeaders = (): Record<string, string> => {
+  const token = getStoredToken();
+  return token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+};
 
 // Interfaces
 import type {
@@ -136,7 +144,7 @@ const getEstatusOptionsFromAPI = async (): Promise<string[]> => {
     }>(url, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+        ...buildAuthHeaders()
       }
     });
 
@@ -228,7 +236,7 @@ const getHistorialFromAPI = async (params: GetHistorialIPHParams): Promise<Histo
     const response = await http.get<info>(url, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+        ...buildAuthHeaders()
       }
     });
 
@@ -285,7 +293,7 @@ const updateEstatusFromAPI = async (params: UpdateEstatusIPHParams): Promise<Reg
     const response = await http.put<RegistroHistorialIPH>(url, body, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+        ...buildAuthHeaders()
       }
     });
 
@@ -353,7 +361,7 @@ export const getRegistroIPHById = async (id: string): Promise<RegistroHistorialI
     const response = await http.get<RegistroHistorialIPH>(url, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+        ...buildAuthHeaders()
       }
     });
 
@@ -390,7 +398,7 @@ export const getEstadisticasHistorial = async (): Promise<EstadisticasHistorial>
     }>(url, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+        ...buildAuthHeaders()
       }
     });
 
@@ -450,7 +458,7 @@ export const getHistorialIPHRaw = async (params: GetHistorialIPHParams = {}): Pr
     const response = await http.get<info>(url, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+        ...buildAuthHeaders()
       }
     });
 
@@ -486,7 +494,7 @@ export const getPaginatedHistorialIPH = async (params: GetHistorialIPHParamsEnha
     const response = await http.get<PaginatedResHistory>(url, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+        ...buildAuthHeaders()
       }
     });
 
@@ -529,7 +537,7 @@ export const calculateMonthlyAverage = async (
     const response = await http.get<MonthlyIphStatistics>(`${url}?${queryParams}`, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+        ...buildAuthHeaders()
       }
     });
 
@@ -566,7 +574,7 @@ export const getMonthlyIphStatistics = async (params: EstadisticasParams = {}): 
     const response = await http.get<MonthlyIphStatistics>(`${url}?${queryParams}`, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+        ...buildAuthHeaders()
       }
     });
 
@@ -621,7 +629,7 @@ export const getTiposHistorial = async (params: EstadisticasParams = {}): Promis
     }>(`${url}?${queryParams}`, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+        ...buildAuthHeaders()
       }
     });
 

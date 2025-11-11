@@ -130,6 +130,7 @@ export interface IPerfilUsuarioState {
   // Estado de la UI
   isEditing: boolean;
   userId?: string;
+  permissionsResolved: boolean;
   
   // Control de acceso
   canEdit: boolean;
@@ -209,7 +210,7 @@ export interface IValidationRule {
   minLength?: number;
   maxLength?: number;
   pattern?: RegExp;
-  custom?: (value: any) => string | null;
+  custom?: (value: unknown) => string | null;
 }
 
 export interface IValidationRules {

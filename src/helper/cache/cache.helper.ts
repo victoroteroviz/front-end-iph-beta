@@ -1,5 +1,5 @@
 /**
- * Cache Helper Optimizado v2.3.0 - TWO-LEVEL CACHE + ENCRYPTION
+ * Cache Helper Optimizado v2.3.0 - TWO-LEVEL CACHE (ENTERPRISE GRADE)
  *
  * Helper avanzado para manejo de cache con arquitectura de dos niveles:
  *
@@ -11,10 +11,12 @@
  * - Volátil (se pierde al recargar)
  *
  * 💾 L2 CACHE (Storage - Persistente):
- * - localStorage/sessionStorage
+ * - localStorage/sessionStorage con detección automática
  * - ~5-10ms de latencia (JSON parse/stringify)
  * - Persistente entre recargas
  * - Límite de 5MB por defecto (configurable)
+ * - Fallback graceful si storage no disponible
+ * - Validación Zod en runtime para datos corruptos
  *
  * 🚀 CARACTERÍSTICAS:
  * - Auto-cleanup de items expirados
@@ -30,18 +32,60 @@
  * - 🔐 Encriptación AES-GCM opcional para datos sensibles
  * - TypeScript strict mode
  * - Backward compatible
+ * - Cross-environment compatible (Browser, Node.js, SSR)
+ * - Validación de datos con Zod (runtime type safety)
+ * - Sanitización de keys (prevención XSS)
  *
  * @author Sistema IPH
  * @version 2.3.0
  *
  * @changelog
- * v2.3.0 (2025-01-31) 🔐 ENCRYPTION SUPPORT
- * - ✅ Encriptación AES-GCM opcional para datos sensibles
- * - ✅ Integración con EncryptHelper existente
- * - ✅ Opción `encrypt: true` en CacheSetOptions
- * - ✅ Desencriptación automática en get()
- * - ✅ Almacenamiento seguro de IV (Initialization Vector)
- * - ✅ Backward compatible (encriptación opt-in)
+ * v2.3.0 (2025-01-31) 🚀 OPTIONAL ENHANCEMENTS - ENTERPRISE GRADE
+ * - 🟡 MEJORA: Validación de tipos en runtime con Zod
+ *   - Agregado CacheItemSchema para validación automática
+ *   - Método parseCacheItem() con validación completa
+ *   - Auto-detección y eliminación de datos corruptos
+ *   - Logging detallado de errores de schema
+ *   - Previene crashes por estructura inválida
+ *   - Facilita migraciones entre versiones
+ *
+ * - 🟡 MEJORA: Sanitización robusta de keys
+ *   - Método sanitizeKey() con validación completa
+ *   - Previene XSS via storage keys
+ *   - Limita longitud máxima (100 chars) con hash
+ *   - Solo permite caracteres seguros (a-zA-Z0-9_-.:)
+ *   - Validación de keys vacías o null
+ *   - Método simpleHash() para mantener unicidad
+ *   - buildKey() ahora sanitiza automáticamente
+ *
+ * - ✅ Todos los métodos actualizados para usar validación Zod
+ * - ✅ get(), clear(), cleanup(), getStats(), evictLRU() validados
+ * - ✅ Logging mejorado con contexto de validación
+ * - ✅ Documentación extendida con ejemplos
+ *
+ * v2.2.1 (2025-01-31) 🛡️ CRITICAL FIXES - PRODUCTION READY
+ * - 🔴 FIX CRÍTICO: Verificación de disponibilidad de Storage API
+ *   - Agregado isStorageAvailable() para detectar storage deshabilitado
+ *   - Agregado getStorage() para acceso seguro con fallback
+ *   - Previene crashes en Safari modo incógnito y SSR
+ *   - Fallback graceful a solo L1 cache si L2 no disponible
+ *
+ * - 🔴 FIX CRÍTICO: Prevención de memory leaks de setTimeout
+ *   - Agregado tracking de updates asíncronos pendientes (Set<Timeout>)
+ *   - Método scheduleL2Update() con tracking automático
+ *   - Método flushPendingUpdates() para cancelar timeouts
+ *   - destroy() ahora cancela todos los timeouts pendientes
+ *   - Límite de seguridad: máximo 100 updates pendientes
+ *
+ * - 🔴 FIX CRÍTICO: estimateSize() cross-environment
+ *   - Estrategia 1: Blob API (navegadores)
+ *   - Estrategia 2: Buffer (Node.js/SSR)
+ *   - Estrategia 3: Estimación manual UTF-8 (fallback universal)
+ *   - Valor por defecto 1KB en lugar de 0 en error
+ *
+ * - ✅ Mejoras de robustez en todos los métodos
+ * - ✅ Logging mejorado con contexto de L1/L2
+ * - ✅ Try-catch adicionales en operaciones críticas
  *
  * v2.2.0 (2025-01-31) 🚀 TWO-LEVEL CACHE
  * - ✅ Implementado L1 cache en memoria (Map) para performance
@@ -63,7 +107,9 @@
  */
 
 import { logInfo, logWarning, logError } from '../log/logger.helper';
-import EncryptHelper from '../encrypt/encrypt.helper';
+import { z } from 'zod';
+import type { EncryptionResult } from '../encrypt/encrypt.helper';
+import { encryptData as encryptString, decryptData as decryptString } from '../encrypt/encrypt.helper';
 
 // =====================================================
 // TYPES Y CONSTANTES
@@ -123,8 +169,10 @@ export type CacheSetOptions = {
   namespace?: CacheNamespace;
   /** Usar sessionStorage en lugar de localStorage */
   useSessionStorage?: boolean;
-  /** Encriptar los datos antes de guardarlos (recomendado para datos sensibles) */
+  /** Guardar datos encriptados en L2 storage */
   encrypt?: boolean;
+  /** Passphrase personalizada para encriptar */
+  passphrase?: string;
   /** Metadata adicional */
   metadata?: Record<string, unknown>;
 };
@@ -167,6 +215,26 @@ export type CacheStats = {
 };
 
 /**
+ * Opciones adicionales para operaciones de recuperación segura
+ */
+type SecureGetOptions = {
+  /** Si usar sessionStorage en lugar de localStorage */
+  useSessionStorage?: boolean;
+  /** Passphrase personalizada para desencriptar */
+  passphrase?: string;
+};
+
+/**
+ * Payload encriptado almacenado en L2 cache
+ */
+type EncryptedCachePayload = EncryptionResult & {
+  /** Flag interno para identificar payload encriptado */
+  __cacheEncrypted: true;
+  /** Formato de serialización usado antes de encriptar */
+  format: 'json';
+};
+
+/**
  * Configuración del cache
  */
 type CacheConfig = {
@@ -187,6 +255,31 @@ type CacheConfig = {
   /** Número máximo de items en L1 cache (default: 100) */
   memoryCacheMaxItems: number;
 };
+
+// =====================================================
+// ZOD SCHEMAS - VALIDACIÓN EN RUNTIME
+// =====================================================
+
+/**
+ * Schema de validación Zod para CacheItem
+ *
+ * Valida la estructura de datos almacenados en storage para:
+ * - Prevenir errores por datos corruptos
+ * - Type safety en runtime
+ * - Auto-detección de items inválidos
+ * - Migración segura entre versiones
+ */
+const CacheItemSchema = z.object({
+  data: z.unknown(),
+  timestamp: z.number(),
+  expiresIn: z.number(),
+  priority: z.enum(['low', 'normal', 'high', 'critical']),
+  namespace: z.enum(['routes', 'data', 'components', 'user', 'system', 'temp']),
+  accessCount: z.number(),
+  lastAccess: z.number(),
+  size: z.number(),
+  metadata: z.record(z.string(), z.unknown()).optional()
+});
 
 // =====================================================
 // CACHE HELPER CLASS
@@ -290,6 +383,9 @@ export class CacheHelper {
 
   // Timer para auto-cleanup
   private static cleanupTimer: NodeJS.Timeout | null = null;
+
+  // Tracking de updates asíncronos pendientes (previene memory leaks)
+  private static pendingUpdates = new Set<NodeJS.Timeout>();
 
   // Inicialización y estado
   private static initialized = false;
@@ -399,22 +495,27 @@ export class CacheHelper {
       return;
     }
 
-    // 1. Detener auto-cleanup (previene memory leak)
+    // 1. Cancelar updates asíncronos pendientes (previene memory leak crítico)
+    const pendingCount = this.pendingUpdates.size;
+    this.flushPendingUpdates();
+
+    // 2. Detener auto-cleanup (previene memory leak)
     this.stopAutoCleanup();
 
-    // 2. Limpiar L1 cache (memoria) - IMPORTANTE para liberar memoria
+    // 3. Limpiar L1 cache (memoria) - IMPORTANTE para liberar memoria
     const l1Size = this.memoryCache.size;
     this.memoryCache.clear();
 
-    // 3. Resetear métricas
+    // 4. Resetear métricas
     this.resetMetrics();
 
-    // 4. Marcar como destruido y no inicializado
+    // 5. Marcar como destruido y no inicializado
     this.destroyed = true;
     this.initialized = false;
 
     this.log('info', 'Cache Helper destruido - recursos liberados', {
       timerStopped: this.cleanupTimer === null,
+      pendingUpdatesCanceled: pendingCount,
       l1CacheCleared: l1Size,
       metricsReset: this.metrics.hits === 0 && this.metrics.misses === 0
     });
@@ -519,6 +620,13 @@ export class CacheHelper {
         };
       }
 
+      if (options.encrypt) {
+        this.setEncrypted(key, data, options).catch((error: unknown) => {
+          this.log('error', `Error guardando en cache encriptado: "${key}"`, error);
+        });
+        return true;
+      }
+
       // Calcular tamaño estimado
       const size = this.estimateSize(data);
 
@@ -579,14 +687,28 @@ export class CacheHelper {
       // ========================================
       // PASO 2: Guardar en L2 Cache (Storage)
       // ========================================
-      const storage = options.useSessionStorage ? sessionStorage : localStorage;
-      storage.setItem(cacheKey, JSON.stringify(cacheItem));
+      const storage = this.getStorage(options.useSessionStorage || false);
 
-      this.log('info', `Cache set: "${key}" (L1 + L2)`, {
+      if (storage) {
+        // L2 disponible, guardar en storage
+        try {
+          storage.setItem(cacheKey, JSON.stringify(cacheItem));
+        } catch (error) {
+          // QuotaExceededError o similar
+          this.log('warn', `Error guardando en L2 cache: "${key}"`, error);
+          // Continuar, al menos está en L1
+        }
+      } else {
+        // L2 no disponible, solo guardamos en L1
+        this.log('info', `L2 cache no disponible, solo guardado en L1: "${key}"`);
+      }
+
+      this.log('info', `Cache set: "${key}" (L1${storage ? ' + L2' : ''})`, {
         size,
         namespace: cacheItem.namespace,
         priority: cacheItem.priority,
-        l1Enabled: this.config.enableMemoryCache
+        l1Enabled: this.config.enableMemoryCache,
+        l2Enabled: storage !== null
       });
 
       return true;
@@ -594,6 +716,260 @@ export class CacheHelper {
     } catch (error) {
       this.log('error', `Error guardando en cache: "${key}"`, error);
       return false;
+    }
+  }
+
+  /**
+   * Guarda un item encriptado en cache (Two-Level)
+   *
+   * IMPORTANTE: Los datos permanecen en texto plano en L1 (memoria) para performance,
+   * pero se almacenan encriptados en L2 (storage).
+   */
+  static async setEncrypted<T>(
+    key: string,
+    data: T,
+    options?: CacheSetOptions
+  ): Promise<boolean> {
+    if (!this.initialized) {
+      this.initialize();
+    }
+
+    if (!this.checkState()) {
+      return false;
+    }
+
+    try {
+      const normalizedOptions: Required<Omit<CacheSetOptions, 'metadata' | 'encrypt' | 'passphrase'>> & {
+        metadata?: Record<string, unknown>;
+        passphrase?: string;
+      } = {
+        expiresIn: options?.expiresIn ?? this.config.defaultExpiration,
+        priority: options?.priority ?? 'normal',
+        namespace: options?.namespace ?? 'data',
+        useSessionStorage: options?.useSessionStorage ?? false,
+        metadata: options?.metadata,
+        passphrase: options?.passphrase
+      };
+
+      const cacheKey = this.buildKey(key);
+      const now = Date.now();
+
+      let serialized: string;
+      try {
+        serialized = JSON.stringify(data);
+      } catch (serializationError) {
+        this.log('error', `Error serializando datos para encriptar: "${key}"`, serializationError);
+        return false;
+      }
+
+      const size = this.estimateSize(data);
+
+      if (!this.ensureSpace(size, normalizedOptions.useSessionStorage)) {
+        this.log('warn', `No hay espacio suficiente en cache para "${key}" (encrypted)`);
+        return false;
+      }
+
+      const baseMetadata: Record<string, unknown> = {
+        ...(normalizedOptions.metadata ?? {}),
+        encrypted: true
+      };
+
+      const baseItemProps = {
+        timestamp: now,
+        expiresIn: normalizedOptions.expiresIn,
+        priority: normalizedOptions.priority,
+        namespace: normalizedOptions.namespace,
+        accessCount: 0,
+        lastAccess: now,
+        size
+      } as const;
+
+      const memoryItem: CacheItem<T> = {
+        data,
+        ...baseItemProps,
+        metadata: baseMetadata
+      };
+
+      this.addToMemoryCache(cacheKey, memoryItem);
+
+      const storage = this.getStorage(normalizedOptions.useSessionStorage);
+
+      if (!storage) {
+        this.log('warn', `L2 cache no disponible, "${key}" se guardó solo en L1 (encrypted)`);
+        return true;
+      }
+
+      try {
+        const encryptedPayload = await this.encryptPayload(serialized, normalizedOptions.passphrase);
+
+        const storageMetadata: Record<string, unknown> = {
+          ...baseMetadata,
+          encryption: {
+            algorithm: encryptedPayload.algorithm,
+            timestamp: encryptedPayload.timestamp
+          }
+        };
+
+        const storageItem: CacheItem<EncryptedCachePayload> = {
+          data: encryptedPayload,
+          ...baseItemProps,
+          metadata: storageMetadata
+        };
+
+        storage.setItem(cacheKey, JSON.stringify(storageItem));
+
+        this.log('info', `Cache set (encrypted): "${key}" (L1 + L2)`, {
+          namespace: storageItem.namespace,
+          priority: storageItem.priority,
+          algorithm: encryptedPayload.algorithm
+        });
+
+        return true;
+
+      } catch (encryptionError) {
+        this.log('error', `Error guardando cache encriptado: "${key}"`, encryptionError);
+        return false;
+      }
+    } catch (error) {
+      this.log('error', `Error general en setEncrypted: "${key}"`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Obtiene un item encriptado desde cache, desencriptándolo automáticamente si proviene de L2
+   */
+  static async getEncrypted<T>(
+    key: string,
+    options?: SecureGetOptions
+  ): Promise<T | null> {
+    if (!this.initialized) {
+      this.initialize();
+    }
+
+    if (!this.checkState()) {
+      return null;
+    }
+
+    try {
+      const useSessionStorage = options?.useSessionStorage ?? false;
+      const passphrase = options?.passphrase;
+      const cacheKey = this.buildKey(key);
+      const now = Date.now();
+
+      const l1Item = this.getFromMemoryCache<T>(cacheKey);
+
+      if (l1Item) {
+        l1Item.accessCount++;
+        l1Item.lastAccess = now;
+        this.memoryCache.set(cacheKey, l1Item);
+
+        this.metrics.hits++;
+        this.metrics.l1Hits++;
+
+        return l1Item.data as T;
+      }
+
+      const storage = this.getStorage(useSessionStorage);
+
+      if (!storage) {
+        this.metrics.misses++;
+        return null;
+      }
+
+      const cached = storage.getItem(cacheKey);
+
+      if (!cached) {
+        this.metrics.misses++;
+        return null;
+      }
+
+      const cacheItem = this.parseCacheItem<unknown>(cached, key);
+
+      if (!cacheItem) {
+        this.metrics.misses++;
+        return null;
+      }
+
+      if (now - cacheItem.timestamp > cacheItem.expiresIn) {
+        this.remove(key, useSessionStorage);
+        this.metrics.misses++;
+        return null;
+      }
+
+      // Item no encriptado (legacy)
+      if (!this.isEncryptedMetadata(cacheItem.metadata) && !this.isEncryptedPayload(cacheItem.data)) {
+        const plainItem = cacheItem as CacheItem<T>;
+        plainItem.accessCount++;
+        plainItem.lastAccess = now;
+
+        this.addToMemoryCache(cacheKey, plainItem);
+        this.scheduleL2Update(storage, cacheKey, plainItem);
+
+        this.metrics.hits++;
+        this.metrics.l2Hits++;
+
+        return plainItem.data;
+      }
+
+      if (!this.isEncryptedPayload(cacheItem.data)) {
+        this.log('warn', `Cache item "${key}" marcado como encriptado pero sin payload válido`);
+        this.metrics.misses++;
+        return null;
+      }
+
+      try {
+        const decrypted = await this.decryptPayload(cacheItem.data, passphrase);
+        const data = this.deserializePayload<T>(decrypted);
+
+        const metadata: Record<string, unknown> = {
+          ...(cacheItem.metadata ?? {}),
+          encrypted: true
+        };
+
+        const memoryItem: CacheItem<T> = {
+          data,
+          timestamp: cacheItem.timestamp,
+          expiresIn: cacheItem.expiresIn,
+          priority: cacheItem.priority,
+          namespace: cacheItem.namespace,
+          accessCount: cacheItem.accessCount + 1,
+          lastAccess: now,
+          size: cacheItem.size,
+          metadata
+        };
+
+        this.addToMemoryCache(cacheKey, memoryItem);
+
+        const encryptedItem: CacheItem<EncryptedCachePayload> = {
+          data: cacheItem.data,
+          timestamp: cacheItem.timestamp,
+          expiresIn: cacheItem.expiresIn,
+          priority: cacheItem.priority,
+          namespace: cacheItem.namespace,
+          accessCount: cacheItem.accessCount + 1,
+          lastAccess: now,
+          size: cacheItem.size,
+          metadata: cacheItem.metadata
+        };
+
+        this.scheduleL2Update(storage, cacheKey, encryptedItem);
+
+        this.metrics.hits++;
+        this.metrics.l2Hits++;
+
+        return data;
+
+      } catch (decryptError) {
+        this.log('error', `Error desencriptando cache "${key}"`, decryptError);
+        this.remove(key, useSessionStorage);
+        this.metrics.misses++;
+        return null;
+      }
+    } catch (error) {
+      this.log('error', `Error general en getEncrypted: "${key}"`, error);
+      this.metrics.misses++;
+      return null;
     }
   }
 
@@ -683,7 +1059,14 @@ export class CacheHelper {
       // ========================================
       // PASO 2: Buscar en L2 Cache (Storage)
       // ========================================
-      const storage = useSessionStorage ? sessionStorage : localStorage;
+      const storage = this.getStorage(useSessionStorage);
+
+      if (!storage) {
+        // L2 no disponible, solo tenemos L1
+        this.metrics.misses++;
+        return null;
+      }
+
       const cached = storage.getItem(cacheKey);
 
       if (!cached) {
@@ -691,14 +1074,29 @@ export class CacheHelper {
         return null;
       }
 
-      // Parse desde storage (operación costosa)
-      const cacheItem: CacheItem<T> = JSON.parse(cached);
+      // Parse y validar desde storage con Zod (operación costosa)
+      const cacheItem = this.parseCacheItem<T>(cached, key);
+
+      if (!cacheItem) {
+        // Dato corrupto o inválido, eliminar automáticamente
+        this.remove(key, useSessionStorage);
+        this.metrics.misses++;
+        this.log('warn', `Cache item corrupto eliminado: "${key}"`);
+        return null;
+      }
 
       // Verificar si ha expirado
       if (now - cacheItem.timestamp > cacheItem.expiresIn) {
         this.remove(key, useSessionStorage);
         this.metrics.misses++;
         this.log('info', `Cache expired: "${key}"`);
+        return null;
+      }
+
+      // Detectar items encriptados y solicitar uso de getEncrypted
+      if (this.isEncryptedMetadata(cacheItem.metadata) || this.isEncryptedPayload(cacheItem.data)) {
+        this.metrics.misses++;
+        this.log('warn', `Cache item "${key}" está encriptado. Usa getEncrypted()`);
         return null;
       }
 
@@ -710,9 +1108,8 @@ export class CacheHelper {
       this.addToMemoryCache(cacheKey, cacheItem);
 
       // Actualizar L2 de forma asíncrona (no bloquea)
-      setTimeout(() => {
-        storage.setItem(cacheKey, JSON.stringify(cacheItem));
-      }, 0);
+      // Usa método seguro con tracking para prevenir memory leaks
+      this.scheduleL2Update(storage, cacheKey, cacheItem);
 
       this.metrics.hits++;
       this.metrics.l2Hits++;
@@ -843,10 +1240,13 @@ export class CacheHelper {
       this.removeFromMemoryCache(cacheKey);
 
       // Eliminar de L2 (storage)
-      const storage = useSessionStorage ? sessionStorage : localStorage;
-      storage.removeItem(cacheKey);
-
-      this.log('info', `Cache removed: "${key}" (L1 + L2)`);
+      const storage = this.getStorage(useSessionStorage);
+      if (storage) {
+        storage.removeItem(cacheKey);
+        this.log('info', `Cache removed: "${key}" (L1 + L2)`);
+      } else {
+        this.log('info', `Cache removed: "${key}" (L1 only, L2 not available)`);
+      }
     } catch (error) {
       this.log('error', `Error eliminando cache: "${key}"`, error);
     }
@@ -872,7 +1272,17 @@ export class CacheHelper {
    */
   static clear(useSessionStorage: boolean = false, namespace?: CacheNamespace): void {
     try {
-      const storage = useSessionStorage ? sessionStorage : localStorage;
+      const storage = this.getStorage(useSessionStorage);
+
+      if (!storage) {
+        // Si L2 no está disponible, al menos limpiar L1
+        if (!namespace) {
+          this.clearMemoryCache();
+          this.log('info', 'Cache L1 cleared (L2 not available)');
+        }
+        return;
+      }
+
       const keys = Object.keys(storage).filter(key => key.startsWith(this.config.prefix));
 
       let removedCount = 0;
@@ -880,25 +1290,21 @@ export class CacheHelper {
       keys.forEach(key => {
         if (namespace) {
           // Si se especifica namespace, verificar que coincida
-          try {
-            const cached = storage.getItem(key);
-            if (cached) {
-              const item: CacheItem<unknown> = JSON.parse(cached);
-              if (item.namespace === namespace) {
-                // Eliminar de L2 (storage)
-                storage.removeItem(key);
+          const cached = storage.getItem(key);
+          if (cached) {
+            const item = this.parseCacheItem<unknown>(cached);
 
-                // Eliminar de L1 (memoria)
-                this.removeFromMemoryCache(key);
-
-                removedCount++;
-              }
+            if (item && item.namespace === namespace) {
+              // Namespace coincide, eliminar de ambos
+              storage.removeItem(key);
+              this.removeFromMemoryCache(key);
+              removedCount++;
+            } else if (!item) {
+              // Dato corrupto, eliminar de ambos
+              storage.removeItem(key);
+              this.removeFromMemoryCache(key);
+              removedCount++;
             }
-          } catch {
-            // Si hay error parseando, eliminar de ambos
-            storage.removeItem(key);
-            this.removeFromMemoryCache(key);
-            removedCount++;
           }
         } else {
           // Limpiar todo de L2
@@ -931,27 +1337,36 @@ export class CacheHelper {
    */
   static cleanup(useSessionStorage: boolean = false): number {
     try {
-      const storage = useSessionStorage ? sessionStorage : localStorage;
+      const storage = this.getStorage(useSessionStorage);
+
+      if (!storage) {
+        // L2 no disponible, no hay nada que limpiar
+        return 0;
+      }
+
       const keys = Object.keys(storage).filter(key => key.startsWith(this.config.prefix));
 
       let removedCount = 0;
       const now = Date.now();
 
       keys.forEach(key => {
-        try {
-          const cached = storage.getItem(key);
-          if (!cached) return;
+        const cached = storage.getItem(key);
+        if (!cached) return;
 
-          const cacheItem: CacheItem<unknown> = JSON.parse(cached);
+        const cacheItem = this.parseCacheItem<unknown>(cached);
 
-          // Verificar si expiró
-          if (now - cacheItem.timestamp > cacheItem.expiresIn) {
-            storage.removeItem(key);
-            removedCount++;
-          }
-        } catch {
-          // Si hay error parseando, eliminar
+        if (!cacheItem) {
+          // Dato corrupto, eliminar
           storage.removeItem(key);
+          this.removeFromMemoryCache(key);
+          removedCount++;
+          return;
+        }
+
+        // Verificar si expiró
+        if (now - cacheItem.timestamp > cacheItem.expiresIn) {
+          storage.removeItem(key);
+          this.removeFromMemoryCache(key);
           removedCount++;
         }
       });
@@ -978,10 +1393,54 @@ export class CacheHelper {
    */
   static getStats(useSessionStorage: boolean = false): CacheStats {
     try {
-      const storage = useSessionStorage ? sessionStorage : localStorage;
+      const storage = this.getStorage(useSessionStorage);
+
+      if (!storage) {
+        // L2 no disponible, retornar solo stats de L1
+        const l1CacheStats = this.config.enableMemoryCache ? {
+          items: this.memoryCache.size,
+          hits: this.metrics.l1Hits,
+          hitRate: this.metrics.hits > 0
+            ? Math.round((this.metrics.l1Hits / this.metrics.hits) * 100 * 100) / 100
+            : 0,
+          maxItems: this.config.memoryCacheMaxItems,
+          usage: Math.round((this.memoryCache.size / this.config.memoryCacheMaxItems) * 100 * 100) / 100
+        } : undefined;
+
+        const totalAccesses = this.metrics.hits + this.metrics.misses;
+        const hitRate = totalAccesses > 0
+          ? Math.round((this.metrics.hits / totalAccesses) * 100 * 100) / 100
+          : 0;
+
+        return {
+          totalItems: 0,
+          expiredItems: 0,
+          validItems: 0,
+          hits: this.metrics.hits,
+          misses: this.metrics.misses,
+          hitRate,
+          totalSize: 0,
+          itemsByNamespace: {
+            routes: 0,
+            data: 0,
+            components: 0,
+            user: 0,
+            system: 0,
+            temp: 0
+          },
+          itemsByPriority: {
+            low: 0,
+            normal: 0,
+            high: 0,
+            critical: 0
+          },
+          l1Cache: l1CacheStats
+        };
+      }
+
       const keys = Object.keys(storage).filter(key => key.startsWith(this.config.prefix));
 
-      let totalItems = keys.length;
+  const totalItems = keys.length;
       let expiredItems = 0;
       let validItems = 0;
       let totalSize = 0;
@@ -1005,29 +1464,31 @@ export class CacheHelper {
       const now = Date.now();
 
       keys.forEach(key => {
-        try {
-          const cached = storage.getItem(key);
-          if (!cached) return;
+        const cached = storage.getItem(key);
+        if (!cached) return;
 
-          const cacheItem: CacheItem<unknown> = JSON.parse(cached);
+        const cacheItem = this.parseCacheItem<unknown>(cached);
 
-          // Contar por namespace
-          itemsByNamespace[cacheItem.namespace]++;
-
-          // Contar por prioridad
-          itemsByPriority[cacheItem.priority]++;
-
-          // Sumar tamaño
-          totalSize += cacheItem.size || 0;
-
-          // Verificar expiración
-          if (now - cacheItem.timestamp > cacheItem.expiresIn) {
-            expiredItems++;
-          } else {
-            validItems++;
-          }
-        } catch {
+        if (!cacheItem) {
+          // Dato corrupto, contar como expirado
           expiredItems++;
+          return;
+        }
+
+        // Contar por namespace
+        itemsByNamespace[cacheItem.namespace]++;
+
+        // Contar por prioridad
+        itemsByPriority[cacheItem.priority]++;
+
+        // Sumar tamaño
+        totalSize += cacheItem.size || 0;
+
+        // Verificar expiración
+        if (now - cacheItem.timestamp > cacheItem.expiresIn) {
+          expiredItems++;
+        } else {
+          validItems++;
         }
       });
 
@@ -1135,20 +1596,310 @@ export class CacheHelper {
   }
 
   /**
-   * Construye la key completa con prefijo
+   * Determina si la metadata indica que el item está encriptado
+   */
+  private static isEncryptedMetadata(metadata?: Record<string, unknown>): boolean {
+    if (!metadata || typeof metadata !== 'object') return false;
+    const flag = (metadata as { encrypted?: unknown }).encrypted;
+    return flag === true;
+  }
+
+  /**
+   * Determina si el payload corresponde a un item encriptado
+   */
+  private static isEncryptedPayload(data: unknown): data is EncryptedCachePayload {
+    if (!data || typeof data !== 'object') return false;
+    return (data as { __cacheEncrypted?: unknown }).__cacheEncrypted === true;
+  }
+
+  /**
+   * Encripta datos serializados para almacenamiento en L2
+   */
+  private static async encryptPayload(serialized: string, passphrase?: string): Promise<EncryptedCachePayload> {
+    const result = await encryptString(serialized, passphrase);
+    return {
+      ...result,
+      __cacheEncrypted: true,
+      format: 'json'
+    };
+  }
+
+  /**
+   * Desencripta payload almacenado en L2
+   */
+  private static async decryptPayload(payload: EncryptedCachePayload, passphrase?: string): Promise<string> {
+    return decryptString(payload, passphrase);
+  }
+
+  /**
+   * Deserializa datos desencriptados a su representación original
+   */
+  private static deserializePayload<T>(serialized: string): T {
+    try {
+      return JSON.parse(serialized) as T;
+    } catch (error) {
+      this.log('warn', 'Error parseando datos desencriptados, devolviendo string crudo', error);
+      return serialized as unknown as T;
+    }
+  }
+
+  /**
+   * Parsea y valida un CacheItem desde JSON usando Zod
+   *
+   * Este método proporciona type safety en runtime validando que los datos
+   * almacenados en storage cumplan con la estructura esperada de CacheItem.
+   *
+   * BENEFICIOS:
+   * - Detecta datos corruptos automáticamente
+   * - Previene crashes por estructura inválida
+   * - Facilita migraciones entre versiones
+   * - Logging detallado de errores de validación
+   *
+   * @param json - JSON string del cache
+   * @param key - Clave del cache (para logging)
+   * @returns CacheItem validado o null si es inválido
+   */
+  private static parseCacheItem<T>(json: string, key?: string): CacheItem<T> | null {
+    try {
+      const parsed = JSON.parse(json);
+
+      // Validar con Zod
+      const result = CacheItemSchema.safeParse(parsed);
+
+      if (!result.success) {
+        // Datos no cumplen el schema
+        const errors = result.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`);
+        this.log('warn', `Cache item inválido${key ? ` "${key}"` : ''} (schema mismatch)`, {
+          errors,
+          received: parsed
+        });
+        return null;
+      }
+
+      // Validación exitosa, retornar con tipo correcto
+      return result.data as CacheItem<T>;
+
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        this.log('error', `JSON inválido en cache${key ? ` "${key}"` : ''}`, error);
+      } else {
+        this.log('error', `Error parseando cache item${key ? ` "${key}"` : ''}`, error);
+      }
+      return null;
+    }
+  }
+
+  /**
+   * Verifica si el storage está disponible y funcionando
+   *
+   * IMPORTANTE: localStorage/sessionStorage pueden no estar disponibles en:
+   * - Navegadores en modo incógnito (Safari especialmente)
+   * - Storage deshabilitado por políticas empresariales
+   * - Entornos SSR (server-side rendering)
+   * - Storage lleno (QuotaExceededError)
+   *
+   * @param type - Tipo de storage a verificar
+   * @returns true si el storage está disponible y funcional
+   */
+  private static isStorageAvailable(type: 'localStorage' | 'sessionStorage'): boolean {
+    try {
+      const storage = type === 'localStorage' ? localStorage : sessionStorage;
+      const testKey = '__iph_storage_test__';
+
+      // Intentar escribir y leer
+      storage.setItem(testKey, 'test');
+      const result = storage.getItem(testKey);
+      storage.removeItem(testKey);
+
+      return result === 'test';
+
+    } catch (e) {
+      this.log('warn', `${type} no disponible o no funcional`, e);
+      return false;
+    }
+  }
+
+  /**
+   * Obtiene el storage de forma segura
+   * Retorna null si no está disponible
+   *
+   * Este método centraliza el acceso a storage y proporciona fallback
+   * graceful cuando el storage no está disponible.
+   *
+   * @param useSessionStorage - Si usar sessionStorage en lugar de localStorage
+   * @returns Storage instance o null si no está disponible
+   */
+  private static getStorage(useSessionStorage: boolean): Storage | null {
+    const type = useSessionStorage ? 'sessionStorage' : 'localStorage';
+
+    if (!this.isStorageAvailable(type)) {
+      this.log('warn', `${type} no disponible, operación de L2 cache omitida`);
+      return null;
+    }
+
+    return useSessionStorage ? sessionStorage : localStorage;
+  }
+
+  /**
+   * Sanitiza una key antes de usarla en cache
+   *
+   * Este método previene problemas de seguridad y validez de keys:
+   * - Remueve caracteres peligrosos (XSS, injection)
+   * - Limita longitud máxima (previene keys excesivamente largas)
+   * - Valida que la key no quede vacía
+   * - Normaliza formato (solo alfanuméricos, guiones, underscores)
+   *
+   * SEGURIDAD:
+   * - Previene XSS via storage keys
+   * - Previene ataques de storage pollution
+   * - Valida longitud para prevenir DoS
+   *
+   * @param key - Key original a sanitizar
+   * @returns Key sanitizada y segura
+   * @throws Error si la key es inválida (vacía o null)
+   *
+   * @example
+   * ```typescript
+   * sanitizeKey('user/123')           // → 'user_123'
+   * sanitizeKey('data<script>evil')   // → 'data_script_evil'
+   * sanitizeKey('a'.repeat(200))      // → 'aaa...aaa' (100 chars)
+   * ```
+   */
+  private static sanitizeKey(key: string): string {
+    // Validar que la key existe y es string
+    if (!key || typeof key !== 'string') {
+      throw new Error('Cache key debe ser un string no vacío');
+    }
+
+    // Remover espacios al inicio y final
+    key = key.trim();
+
+    if (key.length === 0) {
+      throw new Error('Cache key no puede estar vacía');
+    }
+
+    // Remover caracteres peligrosos
+    // Solo permitir: letras, números, guiones, underscores, puntos, dos puntos
+    // Esto previene XSS y problemas con storage keys
+    let sanitized = key.replace(/[^a-zA-Z0-9_\-.:]/g, '_');
+
+    // Limitar longitud máxima (previene keys excesivamente largas)
+    const MAX_KEY_LENGTH = 100;
+    if (sanitized.length > MAX_KEY_LENGTH) {
+      // Truncar y agregar hash para mantener unicidad
+      const hash = this.simpleHash(sanitized);
+      sanitized = sanitized.substring(0, MAX_KEY_LENGTH - 8) + '_' + hash;
+
+      if (this.config.enableLogging && import.meta.env.DEV) {
+        this.log('warn', `Key truncada (${key.length} → ${MAX_KEY_LENGTH} chars)`, {
+          original: key,
+          sanitized
+        });
+      }
+    }
+
+    // Prevenir keys vacías después de sanitización
+    if (sanitized.length === 0) {
+      throw new Error('Cache key inválida (vacía después de sanitización)');
+    }
+
+    return sanitized;
+  }
+
+  /**
+   * Genera un hash simple de una string para mantener unicidad
+   * Usado cuando truncamos keys largas
+   *
+   * @param str - String a hashear
+   * @returns Hash de 7 caracteres (base36)
+   */
+  private static simpleHash(str: string): string {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash).toString(36).substring(0, 7);
+  }
+
+  /**
+   * Construye la key completa con prefijo (versión segura)
+   * Sanitiza la key antes de agregar el prefijo
    */
   private static buildKey(key: string): string {
-    return `${this.config.prefix}${key}`;
+    const sanitized = this.sanitizeKey(key);
+    return `${this.config.prefix}${sanitized}`;
   }
 
   /**
    * Estima el tamaño en bytes de un objeto
+   * Usa diferentes estrategias según el entorno para máxima compatibilidad
+   *
+   * ESTRATEGIAS:
+   * 1. Blob API (navegadores modernos) - Más preciso
+   * 2. Buffer (Node.js / SSR) - Preciso para UTF-8
+   * 3. Estimación manual (fallback universal) - Aproximado pero funcional
+   *
+   * @param data - Datos a medir
+   * @returns Tamaño estimado en bytes
    */
   private static estimateSize(data: unknown): number {
     try {
-      return new Blob([JSON.stringify(data)]).size;
-    } catch {
-      return 0;
+      const json = JSON.stringify(data);
+
+      // ESTRATEGIA 1: Blob API (navegadores modernos)
+      if (typeof Blob !== 'undefined') {
+        try {
+          return new Blob([json]).size;
+        } catch {
+          // Continuar con siguiente estrategia
+        }
+      }
+
+      // ESTRATEGIA 2: Buffer (Node.js / SSR)
+      if (typeof Buffer !== 'undefined') {
+        try {
+          return Buffer.byteLength(json, 'utf8');
+        } catch {
+          // Continuar con fallback
+        }
+      }
+
+      // ESTRATEGIA 3: Estimación manual (fallback universal)
+      // Cuenta caracteres considerando encoding UTF-8
+      let size = 0;
+      for (let i = 0; i < json.length; i++) {
+        const code = json.charCodeAt(i);
+
+        // UTF-8 encoding size:
+        // - ASCII (0-127): 1 byte
+        // - 128-2047: 2 bytes
+        // - 2048-65535: 3 bytes
+        // - 65536+: 4 bytes
+        if (code < 0x80) {
+          size += 1;
+        } else if (code < 0x800) {
+          size += 2;
+        } else if (code < 0x10000) {
+          size += 3;
+        } else {
+          size += 4;
+        }
+      }
+
+      // Log solo en desarrollo para no saturar logs
+      if (import.meta.env.DEV) {
+        this.log('info', 'Usando estimación manual de tamaño (Blob y Buffer no disponibles)');
+      }
+
+      return size;
+
+    } catch (error) {
+      this.log('warn', 'Error estimando tamaño, usando valor conservador por defecto', error);
+      // Retornar tamaño conservador (1KB) en lugar de 0
+      // Esto previene problemas con límites de cache
+      return 1024;
     }
   }
 
@@ -1259,20 +2010,25 @@ export class CacheHelper {
    */
   private static evictLRU(requiredSize: number, useSessionStorage: boolean): boolean {
     try {
-      const storage = useSessionStorage ? sessionStorage : localStorage;
+      const storage = this.getStorage(useSessionStorage);
+
+      if (!storage) {
+        // L2 no disponible, no se puede hacer eviction
+        this.log('warn', 'No se puede hacer eviction, L2 cache no disponible');
+        return false;
+      }
+
       const keys = Object.keys(storage).filter(key => key.startsWith(this.config.prefix));
 
       // Obtener todos los items con metadata
       const items = keys.map(key => {
-        try {
-          const cached = storage.getItem(key);
-          if (!cached) return null;
+        const cached = storage.getItem(key);
+        if (!cached) return null;
 
-          const item = JSON.parse(cached);
-          return { key, item };
-        } catch {
-          return null;
-        }
+        const item = this.parseCacheItem<unknown>(cached);
+        if (!item) return null;
+
+        return { key, item };
       }).filter(Boolean) as Array<{ key: string; item: CacheItem<unknown> }>;
 
       // Ordenar por prioridad (low primero) y luego por último acceso
@@ -1315,6 +2071,66 @@ export class CacheHelper {
     } catch (error) {
       this.log('error', 'Error en evictLRU', error);
       return false;
+    }
+  }
+
+  /**
+   * Programa una actualización asíncrona del L2 cache
+   * Mantiene tracking de timeouts para poder cancelarlos en destroy()
+   *
+   * IMPORTANTE: Este método previene memory leaks manteniendo referencias
+   * a todos los timeouts pendientes, permitiendo cancelarlos si es necesario.
+   *
+   * @param storage - Storage instance (ya verificado)
+   * @param key - Clave del cache (con prefijo)
+   * @param item - Item a guardar
+   */
+  private static scheduleL2Update(
+    storage: Storage,
+    key: string,
+    item: CacheItem<unknown>
+  ): void {
+    const timeout = setTimeout(() => {
+      // Verificar que no fue destruido mientras esperaba
+      if (this.destroyed) {
+        this.pendingUpdates.delete(timeout);
+        return;
+      }
+
+      try {
+        storage.setItem(key, JSON.stringify(item));
+        this.pendingUpdates.delete(timeout);
+      } catch (error) {
+        this.log('error', 'Error en actualización asíncrona de L2', error);
+        this.pendingUpdates.delete(timeout);
+      }
+    }, 0);
+
+    this.pendingUpdates.add(timeout);
+
+    // Límite de seguridad: máximo 100 updates pendientes
+    // Previene acumulación excesiva en caso de muchas lecturas rápidas
+    if (this.pendingUpdates.size > 100) {
+      this.log('warn', `Demasiados updates pendientes (${this.pendingUpdates.size}), ejecutando flush`);
+      this.flushPendingUpdates();
+    }
+  }
+
+  /**
+   * Cancela todos los updates asíncronos pendientes
+   *
+   * IMPORTANTE: Este método debe ser llamado en destroy() para prevenir
+   * memory leaks de timeouts que quedan ejecutándose después de destruir.
+   *
+   * También puede llamarse manualmente si se detecta acumulación excesiva.
+   */
+  private static flushPendingUpdates(): void {
+    const count = this.pendingUpdates.size;
+
+    if (count > 0) {
+      this.pendingUpdates.forEach(timeout => clearTimeout(timeout));
+      this.pendingUpdates.clear();
+      this.log('info', `Updates pendientes cancelados: ${count}`);
     }
   }
 

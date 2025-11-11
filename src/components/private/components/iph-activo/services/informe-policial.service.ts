@@ -25,6 +25,7 @@ import { getAllIph, getIphByUser } from '../../iph-oficial/services/get-iph.serv
 // Helpers
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 import { getUserRoles } from '../../../../../helper/role/role.helper';
+import { getUserData } from '../../../../../helper/user/user.helper';
 
 // =====================================================
 // TRANSFORMADORES DE DATOS
@@ -139,12 +140,8 @@ const canUserViewAll = (userRoles: any[]): boolean => {
  * @returns ID del usuario o null
  */
 const getCurrentUserId = (): string | null => {
-  try {
-    const userData = JSON.parse(sessionStorage.getItem('user_data') || '{}');
-    return userData?.id?.toString() || null;
-  } catch {
-    return null;
-  }
+  const userData = getUserData();
+  return userData?.id ? userData.id.toString() : null;
 };
 
 // ✅ Función getCurrentUserRoles() eliminada - usar getUserRoles() del helper centralizado

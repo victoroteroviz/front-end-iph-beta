@@ -43,6 +43,7 @@
 
 import { z } from 'zod';
 import { logInfo, logError, logWarning, logDebug } from '../log/logger.helper';
+import CacheHelper from '../cache/cache.helper';
 import type {
   UserData,
   UserContext,
@@ -105,8 +106,8 @@ const UserDataSchema = z.object({
  * @private
  */
 const CONSTANTS = {
-  /** Key de sessionStorage para datos de usuario */
-  STORAGE_KEY: 'user_data',
+  /** Key en CacheHelper (encriptado) */
+  CACHE_KEY: 'auth_user_data',
 
   /** Tiempo de vida del cache en milisegundos (5 segundos) */
   CACHE_TTL: 5000,
@@ -145,57 +146,18 @@ class UserHelper {
    */
   private userDataCache: UserData | null = null;
   private cacheTimestamp: number = 0;
-
-  /**
-   * Flag para verificar si sessionStorage está disponible
-   * Se verifica solo una vez en el constructor
-   * @private
-   */
-  private storageAvailable: boolean = true;
+  private loadPromise: Promise<UserData | null> | null = null;
 
   /**
    * Constructor privado para Singleton pattern
    * @private
    */
   private constructor() {
-    // Verificar disponibilidad de sessionStorage
-    this.storageAvailable = this.checkStorageAvailability();
-
-    if (!this.storageAvailable) {
-      logWarning(
-        CONSTANTS.MODULE_NAME,
-        'sessionStorage NO disponible (Safari incógnito, storage deshabilitado, etc.)'
-      );
-    }
-
     if (CONSTANTS.VERBOSE_LOGGING) {
       logInfo(
         CONSTANTS.MODULE_NAME,
         'Instancia de UserHelper creada con sistema de caching (TTL: 5s)'
       );
-    }
-  }
-
-  /**
-   * Verifica si sessionStorage está disponible
-   * Previene errores en Safari modo incógnito, storage deshabilitado, etc.
-   *
-   * @private
-   * @returns {boolean} true si sessionStorage está disponible
-   */
-  private checkStorageAvailability(): boolean {
-    try {
-      const test = '__storage_test__';
-      sessionStorage.setItem(test, test);
-      sessionStorage.removeItem(test);
-      return true;
-    } catch (error) {
-      logError(
-        CONSTANTS.MODULE_NAME,
-        error,
-        'sessionStorage no disponible o bloqueado'
-      );
-      return false;
     }
   }
 
@@ -239,6 +201,25 @@ class UserHelper {
   }
 
   /**
+   * Hidrata el cache interno con datos conocidos (post-login)
+   */
+  public hydrateUserData(data: UserData): void {
+    this.userDataCache = data;
+    this.cacheTimestamp = Date.now();
+
+    if (CONSTANTS.VERBOSE_LOGGING) {
+      logInfo(CONSTANTS.MODULE_NAME, 'Cache de usuario hidratado manualmente');
+    }
+  }
+
+  /**
+   * Pre-carga datos desde CacheHelper para usarlos de forma sincrónica
+   */
+  public async preloadFromCache(): Promise<void> {
+    await this.loadFromSecureCache();
+  }
+
+  /**
    * Verifica si el cache es válido basado en TTL
    *
    * @private
@@ -254,6 +235,55 @@ class UserHelper {
     }
 
     return isValid;
+  }
+
+  /**
+   * Carga datos encriptados del usuario desde CacheHelper
+   * Actualiza el cache interno si la data es válida
+   */
+  private async loadFromSecureCache(): Promise<UserData | null> {
+    try {
+      const cached = await CacheHelper.getEncrypted<UserData>(CONSTANTS.CACHE_KEY, {
+        useSessionStorage: true
+      });
+
+      if (!cached) {
+        if (CONSTANTS.VERBOSE_LOGGING) {
+          logDebug(CONSTANTS.MODULE_NAME, 'No se encontraron datos en CacheHelper');
+        }
+        this.userDataCache = null;
+        this.cacheTimestamp = Date.now();
+        return null;
+      }
+
+      const validationResult = UserDataSchema.safeParse(cached);
+
+      if (!validationResult.success) {
+        logError(
+          CONSTANTS.MODULE_NAME,
+          validationResult.error,
+          'Datos de usuario inválidos en CacheHelper - limpiando cache en memoria'
+        );
+        this.userDataCache = null;
+        this.cacheTimestamp = Date.now();
+        return null;
+      }
+
+      this.userDataCache = validationResult.data as UserData;
+      this.cacheTimestamp = Date.now();
+
+      if (CONSTANTS.VERBOSE_LOGGING) {
+        logInfo(CONSTANTS.MODULE_NAME, 'Datos de usuario cargados desde CacheHelper (encriptado)');
+      }
+
+      return this.userDataCache;
+
+    } catch (error) {
+      logError(CONSTANTS.MODULE_NAME, error, 'Error cargando datos de usuario desde CacheHelper');
+      this.userDataCache = null;
+      this.cacheTimestamp = Date.now();
+      throw error;
+    }
   }
 
   // ==================== MÉTODOS PRINCIPALES ====================
@@ -307,96 +337,25 @@ class UserHelper {
    * ```
    */
   public getUserData(): UserData | null {
-    // 🔴 FIX CRÍTICO #8: Verificar disponibilidad de sessionStorage
-    if (!this.storageAvailable) {
-      if (CONSTANTS.VERBOSE_LOGGING) {
-        logWarning(
-          CONSTANTS.MODULE_NAME,
-          'Intento de acceso a sessionStorage que no está disponible'
-        );
-      }
-      return null;
-    }
-
-    // Retornar cache si es válido
     if (this.isCacheValid()) {
-      // 🟡 FIX #3: Logging condicional
       if (CONSTANTS.VERBOSE_LOGGING) {
-        logDebug(CONSTANTS.MODULE_NAME, 'Retornando datos desde cache');
+        logDebug(CONSTANTS.MODULE_NAME, 'Retornando datos de usuario desde cache en memoria');
       }
       return this.userDataCache;
     }
 
-    // Cache expirado o inválido, refrescar
-    try {
-      const rawData = sessionStorage.getItem(CONSTANTS.STORAGE_KEY);
-
-      if (!rawData) {
-        if (CONSTANTS.VERBOSE_LOGGING) {
-          logDebug(
-            CONSTANTS.MODULE_NAME,
-            'No hay datos de usuario en sessionStorage'
-          );
-        }
-        this.userDataCache = null;
-        this.cacheTimestamp = Date.now();
-        return null;
-      }
-
-      const parsed = JSON.parse(rawData);
-
-      // Validación con Zod
-      const validationResult = UserDataSchema.safeParse(parsed);
-
-      if (!validationResult.success) {
-        logError(
-          CONSTANTS.MODULE_NAME,
-          validationResult.error,
-          'Datos de usuario inválidos según schema Zod - sessionStorage corrupto'
-        );
-
-        // Sanitizar sessionStorage corrupto
-        logWarning(
-          CONSTANTS.MODULE_NAME,
-          'Limpiando sessionStorage corrupto para user_data'
-        );
-        sessionStorage.removeItem(CONSTANTS.STORAGE_KEY);
-
-        this.userDataCache = null;
-        this.cacheTimestamp = Date.now();
-        return null;
-      }
-
-      // Datos válidos, actualizar cache
-      const validatedData = validationResult.data as UserData;
-      this.userDataCache = validatedData;
-      this.cacheTimestamp = Date.now();
-
-      if (CONSTANTS.VERBOSE_LOGGING) {
-        logInfo(CONSTANTS.MODULE_NAME, 'Datos de usuario validados y cacheados correctamente');
-      }
-
-      return validatedData;
-
-    } catch (error) {
-      logError(
-        CONSTANTS.MODULE_NAME,
-        error,
-        'Error crítico obteniendo datos del usuario'
-      );
-
-      // Limpiar cache y sessionStorage en caso de error
-      this.userDataCache = null;
-      this.cacheTimestamp = Date.now();
-
-      try {
-        sessionStorage.removeItem(CONSTANTS.STORAGE_KEY);
-      } catch {
-        // Silenciar error de limpieza
-      }
-
-      return null;
+    if (!this.loadPromise) {
+      this.loadPromise = this.loadFromSecureCache()
+        .catch((error: unknown) => {
+          logError(CONSTANTS.MODULE_NAME, error, 'Error obteniendo datos de usuario desde CacheHelper');
+          return null;
+        })
+        .finally(() => {
+          this.loadPromise = null;
+        });
     }
+
+    return this.userDataCache;
   }
 
   /**
@@ -749,17 +708,11 @@ class UserHelper {
    * ```
    */
   public clearUserData(): void {
-    try {
-      if (this.storageAvailable) {
-        sessionStorage.removeItem(CONSTANTS.STORAGE_KEY);
-      }
-      this.invalidateCache();
+    this.userDataCache = null;
+    this.cacheTimestamp = 0;
 
-      if (CONSTANTS.VERBOSE_LOGGING) {
-        logInfo(CONSTANTS.MODULE_NAME, 'Datos de usuario limpiados correctamente');
-      }
-    } catch (error) {
-      logError(CONSTANTS.MODULE_NAME, error, 'Error limpiando datos de usuario');
+    if (CONSTANTS.VERBOSE_LOGGING) {
+      logInfo(CONSTANTS.MODULE_NAME, 'Datos de usuario limpiados correctamente (memoria)');
     }
   }
 }
@@ -859,6 +812,20 @@ export const clearUserData = (): void =>
  */
 export const invalidateUserCache = (): void =>
   userHelper.invalidateCache();
+
+/**
+ * Hidrata el cache de usuario con datos conocidos
+ * @see UserHelper.hydrateUserData
+ */
+export const hydrateUserDataCache = (data: UserData): void =>
+  userHelper.hydrateUserData(data);
+
+/**
+ * Pre-carga datos del usuario desde CacheHelper (encriptado)
+ * @see UserHelper.preloadFromCache
+ */
+export const preloadUserDataFromCache = (): Promise<void> =>
+  userHelper.preloadFromCache();
 
 // ==================== INICIALIZACIÓN ====================
 

@@ -1,5 +1,6 @@
 //+ Dependencias de npm
 import { jwtDecode } from "jwt-decode";
+import { z } from 'zod';
 
 //+ Interfaces
 import type { Token, UserRole } from "../../../../interfaces/token/token.interface";
@@ -8,10 +9,12 @@ import type { LoginRequest, LoginResponse } from "../../../../interfaces/user/lo
 import { ALLOWED_ROLES, API_BASE_URL } from "../../../../config/env.config";
 //+ Helpers
 import {HttpHelper} from "../../../../helper/http/http.helper";
-
+import CacheHelper from "../../../../helper/cache/cache.helper";
 import {logger} from '../../../../helper/log/logger.helper';
 import type { IRole } from "../../../../interfaces/role/role.interface";
 import { clearAllPaginationPersistence } from '../../../shared/components/pagination';
+import { setUserRoles, clearRoles } from '../../../../helper/role/role.helper';
+import { hydrateUserDataCache, clearUserData } from '../../../../helper/user/user.helper';
 
 /**
  * Handler para decodificar JWT con manejo seguro de excepciones y validaciones
@@ -45,6 +48,222 @@ const decodeAndValidateToken = (tokenString: string): Token => {
     throw new Error('Token con formato inválido recibido del servidor');
   }
 };
+
+// =====================================================
+// SCHEMAS DE VALIDACIÓN PARA CACHE
+// =====================================================
+
+/**
+ * Schema para validar datos de usuario en cache
+ *
+ * IMPORTANTE: id es string (UUID del backend), no number
+ */
+const UserDataSchema = z.object({
+  id: z.string(), // UUID desde el backend
+  nombre: z.string(),
+  primer_apellido: z.string(),
+  segundo_apellido: z.string().optional(),
+  foto: z.string().optional()
+});
+
+// =====================================================
+// CONSTANTES DE CONFIGURACIÓN DE CACHE
+// =====================================================
+
+/**
+ * Configuración centralizada para cache de autenticación
+ *
+ * IMPORTANTE: Todas las keys y TTLs de auth centralizados aquí
+ *
+ * NOTA v3.0.0: La key ROLES fue removida. Los roles ahora se gestionan
+ * con RoleHelper (src/helper/role/role.helper.ts) que usa encriptación
+ * nativa con EncryptHelper y cache interno optimizado.
+ */
+const AUTH_CACHE_CONFIG = {
+  keys: {
+    USER_DATA: 'auth_user_data',
+    // ROLES: 'auth_roles', ← REMOVIDO - Ahora usa RoleHelper
+    TOKEN: 'auth_token'
+  },
+  ttl: {
+    // Sesión expira en 8 horas (28800000 ms)
+    SESSION: 8 * 60 * 60 * 1000
+  }
+} as const;
+
+/**
+ * Clave legacy utilizada por módulos que aún acceden directamente a sessionStorage
+ * Mantener sincronizada mientras se realiza la migración completa hacia CacheHelper.
+ */
+const LEGACY_AUTH_TOKEN_KEYS = ['token'] as const;
+
+// =====================================================
+// FUNCIONES AUXILIARES DE CACHE (DRY)
+// =====================================================
+
+/**
+ * Guarda los datos de usuario en cache
+ *
+ * @param userData - Datos del usuario a guardar
+ */
+const saveUserData = async (userData: z.infer<typeof UserDataSchema>): Promise<void> => {
+  // Validar datos antes de guardar
+  const validated = UserDataSchema.parse(userData);
+
+  const stored = await CacheHelper.setEncrypted(AUTH_CACHE_CONFIG.keys.USER_DATA, validated, {
+    expiresIn: AUTH_CACHE_CONFIG.ttl.SESSION,
+    priority: 'critical', // No eliminar en LRU
+    namespace: 'user',
+    useSessionStorage: true,
+    metadata: {
+      schema: 'UserDataSchema'
+    }
+  });
+
+  if (!stored) {
+    logger.warn('saveUserData', 'No se pudo guardar datos de usuario en cache encriptado', {
+      userId: validated.id
+    });
+    return;
+  }
+
+  logger.debug('saveUserData', 'Datos de usuario guardados en cache encriptado', {
+    userId: validated.id
+  });
+
+  hydrateUserDataCache(validated);
+};
+
+/**
+ * Guarda los roles del usuario usando RoleHelper
+ *
+ * MODIFICADO v3.0.0: Ahora usa RoleHelper.setUserRoles() directamente
+ * en lugar de CacheHelper. RoleHelper tiene validación Zod interna,
+ * encriptación nativa y cache optimizado.
+ *
+ * @deprecated Esta función ya no es necesaria. Usar setUserRoles() directamente.
+ * @param roles - Roles del usuario
+ */
+// const saveUserRoles = async (roles: IRole[]): Promise<void> => {
+//   // NOTA: Esta función fue reemplazada por llamada directa a:
+//   // await setUserRoles(roles);
+//   //
+//   // RoleHelper proporciona:
+//   // - Validación Zod automática
+//   // - Encriptación con EncryptHelper (Web Crypto API)
+//   // - Cache interno optimizado (5s TTL)
+//   // - Gestión unificada de roles en toda la app
+// };
+
+/**
+ * Guarda el token JWT en cache
+ *
+ * @param token - Token JWT
+ */
+const saveAuthToken = async (token: string): Promise<void> => {
+  const stored = await CacheHelper.setEncrypted(AUTH_CACHE_CONFIG.keys.TOKEN, token, {
+    expiresIn: AUTH_CACHE_CONFIG.ttl.SESSION,
+    priority: 'critical',
+    namespace: 'user',
+    useSessionStorage: true,
+    metadata: {
+      type: 'auth_token'
+    }
+  });
+
+  if (!stored) {
+    logger.warn('saveAuthToken', 'No se pudo guardar token en cache encriptado');
+  } else {
+    logger.debug('saveAuthToken', 'Token guardado en cache encriptado');
+  }
+
+  // Compatibilidad con módulos legacy que leen directamente desde sessionStorage
+  for (const legacyKey of LEGACY_AUTH_TOKEN_KEYS) {
+    try {
+      sessionStorage.setItem(legacyKey, token);
+    } catch (error) {
+      logger.warn('saveAuthToken', `No se pudo sincronizar token legacy en sessionStorage (${legacyKey})`, {
+        error: error instanceof Error ? error.message : 'unknown'
+      });
+    }
+  }
+};
+
+/**
+ * Obtiene el token JWT desde cache
+ *
+ * IMPORTANTE: Esta función es exportada para que otros módulos
+ * puedan obtener el token de autenticación (http.helper, etc.)
+ *
+ * @returns Token JWT o null si no existe o expiró
+ */
+export const getAuthToken = async (): Promise<string | null> => {
+  const cachedToken = await CacheHelper.getEncrypted<string>(
+    AUTH_CACHE_CONFIG.keys.TOKEN,
+    {
+      useSessionStorage: true
+    }
+  );
+
+  if (cachedToken) {
+    return cachedToken;
+  }
+
+  try {
+    for (const legacyKey of LEGACY_AUTH_TOKEN_KEYS) {
+      const legacyToken = sessionStorage.getItem(legacyKey);
+      if (legacyToken) {
+        return legacyToken;
+      }
+    }
+  } catch (error) {
+    logger.warn('getAuthToken', 'No se pudo obtener token legacy desde sessionStorage', {
+      error: error instanceof Error ? error.message : 'unknown'
+    });
+  }
+
+  return null;
+};
+
+/**
+ * Limpia todos los datos de autenticación del cache
+ *
+ * MODIFICADO v3.0.0: Ahora usa clearRoles() del RoleHelper para limpiar
+ * roles (encrypted + legacy) en lugar de CacheHelper.
+ */
+const clearAuthCache = (): void => {
+  // Limpiar datos de usuario y token con CacheHelper
+  CacheHelper.remove(AUTH_CACHE_CONFIG.keys.USER_DATA, true);
+  // CacheHelper.remove(AUTH_CACHE_CONFIG.keys.ROLES, true); ← REMOVIDO - Ahora usa RoleHelper
+  CacheHelper.remove(AUTH_CACHE_CONFIG.keys.TOKEN, true);
+
+  clearUserData();
+
+  // Limpiar roles con RoleHelper (limpia 'roles' y 'roles_encrypted')
+  clearRoles();
+
+  // Limpiar tokens legacy de sessionStorage
+  for (const legacyKey of LEGACY_AUTH_TOKEN_KEYS) {
+    try {
+      sessionStorage.removeItem(legacyKey);
+    } catch (error) {
+      logger.warn('clearAuthCache', `No se pudo eliminar token legacy (${legacyKey}) de sessionStorage`, {
+        error: error instanceof Error ? error.message : 'unknown'
+      });
+    }
+  }
+
+  logger.debug('clearAuthCache', 'Cache de autenticación limpiado', {
+    userDataCleared: true,
+    rolesCleared: true,  // ← Con RoleHelper (encrypted + legacy)
+    tokenCleared: true,
+    legacyTokensCleared: true
+  });
+};
+
+// =====================================================
+// CONFIGURACIÓN HTTP HELPER
+// =====================================================
 
 //* Con esto configuramos el helper para las peticiones.
 const http : HttpHelper = HttpHelper.getInstance(
@@ -149,22 +368,32 @@ export const login = async (loginRequest : LoginRequest)
     );
 
     if(rolesFiltrados.length <= 0) throw new Error('Roles no validos');
-    sessionStorage.setItem('user_data', JSON.stringify(
-      {
+
+    // ========================================
+    // ✅ GUARDAR DATOS DE AUTENTICACIÓN
+    // ========================================
+    // MODIFICADO v3.0.0: Roles ahora se guardan con RoleHelper (encriptado)
+    // en lugar de CacheHelper para unificar la gestión de roles en toda la app.
+
+    await Promise.all([
+      saveUserData({
         id: token.data.id,
         nombre: token.data.nombre,
         primer_apellido: token.data.primer_apellido,
         segundo_apellido: token.data.segundo_apellido,
-        foto: token.data.photo,
-      }
-    ));
+        foto: token.data.photo
+      }),
+      setUserRoles(rolesFiltrados),  // ← RoleHelper v3.0.0 (encriptado + cache)
+      saveAuthToken(loginResponse.token)
+    ]);
 
-    //TODO AGREGAR METODO DE ENCRIPTACION DE DATOS CON BCRYPT
-    
-    sessionStorage.setItem('roles', JSON.stringify(rolesFiltrados));
-    sessionStorage.setItem('token', loginResponse.token);
-
-    logger.debug(login.name,'Login exitoso, se guardaron los datos del usuario y roles en sessionStorage');
+    logger.debug(login.name,'Login exitoso, datos guardados', {
+      userId: token.data.id,
+      rolesCount: rolesFiltrados.length,
+      rolesStorage: 'RoleHelper v3.0.0 (encrypted + cache)',
+      userDataStorage: 'CacheHelper (encrypted)',
+      tokenStorage: 'CacheHelper (encrypted) + sessionStorage (legacy)'
+    });
 
     return token;
 
@@ -177,21 +406,32 @@ export const login = async (loginRequest : LoginRequest)
 export const logout = async () : Promise<void> => {
   logger.debug(logout.name,'Inicio del proceso de logout');
   try {
-    // Limpiar datos de usuario y autenticación
-    sessionStorage.removeItem('user_data');
-    sessionStorage.removeItem('roles');
-    sessionStorage.removeItem('token');
+    // ========================================
+    // ✅ LIMPIAR CACHE CON CACHEHELPER (DRY)
+    // ========================================
+
+    // Limpiar datos de autenticación (user_data, roles, token)
+    clearAuthCache();
 
     // ✅ SECURITY FIX: Limpiar todas las paginaciones persistidas
     // Previene que el siguiente usuario vea la página del usuario anterior
     clearAllPaginationPersistence();
 
-    logger.debug(logout.name,'Logout exitoso, se eliminaron los datos del usuario, roles y paginaciones de sessionStorage');
+    logger.debug(logout.name,'Logout exitoso, cache de autenticación y paginaciones limpiados');
   } catch (error) {
     throw new Error((error as Error).message || 'Error desconocido, habla con soporte');
   }
 };
 
-export const isLoggedIn = (): boolean => {
-  return !!sessionStorage.getItem('token');
+/**
+ * Verifica si el usuario está autenticado
+ *
+ * @returns true si existe un token válido en cache
+ */
+export const isLoggedIn = async (): Promise<boolean> => {
+  // ========================================
+  // ✅ OBTENER TOKEN DESDE CACHEHELPER (DRY)
+  // ========================================
+  const token = await getAuthToken();
+  return !!token;
 };
