@@ -95,8 +95,103 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
     isEditing,
     canEdit,
     canCreate,
-    canViewSensitiveData
+    canViewSensitiveData,
+    permissionsResolved
   } = state;
+
+  const gradosList = useMemo(() => {
+    if (!Array.isArray(grados)) {
+      return [];
+    }
+    return grados.map((grado) => {
+      const rawId = typeof grado.id === 'number' ? grado.id : Number(grado.id);
+      return {
+        id: Number.isNaN(rawId) ? 0 : rawId,
+        nombre: grado.nombre ?? ''
+      };
+    });
+  }, [grados]);
+
+  const cargosList = useMemo(() => {
+    if (!Array.isArray(cargos)) {
+      return [];
+    }
+    return cargos.map((cargo) => {
+      const rawId = typeof cargo.id === 'number' ? cargo.id : Number(cargo.id);
+      return {
+        id: Number.isNaN(rawId) ? 0 : rawId,
+        nombre: cargo.nombre ?? ''
+      };
+    });
+  }, [cargos]);
+
+  const sexosOptions = useMemo(() => {
+    if (!Array.isArray(sexos)) {
+      return [];
+    }
+    return sexos.map((sexo) => {
+      const rawId = typeof sexo.id === 'number' ? sexo.id : Number(sexo.id);
+      return {
+        id: Number.isNaN(rawId) ? 0 : rawId,
+        nombre: sexo.nombre ?? ''
+      };
+    });
+  }, [sexos]);
+
+  const passwordMetrics = useMemo(() => {
+    const passwordValue = formData.password ?? '';
+    const length = passwordValue.length;
+    const uppercaseMatches = passwordValue.match(/[A-Z]/g) ?? [];
+    const digitMatches = passwordValue.match(/[0-9]/g) ?? [];
+    const specialMatches = passwordValue.match(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/g) ?? [];
+
+    return {
+      length,
+      uppercaseCount: uppercaseMatches.length,
+      digitCount: digitMatches.length,
+      specialCount: specialMatches.length,
+      meetsLength: length >= 8 && length <= 12,
+      meetsUppercase: uppercaseMatches.length >= 2,
+      meetsDigits: digitMatches.length >= 2,
+      meetsSpecials: specialMatches.length >= 2
+    };
+  }, [formData.password]);
+
+  const passwordRequirements = useMemo(() => (
+    [
+      {
+        id: 'length',
+        met: passwordMetrics.meetsLength,
+        label: 'Entre 8 y 12 caracteres',
+        progress: passwordMetrics.length ? `(${passwordMetrics.length}/12)` : ''
+      },
+      {
+        id: 'uppercase',
+        met: passwordMetrics.meetsUppercase,
+        label: 'Mínimo 2 letras mayúsculas',
+        progress: `(${passwordMetrics.uppercaseCount}/2)`
+      },
+      {
+        id: 'digits',
+        met: passwordMetrics.meetsDigits,
+        label: 'Mínimo 2 números',
+        progress: `(${passwordMetrics.digitCount}/2)`
+      },
+      {
+        id: 'special',
+        met: passwordMetrics.meetsSpecials,
+        label: 'Mínimo 2 caracteres especiales',
+        progress: `(${passwordMetrics.specialCount}/2)`
+      }
+    ]
+  ), [passwordMetrics]);
+
+  const isInitialLoading = !permissionsResolved || isLoading || isCatalogsLoading;
+  const loadingMessage = !permissionsResolved
+    ? 'Validando permisos...'
+    : isCatalogsLoading
+      ? 'Cargando formulario...'
+      : 'Cargando datos del usuario...';
 
   // Breadcrumbs dinámicos
   const breadcrumbItems: BreadcrumbItem[] = useMemo(() => {
@@ -136,7 +231,7 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
   }, [userId, mode, isEditing, canEdit, canCreate]);
 
   // Estado de carga general
-  if (isLoading || isCatalogsLoading) {
+  if (isInitialLoading) {
     return (
       <div className={`min-h-screen p-4 md:p-6 lg:p-8 ${className}`} data-component="perfil-usuario">
         <div className="max-w-7xl mx-auto">
@@ -146,7 +241,7 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
           <div className="flex justify-center items-center py-16">
             <LoadingSpinner
               size="large"
-              message={isCatalogsLoading ? "Cargando formulario..." : "Cargando datos del usuario..."}
+              message={loadingMessage}
             />
           </div>
         </div>
@@ -155,7 +250,7 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
   }
 
   // Verificar permisos
-  if (!canEdit && !canCreate) {
+  if (permissionsResolved && !canEdit && !canCreate) {
     return (
       <div className={`min-h-screen p-4 md:p-6 lg:p-8 ${className}`} data-component="perfil-usuario">
         <div className="max-w-7xl mx-auto">
@@ -262,7 +357,7 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
               value={formData.sexoId}
               onChange={(value) => updateFormData({ sexoId: value })}
               error={formErrors.sexoId}
-              options={sexos}
+              options={sexosOptions}
               placeholder="Selecciona un sexo"
               showPlaceholderOption={true}
               required
@@ -327,7 +422,7 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
         <FormSection title="Información Profesional" icon={Briefcase}>
           <div className="grid md:grid-cols-2 gap-4">
             <GradosSelector
-              grados={Array.isArray(grados) ? grados.map(g => ({ id: Number(g.id), nombre: g.nombre })) : []}
+              grados={gradosList}
               selectedGradoId={formData.gradoId}
               onSelect={(gradoId) => updateFormData({ gradoId })}
               error={formErrors.gradoId}
@@ -337,7 +432,7 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
             />
 
             <CargosSelector
-              cargos={Array.isArray(cargos) ? cargos : []}
+              cargos={cargosList}
               selectedCargoId={formData.cargoId}
               onSelect={(cargoId) => updateFormData({ cargoId })}
               error={formErrors.cargoId}
@@ -405,62 +500,23 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
                   <strong className="text-[#4d4725] font-medium">Requisitos de contraseña:</strong>
                 </div>
                 <ul className="list-none space-y-1.5">
-                  <li className={`flex items-center gap-2 transition-colors duration-200 ${
-                    formData.password.length >= 8 && formData.password.length <= 12
-                      ? 'text-green-600'
-                      : 'text-[#6b6b6b]'
-                  }`}>
-                    <span className={`w-4 h-4 text-center font-bold ${
-                      formData.password.length >= 8 && formData.password.length <= 12
-                        ? 'text-green-600'
-                        : 'text-[#6b6b6b]'
-                    }`}>
-                      {formData.password.length >= 8 && formData.password.length <= 12 ? '✓' : '•'}
-                    </span>
-                    Entre 8 y 12 caracteres {formData.password ? `(${formData.password.length}/12)` : ''}
-                  </li>
-                  <li className={`flex items-center gap-2 transition-colors duration-200 ${
-                    (formData.password.match(/[A-Z]/g) || []).length >= 2
-                      ? 'text-green-600'
-                      : 'text-[#6b6b6b]'
-                  }`}>
-                    <span className={`w-4 h-4 text-center font-bold ${
-                      (formData.password.match(/[A-Z]/g) || []).length >= 2
-                        ? 'text-green-600'
-                        : 'text-[#6b6b6b]'
-                    }`}>
-                      {(formData.password.match(/[A-Z]/g) || []).length >= 2 ? '✓' : '•'}
-                    </span>
-                    Mínimo 2 letras mayúsculas {formData.password ? `(${(formData.password.match(/[A-Z]/g) || []).length}/2)` : ''}
-                  </li>
-                  <li className={`flex items-center gap-2 transition-colors duration-200 ${
-                    (formData.password.match(/[0-9]/g) || []).length >= 2
-                      ? 'text-green-600'
-                      : 'text-[#6b6b6b]'
-                  }`}>
-                    <span className={`w-4 h-4 text-center font-bold ${
-                      (formData.password.match(/[0-9]/g) || []).length >= 2
-                        ? 'text-green-600'
-                        : 'text-[#6b6b6b]'
-                    }`}>
-                      {(formData.password.match(/[0-9]/g) || []).length >= 2 ? '✓' : '•'}
-                    </span>
-                    Mínimo 2 números {formData.password ? `(${(formData.password.match(/[0-9]/g) || []).length}/2)` : ''}
-                  </li>
-                  <li className={`flex items-center gap-2 transition-colors duration-200 ${
-                    (formData.password.match(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/g) || []).length >= 2
-                      ? 'text-green-600'
-                      : 'text-[#6b6b6b]'
-                  }`}>
-                    <span className={`w-4 h-4 text-center font-bold ${
-                      (formData.password.match(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/g) || []).length >= 2
-                        ? 'text-green-600'
-                        : 'text-[#6b6b6b]'
-                    }`}>
-                      {(formData.password.match(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/g) || []).length >= 2 ? '✓' : '•'}
-                    </span>
-                    Mínimo 2 caracteres especiales {formData.password ? `(${(formData.password.match(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/g) || []).length}/2)` : ''}
-                  </li>
+                  {passwordRequirements.map((requirement) => (
+                    <li
+                      key={requirement.id}
+                      className={`flex items-center gap-2 transition-colors duration-200 ${
+                        requirement.met ? 'text-green-600' : 'text-[#6b6b6b]'
+                      }`}
+                    >
+                      <span
+                        className={`w-4 h-4 text-center font-bold ${
+                          requirement.met ? 'text-green-600' : 'text-[#6b6b6b]'
+                        }`}
+                      >
+                        {requirement.met ? '✓' : '•'}
+                      </span>
+                      {requirement.label} {formData.password ? requirement.progress : ''}
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>

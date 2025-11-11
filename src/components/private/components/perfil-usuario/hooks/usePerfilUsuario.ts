@@ -36,7 +36,6 @@ import { sanitizeInput } from '../../../../../helper/security/security.helper';
 import { getUserRoles } from '../../../../../helper/role/role.helper';
 import { getUserData } from '../../../../../helper/user/user.helper';
 import { isSuperAdmin, isAdmin } from '../../../../../config/permissions.config';
-import { ALLOWED_ROLES } from '../../../../../config/env.config';
 
 // Interfaces
 import type {
@@ -48,9 +47,8 @@ import type {
   IRolOption,
   IUserRole
 } from '../../../../../interfaces/components/perfilUsuario.interface';
-import type { 
-  ICreateUser, 
-  IUpdateUser 
+import type {
+  ICreateUser
 } from '../../../../../interfaces/user/crud/crud-user.interface';
 
 // =====================================================
@@ -81,7 +79,7 @@ const perfilUsuarioBaseSchema = z.object({
   telefono: z.string()
     .min(10, 'El teléfono debe tener al menos 10 dígitos')
     .max(15, 'El teléfono no puede exceder 15 caracteres')
-    .regex(/^[0-9+\-\s\(\)]+$/, 'Formato de teléfono inválido'),
+    .regex(/^[0-9+\-\s()]+$/, 'Formato de teléfono inválido'),
   
   cuip: z.string()
     .max(20, 'El CUIP no puede exceder 20 caracteres')
@@ -251,6 +249,7 @@ const initialState: IPerfilUsuarioState = {
   rolesDisponibles: [],
   rolesUsuarios: [],
   isEditing: false,
+  permissionsResolved: false,
   canEdit: false,
   canCreate: false,
   canViewSensitiveData: false
@@ -281,15 +280,16 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
    * @security Validación Zod + cache 5s + jerarquía automática
    */
   const checkPermissions = useCallback(() => {
-  const userData = getUserData();
+    const userData = getUserData();
     const userRoles = getUserRoles();
 
     // Determinar permisos basado en roles usando helpers centralizados
     const hasAdminRole = isSuperAdmin(userRoles) || isAdmin(userRoles);
-  const isCurrentUser = Boolean(userData?.id && userData.id.toString() === id);
+    const isCurrentUser = Boolean(userData?.id && userData.id.toString() === id);
 
     setState(prev => ({
       ...prev,
+      permissionsResolved: true,
       canCreate: hasAdminRole,
       canEdit: hasAdminRole || isCurrentUser,
       canViewSensitiveData: hasAdminRole
@@ -612,7 +612,7 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
     } finally {
       setState(prev => ({ ...prev, isSubmitting: false }));
     }
-  }, [state, id, validateForm, updateFormErrors, navigate]);
+  }, [state, id, validateForm, navigate]);
 
   // Funciones específicas para el modal de confirmación
   const handleConfirmUpdate = useCallback(async () => {
@@ -710,6 +710,7 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
   // =====================================================
 
   const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastCanSubmitRef = useRef<boolean | null>(null);
 
   useEffect(() => {
     // Solo validar si hay campos tocados
@@ -820,33 +821,46 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
     return hasChanges;
   }, [state.formData, state.isEditing, originalData]);
 
-  const canSubmit = useMemo(() => {
+  const canSubmitState = useMemo(() => {
     const conditions = {
       isFormValid,
       notSubmitting: !state.isSubmitting,
       notLoading: !state.isLoading,
       hasPermissions: state.canEdit || state.canCreate,
       catalogsLoaded: !state.isCatalogsLoading,
-      hasChanges: hasUnsavedChanges // Nueva condición: debe haber cambios reales
+      hasChanges: hasUnsavedChanges
     };
 
-    const result = conditions.isFormValid &&
-                   conditions.notSubmitting &&
-                   conditions.notLoading &&
-                   conditions.hasPermissions &&
-                   conditions.catalogsLoaded &&
-                   conditions.hasChanges; // Agregar condición de cambios
+    const result =
+      conditions.isFormValid &&
+      conditions.notSubmitting &&
+      conditions.notLoading &&
+      conditions.hasPermissions &&
+      conditions.catalogsLoaded &&
+      conditions.hasChanges;
 
-    // Solo loggear cambios significativos en canSubmit
-    if (result !== (state as any)._lastCanSubmit) {
+    return { result, conditions };
+  }, [
+    isFormValid,
+    state.isSubmitting,
+    state.isLoading,
+    state.canEdit,
+    state.canCreate,
+    state.isCatalogsLoading,
+    hasUnsavedChanges
+  ]);
+
+  const { result: canSubmit, conditions: canSubmitConditions } = canSubmitState;
+
+  useEffect(() => {
+    if (lastCanSubmitRef.current !== canSubmit) {
       logInfo('CanSubmit', 'Estado del botón cambió', JSON.stringify({
-        canSubmit: result,
-        ...conditions
+        canSubmit,
+        ...canSubmitConditions
       }));
+      lastCanSubmitRef.current = canSubmit;
     }
-
-    return result;
-  }, [isFormValid, state.isSubmitting, state.isLoading, state.canEdit, state.canCreate, state.isCatalogsLoading, hasUnsavedChanges]);
+  }, [canSubmit, canSubmitConditions]);
 
   // =====================================================
   // RETORNO DEL HOOK

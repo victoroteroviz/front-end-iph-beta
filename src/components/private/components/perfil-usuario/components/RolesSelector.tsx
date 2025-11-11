@@ -3,8 +3,8 @@
  * Selector multiselección para roles usando react-select
  */
 
-import React from 'react';
-import Select from 'react-select';
+import React, { useMemo } from 'react';
+import Select, { type StylesConfig } from 'react-select';
 import { AlertCircle, Users } from 'lucide-react';
 import type { IRol, IRolOption } from '../../../../../interfaces/components/perfilUsuario.interface';
 
@@ -26,14 +26,19 @@ const RolesSelector: React.FC<RolesSelectorProps> = ({
   canEditRoles = true
 }) => {
   // Convertir roles disponibles a opciones de react-select
-  const options: IRolOption[] = Array.isArray(rolesDisponibles) ? rolesDisponibles.map(rol => ({
-    value: rol.id,
-    label: rol.nombre
-  })) : [];
+  const options = useMemo<IRolOption[]>(() => {
+    if (!Array.isArray(rolesDisponibles)) {
+      return [];
+    }
+    return rolesDisponibles.map((rol) => ({
+      value: rol.id,
+      label: rol.nombre
+    }));
+  }, [rolesDisponibles]);
 
   // Estilos personalizados para react-select
-  const customStyles = {
-    control: (provided: any, state: any) => ({
+  const customStyles = useMemo<StylesConfig<IRolOption, true>>(() => ({
+    control: (provided, state) => ({
       ...provided,
       backgroundColor: '#f3f4f6',
       border: error ? '1px solid #ef4444' : '1px solid #d1d5db',
@@ -46,23 +51,23 @@ const RolesSelector: React.FC<RolesSelectorProps> = ({
       minHeight: '2.5rem',
       fontFamily: 'Poppins, sans-serif'
     }),
-    multiValue: (provided: any) => ({
+    multiValue: (provided) => ({
       ...provided,
       backgroundColor: '#948b54',
       borderRadius: '0.25rem'
     }),
-    multiValueLabel: (provided: any) => ({
+    multiValueLabel: (provided) => ({
       ...provided,
       color: '#ffffff',
       fontSize: '0.875rem',
       fontWeight: '500'
     }),
-    placeholder: (provided: any) => ({
+    placeholder: (provided) => ({
       ...provided,
       color: '#6b7280',
       fontSize: '0.875rem'
     }),
-    option: (provided: any, state: any) => ({
+    option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isSelected
         ? '#948b54'
@@ -73,15 +78,15 @@ const RolesSelector: React.FC<RolesSelectorProps> = ({
       cursor: 'pointer',
       fontFamily: 'Poppins, sans-serif'
     }),
-    dropdownIndicator: (provided: any) => ({
+    dropdownIndicator: (provided) => ({
       ...provided,
       cursor: 'pointer'
     }),
-    clearIndicator: (provided: any) => ({
+    clearIndicator: (provided) => ({
       ...provided,
       cursor: 'pointer'
     }),
-    multiValueRemove: (provided: any) => ({
+    multiValueRemove: (provided) => ({
       ...provided,
       color: '#ffffff',
       cursor: 'pointer',
@@ -90,7 +95,7 @@ const RolesSelector: React.FC<RolesSelectorProps> = ({
         color: '#ffffff'
       }
     })
-  };
+  }), [error]);
 
   if (!canEditRoles && rolesSeleccionados.length > 0) {
     // Vista de solo lectura

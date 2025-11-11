@@ -7,8 +7,9 @@
  */
 
 import { API_BASE_URL } from '../../../../../config/env.config';
+import CacheHelper from '../../../../../helper/cache/cache.helper';
 import { HttpHelper } from '../../../../../helper/http/http.helper';
-import { logDebug, logError, logInfo, logVerbose } from '../../../../../helper/log/logger.helper';
+import { logDebug, logError, logInfo, logVerbose, logWarning } from '../../../../../helper/log/logger.helper';
 
 // Interfaces
 import type { I_BasicDataDto } from '../../../../../interfaces/iph-basic-data';
@@ -24,6 +25,9 @@ import {
 // Constantes del servicio
 const SERVICE_NAME = 'IphBasicDataService';
 const API_ROUTE = '/api/iph-web';
+const CACHE_NAMESPACE = 'data';
+const CACHE_KEY_PREFIX = `${SERVICE_NAME}:basic`;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
 
 /**
  * Configuración del HttpHelper para este servicio
@@ -65,6 +69,22 @@ export const getBasicDataByIphId = async (id: string): Promise<I_BasicDataDto> =
     // Validación de entrada con utils
     validateIphId(id);
 
+    const cacheKey = `${CACHE_KEY_PREFIX}:${id}`;
+
+    const cachedData = CacheHelper.get<I_BasicDataDto>(cacheKey, true);
+
+    if (cachedData) {
+      const cachedClone = JSON.parse(JSON.stringify(cachedData)) as I_BasicDataDto;
+
+      logInfo(SERVICE_NAME, `${functionName} - Datos obtenidos desde cache`, {
+        iphId: cachedData.id,
+        cacheKey,
+        source: 'sessionStorage'
+      });
+
+      return transformBasicData(cachedClone);
+    }
+
     // Consultar API
     const endpoint = `${API_ROUTE}/getBasicDataByIph/${id}`;
 
@@ -88,7 +108,25 @@ export const getBasicDataByIphId = async (id: string): Promise<I_BasicDataDto> =
     });
 
     // Transformar y normalizar datos con utils
-    const transformedData = transformBasicData(response.data);
+  const transformedData = transformBasicData({ ...response.data });
+
+    const stored = CacheHelper.set<I_BasicDataDto>(cacheKey, transformedData, {
+      expiresIn: CACHE_TTL_MS,
+      priority: 'high',
+      namespace: CACHE_NAMESPACE,
+      useSessionStorage: true,
+      metadata: {
+        service: SERVICE_NAME,
+        version: '2.0.0',
+        cachedAt: new Date().toISOString()
+      }
+    });
+
+    if (!stored) {
+      logWarning(SERVICE_NAME, `${functionName} - No se pudo almacenar en cache`, {
+        cacheKey
+      });
+    }
 
     return transformedData;
 
