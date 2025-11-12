@@ -1759,7 +1759,7 @@ export class EncryptHelper {
    * @since v2.1.0
    */
   public validatePassphrase(passphrase: string): PassphraseValidationResult {
-    logVerbose('EncryptHelper', 'Validando fuerza de passphrase', {
+    logInfo('EncryptHelper', 'Validando fuerza de passphrase', {
       length: passphrase.length,
       // NO loggear la passphrase misma
     });

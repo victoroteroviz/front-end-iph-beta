@@ -786,6 +786,20 @@ export class CacheHelper {
 
   /**
    * Obtiene un item encriptado desde cache, desencriptándolo automáticamente si proviene de L2
+   *
+   * Compatible con datos legacy (pre-v2.1.1) que no tienen campo `salt`.
+   * Los datos legacy se limpian automáticamente y se retorna null (cache miss).
+   *
+   * @param key - Clave del cache
+   * @param options - Opciones de seguridad (useSessionStorage, passphrase)
+   * @returns Promesa que resuelve a los datos desencriptados o null si no existe/es legacy
+   *
+   * @example
+   * ```typescript
+   * const userData = await CacheHelper.getEncrypted<User>('userData', {
+   *   passphrase: 'custom-passphrase'
+   * });
+   * ```
    */
   static async getEncrypted<T>(
     key: string,
@@ -866,7 +880,25 @@ export class CacheHelper {
         return null;
       }
 
+      // ✅ MIGRATION CHECK: Detectar datos legacy sin salt (pre-v2.1.1)
+      const encryptedData = cacheItem.data as EncryptedCachePayload;
+      if (!encryptedData.salt) {
+        this.log('warn', `🔄 Migration: Limpiando cache legacy sin salt (pre-v2.1.1): "${key}"`, {
+          namespace: cacheItem.namespace,
+          priority: cacheItem.priority,
+          migration: 'EncryptHelper v2.1.1',
+          action: 'auto-cleanup',
+          note: 'Cache encriptado legacy será eliminado y regenerado'
+        });
+
+        // Limpiar cache legacy incompatible
+        this.remove(key, useSessionStorage);
+        this.metrics.misses++;
+        return null;
+      }
+
       try {
+        // ✅ Datos tienen salt, proceder con desencriptación normal
         const decrypted = await this.decryptPayload(cacheItem.data, passphrase);
         const data = this.deserializePayload<T>(decrypted);
 
