@@ -71,7 +71,7 @@ export const getBasicDataByIphId = async (id: string): Promise<I_BasicDataDto> =
 
     const cacheKey = `${CACHE_KEY_PREFIX}:${id}`;
 
-    const cachedData = CacheHelper.get<I_BasicDataDto>(cacheKey, true);
+    const cachedData = await CacheHelper.get<I_BasicDataDto>(cacheKey, true);
 
     if (cachedData) {
       const cachedClone = JSON.parse(JSON.stringify(cachedData)) as I_BasicDataDto;

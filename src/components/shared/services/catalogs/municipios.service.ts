@@ -103,7 +103,7 @@ export const getMunicipios = async (): Promise<IMunicipios[]> => {
 
   try {
     // Intentar obtener del cache primero
-    const cachedMunicipios = CacheHelper.get<IMunicipios[]>(CACHE_KEY_MUNICIPIOS);
+    const cachedMunicipios = await CacheHelper.get<IMunicipios[]>(CACHE_KEY_MUNICIPIOS);
 
     if (cachedMunicipios && cachedMunicipios.length > 0) {
       logInfo('MunicipiosService', '✅ Municipios obtenidos del cache', { count: cachedMunicipios.length });

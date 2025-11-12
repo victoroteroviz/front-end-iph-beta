@@ -32,7 +32,7 @@ export const getGrados = async (): Promise<IGrados[]> => {
 
   try {
     // Intentar obtener del cache primero
-    const cachedGrados = CacheHelper.get<IGrados[]>(CACHE_KEY_GRADOS);
+    const cachedGrados = await CacheHelper.get<IGrados[]>(CACHE_KEY_GRADOS);
 
     if (cachedGrados) {
       logInfo('GradosService', '✅ Grados obtenidos del cache', { count: cachedGrados.length });

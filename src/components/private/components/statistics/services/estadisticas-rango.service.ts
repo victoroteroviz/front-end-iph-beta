@@ -1,5 +1,5 @@
 /**
- * =Ê Servicio de Estadísticas - Rango de IPH por Usuario y Fecha
+ * =ï¿½ Servicio de Estadï¿½sticas - Rango de IPH por Usuario y Fecha
  *
  * Servicio frontend para consultar el endpoint de backend que obtiene
  * el listado paginado de IPH filtrado por rango de fechas y usuario.
@@ -12,13 +12,13 @@
  * Este servicio se comunica con el endpoint NestJS:
  * GET /estadisticas/getRangoIphPorFechaUsuario
  *
- * Características:
- * -  Validación Zod de response para type safety en runtime
- * -  Cache agresivo (30s) solo para queries sin búsqueda
- * -  Construcción manual de query params complejos
+ * Caracterï¿½sticas:
+ * -  Validaciï¿½n Zod de response para type safety en runtime
+ * -  Cache agresivo (30s) solo para queries sin bï¿½squeda
+ * -  Construcciï¿½n manual de query params complejos
  * -  Logging estructurado (HTTP + Info + Error)
  * -  Manejo de errores robusto (throw silencioso)
- * -  Conversión automática de fechas a ISO string
+ * -  Conversiï¿½n automï¿½tica de fechas a ISO string
  * -  TypeScript strict mode
  * -  JSDoc completo en todas las funciones
  *
@@ -26,7 +26,7 @@
  * ```typescript
  * import { getRangoIphPorUsuario } from './estadisticas-rango.service';
  *
- * // Uso básico
+ * // Uso bï¿½sico
  * const response = await getRangoIphPorUsuario({
  *   limite: 10,
  *   pagina: 1,
@@ -60,18 +60,18 @@ import { API_BASE_URL } from '@/config/env.config';
 // =====================================================
 
 /**
- * Enum para orden de resultados (ASC/DESC)
+ * Constante para orden de resultados (ASC/DESC)
  * Debe coincidir con el enum del backend
  */
-export enum OrdenarEnum {
-  ASC = 'ASC',
-  DESC = 'DESC'
-}
+export const OrdenarEnum = {
+  ASC: 'ASC',
+  DESC: 'DESC'
+} as const;
 
 /**
  * Tipo para los valores de ordenamiento
  */
-export type OrdenarType = `${OrdenarEnum}`;
+export type OrdenarType = typeof OrdenarEnum[keyof typeof OrdenarEnum];
 
 // =====================================================
 // INTERFACES TYPESCRIPT (Aligned con backend)
@@ -80,10 +80,10 @@ export type OrdenarType = `${OrdenarEnum}`;
 /**
  * Interface para los detalles del usuario en la respuesta
  *
- * Representa la información básica del usuario asociado al IPH
+ * Representa la informaciï¿½n bï¿½sica del usuario asociado al IPH
  */
 export interface RangoUsuarioDetalle {
-  /** ID único del usuario */
+  /** ID ï¿½nico del usuario */
   id: string;
   /** Nombre del usuario (puede ser null) */
   nombre: string | null;
@@ -96,63 +96,63 @@ export interface RangoUsuarioDetalle {
 /**
  * Interface para un item individual de IPH en el listado
  *
- * Representa un registro de IPH con su información básica
+ * Representa un registro de IPH con su informaciï¿½n bï¿½sica
  */
 export interface RangoIphItem {
-  /** ID único del IPH */
+  /** ID ï¿½nico del IPH */
   id: string;
-  /** Fecha de creación en formato ISO string (puede ser null) */
+  /** Fecha de creaciï¿½n en formato ISO string (puede ser null) */
   fechaCreacion: string | null;
-  /** Información del usuario asociado (puede ser null) */
+  /** Informaciï¿½n del usuario asociado (puede ser null) */
   usuario: RangoUsuarioDetalle | null;
 }
 
 /**
- * Interface para los metadatos de paginación
+ * Interface para los metadatos de paginaciï¿½n
  *
- * Contiene información sobre el estado actual de la paginación
+ * Contiene informaciï¿½n sobre el estado actual de la paginaciï¿½n
  */
 export interface RangoIphMeta {
   /** Total de registros encontrados */
   total: number;
-  /** Página actual */
+  /** Pï¿½gina actual */
   pagina: number;
-  /** Límite de registros por página */
+  /** Lï¿½mite de registros por pï¿½gina */
   limite: number;
-  /** Total de páginas disponibles */
+  /** Total de pï¿½ginas disponibles */
   totalPaginas: number;
   /** Orden aplicado a los resultados */
-  ordenarPor: OrdenarEnum;
+  ordenarPor: OrdenarType;
 }
 
 /**
  * Interface para la respuesta completa del endpoint
  *
- * Estructura estándar de respuesta paginada
+ * Estructura estï¿½ndar de respuesta paginada
  */
 export interface RangoIphPorUsuarioResponse {
   /** Array de items de IPH */
   data: RangoIphItem[];
-  /** Metadatos de paginación */
+  /** Metadatos de paginaciï¿½n */
   meta: RangoIphMeta;
 }
 
 /**
- * Interface para los parámetros de query del endpoint
+ * Interface para los parï¿½metros de query del endpoint
  *
- * Todos los parámetros son opcionales excepto limite, pagina y ordenarPor
+ * Todos los parï¿½metros son opcionales excepto limite, pagina y ordenarPor
  * que tienen valores por defecto
  */
 export interface QueryRangoPorUsuarioParams {
-  /** Límite de registros por página (1-100, default: 10) */
+  /** Lï¿½mite de registros por pï¿½gina (1-100, default: 10) */
   limite?: number;
-  /** Número de página actual (min: 1, default: 1) */
+  /** Nï¿½mero de pï¿½gina actual (min: 1, default: 1) */
   pagina?: number;
   /** Orden de los resultados (default: ASC) */
-  ordenarPor?: OrdenarEnum;
+  ordenarPor?: OrdenarType;
   /** Campo por el cual buscar (opcional) */
   buscarPor?: string;
-  /** Término de búsqueda (opcional) */
+  /** Tï¿½rmino de bï¿½squeda (opcional) */
   terminoBusqueda?: string;
   /** Fecha de inicio del rango (opcional) */
   fechaInicio?: Date;
@@ -161,7 +161,7 @@ export interface QueryRangoPorUsuarioParams {
 }
 
 // =====================================================
-// VALIDACIÓN ZOD (Runtime Type Safety)
+// VALIDACIï¿½N ZOD (Runtime Type Safety)
 // =====================================================
 
 /**
@@ -170,7 +170,7 @@ export interface QueryRangoPorUsuarioParams {
  * Asegura que los datos del usuario cumplan con la estructura esperada
  */
 const RangoUsuarioDetalleSchema = z.object({
-  id: z.string().uuid('ID de usuario debe ser UUID válido'),
+  id: z.string().uuid('ID de usuario debe ser UUID vï¿½lido'),
   nombre: z.string().nullable(),
   primerApellido: z.string().nullable(),
   segundoApellido: z.string().nullable()
@@ -182,21 +182,21 @@ const RangoUsuarioDetalleSchema = z.object({
  * Valida la estructura de cada registro de IPH en la respuesta
  */
 const RangoIphItemSchema = z.object({
-  id: z.string().uuid('ID de IPH debe ser UUID válido'),
+  id: z.string().uuid('ID de IPH debe ser UUID vï¿½lido'),
   fechaCreacion: z.string().nullable(),
   usuario: RangoUsuarioDetalleSchema.nullable()
 });
 
 /**
- * Schema Zod para validar los metadatos de paginación
+ * Schema Zod para validar los metadatos de paginaciï¿½n
  *
- * Asegura que los metadatos sean consistentes y válidos
+ * Asegura que los metadatos sean consistentes y vï¿½lidos
  */
 const RangoIphMetaSchema = z.object({
   total: z.number().int().min(0, 'Total debe ser positivo o cero'),
-  pagina: z.number().int().min(1, 'Página debe ser al menos 1'),
-  limite: z.number().int().min(1).max(100, 'Límite debe estar entre 1 y 100'),
-  totalPaginas: z.number().int().min(0, 'Total de páginas debe ser positivo o cero'),
+  pagina: z.number().int().min(1, 'Pï¿½gina debe ser al menos 1'),
+  limite: z.number().int().min(1).max(100, 'Lï¿½mite debe estar entre 1 y 100'),
+  totalPaginas: z.number().int().min(0, 'Total de pï¿½ginas debe ser positivo o cero'),
   ordenarPor: z.nativeEnum(OrdenarEnum)
 });
 
@@ -211,30 +211,30 @@ const RangoIphPorUsuarioResponseSchema = z.object({
 });
 
 // =====================================================
-// CONSTANTES DE CONFIGURACIÓN
+// CONSTANTES DE CONFIGURACIï¿½N
 // =====================================================
 
 /**
- * Configuración del servicio
+ * Configuraciï¿½n del servicio
  */
 const SERVICE_CONFIG = {
-  /** Nombre del módulo para logging */
+  /** Nombre del mï¿½dulo para logging */
   MODULE_NAME: 'EstadisticasRangoService',
 
   /** Endpoint del backend (relativo a API_BASE_URL) */
   ENDPOINT: '/estadisticas/getRangoIphPorFechaUsuario',
 
-  /** Timeout para la petición (15 segundos) */
+  /** Timeout para la peticiï¿½n (15 segundos) */
   TIMEOUT: 15000,
 
-  /** Número de reintentos en caso de fallo */
+  /** Nï¿½mero de reintentos en caso de fallo */
   RETRIES: 3,
 
-  /** Cache TTL (30 segundos) - Solo para queries sin búsqueda */
+  /** Cache TTL (30 segundos) - Solo para queries sin bï¿½squeda */
   CACHE_TTL: 30 * 1000,
 
   /** Namespace de cache */
-  CACHE_NAMESPACE: 'estadisticas' as const,
+  CACHE_NAMESPACE: 'data' as const,
 
   /** Prioridad de cache */
   CACHE_PRIORITY: 'normal' as const,
@@ -252,23 +252,23 @@ const SERVICE_CONFIG = {
 // =====================================================
 
 /**
- * Construye manualmente la query string desde un objeto de parámetros
+ * Construye manualmente la query string desde un objeto de parï¿½metros
  *
- * Esta función es necesaria porque el httpHelper no tiene soporte nativo
+ * Esta funciï¿½n es necesaria porque el httpHelper no tiene soporte nativo
  * para query params complejos. Construye la URL completa incluyendo
  * el query string.
  *
  * @param baseUrl - URL base del endpoint
- * @param params - Objeto con los parámetros de query
+ * @param params - Objeto con los parï¿½metros de query
  * @returns URL completa con query string
  *
  * @example
  * ```typescript
  * const url = buildQueryString(
  *   'https://api.example.com/endpoint',
- *   { limite: 10, pagina: 1, nombre: 'Juan Pérez' }
+ *   { limite: 10, pagina: 1, nombre: 'Juan Pï¿½rez' }
  * );
- * // ’ 'https://api.example.com/endpoint?limite=10&pagina=1&nombre=Juan+P%C3%A9rez'
+ * // ï¿½ 'https://api.example.com/endpoint?limite=10&pagina=1&nombre=Juan+P%C3%A9rez'
  * ```
  *
  * @internal
@@ -277,12 +277,12 @@ function buildQueryString(
   baseUrl: string,
   params: Record<string, string | number | boolean | undefined>
 ): string {
-  // Filtrar parámetros undefined
+  // Filtrar parï¿½metros undefined
   const validParams = Object.entries(params).filter(
     ([_, value]) => value !== undefined && value !== null
   );
 
-  // Si no hay parámetros válidos, retornar URL base
+  // Si no hay parï¿½metros vï¿½lidos, retornar URL base
   if (validParams.length === 0) {
     return baseUrl;
   }
@@ -298,17 +298,17 @@ function buildQueryString(
 }
 
 /**
- * Convierte los parámetros del frontend al formato esperado por el backend
+ * Convierte los parï¿½metros del frontend al formato esperado por el backend
  *
  * Transformaciones aplicadas:
  * - Convierte Date a ISO string para fechaInicio y fechaFin
  * - Aplica valores por defecto para limite, pagina y ordenarPor
  * - Valida rangos de valores (limite: 1-100, pagina: >= 1)
  *
- * @param params - Parámetros del frontend
- * @returns Objeto con parámetros transformados listos para query string
+ * @param params - Parï¿½metros del frontend
+ * @returns Objeto con parï¿½metros transformados listos para query string
  *
- * @throws {Error} Si los parámetros no cumplen las validaciones
+ * @throws {Error} Si los parï¿½metros no cumplen las validaciones
  *
  * @example
  * ```typescript
@@ -316,7 +316,7 @@ function buildQueryString(
  *   limite: 20,
  *   fechaInicio: new Date('2025-01-01')
  * });
- * // ’ { limite: 20, pagina: 1, ordenarPor: 'ASC', fechaInicio: '2025-01-01T00:00:00.000Z' }
+ * // ï¿½ { limite: 20, pagina: 1, ordenarPor: 'ASC', fechaInicio: '2025-01-01T00:00:00.000Z' }
  * ```
  *
  * @internal
@@ -334,23 +334,23 @@ function transformParams(
     fechaFin
   } = params;
 
-  // Validaciones en frontend (previene requests inválidos)
+  // Validaciones en frontend (previene requests invï¿½lidos)
   if (limite < 1 || limite > 100) {
-    throw new Error('El límite debe estar entre 1 y 100');
+    throw new Error('El lï¿½mite debe estar entre 1 y 100');
   }
 
   if (pagina < 1) {
-    throw new Error('La página debe ser al menos 1');
+    throw new Error('La pï¿½gina debe ser al menos 1');
   }
 
-  // Construir objeto de parámetros
+  // Construir objeto de parï¿½metros
   const queryParams: Record<string, string | number | undefined> = {
     limite,
     pagina,
     ordenarPor
   };
 
-  // Agregar parámetros opcionales solo si están presentes
+  // Agregar parï¿½metros opcionales solo si estï¿½n presentes
   if (buscarPor) {
     queryParams.buscarPor = buscarPor;
   }
@@ -372,18 +372,18 @@ function transformParams(
 }
 
 /**
- * Genera una key única para el cache basada en los parámetros de query
+ * Genera una key ï¿½nica para el cache basada en los parï¿½metros de query
  *
- * La key incluye todos los parámetros relevantes para identificar
- * de manera única una consulta específica.
+ * La key incluye todos los parï¿½metros relevantes para identificar
+ * de manera ï¿½nica una consulta especï¿½fica.
  *
- * @param params - Parámetros de query transformados
- * @returns String único para usar como cache key
+ * @param params - Parï¿½metros de query transformados
+ * @returns String ï¿½nico para usar como cache key
  *
  * @example
  * ```typescript
  * const key = generateCacheKey({ limite: 10, pagina: 1, ordenarPor: 'ASC' });
- * // ’ 'rango-iph:limite=10:pagina=1:ordenarPor=ASC'
+ * // ï¿½ 'rango-iph:limite=10:pagina=1:ordenarPor=ASC'
  * ```
  *
  * @internal
@@ -404,31 +404,31 @@ function generateCacheKey(params: Record<string, string | number | undefined>): 
  * Determina si una query debe ser cacheada o no
  *
  * Estrategia de cache:
- * -  Cachear: Queries sin filtros de búsqueda (listado general paginado)
- * - L NO cachear: Queries con búsqueda activa (terminoBusqueda presente)
+ * -  Cachear: Queries sin filtros de bï¿½squeda (listado general paginado)
+ * - L NO cachear: Queries con bï¿½squeda activa (terminoBusqueda presente)
  *
- * Razón: Los listados generales cambian menos frecuentemente,
- * mientras que las búsquedas suelen ser exploratorias y el usuario
+ * Razï¿½n: Los listados generales cambian menos frecuentemente,
+ * mientras que las bï¿½squedas suelen ser exploratorias y el usuario
  * espera datos actualizados.
  *
- * @param params - Parámetros de query originales
+ * @param params - Parï¿½metros de query originales
  * @returns true si debe cachearse, false en caso contrario
  *
  * @example
  * ```typescript
- * shouldCache({ limite: 10, pagina: 1 }); // ’ true (listado general)
- * shouldCache({ limite: 10, terminoBusqueda: 'Juan' }); // ’ false (búsqueda activa)
+ * shouldCache({ limite: 10, pagina: 1 }); // ï¿½ true (listado general)
+ * shouldCache({ limite: 10, terminoBusqueda: 'Juan' }); // ï¿½ false (bï¿½squeda activa)
  * ```
  *
  * @internal
  */
 function shouldCache(params: QueryRangoPorUsuarioParams): boolean {
-  // NO cachear si hay búsqueda activa
+  // NO cachear si hay bï¿½squeda activa
   if (params.terminoBusqueda && params.terminoBusqueda.trim() !== '') {
     return false;
   }
 
-  // Cachear listados generales (sin búsqueda)
+  // Cachear listados generales (sin bï¿½squeda)
   return true;
 }
 
@@ -441,18 +441,18 @@ function shouldCache(params: QueryRangoPorUsuarioParams): boolean {
  *
  * Este servicio consume el endpoint GET /estadisticas/getRangoIphPorFechaUsuario
  * del backend NestJS. Implementa cache agresivo para mejorar performance en
- * consultas repetidas sin búsqueda activa.
+ * consultas repetidas sin bï¿½squeda activa.
  *
- * @param params - Parámetros de query para filtrar y paginar
+ * @param params - Parï¿½metros de query para filtrar y paginar
  * @returns Promise con la respuesta validada del backend
  *
- * @throws {Error} Si los parámetros son inválidos (validación frontend)
+ * @throws {Error} Si los parï¿½metros son invï¿½lidos (validaciï¿½n frontend)
  * @throws {HttpError} Si el backend retorna error (status >= 400)
  * @throws {z.ZodError} Si la respuesta del backend no cumple el schema esperado
  *
  * @example
  * ```typescript
- * // Ejemplo 1: Listado básico (primera página)
+ * // Ejemplo 1: Listado bï¿½sico (primera pï¿½gina)
  * try {
  *   const response = await getRangoIphPorUsuario({
  *     limite: 10,
@@ -471,7 +471,7 @@ function shouldCache(params: QueryRangoPorUsuarioParams): boolean {
  *
  * @example
  * ```typescript
- * // Ejemplo 2: Búsqueda por usuario con rango de fechas
+ * // Ejemplo 2: Bï¿½squeda por usuario con rango de fechas
  * const response = await getRangoIphPorUsuario({
  *   limite: 20,
  *   pagina: 1,
@@ -487,7 +487,7 @@ function shouldCache(params: QueryRangoPorUsuarioParams): boolean {
  *
  * @example
  * ```typescript
- * // Ejemplo 3: Paginación avanzada
+ * // Ejemplo 3: Paginaciï¿½n avanzada
  * const getAllPages = async () => {
  *   const firstPage = await getRangoIphPorUsuario({
  *     limite: 50,
@@ -497,7 +497,7 @@ function shouldCache(params: QueryRangoPorUsuarioParams): boolean {
  *   const totalPages = firstPage.meta.totalPaginas;
  *   const allData = [...firstPage.data];
  *
- *   // Obtener páginas restantes
+ *   // Obtener pï¿½ginas restantes
  *   for (let page = 2; page <= totalPages; page++) {
  *     const pageData = await getRangoIphPorUsuario({
  *       limite: 50,
@@ -515,14 +515,14 @@ function shouldCache(params: QueryRangoPorUsuarioParams): boolean {
  * - Cache miss + backend: ~100-300ms (depende de DB)
  * - Sin cache: Siempre requiere llamada al backend
  *
- * @see {@link QueryRangoPorUsuarioParams} para detalles de parámetros
+ * @see {@link QueryRangoPorUsuarioParams} para detalles de parï¿½metros
  * @see {@link RangoIphPorUsuarioResponse} para estructura de respuesta
  */
 export async function getRangoIphPorUsuario(
   params: QueryRangoPorUsuarioParams = {}
 ): Promise<RangoIphPorUsuarioResponse> {
   // ==========================================
-  // PASO 1: Transformar y validar parámetros
+  // PASO 1: Transformar y validar parï¿½metros
   // ==========================================
 
   let transformedParams: Record<string, string | number | undefined>;
@@ -535,11 +535,11 @@ export async function getRangoIphPorUsuario(
       transformados: transformedParams
     });
   } catch (error) {
-    // Error en validación de parámetros (frontend)
+    // Error en validaciï¿½n de parï¿½metros (frontend)
     logError(
       SERVICE_CONFIG.MODULE_NAME,
       error,
-      'Error validando parámetros de entrada'
+      'Error validando parï¿½metros de entrada'
     );
     throw error;
   }
@@ -569,7 +569,7 @@ export async function getRangoIphPorUsuario(
       }
     } catch (error) {
       // Si falla el cache, continuar con request al backend
-      // (no es un error crítico)
+      // (no es un error crï¿½tico)
       logError(
         SERVICE_CONFIG.MODULE_NAME,
         error,
@@ -577,7 +577,7 @@ export async function getRangoIphPorUsuario(
       );
     }
   } else {
-    logInfo(SERVICE_CONFIG.MODULE_NAME, 'Cache omitido (búsqueda activa)', {
+    logInfo(SERVICE_CONFIG.MODULE_NAME, 'Cache omitido (bï¿½squeda activa)', {
       terminoBusqueda: params.terminoBusqueda
     });
   }
@@ -596,7 +596,7 @@ export async function getRangoIphPorUsuario(
   });
 
   // ==========================================
-  // PASO 4: Realizar petición HTTP
+  // PASO 4: Realizar peticiï¿½n HTTP
   // ==========================================
 
   const startTime = Date.now();
@@ -605,12 +605,12 @@ export async function getRangoIphPorUsuario(
     const response = await httpHelper.get<RangoIphPorUsuarioResponse>(fullUrl, {
       timeout: SERVICE_CONFIG.TIMEOUT,
       retries: SERVICE_CONFIG.RETRIES,
-      includeAuth: true // Incluir token de autenticación
+      includeAuth: true // Incluir token de autenticaciï¿½n
     });
 
     const duration = Date.now() - startTime;
 
-    // Log HTTP (automático desde httpHelper, pero lo reforzamos aquí)
+    // Log HTTP (automï¿½tico desde httpHelper, pero lo reforzamos aquï¿½)
     logHttp('GET', SERVICE_CONFIG.ENDPOINT, response.status, duration, {
       total: response.data.meta?.total,
       items: response.data.data?.length
@@ -633,7 +633,7 @@ export async function getRangoIphPorUsuario(
         duration
       });
     } catch (zodError) {
-      // Error de validación Zod (estructura de respuesta inválida)
+      // Error de validaciï¿½n Zod (estructura de respuesta invï¿½lida)
       logError(
         SERVICE_CONFIG.MODULE_NAME,
         zodError,
@@ -671,12 +671,12 @@ export async function getRangoIphPorUsuario(
           total: validatedData.meta.total
         });
       } catch (error) {
-        // Si falla el guardado en cache, no es crítico
+        // Si falla el guardado en cache, no es crï¿½tico
         // Solo loggeamos el error y continuamos
         logError(
           SERVICE_CONFIG.MODULE_NAME,
           error,
-          'Error al guardar en cache (no crítico)'
+          'Error al guardar en cache (no crï¿½tico)'
         );
       }
     }
@@ -694,19 +694,19 @@ export async function getRangoIphPorUsuario(
 
     const duration = Date.now() - startTime;
 
-    // Si es un HttpError del helper, tiene información estructurada
+    // Si es un HttpError del helper, tiene informaciï¿½n estructurada
     if (error && typeof error === 'object' && 'type' in error) {
       const httpError = error as any;
 
-      logError(SERVICE_CONFIG.MODULE_NAME, httpError, 'Error HTTP en petición');
+      logError(SERVICE_CONFIG.MODULE_NAME, httpError, 'Error HTTP en peticiï¿½n');
 
-      // Log HTTP para errores también
+      // Log HTTP para errores tambiï¿½n
       if (httpError.status) {
         logHttp('GET', SERVICE_CONFIG.ENDPOINT, httpError.status, duration);
       }
     } else {
-      // Error genérico (no HTTP)
-      logError(SERVICE_CONFIG.MODULE_NAME, error, 'Error no HTTP en petición');
+      // Error genï¿½rico (no HTTP)
+      logError(SERVICE_CONFIG.MODULE_NAME, error, 'Error no HTTP en peticiï¿½n');
     }
 
     // Re-throw para que el componente maneje el error
@@ -737,10 +737,3 @@ export default getRangoIphPorUsuario;
  * } from './estadisticas-rango.service';
  * ```
  */
-export type {
-  QueryRangoPorUsuarioParams,
-  RangoIphPorUsuarioResponse,
-  RangoIphItem,
-  RangoIphMeta,
-  RangoUsuarioDetalle
-};

@@ -68,9 +68,9 @@ const buildListCacheKey = (params: NormalizedUsuariosParams): string =>
 const buildDetailCacheKey = (id: string): string =>
   `${CACHE_CONFIG.prefix.detail}:${id}`;
 
-const registerListCacheKey = (cacheKey: string): void => {
+const registerListCacheKey = async (cacheKey: string): Promise<void> => {
   const indexKey = CACHE_CONFIG.keys.listIndex;
-  const cachedKeys = CacheHelper.get<string[]>(indexKey, CACHE_CONFIG.useSessionStorage) ?? [];
+  const cachedKeys = (await CacheHelper.get<string[]>(indexKey, CACHE_CONFIG.useSessionStorage)) ?? [];
 
   if (cachedKeys.includes(cacheKey)) {
     return;
@@ -78,7 +78,7 @@ const registerListCacheKey = (cacheKey: string): void => {
 
   const updatedKeys = [...cachedKeys, cacheKey];
 
-  CacheHelper.set(indexKey, updatedKeys, {
+  await CacheHelper.set(indexKey, updatedKeys, {
     expiresIn: CACHE_CONFIG.ttl.index,
     namespace: CACHE_CONFIG.namespace,
     useSessionStorage: CACHE_CONFIG.useSessionStorage,
@@ -89,11 +89,11 @@ const registerListCacheKey = (cacheKey: string): void => {
   });
 };
 
-const cacheListResponse = (
+const cacheListResponse = async (
   cacheKey: string,
   data: IPaginatedUsersResponse
-): void => {
-  const stored = CacheHelper.set(cacheKey, data, {
+): Promise<void> => {
+  const stored = await CacheHelper.set(cacheKey, data, {
     expiresIn: CACHE_CONFIG.ttl.list,
     namespace: CACHE_CONFIG.namespace,
     useSessionStorage: CACHE_CONFIG.useSessionStorage,
@@ -103,12 +103,12 @@ const cacheListResponse = (
   });
 
   if (stored) {
-    registerListCacheKey(cacheKey);
+    await registerListCacheKey(cacheKey);
   }
 };
 
-const cacheDetailResponse = (id: string, data: IGetUserById): void => {
-  CacheHelper.set(buildDetailCacheKey(id), data, {
+const cacheDetailResponse = async (id: string, data: IGetUserById): Promise<void> => {
+  await CacheHelper.set(buildDetailCacheKey(id), data, {
     expiresIn: CACHE_CONFIG.ttl.detail,
     namespace: CACHE_CONFIG.namespace,
     useSessionStorage: CACHE_CONFIG.useSessionStorage,
@@ -119,9 +119,9 @@ const cacheDetailResponse = (id: string, data: IGetUserById): void => {
   });
 };
 
-const invalidateUsuariosListCache = (): void => {
+const invalidateUsuariosListCache = async (): Promise<void> => {
   const indexKey = CACHE_CONFIG.keys.listIndex;
-  const cachedKeys = CacheHelper.get<string[]>(indexKey, CACHE_CONFIG.useSessionStorage);
+  const cachedKeys = await CacheHelper.get<string[]>(indexKey, CACHE_CONFIG.useSessionStorage);
 
   if (cachedKeys && cachedKeys.length > 0) {
     cachedKeys.forEach((key) => CacheHelper.remove(key, CACHE_CONFIG.useSessionStorage));
@@ -154,7 +154,7 @@ export const getUsuarios = async (params: GetUsuariosParams): Promise<IPaginated
   const normalizedParams = normalizeListParams(params);
   const cacheKey = buildListCacheKey(normalizedParams);
 
-  const cachedResponse = CacheHelper.get<IPaginatedUsersResponse>(
+  const cachedResponse = await CacheHelper.get<IPaginatedUsersResponse>(
     cacheKey,
     CACHE_CONFIG.useSessionStorage
   );
@@ -169,7 +169,7 @@ export const getUsuarios = async (params: GetUsuariosParams): Promise<IPaginated
     const response = await http.get<IPaginatedUsersResponse>(url);
     const usuariosResponse: IPaginatedUsersResponse = response.data;
     if (!usuariosResponse) throw new Error("No se encontraron usuarios");
-    cacheListResponse(cacheKey, usuariosResponse);
+    await cacheListResponse(cacheKey, usuariosResponse);
     return usuariosResponse;
   } catch (error) {
     throw new Error(
@@ -180,7 +180,7 @@ export const getUsuarios = async (params: GetUsuariosParams): Promise<IPaginated
 
 export const getUserById = async (id: string): Promise<IGetUserById> => {
   const cacheKey = buildDetailCacheKey(id);
-  const cached = CacheHelper.get<IGetUserById>(cacheKey, CACHE_CONFIG.useSessionStorage);
+  const cached = await CacheHelper.get<IGetUserById>(cacheKey, CACHE_CONFIG.useSessionStorage);
 
   if (cached) {
     return cached;
@@ -191,7 +191,7 @@ export const getUserById = async (id: string): Promise<IGetUserById> => {
     const response = await http.get<IGetUserById>(url);
     const usuario: IGetUserById = response.data;
     if (!usuario) throw new Error("No se encontró el usuario");
-    cacheDetailResponse(id, usuario);
+    await cacheDetailResponse(id, usuario);
     return usuario;
   } catch (error) {
     throw new Error(
@@ -208,7 +208,7 @@ export const createUsuario = async (
     const response = await http.post<ICreatedUser>(url, user);
     const nuevoUsuario: ICreatedUser = response.data;
     if (!nuevoUsuario) throw new Error("No se pudo crear el usuario");
-    invalidateUsuariosListCache();
+    await invalidateUsuariosListCache();
     return nuevoUsuario;
   } catch (error) {
     throw new Error(
@@ -227,7 +227,7 @@ export const updateUsuario = async (
     if (!usuarioActualizado)
       throw new Error("No se pudo actualizar el usuario");
     invalidateUserDetailCache(id);
-    invalidateUsuariosListCache();
+    await invalidateUsuariosListCache();
     return usuarioActualizado;
   } catch (error) {
     throw new Error(
@@ -241,7 +241,7 @@ export const deleteUsuario = async (id: string): Promise<void> => {
   try {
     await http.delete<void>(url);
     invalidateUserDetailCache(id);
-    invalidateUsuariosListCache();
+    await invalidateUsuariosListCache();
   } catch (error) {
     throw new Error(
       (error as Error).message || "Error desconocido, habla con soporte"

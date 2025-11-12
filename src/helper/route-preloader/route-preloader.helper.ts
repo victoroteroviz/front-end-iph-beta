@@ -380,7 +380,7 @@ export class RoutePreloader {
     try {
       // Verificar si está en cache primero
       if (options.cache) {
-        const cached = CacheHelper.get<boolean>(`route_${routeId}`, true);
+        const cached = await CacheHelper.get<boolean>(`route_${routeId}`, true);
         if (cached) {
           this.cacheMetrics.hits++;
           this.log('info', `Ruta cargada desde cache: ${routeId}`);

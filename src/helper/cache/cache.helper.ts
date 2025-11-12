@@ -636,35 +636,9 @@ export class CacheHelper {
         return false;
       }
 
-      // Encriptar datos si se solicita
-      let dataToStore: T = data;
-      let encryptionIV: string | undefined;
-      let isEncrypted = false;
-
-      if (options.encrypt === true) {
-        try {
-          // Convertir data a string para encriptar
-          const dataStr = JSON.stringify(data);
-
-          // Encriptar usando EncryptHelper
-          const encryptResult = await EncryptHelper.encryptData(dataStr);
-
-          // Guardar datos encriptados y el IV
-          dataToStore = encryptResult.encrypted as T;
-          encryptionIV = encryptResult.iv;
-          isEncrypted = true;
-
-          this.log('info', `Datos encriptados para "${key}" usando AES-GCM`);
-        } catch (error) {
-          this.log('error', `Error encriptando datos para "${key}"`, error);
-          // Si falla la encriptación, no guardar los datos (seguridad primero)
-          return false;
-        }
-      }
-
       // Crear item de cache
       const cacheItem: CacheItem<T> = {
-        data: dataToStore,
+        data,
         timestamp: Date.now(),
         expiresIn: options.expiresIn || this.config.defaultExpiration,
         priority: options.priority || 'normal',
@@ -672,8 +646,6 @@ export class CacheHelper {
         accessCount: 0,
         lastAccess: Date.now(),
         size,
-        encrypted: isEncrypted,
-        encryptionIV,
         metadata: options.metadata
       };
 
@@ -1034,14 +1006,14 @@ export class CacheHelper {
         // Desencriptar si es necesario
         if (l1Item.encrypted && l1Item.encryptionIV) {
           try {
-            const decryptResult = await EncryptHelper.decryptData({
+            const decryptResult = await decryptString({
               encrypted: l1Item.data as string,
               iv: l1Item.encryptionIV,
               algorithm: 'AES-GCM',
               timestamp: l1Item.timestamp
             });
 
-            const decryptedData = JSON.parse(decryptResult.decrypted) as T;
+            const decryptedData = JSON.parse(decryptResult) as T;
             this.log('info', `Datos desencriptados desde L1: "${key}"`);
             return decryptedData;
           } catch (error) {
@@ -1119,14 +1091,14 @@ export class CacheHelper {
       // Desencriptar si es necesario
       if (cacheItem.encrypted && cacheItem.encryptionIV) {
         try {
-          const decryptResult = await EncryptHelper.decryptData({
+          const decryptResult = await decryptString({
             encrypted: cacheItem.data as string,
             iv: cacheItem.encryptionIV,
             algorithm: 'AES-GCM',
             timestamp: cacheItem.timestamp
           });
 
-          const decryptedData = JSON.parse(decryptResult.decrypted) as T;
+          const decryptedData = JSON.parse(decryptResult) as T;
           this.log('info', `Datos desencriptados desde L2: "${key}"`);
           return decryptedData;
         } catch (error) {

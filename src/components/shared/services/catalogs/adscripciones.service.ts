@@ -93,7 +93,7 @@ export const getAdscripciones = async (): Promise<IAdscripcionWithInstitucion[]>
 
   try {
     // Intentar obtener del cache primero
-    const cachedAdscripciones = CacheHelper.get<IAdscripcionWithInstitucion[]>(CACHE_KEY_ADSCRIPCIONES);
+    const cachedAdscripciones = await CacheHelper.get<IAdscripcionWithInstitucion[]>(CACHE_KEY_ADSCRIPCIONES);
 
     if (cachedAdscripciones && cachedAdscripciones.length > 0) {
       logInfo('AdscripcionesService', '✅ Adscripciones obtenidas del cache', { count: cachedAdscripciones.length });

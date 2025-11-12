@@ -32,7 +32,7 @@ export const getCargos = async (): Promise<ICargos[]> => {
 
   try {
     // Intentar obtener del cache primero
-    const cachedCargos = CacheHelper.get<ICargos[]>(CACHE_KEY_CARGOS);
+    const cachedCargos = await CacheHelper.get<ICargos[]>(CACHE_KEY_CARGOS);
 
     if (cachedCargos) {
       logInfo('CargosService', '✅ Cargos obtenidos del cache', { count: cachedCargos.length });
