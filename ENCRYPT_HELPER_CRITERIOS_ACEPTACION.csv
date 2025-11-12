@@ -1,0 +1,50 @@
+Sprint,Criterio,Tipo,Crítico,Descripción,Cómo Verificar
+Sprint 1,Todas vulnerabilidades críticas corregidas,Seguridad,SÍ,SEC-001 a SEC-006 completadas y validadas,Audit de seguridad manual + tests
+Sprint 1,Tests de seguridad básicos pasan,Testing,SÍ,Password hashing con salt único funciona correctamente,npm run test -- encrypt.helper
+Sprint 1,SECURITY.md revisado y aprobado,Documentación,SÍ,Equipo de seguridad aprueba guías y políticas,Code review + aprobación
+Sprint 1,Guía de migración probada con datos reales,Documentación,SÍ,Script de migración funciona con datos legacy,Test manual con sessionStorage
+Sprint 1,Variables de entorno documentadas,Configuración,SÍ,.env.example actualizado con todas las vars requeridas,Revisar .env.example
+Sprint 1,Code review completado,Calidad,SÍ,Al menos 2 devs aprueban cambios críticos,GitHub PR approved
+Sprint 1,No existen secretos hardcodeados,Seguridad,SÍ,Scan automático no encuentra secrets,git-secrets o similar
+Sprint 1,Iteraciones PBKDF2 >= 600k en producción,Seguridad,SÍ,Configuración por ambiente correcta,Revisar config por env
+Sprint 1,Tests manuales en staging,QA,NO,QA valida funcionalidad básica,Test manual checklist
+Sprint 1,Performance baseline documentado,Performance,NO,Tiempos de hashing/encriptación medidos,Benchmark inicial
+
+Sprint 2,Cache implementado con límite y TTL,Performance,SÍ,LRU Cache con max 100 items y TTL 1h,Tests unitarios + logs
+Sprint 2,Tests de performance pasan,Testing,SÍ,Conversión Base64 más rápida que antes,Benchmark comparativo
+Sprint 2,Logs sanitizados en producción,Seguridad,SÍ,No se loggean passphrases ni datos sensibles,Revisar logs en staging
+Sprint 2,Sin código comentado ni TODOs,Calidad,NO,Código limpio sin comentarios legacy,ESLint + grep manual
+Sprint 2,Todas constantes nombradas,Calidad,NO,No hay magic numbers en código,ESLint rule
+Sprint 2,Code coverage >= 70%,Testing,SÍ,Jest coverage report muestra 70%+,npm run test:coverage
+Sprint 2,Performance benchmarks documentados,Performance,NO,Comparación antes/después en README,Benchmark report
+Sprint 2,Cache cleanup funciona correctamente,Performance,SÍ,Entries expiradas se eliminan automáticamente,Test con timestamps manipulados
+Sprint 2,Validación de passphrase mejorada,Seguridad,NO,Min 12 chars + complejidad verificada,Tests unitarios
+Sprint 2,Build de producción exitoso,Build,SÍ,npm run build sin errores ni warnings,CI/CD pipeline
+
+Sprint 3,Arquitectura refactorizada con SRP,Arquitectura,SÍ,6 clases especializadas creadas (ARCH-001 a 005),Code review arquitectura
+Sprint 3,Cada servicio tiene tests unitarios,Testing,SÍ,Coverage >90% por servicio individual,Jest coverage por archivo
+Sprint 3,Tests de integración E2E pasan,Testing,SÍ,Workflows completos funcionan correctamente,npm run test:e2e
+Sprint 3,Tests de timing attacks pasan,Seguridad,SÍ,Constant-time comparison verificada,Tests estadísticos
+Sprint 3,Facade mantiene retrocompatibilidad,Arquitectura,SÍ,API pública sin breaking changes (excepto salt),Tests de regresión
+Sprint 3,Documentación técnica actualizada,Documentación,NO,JSDoc completo en todas las clases,Compodoc o similar
+Sprint 3,Code coverage >= 85%,Testing,SÍ,Coverage global del helper,npm run test:coverage
+Sprint 3,Strategy Pattern implementado,Arquitectura,NO,AesGcmStrategy y AesCbcStrategy funcionan,Tests unitarios
+Sprint 3,Sin warnings de TypeScript,Calidad,SÍ,npx tsc --noEmit sin errores,TypeScript compiler
+Sprint 3,Performance no degradada,Performance,SÍ,Benchmarks iguales o mejores que Sprint 2,Benchmark comparativo
+
+Sprint 4,Rotación de claves probada,Seguridad,SÍ,reencryptData() funciona con datos reales,Test manual + unitarios
+Sprint 4,Versionamiento de esquemas funcional,Seguridad,NO,version field en EncryptionResult,Tests unitarios
+Sprint 4,Web Workers funcionales (si implementado),Performance,NO,PBKDF2 no bloquea UI,Test manual en navegador
+Sprint 4,Ejemplos de uso documentados,Documentación,NO,README con ejemplos completos y probados,Revisar README
+Sprint 4,README actualizado con nuevas features,Documentación,NO,Rotación de claves y versionamiento docs,Revisar README
+Sprint 4,Performance tests con Workers,Performance,NO,Comparación con/sin Workers,Benchmark opcional
+Sprint 4,Code coverage >= 90%,Testing,SÍ,Coverage global incluyendo nuevas features,npm run test:coverage
+Sprint 4,Build producción optimizado,Build,SÍ,Bundle size no aumentó significativamente,webpack-bundle-analyzer
+Sprint 4,Tests de carga básicos,Performance,NO,Helper funciona con 1000+ operaciones,Test de estrés
+Sprint 4,Documentación de migración completa,Documentación,SÍ,Guía paso a paso para actualizar de v1.0 a v2.0,Revisar MIGRATION.md
+
+General,No hay regresiones,Testing,SÍ,Todos los tests previos siguen pasando,Regression test suite
+General,Logs de desarrollo útiles,DX,NO,Logging ayuda a debugging sin exponer datos,Revisar logs en dev
+General,Sin vulnerabilidades de dependencias,Seguridad,SÍ,npm audit sin vulnerabilidades high/critical,npm audit
+General,Code review aprobado por 2+ devs,Calidad,SÍ,Pull request aprobado por equipo,GitHub PR reviews
+General,Changelog actualizado,Documentación,NO,CHANGELOG.md con todos los cambios,Revisar CHANGELOG.md
