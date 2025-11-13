@@ -2,7 +2,6 @@
  * Hook personalizado para InformeEjecutivo
  * Consume getIphById con ResponseIphData
  * Maneja toda la lógica de negocio separada de la presentación
-import { getUserData } from '../../../../../helper/user/user.helper';
  * Solo lectura - sin funcionalidad de edición
  *
  * @version 2.0.0

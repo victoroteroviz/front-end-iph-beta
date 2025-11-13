@@ -2,8 +2,8 @@
  * HTTP Helper Avanzado para manejo de peticiones HTTP
  * Siguiendo principios SOLID, KISS y DRY
  *
- * @version 2.1.0
- * @refactored 2025-01-21
+ * @version 2.3.0
+ * @refactored 2025-01-31
  *
  * Mejoras implementadas:
  * - Sistema de interceptores para request/response
@@ -14,6 +14,17 @@
  * - Sistema de observers para testing/monitoring
  * - Logging profesional integrado con logger.helper.ts
  * - Type safety mejorado
+ * - 🆕 Circuit Breaker pattern (P0 Security - Enterprise Grade)
+ *   • Prevención de cascading failures
+ *   • Estados: CLOSED → OPEN → HALF_OPEN
+ *   • Configuración por endpoint
+ *   • Métricas y observabilidad completa
+ * - 🆕 Rate Limiting con Token Bucket (P0 Security - Enterprise Grade)
+ *   • Prevención de API abuse y DoS auto-infligido
+ *   • Límites globales + por endpoint
+ *   • Token Bucket algorithm con burst support
+ *   • Métricas en tiempo real (tokens, rejectionRate)
+ *   • API completa para gestión y observabilidad
  */
 
 import {
@@ -100,6 +111,62 @@ export interface ResponseInterceptor {
 }
 
 /**
+ * Interface para la configuración del Circuit Breaker
+ */
+export interface CircuitBreakerConfig {
+  enabled: boolean;
+  failureThreshold: number;
+  successThreshold: number;
+  openDuration: number;
+  halfOpenMaxRequests: number;
+  volumeThreshold: number;
+}
+
+/**
+ * Estados del Circuit Breaker
+ */
+export type CircuitBreakerState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
+
+/**
+ * Interface para métricas del Circuit Breaker
+ */
+export interface CircuitBreakerMetrics {
+  state: CircuitBreakerState;
+  failures: number;
+  successes: number;
+  totalRequests: number;
+  lastFailureTime?: number;
+  lastSuccessTime?: number;
+  stateChangedAt: number;
+  nextAttemptAt?: number;
+}
+
+/**
+ * Interface para la configuración del Rate Limiter
+ */
+export interface RateLimiterConfig {
+  enabled: boolean;
+  globalLimit: number;
+  globalWindow: number;
+  perEndpointLimit: number;
+  perEndpointWindow: number;
+  burstSize?: number;
+}
+
+/**
+ * Interface para métricas del Rate Limiter
+ */
+export interface RateLimiterMetrics {
+  tokens: number;
+  capacity: number;
+  requestsInWindow: number;
+  lastRefillTime: number;
+  totalRequests: number;
+  totalRejected: number;
+  rejectionRate: number;
+}
+
+/**
  * Interface para la configuración global del HTTP helper
  */
 export interface HttpHelperConfig {
@@ -115,6 +182,8 @@ export interface HttpHelperConfig {
   enableCache: boolean;
   defaultCacheTTL: number;
   enableMetrics: boolean;
+  circuitBreaker: CircuitBreakerConfig;
+  rateLimiter: RateLimiterConfig;
 }
 
 /**
@@ -173,7 +242,23 @@ const DEFAULT_CONFIG: HttpHelperConfig = {
   },
   enableCache: false,
   defaultCacheTTL: 60000, // 1 minuto
-  enableMetrics: true
+  enableMetrics: true,
+  circuitBreaker: {
+    enabled: true,
+    failureThreshold: 0.5, // 50% de fallos
+    successThreshold: 2, // 2 éxitos consecutivos para cerrar
+    openDuration: 30000, // 30 segundos en OPEN
+    halfOpenMaxRequests: 3, // 3 requests de prueba en HALF_OPEN
+    volumeThreshold: 3 // Mínimo 3 requests para evaluar
+  },
+  rateLimiter: {
+    enabled: true,
+    globalLimit: 100, // 100 requests
+    globalWindow: 60000, // por minuto (60s)
+    perEndpointLimit: 30, // 30 requests
+    perEndpointWindow: 60000, // por minuto (60s)
+    burstSize: 10 // Permite bursts de 10 requests
+  }
 };
 
 /**
@@ -569,6 +654,455 @@ class HttpMetricsTracker {
 }
 
 /**
+ * Circuit Breaker para prevenir cascading failures
+ *
+ * Estados:
+ * - CLOSED: Funcionamiento normal
+ * - OPEN: Servicio detectado como caído, rechaza requests inmediatamente
+ * - HALF_OPEN: Probando si el servicio se recuperó
+ *
+ * @version 1.0.0
+ * @enterprise-grade
+ */
+class CircuitBreaker {
+  private state: CircuitBreakerState = 'CLOSED';
+  private failures = 0;
+  private successes = 0;
+  private totalRequests = 0;
+  private lastFailureTime?: number;
+  private lastSuccessTime?: number;
+  private stateChangedAt = Date.now();
+  private nextAttemptAt?: number;
+  private halfOpenRequests = 0;
+
+  constructor(private config: CircuitBreakerConfig, private endpoint: string) {
+    logDebug('CircuitBreaker', `Circuit breaker initialized for ${endpoint}`, {
+      failureThreshold: config.failureThreshold,
+      openDuration: config.openDuration,
+      volumeThreshold: config.volumeThreshold
+    });
+  }
+
+  /**
+   * Verifica si el request puede proceder
+   * @throws HttpError si el circuito está abierto
+   */
+  public canProceed(): void {
+    if (!this.config.enabled) {
+      return;
+    }
+
+    const now = Date.now();
+
+    switch (this.state) {
+      case 'CLOSED':
+        // Funcionamiento normal
+        return;
+
+      case 'OPEN':
+        // Verificar si es momento de intentar recovery
+        if (this.nextAttemptAt && now >= this.nextAttemptAt) {
+          this.transitionToHalfOpen();
+          return;
+        }
+
+        // Rechazar request
+        const waitTime = this.nextAttemptAt ? Math.ceil((this.nextAttemptAt - now) / 1000) : 0;
+
+        logWarning('CircuitBreaker', `Circuit breaker is OPEN for ${this.endpoint}`, {
+          state: this.state,
+          waitTime,
+          failures: this.failures,
+          totalRequests: this.totalRequests
+        });
+
+        throw HttpErrorHandler.createError(
+          'NETWORK',
+          `Circuit breaker is OPEN. Service unavailable. Try again in ${waitTime} seconds.`,
+          this.endpoint,
+          0,
+          undefined,
+          undefined,
+          {
+            circuitBreakerState: 'OPEN',
+            waitTime,
+            nextAttemptAt: this.nextAttemptAt
+          }
+        );
+
+      case 'HALF_OPEN':
+        // Limitar requests durante prueba
+        if (this.halfOpenRequests >= this.config.halfOpenMaxRequests) {
+          logDebug('CircuitBreaker', `Half-open limit reached for ${this.endpoint}`, {
+            halfOpenRequests: this.halfOpenRequests,
+            maxAllowed: this.config.halfOpenMaxRequests
+          });
+
+          throw HttpErrorHandler.createError(
+            'NETWORK',
+            'Circuit breaker is testing recovery. Too many concurrent requests.',
+            this.endpoint,
+            0,
+            undefined,
+            undefined,
+            { circuitBreakerState: 'HALF_OPEN' }
+          );
+        }
+
+        this.halfOpenRequests++;
+        return;
+    }
+  }
+
+  /**
+   * Registra un éxito
+   */
+  public recordSuccess(): void {
+    if (!this.config.enabled) {
+      return;
+    }
+
+    this.totalRequests++;
+    this.successes++;
+    this.lastSuccessTime = Date.now();
+
+    if (this.state === 'HALF_OPEN') {
+      this.halfOpenRequests--;
+
+      // Verificar si alcanzamos el threshold de éxitos
+      if (this.successes >= this.config.successThreshold) {
+        this.transitionToClosed();
+      }
+
+      logDebug('CircuitBreaker', `Success in HALF_OPEN state for ${this.endpoint}`, {
+        successes: this.successes,
+        threshold: this.config.successThreshold
+      });
+    }
+  }
+
+  /**
+   * Registra un fallo
+   */
+  public recordFailure(): void {
+    if (!this.config.enabled) {
+      return;
+    }
+
+    this.totalRequests++;
+    this.failures++;
+    this.lastFailureTime = Date.now();
+
+    if (this.state === 'HALF_OPEN') {
+      this.halfOpenRequests--;
+      // Un solo fallo en HALF_OPEN → volver a OPEN
+      this.transitionToOpen();
+      return;
+    }
+
+    if (this.state === 'CLOSED') {
+      // Verificar si debemos abrir el circuito
+      if (this.totalRequests >= this.config.volumeThreshold) {
+        const failureRate = this.failures / this.totalRequests;
+
+        if (failureRate >= this.config.failureThreshold) {
+          this.transitionToOpen();
+        }
+      }
+    }
+  }
+
+  /**
+   * Transición a CLOSED (funcionamiento normal)
+   */
+  private transitionToClosed(): void {
+    logInfo('CircuitBreaker', `🟢 Circuit breaker CLOSED for ${this.endpoint}`, {
+      previousState: this.state,
+      successes: this.successes,
+      failures: this.failures,
+      totalRequests: this.totalRequests
+    });
+
+    this.state = 'CLOSED';
+    this.failures = 0;
+    this.successes = 0;
+    this.totalRequests = 0;
+    this.halfOpenRequests = 0;
+    this.nextAttemptAt = undefined;
+    this.stateChangedAt = Date.now();
+  }
+
+  /**
+   * Transición a OPEN (circuito abierto)
+   */
+  private transitionToOpen(): void {
+    const now = Date.now();
+    this.nextAttemptAt = now + this.config.openDuration;
+
+    logCritical('CircuitBreaker', `🔴 Circuit breaker OPEN for ${this.endpoint}`, {
+      previousState: this.state,
+      failures: this.failures,
+      totalRequests: this.totalRequests,
+      failureRate: ((this.failures / this.totalRequests) * 100).toFixed(2) + '%',
+      openDuration: this.config.openDuration,
+      nextAttemptAt: new Date(this.nextAttemptAt).toISOString()
+    });
+
+    this.state = 'OPEN';
+    this.stateChangedAt = now;
+    this.halfOpenRequests = 0;
+  }
+
+  /**
+   * Transición a HALF_OPEN (probando recovery)
+   */
+  private transitionToHalfOpen(): void {
+    logWarning('CircuitBreaker', `🟡 Circuit breaker HALF_OPEN for ${this.endpoint}`, {
+      previousState: this.state,
+      testRequests: this.config.halfOpenMaxRequests
+    });
+
+    this.state = 'HALF_OPEN';
+    this.successes = 0;
+    this.failures = 0;
+    this.totalRequests = 0;
+    this.halfOpenRequests = 0;
+    this.stateChangedAt = Date.now();
+  }
+
+  /**
+   * Obtiene métricas actuales
+   */
+  public getMetrics(): CircuitBreakerMetrics {
+    return {
+      state: this.state,
+      failures: this.failures,
+      successes: this.successes,
+      totalRequests: this.totalRequests,
+      lastFailureTime: this.lastFailureTime,
+      lastSuccessTime: this.lastSuccessTime,
+      stateChangedAt: this.stateChangedAt,
+      nextAttemptAt: this.nextAttemptAt
+    };
+  }
+
+  public getState(): CircuitBreakerState {
+    return this.state;
+  }
+
+  /**
+   * Resetea el circuit breaker
+   */
+  public reset(): void {
+    logInfo('CircuitBreaker', `Circuit breaker reset for ${this.endpoint}`, {
+      previousState: this.state
+    });
+
+    this.state = 'CLOSED';
+    this.failures = 0;
+    this.successes = 0;
+    this.totalRequests = 0;
+    this.halfOpenRequests = 0;
+    this.lastFailureTime = undefined;
+    this.lastSuccessTime = undefined;
+    this.nextAttemptAt = undefined;
+    this.stateChangedAt = Date.now();
+  }
+}
+
+/**
+ * Rate Limiter con Token Bucket Algorithm para prevenir API abuse
+ *
+ * Token Bucket:
+ * - Bucket tiene capacidad máxima (limit)
+ * - Tokens se recargan a tasa constante (refill rate)
+ * - Request consume 1 token
+ * - Si no hay tokens → rechazar request
+ *
+ * @version 1.0.0
+ * @enterprise-grade
+ */
+class RateLimiter {
+  private tokens: number;
+  private readonly capacity: number;
+  private readonly refillRate: number; // tokens por ms
+  private lastRefillTime: number;
+  private totalRequests = 0;
+  private totalRejected = 0;
+  private readonly burstSize: number;
+
+  constructor(
+    private config: { limit: number; window: number; burstSize?: number },
+    private identifier: string
+  ) {
+    this.capacity = config.limit;
+    this.tokens = config.limit; // Bucket empieza lleno
+    this.refillRate = config.limit / config.window; // tokens por ms
+    this.lastRefillTime = Date.now();
+    this.burstSize = config.burstSize || Math.ceil(config.limit * 0.1); // 10% default
+
+    logDebug('RateLimiter', `Rate limiter initialized for ${identifier}`, {
+      limit: config.limit,
+      window: config.window,
+      refillRate: (this.refillRate * 1000).toFixed(2) + ' tokens/s',
+      burstSize: this.burstSize
+    });
+  }
+
+  /**
+   * Recarga tokens basado en tiempo transcurrido
+   */
+  private refillTokens(): void {
+    const now = Date.now();
+    const timePassed = now - this.lastRefillTime;
+
+    if (timePassed > 0) {
+      const tokensToAdd = timePassed * this.refillRate;
+      this.tokens = Math.min(this.capacity, this.tokens + tokensToAdd);
+      this.lastRefillTime = now;
+
+      if (tokensToAdd > 0) {
+        logDebug('RateLimiter', `Tokens refilled for ${this.identifier}`, {
+          tokensAdded: tokensToAdd.toFixed(2),
+          currentTokens: this.tokens.toFixed(2),
+          capacity: this.capacity
+        });
+      }
+    }
+  }
+
+  /**
+   * Intenta consumir un token
+   * @returns true si el request puede proceder, false si está rate limited
+   */
+  public tryConsume(): boolean {
+    this.refillTokens();
+    this.totalRequests++;
+
+    if (this.tokens >= 1) {
+      this.tokens -= 1;
+
+      logDebug('RateLimiter', `Token consumed for ${this.identifier}`, {
+        remainingTokens: this.tokens.toFixed(2),
+        capacity: this.capacity,
+        totalRequests: this.totalRequests,
+        rejectionRate: this.getRejectionRate().toFixed(2) + '%'
+      });
+
+      return true;
+    }
+
+    // Rate limited
+    this.totalRejected++;
+
+    const waitTime = Math.ceil((1 - this.tokens) / this.refillRate);
+
+    logWarning('RateLimiter', `🚫 Rate limit exceeded for ${this.identifier}`, {
+      tokens: this.tokens.toFixed(2),
+      capacity: this.capacity,
+      totalRejected: this.totalRejected,
+      rejectionRate: this.getRejectionRate().toFixed(2) + '%',
+      waitTime: waitTime + 'ms'
+    });
+
+    return false;
+  }
+
+  /**
+   * Verifica si hay tokens disponibles sin consumir
+   */
+  public hasTokens(): boolean {
+    this.refillTokens();
+    return this.tokens >= 1;
+  }
+
+  /**
+   * Obtiene tiempo de espera hasta próximo token
+   */
+  public getWaitTime(): number {
+    this.refillTokens();
+    if (this.tokens >= 1) {
+      return 0;
+    }
+    return Math.ceil((1 - this.tokens) / this.refillRate);
+  }
+
+  /**
+   * Obtiene métricas actuales
+   */
+  public getMetrics(): RateLimiterMetrics {
+    this.refillTokens();
+
+    return {
+      tokens: parseFloat(this.tokens.toFixed(2)),
+      capacity: this.capacity,
+      requestsInWindow: this.totalRequests,
+      lastRefillTime: this.lastRefillTime,
+      totalRequests: this.totalRequests,
+      totalRejected: this.totalRejected,
+      rejectionRate: parseFloat(this.getRejectionRate().toFixed(2))
+    };
+  }
+
+  /**
+   * Calcula tasa de rechazo
+   */
+  private getRejectionRate(): number {
+    if (this.totalRequests === 0) return 0;
+    return (this.totalRejected / this.totalRequests) * 100;
+  }
+
+  /**
+   * Resetea el rate limiter
+   */
+  public reset(): void {
+    const previousTokens = this.tokens;
+    const previousRejected = this.totalRejected;
+
+    this.tokens = this.capacity;
+    this.lastRefillTime = Date.now();
+    this.totalRequests = 0;
+    this.totalRejected = 0;
+
+    logInfo('RateLimiter', `Rate limiter reset for ${this.identifier}`, {
+      previousTokens: previousTokens.toFixed(2),
+      previousRejected,
+      newTokens: this.tokens
+    });
+  }
+
+  /**
+   * Permite burst (consume múltiples tokens)
+   */
+  public tryConsumeBurst(count: number): boolean {
+    if (count > this.burstSize) {
+      logWarning('RateLimiter', `Burst size exceeded for ${this.identifier}`, {
+        requested: count,
+        maxBurst: this.burstSize
+      });
+      return false;
+    }
+
+    this.refillTokens();
+
+    if (this.tokens >= count) {
+      this.tokens -= count;
+      this.totalRequests += count;
+
+      logDebug('RateLimiter', `Burst consumed for ${this.identifier}`, {
+        tokensConsumed: count,
+        remainingTokens: this.tokens.toFixed(2)
+      });
+
+      return true;
+    }
+
+    this.totalRejected += count;
+    return false;
+  }
+}
+
+/**
  * Clase principal del HTTP Helper
  * Implementa patrones Singleton, Builder y Observer
  */
@@ -580,11 +1114,28 @@ class HttpHelper {
   private requestInterceptors: Set<RequestInterceptor> = new Set();
   private responseInterceptors: Set<ResponseInterceptor> = new Set();
   private observers: Set<HttpObserver> = new Set();
+  private circuitBreakers: Map<string, CircuitBreaker>;
+  private globalRateLimiter: RateLimiter | null;
+  private endpointRateLimiters: Map<string, RateLimiter>;
 
   private constructor(config?: Partial<HttpHelperConfig>) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.cache = new HttpCache();
     this.metricsTracker = new HttpMetricsTracker();
+    this.circuitBreakers = new Map();
+    this.endpointRateLimiters = new Map();
+
+    // Inicializar rate limiter global
+    this.globalRateLimiter = this.config.rateLimiter.enabled
+      ? new RateLimiter(
+          {
+            limit: this.config.rateLimiter.globalLimit,
+            window: this.config.rateLimiter.globalWindow,
+            burstSize: this.config.rateLimiter.burstSize
+          },
+          'GLOBAL'
+        )
+      : null;
 
     logDebug('HttpHelper', 'HttpHelper initialized', {
       timeout: this.config.timeout,
@@ -622,7 +1173,56 @@ class HttpHelper {
    */
   public updateConfig(newConfig: Partial<HttpHelperConfig>): void {
     const oldConfig = { ...this.config };
-    this.config = { ...this.config, ...newConfig };
+    const circuitBreakerUpdated = newConfig.circuitBreaker !== undefined;
+    const rateLimiterUpdated = newConfig.rateLimiter !== undefined;
+
+    this.config = {
+      ...oldConfig,
+      ...newConfig,
+      circuitBreaker: circuitBreakerUpdated
+        ? { ...oldConfig.circuitBreaker, ...newConfig.circuitBreaker! }
+        : oldConfig.circuitBreaker,
+      rateLimiter: rateLimiterUpdated
+        ? { ...oldConfig.rateLimiter, ...newConfig.rateLimiter! }
+        : oldConfig.rateLimiter
+    };
+
+    if (circuitBreakerUpdated) {
+      const clearedInstances = this.circuitBreakers.size;
+      this.circuitBreakers.clear();
+
+      logInfo('HttpHelper', 'Circuit breaker configuration updated', {
+        clearedInstances,
+        enabled: this.config.circuitBreaker.enabled,
+        failureThreshold: this.config.circuitBreaker.failureThreshold,
+        openDuration: this.config.circuitBreaker.openDuration
+      });
+    }
+
+    if (rateLimiterUpdated) {
+      const clearedEndpoints = this.endpointRateLimiters.size;
+      this.endpointRateLimiters.clear();
+
+      // Recrear rate limiter global
+      this.globalRateLimiter = this.config.rateLimiter.enabled
+        ? new RateLimiter(
+            {
+              limit: this.config.rateLimiter.globalLimit,
+              window: this.config.rateLimiter.globalWindow,
+              burstSize: this.config.rateLimiter.burstSize
+            },
+            'GLOBAL'
+          )
+        : null;
+
+      logInfo('HttpHelper', 'Rate limiter configuration updated', {
+        clearedEndpoints,
+        enabled: this.config.rateLimiter.enabled,
+        globalLimit: this.config.rateLimiter.globalLimit,
+        globalWindow: this.config.rateLimiter.globalWindow,
+        perEndpointLimit: this.config.rateLimiter.perEndpointLimit
+      });
+    }
 
     logInfo('HttpHelper', 'Configuration updated', {
       changes: Object.keys(newConfig),
@@ -743,10 +1343,18 @@ class HttpHelper {
    * Notifica a observers sobre error
    */
   private notifyErrorObservers(error: HttpError): void {
+    const taggedError = error as HttpError & { __notified?: boolean };
+
+    if (taggedError.__notified) {
+      return;
+    }
+
+    taggedError.__notified = true;
+
     this.observers.forEach(observer => {
       if (observer.onError) {
         try {
-          observer.onError(error);
+          observer.onError(taggedError);
         } catch (observerError) {
           logWarning('HttpObserver', 'Observer onError failed', {
             error: String(observerError)
@@ -807,6 +1415,304 @@ class HttpHelper {
   }
 
   /**
+   * Obtiene métricas de circuit breaker(s)
+   * @param endpoint - URL del endpoint (opcional, si no se provee retorna todos)
+   * @param method - Método HTTP (opcional, requerido si se provee endpoint)
+   * @returns Métricas de un endpoint o Map de todos los endpoints
+   */
+  public getCircuitBreakerMetrics(
+    endpoint?: string,
+    method?: HttpMethod
+  ): CircuitBreakerMetrics | Map<string, CircuitBreakerMetrics> | null {
+    // Obtener métricas de un endpoint específico
+    if (endpoint && method) {
+      const fullUrl = this.buildUrl(endpoint);
+      const key = this.getCircuitBreakerKey(fullUrl, method);
+      const circuitBreaker = this.circuitBreakers.get(key);
+
+      if (!circuitBreaker) {
+        logWarning('HttpHelper', 'Circuit breaker not found for endpoint', {
+          endpoint,
+          method
+        });
+        return null;
+      }
+
+      const metrics = circuitBreaker.getMetrics();
+      logDebug('HttpHelper', 'Circuit breaker metrics retrieved', {
+        endpoint,
+        method,
+        state: metrics.state,
+        failures: metrics.failures,
+        successes: metrics.successes
+      });
+
+      return metrics;
+    }
+
+    // Obtener todas las métricas
+    const allMetrics = new Map<string, CircuitBreakerMetrics>();
+    for (const [key, circuitBreaker] of this.circuitBreakers.entries()) {
+      allMetrics.set(key, circuitBreaker.getMetrics());
+    }
+
+    logInfo('HttpHelper', 'All circuit breaker metrics retrieved', {
+      totalCircuitBreakers: allMetrics.size
+    });
+
+    return allMetrics;
+  }
+
+  /**
+   * Resetea un circuit breaker específico
+   * @param endpoint - URL del endpoint
+   * @param method - Método HTTP
+   */
+  public resetCircuitBreaker(endpoint: string, method: HttpMethod): boolean {
+    const fullUrl = this.buildUrl(endpoint);
+    const key = this.getCircuitBreakerKey(fullUrl, method);
+    const circuitBreaker = this.circuitBreakers.get(key);
+
+    if (!circuitBreaker) {
+      logWarning('HttpHelper', 'Circuit breaker not found for reset', {
+        endpoint,
+        method
+      });
+      return false;
+    }
+
+    const previousState = circuitBreaker.getState();
+    circuitBreaker.reset();
+
+    logInfo('HttpHelper', 'Circuit breaker manually reset', {
+      endpoint,
+      method,
+      previousState
+    });
+
+    return true;
+  }
+
+  /**
+   * Resetea todos los circuit breakers
+   * @returns Número de circuit breakers reseteados
+   */
+  public resetAllCircuitBreakers(): number {
+    const count = this.circuitBreakers.size;
+
+    for (const circuitBreaker of this.circuitBreakers.values()) {
+      circuitBreaker.reset();
+    }
+
+    logInfo('HttpHelper', 'All circuit breakers reset', {
+      count
+    });
+
+    return count;
+  }
+
+  /**
+   * Obtiene estado de todos los circuit breakers agrupados por estado
+   * @returns Object con arrays de endpoints agrupados por estado
+   */
+  public getCircuitBreakerStatus(): {
+    closed: string[];
+    open: string[];
+    halfOpen: string[];
+    total: number;
+  } {
+    const status = {
+      closed: [] as string[],
+      open: [] as string[],
+      halfOpen: [] as string[],
+      total: this.circuitBreakers.size
+    };
+
+    for (const [key, circuitBreaker] of this.circuitBreakers.entries()) {
+      const state = circuitBreaker.getState();
+      switch (state) {
+        case 'CLOSED':
+          status.closed.push(key);
+          break;
+        case 'OPEN':
+          status.open.push(key);
+          break;
+        case 'HALF_OPEN':
+          status.halfOpen.push(key);
+          break;
+      }
+    }
+
+    logDebug('HttpHelper', 'Circuit breaker status retrieved', {
+      total: status.total,
+      closed: status.closed.length,
+      open: status.open.length,
+      halfOpen: status.halfOpen.length
+    });
+
+    return status;
+  }
+
+  /**
+   * Obtiene métricas de rate limiter(s)
+   * @param endpoint - URL del endpoint (opcional)
+   * @param method - Método HTTP (opcional, requerido si se provee endpoint)
+   * @returns Métricas de un endpoint o Map de todos los endpoints, o métricas globales
+   */
+  public getRateLimiterMetrics(
+    endpoint?: string,
+    method?: HttpMethod
+  ): RateLimiterMetrics | Map<string, RateLimiterMetrics> | { global: RateLimiterMetrics; endpoints: Map<string, RateLimiterMetrics> } | null {
+    // Métricas de un endpoint específico
+    if (endpoint && method) {
+      const fullUrl = this.buildUrl(endpoint);
+      const key = this.getCircuitBreakerKey(fullUrl, method);
+      const rateLimiter = this.endpointRateLimiters.get(key);
+
+      if (!rateLimiter) {
+        logWarning('HttpHelper', 'Rate limiter not found for endpoint', {
+          endpoint,
+          method
+        });
+        return null;
+      }
+
+      return rateLimiter.getMetrics();
+    }
+
+    // Todas las métricas (global + endpoints)
+    const endpointMetrics = new Map<string, RateLimiterMetrics>();
+    for (const [key, rateLimiter] of this.endpointRateLimiters.entries()) {
+      endpointMetrics.set(key, rateLimiter.getMetrics());
+    }
+
+    const result = {
+      global: this.globalRateLimiter?.getMetrics() || {
+        tokens: 0,
+        capacity: 0,
+        requestsInWindow: 0,
+        lastRefillTime: 0,
+        totalRequests: 0,
+        totalRejected: 0,
+        rejectionRate: 0
+      },
+      endpoints: endpointMetrics
+    };
+
+    logInfo('HttpHelper', 'All rate limiter metrics retrieved', {
+      hasGlobal: !!this.globalRateLimiter,
+      totalEndpoints: endpointMetrics.size
+    });
+
+    return result;
+  }
+
+  /**
+   * Resetea rate limiter(s)
+   * @param scope - 'global' | 'endpoint' | 'all'
+   * @param endpoint - URL del endpoint (requerido si scope es 'endpoint')
+   * @param method - Método HTTP (requerido si scope es 'endpoint')
+   */
+  public resetRateLimiter(
+    scope: 'global' | 'endpoint' | 'all',
+    endpoint?: string,
+    method?: HttpMethod
+  ): boolean {
+    switch (scope) {
+      case 'global':
+        if (this.globalRateLimiter) {
+          this.globalRateLimiter.reset();
+          logInfo('HttpHelper', 'Global rate limiter reset');
+          return true;
+        }
+        return false;
+
+      case 'endpoint':
+        if (!endpoint || !method) {
+          logWarning('HttpHelper', 'Endpoint and method required for endpoint reset');
+          return false;
+        }
+
+        const fullUrl = this.buildUrl(endpoint);
+        const key = this.getCircuitBreakerKey(fullUrl, method);
+        const rateLimiter = this.endpointRateLimiters.get(key);
+
+        if (rateLimiter) {
+          rateLimiter.reset();
+          logInfo('HttpHelper', 'Endpoint rate limiter reset', {
+            endpoint,
+            method
+          });
+          return true;
+        }
+        return false;
+
+      case 'all':
+        let count = 0;
+        if (this.globalRateLimiter) {
+          this.globalRateLimiter.reset();
+          count++;
+        }
+        for (const rateLimiter of this.endpointRateLimiters.values()) {
+          rateLimiter.reset();
+          count++;
+        }
+        logInfo('HttpHelper', 'All rate limiters reset', { count });
+        return count > 0;
+    }
+  }
+
+  /**
+   * Obtiene estado de rate limiters
+   */
+  public getRateLimiterStatus(): {
+    global: {
+      enabled: boolean;
+      tokens: number;
+      capacity: number;
+      rejectionRate: number;
+    };
+    endpoints: {
+      healthy: string[]; // >80% tokens
+      warning: string[];  // 20-80% tokens
+      limited: string[];  // <20% tokens
+      total: number;
+    };
+  } {
+    const endpointStatus = {
+      healthy: [] as string[],
+      warning: [] as string[],
+      limited: [] as string[],
+      total: this.endpointRateLimiters.size
+    };
+
+    for (const [key, rateLimiter] of this.endpointRateLimiters.entries()) {
+      const metrics = rateLimiter.getMetrics();
+      const percentAvailable = (metrics.tokens / metrics.capacity) * 100;
+
+      if (percentAvailable > 80) {
+        endpointStatus.healthy.push(key);
+      } else if (percentAvailable > 20) {
+        endpointStatus.warning.push(key);
+      } else {
+        endpointStatus.limited.push(key);
+      }
+    }
+
+    const globalMetrics = this.globalRateLimiter?.getMetrics();
+
+    return {
+      global: {
+        enabled: !!this.globalRateLimiter,
+        tokens: globalMetrics?.tokens || 0,
+        capacity: globalMetrics?.capacity || 0,
+        rejectionRate: globalMetrics?.rejectionRate || 0
+      },
+      endpoints: endpointStatus
+    };
+  }
+
+  /**
    * Construye la URL completa
    */
   private buildUrl(endpoint: string): string {
@@ -826,6 +1732,62 @@ class HttpHelper {
 
     // URL relativa (proxy de Vite)
     return endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  }
+
+  private getCircuitBreakerKey(url: string, method: HttpMethod): string {
+    try {
+      const base = typeof window !== 'undefined' && window.location?.origin
+        ? window.location.origin
+        : 'http://localhost';
+      const parsed = new URL(url, base);
+      return `${method}:${parsed.origin}${parsed.pathname}`;
+    } catch {
+      return `${method}:${url}`;
+    }
+  }
+
+  private resolveCircuitBreaker(url: string, method: HttpMethod): CircuitBreaker | null {
+    if (!this.config.circuitBreaker.enabled) {
+      return null;
+    }
+
+    const key = this.getCircuitBreakerKey(url, method);
+    let circuitBreaker = this.circuitBreakers.get(key);
+
+    if (!circuitBreaker) {
+      const identifier = `${method} ${HttpErrorHandler['sanitizeUrl'](url)}`;
+      circuitBreaker = new CircuitBreaker(this.config.circuitBreaker, identifier);
+      this.circuitBreakers.set(key, circuitBreaker);
+    }
+
+    return circuitBreaker;
+  }
+
+  /**
+   * Obtiene o crea rate limiter para endpoint
+   */
+  private resolveEndpointRateLimiter(url: string, method: HttpMethod): RateLimiter | null {
+    if (!this.config.rateLimiter.enabled) {
+      return null;
+    }
+
+    const key = this.getCircuitBreakerKey(url, method); // Usa el mismo key format
+    let rateLimiter = this.endpointRateLimiters.get(key);
+
+    if (!rateLimiter) {
+      const identifier = `${method} ${HttpErrorHandler['sanitizeUrl'](url)}`;
+      rateLimiter = new RateLimiter(
+        {
+          limit: this.config.rateLimiter.perEndpointLimit,
+          window: this.config.rateLimiter.perEndpointWindow,
+          burstSize: this.config.rateLimiter.burstSize
+        },
+        identifier
+      );
+      this.endpointRateLimiters.set(key, rateLimiter);
+    }
+
+    return rateLimiter;
   }
 
   /**
@@ -1039,12 +2001,15 @@ class HttpHelper {
   private async executeWithRetries<T>(
     url: string,
     requestConfig: HttpRequestConfig,
-    attempt: number = 1
+    attempt: number = 1,
+    circuitBreaker?: CircuitBreaker,
+    globalRateLimiter?: RateLimiter | null,
+    endpointRateLimiter?: RateLimiter | null
   ): Promise<HttpResponse<T>> {
+    const method = requestConfig.method || 'GET';
     const startTime = Date.now();
     const timeout = requestConfig.timeout || this.config.timeout;
     const { controller, timeoutId } = this.createTimeoutController(timeout);
-    const method = requestConfig.method || 'GET';
 
     // Log inicio de request
     logDebug('HttpHelper', `Starting HTTP request (attempt ${attempt})`, {
@@ -1055,6 +2020,44 @@ class HttpHelper {
     });
 
     try {
+      // Verificar rate limiting global
+      if (globalRateLimiter && !globalRateLimiter.tryConsume()) {
+        const waitTime = globalRateLimiter.getWaitTime();
+        throw HttpErrorHandler.createError(
+          'CLIENT',
+          `Global rate limit exceeded. Wait ${Math.ceil(waitTime / 1000)}s before retry.`,
+          url,
+          0,
+          undefined,
+          undefined,
+          {
+            rateLimitType: 'global',
+            waitTime,
+            retryAfter: Date.now() + waitTime
+          }
+        );
+      }
+
+      // Verificar rate limiting por endpoint
+      if (endpointRateLimiter && !endpointRateLimiter.tryConsume()) {
+        const waitTime = endpointRateLimiter.getWaitTime();
+        throw HttpErrorHandler.createError(
+          'CLIENT',
+          `Endpoint rate limit exceeded. Wait ${Math.ceil(waitTime / 1000)}s before retry.`,
+          url,
+          0,
+          undefined,
+          undefined,
+          {
+            rateLimitType: 'endpoint',
+            waitTime,
+            retryAfter: Date.now() + waitTime
+          }
+        );
+      }
+
+      circuitBreaker?.canProceed();
+
       // Ejecutar interceptores de request
       const processedConfig = await this.executeRequestInterceptors(requestConfig, url);
 
@@ -1086,6 +2089,9 @@ class HttpHelper {
       if (!response.ok) {
         const errorDetails = await HttpErrorHandler.extractErrorDetails(response);
         const errorType = HttpErrorHandler.getErrorType(response.status);
+        if (errorType === 'SERVER') {
+          circuitBreaker?.recordFailure();
+        }
         const errorMessage = `HTTP ${response.status}: ${response.statusText}`;
 
         const httpError = HttpErrorHandler.createError(
@@ -1120,6 +2126,8 @@ class HttpHelper {
         this.metricsTracker.trackSuccess(response.status, duration);
       }
 
+      circuitBreaker?.recordSuccess();
+
       // Log success usando logHttp del logger
       logHttp(method, HttpErrorHandler['sanitizeUrl'](url), response.status, duration);
 
@@ -1149,6 +2157,7 @@ class HttpHelper {
 
       // Error de timeout
       if (error instanceof Error && error.name === 'AbortError') {
+        circuitBreaker?.recordFailure();
         const timeoutError = HttpErrorHandler.createError(
           'TIMEOUT',
           `Request timeout after ${timeout}ms`,
@@ -1168,10 +2177,21 @@ class HttpHelper {
 
       // HttpError ya procesado
       if (error && typeof error === 'object' && 'type' in error) {
-        throw error;
+        const httpError = error as HttpError;
+
+        if (httpError.type === 'PARSE') {
+          circuitBreaker?.recordFailure();
+          if (this.config.enableMetrics) {
+            this.metricsTracker.trackFailure(httpError.status, duration);
+          }
+        }
+
+        this.notifyErrorObservers(httpError);
+        throw httpError;
       }
 
       // Error de red
+      circuitBreaker?.recordFailure();
       const networkError = HttpErrorHandler.createError(
         'NETWORK',
         `Network error: ${String(error)}`,
@@ -1204,8 +2224,14 @@ class HttpHelper {
           duration
         });
 
+        // Evitar reintentos cuando el circuito se abrió durante este fallo
+        if (circuitBreaker && circuitBreaker.getState() === 'OPEN') {
+          this.notifyErrorObservers(networkError);
+          throw networkError;
+        }
+
         await new Promise(resolve => setTimeout(resolve, retryDelay));
-        return this.executeWithRetries<T>(url, requestConfig, attempt + 1);
+        return this.executeWithRetries<T>(url, requestConfig, attempt + 1, circuitBreaker, globalRateLimiter, endpointRateLimiter);
       }
 
       if (this.config.enableMetrics) {
@@ -1256,7 +2282,34 @@ class HttpHelper {
       }
     }
 
-    return this.executeWithRetries<T>(fullUrl, config);
+    const circuitBreaker = this.resolveCircuitBreaker(fullUrl, method);
+    const endpointRateLimiter = this.resolveEndpointRateLimiter(fullUrl, method);
+
+    try {
+      return await this.executeWithRetries<T>(
+        fullUrl,
+        config,
+        1,
+        circuitBreaker ?? undefined,
+        this.globalRateLimiter,
+        endpointRateLimiter
+      );
+    } catch (error) {
+      if (error && typeof error === 'object' && 'type' in error) {
+        const httpError = error as HttpError;
+
+        if (this.config.enableMetrics) {
+          const details = httpError.details as { circuitBreakerState?: string; rateLimitType?: string } | undefined;
+          if (details?.circuitBreakerState === 'OPEN' || details?.circuitBreakerState === 'HALF_OPEN' || details?.rateLimitType) {
+            this.metricsTracker.trackRequest(method);
+            this.metricsTracker.trackFailure(undefined, 0);
+          }
+        }
+
+        this.notifyErrorObservers(httpError);
+      }
+      throw error;
+    }
   }
 
   /**
