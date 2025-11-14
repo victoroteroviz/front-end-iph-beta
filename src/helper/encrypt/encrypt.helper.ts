@@ -884,10 +884,10 @@ export class EncryptHelper {
    * @example
    * ```typescript
    * // Internamente usado por encryptData() y otros métodos
-   * this.validatePassphrase('my-secure-passphrase-2024');
+   * this.validatePassphraseOrThrow('my-secure-passphrase-2024');
    * ```
    */
-  private validatePassphrase(passphrase: string): void {
+  private validatePassphraseOrThrow(passphrase: string): void {
     // Usa PASSPHRASE_VALIDATION preset (min 8 chars, sin max)
     validatePasswordOrThrow(passphrase, {
       rules: PASSPHRASE_VALIDATION,
@@ -1558,7 +1558,7 @@ export class EncryptHelper {
 
       // Resolver passphrase (user > env > fallback)
       const resolvedPassphrase = this.resolvePassphrase(passphrase);
-  this.validatePassphrase(resolvedPassphrase);
+  this.validatePassphraseOrThrow(resolvedPassphrase);
 
       // 1. Derivar clave desde passphrase (genera salt aleatorio único)
       // ✅ NO proporcionar salt aquí - deriveKey() generará uno aleatorio
@@ -1676,7 +1676,7 @@ export class EncryptHelper {
 
       // Resolver passphrase (debe ser la misma usada en encriptación)
       const resolvedPassphrase = this.resolvePassphrase(passphrase);
-  this.validatePassphrase(resolvedPassphrase);
+  this.validatePassphraseOrThrow(resolvedPassphrase);
 
       // 1. Recuperar salt desde datos encriptados
       const storedSalt = this.base64ToArrayBuffer(encryptedData.salt);

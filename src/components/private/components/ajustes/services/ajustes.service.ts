@@ -15,18 +15,18 @@ const USE_MOCK_DATA = true;
 /**
  * @function getAjustesConfiguration
  * @description Obtiene la configuración completa de ajustes del sistema
- * @param {(string | IRole)[]} userRoles - Roles del usuario para filtrar secciones
+ * @param {IRole[]} userRoles - Roles del usuario para filtrar secciones
  * @returns {Promise<IAjustesResponse>} Configuración de ajustes
  * @throws {Error} Error al obtener la configuración
  *
  * @example
  * ```typescript
- * const userRoles = ['SuperAdmin'];
+ * const userRoles = getUserRoles(); // IRole[]
  * const config = await getAjustesConfiguration(userRoles);
  * console.log(config.secciones); // Secciones filtradas por rol
  * ```
  */
-export const getAjustesConfiguration = async (userRoles: Array<string | IRole>): Promise<IAjustesResponse> => {
+export const getAjustesConfiguration = async (userRoles: IRole[]): Promise<IAjustesResponse> => {
   try {
     logInfo('AjustesService', 'Obteniendo configuración de ajustes', { userRoles });
 

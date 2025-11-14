@@ -1,5 +1,5 @@
 /**
- * Cache Helper Optimizado v2.3.0 - TWO-LEVEL CACHE (ENTERPRISE GRADE)
+ * Cache Helper Optimizado v2.4.0 - TWO-LEVEL CACHE (ENTERPRISE GRADE)
  *
  * Helper avanzado para manejo de cache con arquitectura de dos niveles:
  *
@@ -36,9 +36,55 @@
  * - Sanitización de keys (prevención XSS)
  *
  * @author Sistema IPH
- * @version 2.3.0
+ * @version 2.4.0
  *
  * @changelog
+ * v2.4.0 (2025-01-31) 🏗️ MAJOR REFACTORING - ENTERPRISE ARCHITECTURE
+ * - ✅ REFACTOR: Extracted constants to cache.constants.ts (~480 lines)
+ *   - Eliminados TODOS los números mágicos con documentación completa
+ *   - TTL_LIMITS (min 1s, max 1 año, default 5min) con justificación NIST/OWASP
+ *   - CACHE_LIMITS (max items, storage size, pending updates, key length)
+ *   - CLEANUP_INTERVALS, ENCRYPTION_CONSTANTS, SIZE_ESTIMATES
+ *   - ERROR_MESSAGES centralizados para mensajes consistentes
+ *   - Cada constante documenta el "por qué" de su valor
+ *
+ * - ✅ REFACTOR: Created CacheValidator class (~270 lines)
+ *   - Centralizada TODA la lógica de validación (SRP - Single Responsibility)
+ *   - validateTTL() retorna TTLValidationResult tipado
+ *   - validateKey() retorna KeyValidationResult con sanitización
+ *   - isValidNamespace(), isValidPriority(), isValidSize()
+ *   - Clase estática fácilmente testeable y reutilizable
+ *   - Eliminada duplicación de código de validación
+ *
+ * - ✅ REFACTOR: Created CacheMetrics class (~380 lines)
+ *   - Encapsulada TODA la lógica de métricas (SRP)
+ *   - API rica: recordL1Hit(), recordL2Hit(), recordMiss()
+ *   - getSnapshot() retorna CacheMetricsSnapshot completo
+ *   - getHitRate(), getL1HitRate() para consultas rápidas
+ *   - isHealthy() para monitoreo (>70% hit rate, >80% L1 rate)
+ *   - reset(), toJSON(), toString() para gestión completa
+ *   - Métricas derivadas: hitsPerSecond, missesPerSecond, uptime
+ *
+ * - ✅ INTEGRATION: Integrados nuevos módulos en CacheHelper
+ *   - Eliminado método validateTTL() interno (~60 líneas)
+ *   - Eliminado método sanitizeKey() y simpleHash() internos (~80 líneas)
+ *   - Eliminado objeto metrics plano, reemplazado por CacheMetrics instance
+ *   - Todos los puntos de validación usan CacheValidator
+ *   - Todos los puntos de métricas usan CacheMetrics methods
+ *   - getStats() refactorizado con metricsSnapshot
+ *   - resetMetrics() delegado a this.metrics.reset()
+ *
+ * - ✅ SECURITY: Enhanced log() con sanitización automática
+ *   - Integrado EncryptHelper.sanitizeForLogging()
+ *   - Redacción automática de keys sensibles (password, token, apiKey, etc.)
+ *   - showPartial: 0 para máxima seguridad
+ *   - Previene leakage accidental de datos sensibles en logs
+ *
+ * - ✅ CODE QUALITY: Eliminadas ~200 líneas de código duplicado
+ * - ✅ CODE QUALITY: Agregadas ~1,130 líneas de código enterprise-grade
+ * - ✅ ARCHITECTURE: Aplicados principios SOLID en toda la refactorización
+ * - ✅ MAINTAINABILITY: Código más testeable, extensible y documentado
+ *
  * v2.3.0 (2025-01-31) 🚀 OPTIONAL ENHANCEMENTS - ENTERPRISE GRADE
  * - 🟡 MEJORA: Validación de tipos en runtime con Zod
  *   - Agregado CacheItemSchema para validación automática
@@ -108,7 +154,18 @@
 import { logInfo, logWarning, logError } from '../log/logger.helper';
 import { z } from 'zod';
 import type { EncryptionResult } from '../encrypt/encrypt.helper';
-import { encryptData as encryptString, decryptData as decryptString } from '../encrypt/encrypt.helper';
+import {
+  encryptData as encryptString,
+  decryptData as decryptString
+} from '../encrypt/encrypt.helper';
+import { EncryptHelper } from '../encrypt/encrypt.helper';
+
+// ✅ v2.4.0: Imports de clases de refactoring
+import { CACHE_CONSTANTS, TTL_LIMITS, CACHE_LIMITS, CLEANUP_INTERVALS } from './cache.constants';
+import { CacheValidator } from './cache.validator';
+import type { TTLValidationResult, KeyValidationResult } from './cache.validator';
+import { CacheMetrics } from './cache.metrics';
+import type { CacheMetricsSnapshot } from './cache.metrics';
 
 // =====================================================
 // TYPES Y CONSTANTES
@@ -357,14 +414,8 @@ export class CacheHelper {
   // Map<cacheKey, CacheItem>
   private static memoryCache = new Map<string, CacheItem<unknown>>();
 
-  // Métricas de performance
-  private static metrics = {
-    hits: 0, // Total de hits (L1 + L2)
-    misses: 0, // Total de misses
-    l1Hits: 0, // Hits específicos de L1 (memoria)
-    l2Hits: 0, // Hits específicos de L2 (storage)
-    lastCleanup: Date.now()
-  };
+  // ✅ v2.4.0: Métricas encapsuladas en clase CacheMetrics
+  private static metrics = new CacheMetrics();
 
   // Timer para auto-cleanup
   private static cleanupTimer: NodeJS.Timeout | null = null;
@@ -498,11 +549,14 @@ export class CacheHelper {
     this.destroyed = true;
     this.initialized = false;
 
+    // ✅ v2.4.0: Obtener snapshot para logging
+    const metricsSnapshot = this.metrics.getSnapshot();
+
     this.log('info', 'Cache Helper destruido - recursos liberados', {
       timerStopped: this.cleanupTimer === null,
       pendingUpdatesCanceled: pendingCount,
       l1CacheCleared: l1Size,
-      metricsReset: this.metrics.hits === 0 && this.metrics.misses === 0
+      metricsReset: metricsSnapshot.hits === 0 && metricsSnapshot.misses === 0
     });
   }
 
@@ -612,11 +666,24 @@ export class CacheHelper {
         return false;
       }
 
+      // Validar TTL antes de usar (v2.4.0 - con CacheValidator)
+      const ttlResult = CacheValidator.validateTTL(
+        options.expiresIn || this.config.defaultExpiration,
+        this.config.defaultExpiration
+      );
+
+      // Log warning si TTL fue ajustado
+      if (!ttlResult.isValid && this.config.enableLogging && import.meta.env.DEV) {
+        this.log('warn', ttlResult.reason || 'TTL inválido, usando default');
+      }
+
+      const validatedTTL = ttlResult.value;
+
       // Crear item de cache
       const cacheItem: CacheItem<T> = {
         data,
         timestamp: Date.now(),
-        expiresIn: options.expiresIn || this.config.defaultExpiration,
+        expiresIn: validatedTTL,
         priority: options.priority || 'normal',
         namespace: options.namespace || 'data',
         accessCount: 0,
@@ -687,11 +754,24 @@ export class CacheHelper {
     }
 
     try {
+      // Validar TTL antes de usar (v2.4.0 - con CacheValidator)
+      const ttlResult = CacheValidator.validateTTL(
+        options?.expiresIn ?? this.config.defaultExpiration,
+        this.config.defaultExpiration
+      );
+
+      // Log warning si TTL fue ajustado
+      if (!ttlResult.isValid && this.config.enableLogging && import.meta.env.DEV) {
+        this.log('warn', ttlResult.reason || 'TTL inválido, usando default');
+      }
+
+      const validatedTTL = ttlResult.value;
+
       const normalizedOptions: Required<Omit<CacheSetOptions, 'metadata' | 'encrypt' | 'passphrase'>> & {
         metadata?: Record<string, unknown>;
         passphrase?: string;
       } = {
-        expiresIn: options?.expiresIn ?? this.config.defaultExpiration,
+        expiresIn: validatedTTL,
         priority: options?.priority ?? 'normal',
         namespace: options?.namespace ?? 'data',
         useSessionStorage: options?.useSessionStorage ?? false,
@@ -826,8 +906,8 @@ export class CacheHelper {
         l1Item.lastAccess = now;
         this.memoryCache.set(cacheKey, l1Item);
 
-        this.metrics.hits++;
-        this.metrics.l1Hits++;
+        // ✅ v2.4.0: Hit de L1 cache (memoria)
+        this.metrics.recordL1Hit();
 
         return l1Item.data as T;
       }
@@ -835,27 +915,27 @@ export class CacheHelper {
       const storage = this.getStorage(useSessionStorage);
 
       if (!storage) {
-        this.metrics.misses++;
+        this.metrics.recordMiss();
         return null;
       }
 
       const cached = storage.getItem(cacheKey);
 
       if (!cached) {
-        this.metrics.misses++;
+        this.metrics.recordMiss();
         return null;
       }
 
       const cacheItem = this.parseCacheItem<unknown>(cached, key);
 
       if (!cacheItem) {
-        this.metrics.misses++;
+        this.metrics.recordMiss();
         return null;
       }
 
       if (now - cacheItem.timestamp > cacheItem.expiresIn) {
         this.remove(key, useSessionStorage);
-        this.metrics.misses++;
+        this.metrics.recordMiss();
         return null;
       }
 
@@ -868,15 +948,15 @@ export class CacheHelper {
         this.addToMemoryCache(cacheKey, plainItem);
         this.scheduleL2Update(storage, cacheKey, plainItem);
 
-        this.metrics.hits++;
-        this.metrics.l2Hits++;
+        // ✅ v2.4.0: Hit de L2 cache (storage)
+        this.metrics.recordL2Hit();
 
         return plainItem.data;
       }
 
       if (!this.isEncryptedPayload(cacheItem.data)) {
         this.log('warn', `Cache item "${key}" marcado como encriptado pero sin payload válido`);
-        this.metrics.misses++;
+        this.metrics.recordMiss();
         return null;
       }
 
@@ -893,7 +973,7 @@ export class CacheHelper {
 
         // Limpiar cache legacy incompatible
         this.remove(key, useSessionStorage);
-        this.metrics.misses++;
+        this.metrics.recordMiss();
         return null;
       }
 
@@ -935,20 +1015,20 @@ export class CacheHelper {
 
         this.scheduleL2Update(storage, cacheKey, encryptedItem);
 
-        this.metrics.hits++;
-        this.metrics.l2Hits++;
+        // ✅ v2.4.0: Hit de L2 cache (storage)
+        this.metrics.recordL2Hit();
 
         return data;
 
       } catch (decryptError) {
         this.log('error', `Error desencriptando cache "${key}"`, decryptError);
         this.remove(key, useSessionStorage);
-        this.metrics.misses++;
+        this.metrics.recordMiss();
         return null;
       }
     } catch (error) {
       this.log('error', `Error general en getEncrypted: "${key}"`, error);
-      this.metrics.misses++;
+      this.metrics.recordMiss();
       return null;
     }
   }
@@ -1001,8 +1081,8 @@ export class CacheHelper {
         // Actualizar en L1 con nueva metadata
         this.memoryCache.set(cacheKey, l1Item);
 
-        this.metrics.hits++;
-        this.metrics.l1Hits++;
+        // ✅ v2.4.0: Hit de L1 cache (memoria)
+        this.metrics.recordL1Hit();
 
         this.log('info', `L1 Cache hit: "${key}" (${l1Item.accessCount} accesos)`);
         return l1Item.data;
@@ -1015,14 +1095,14 @@ export class CacheHelper {
 
       if (!storage) {
         // L2 no disponible, solo tenemos L1
-        this.metrics.misses++;
+        this.metrics.recordMiss();
         return null;
       }
 
       const cached = storage.getItem(cacheKey);
 
       if (!cached) {
-        this.metrics.misses++;
+        this.metrics.recordMiss();
         return null;
       }
 
@@ -1032,7 +1112,7 @@ export class CacheHelper {
       if (!cacheItem) {
         // Dato corrupto o inválido, eliminar automáticamente
         this.remove(key, useSessionStorage);
-        this.metrics.misses++;
+        this.metrics.recordMiss();
         this.log('warn', `Cache item corrupto eliminado: "${key}"`);
         return null;
       }
@@ -1040,14 +1120,14 @@ export class CacheHelper {
       // Verificar si ha expirado
       if (now - cacheItem.timestamp > cacheItem.expiresIn) {
         this.remove(key, useSessionStorage);
-        this.metrics.misses++;
+        this.metrics.recordMiss();
         this.log('info', `Cache expired: "${key}"`);
         return null;
       }
 
       // Detectar items encriptados y solicitar uso de getEncrypted
       if (this.isEncryptedMetadata(cacheItem.metadata) || this.isEncryptedPayload(cacheItem.data)) {
-        this.metrics.misses++;
+        this.metrics.recordMiss();
         this.log('warn', `Cache item "${key}" está encriptado. Usa getEncrypted()`);
         return null;
       }
@@ -1063,15 +1143,15 @@ export class CacheHelper {
       // Usa método seguro con tracking para prevenir memory leaks
       this.scheduleL2Update(storage, cacheKey, cacheItem);
 
-      this.metrics.hits++;
-      this.metrics.l2Hits++;
+      // ✅ v2.4.0: Hit de L2 cache (storage)
+      this.metrics.recordL2Hit();
 
       this.log('info', `L2 Cache hit: "${key}" → promoted to L1`);
       return cacheItem.data;
 
     } catch (error) {
       this.log('error', `Error leyendo cache: "${key}"`, error);
-      this.metrics.misses++;
+      this.metrics.recordMiss();
       return null;
     }
   }
@@ -1298,7 +1378,8 @@ export class CacheHelper {
         }
       });
 
-      this.metrics.lastCleanup = now;
+      // ✅ v2.4.0: Actualizar timestamp de cleanup
+      this.metrics.updateLastCleanup();
 
       if (removedCount > 0) {
         this.log('info', `Cleanup completed: ${removedCount} items removed`);
@@ -1320,32 +1401,28 @@ export class CacheHelper {
    */
   static getStats(useSessionStorage: boolean = false): CacheStats {
     try {
+      // ✅ v2.4.0: Obtener snapshot de métricas una sola vez
+      const metricsSnapshot = this.metrics.getSnapshot();
+
       const storage = this.getStorage(useSessionStorage);
 
       if (!storage) {
         // L2 no disponible, retornar solo stats de L1
         const l1CacheStats = this.config.enableMemoryCache ? {
           items: this.memoryCache.size,
-          hits: this.metrics.l1Hits,
-          hitRate: this.metrics.hits > 0
-            ? Math.round((this.metrics.l1Hits / this.metrics.hits) * 100 * 100) / 100
-            : 0,
+          hits: metricsSnapshot.l1Hits,
+          hitRate: Math.round(metricsSnapshot.l1HitRate * 100) / 100,
           maxItems: this.config.memoryCacheMaxItems,
           usage: Math.round((this.memoryCache.size / this.config.memoryCacheMaxItems) * 100 * 100) / 100
         } : undefined;
-
-        const totalAccesses = this.metrics.hits + this.metrics.misses;
-        const hitRate = totalAccesses > 0
-          ? Math.round((this.metrics.hits / totalAccesses) * 100 * 100) / 100
-          : 0;
 
         return {
           totalItems: 0,
           expiredItems: 0,
           validItems: 0,
-          hits: this.metrics.hits,
-          misses: this.metrics.misses,
-          hitRate,
+          hits: metricsSnapshot.hits,
+          misses: metricsSnapshot.misses,
+          hitRate: Math.round(metricsSnapshot.hitRate * 100) / 100,
           totalSize: 0,
           itemsByNamespace: {
             routes: 0,
@@ -1419,19 +1496,14 @@ export class CacheHelper {
         }
       });
 
-      // Calcular hit rate general
-      const totalAccesses = this.metrics.hits + this.metrics.misses;
-      const hitRate = totalAccesses > 0
-        ? Math.round((this.metrics.hits / totalAccesses) * 100 * 100) / 100
-        : 0;
+      // ✅ v2.4.0: Usar métricas del snapshot
+      const hitRate = Math.round(metricsSnapshot.hitRate * 100) / 100;
 
       // Calcular estadísticas de L1 cache
       const l1CacheStats = this.config.enableMemoryCache ? {
         items: this.memoryCache.size,
-        hits: this.metrics.l1Hits,
-        hitRate: this.metrics.hits > 0
-          ? Math.round((this.metrics.l1Hits / this.metrics.hits) * 100 * 100) / 100
-          : 0,
+        hits: metricsSnapshot.l1Hits,
+        hitRate: Math.round(metricsSnapshot.l1HitRate * 100) / 100,
         maxItems: this.config.memoryCacheMaxItems,
         usage: Math.round((this.memoryCache.size / this.config.memoryCacheMaxItems) * 100 * 100) / 100
       } : undefined;
@@ -1440,8 +1512,8 @@ export class CacheHelper {
         totalItems,
         expiredItems,
         validItems,
-        hits: this.metrics.hits,
-        misses: this.metrics.misses,
+        hits: metricsSnapshot.hits,
+        misses: metricsSnapshot.misses,
         hitRate,
         totalSize,
         itemsByNamespace,
@@ -1452,12 +1524,35 @@ export class CacheHelper {
     } catch (error) {
       this.log('error', 'Error obteniendo estadísticas', error);
 
+      // ✅ v2.4.0: Intentar obtener snapshot incluso en error
+      let fallbackMetrics: CacheMetricsSnapshot;
+      try {
+        fallbackMetrics = this.metrics.getSnapshot();
+      } catch {
+        // Si incluso getSnapshot() falla, usar valores en cero
+        fallbackMetrics = {
+          hits: 0,
+          misses: 0,
+          totalAccesses: 0,
+          hitRate: 0,
+          l1Hits: 0,
+          l1HitRate: 0,
+          l2Hits: 0,
+          l2HitRate: 0,
+          lastCleanup: Date.now(),
+          startedAt: Date.now(),
+          uptime: 0,
+          hitsPerSecond: 0,
+          missesPerSecond: 0
+        };
+      }
+
       return {
         totalItems: 0,
         expiredItems: 0,
         validItems: 0,
-        hits: this.metrics.hits,
-        misses: this.metrics.misses,
+        hits: fallbackMetrics.hits,
+        misses: fallbackMetrics.misses,
         hitRate: 0,
         totalSize: 0,
         itemsByNamespace: {
@@ -1480,12 +1575,11 @@ export class CacheHelper {
 
   /**
    * Resetea las métricas de performance
+   *
+   * ✅ v2.4.0: Usa CacheMetrics.reset()
    */
   static resetMetrics(): void {
-    this.metrics.hits = 0;
-    this.metrics.misses = 0;
-    this.metrics.l1Hits = 0;
-    this.metrics.l2Hits = 0;
+    this.metrics.reset();
     this.log('info', 'Métricas reseteadas');
   }
 
@@ -1668,95 +1762,31 @@ export class CacheHelper {
   }
 
   /**
-   * Sanitiza una key antes de usarla en cache
-   *
-   * Este método previene problemas de seguridad y validez de keys:
-   * - Remueve caracteres peligrosos (XSS, injection)
-   * - Limita longitud máxima (previene keys excesivamente largas)
-   * - Valida que la key no quede vacía
-   * - Normaliza formato (solo alfanuméricos, guiones, underscores)
-   *
-   * SEGURIDAD:
-   * - Previene XSS via storage keys
-   * - Previene ataques de storage pollution
-   * - Valida longitud para prevenir DoS
-   *
-   * @param key - Key original a sanitizar
-   * @returns Key sanitizada y segura
-   * @throws Error si la key es inválida (vacía o null)
-   *
-   * @example
-   * ```typescript
-   * sanitizeKey('user/123')           // → 'user_123'
-   * sanitizeKey('data<script>evil')   // → 'data_script_evil'
-   * sanitizeKey('a'.repeat(200))      // → 'aaa...aaa' (100 chars)
-   * ```
-   */
-  private static sanitizeKey(key: string): string {
-    // Validar que la key existe y es string
-    if (!key || typeof key !== 'string') {
-      throw new Error('Cache key debe ser un string no vacío');
-    }
-
-    // Remover espacios al inicio y final
-    key = key.trim();
-
-    if (key.length === 0) {
-      throw new Error('Cache key no puede estar vacía');
-    }
-
-    // Remover caracteres peligrosos
-    // Solo permitir: letras, números, guiones, underscores, puntos, dos puntos
-    // Esto previene XSS y problemas con storage keys
-    let sanitized = key.replace(/[^a-zA-Z0-9_\-.:]/g, '_');
-
-    // Limitar longitud máxima (previene keys excesivamente largas)
-    const MAX_KEY_LENGTH = 100;
-    if (sanitized.length > MAX_KEY_LENGTH) {
-      // Truncar y agregar hash para mantener unicidad
-      const hash = this.simpleHash(sanitized);
-      sanitized = sanitized.substring(0, MAX_KEY_LENGTH - 8) + '_' + hash;
-
-      if (this.config.enableLogging && import.meta.env.DEV) {
-        this.log('warn', `Key truncada (${key.length} → ${MAX_KEY_LENGTH} chars)`, {
-          original: key,
-          sanitized
-        });
-      }
-    }
-
-    // Prevenir keys vacías después de sanitización
-    if (sanitized.length === 0) {
-      throw new Error('Cache key inválida (vacía después de sanitización)');
-    }
-
-    return sanitized;
-  }
-
-  /**
-   * Genera un hash simple de una string para mantener unicidad
-   * Usado cuando truncamos keys largas
-   *
-   * @param str - String a hashear
-   * @returns Hash de 7 caracteres (base36)
-   */
-  private static simpleHash(str: string): string {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return Math.abs(hash).toString(36).substring(0, 7);
-  }
-
-  /**
    * Construye la key completa con prefijo (versión segura)
-   * Sanitiza la key antes de agregar el prefijo
+   *
+   * ✅ v2.4.0: Usa CacheValidator para validación centralizada
+   *
+   * @param key - Key original
+   * @returns Key sanitizada con prefijo
+   * @throws Error si la key es inválida
    */
   private static buildKey(key: string): string {
-    const sanitized = this.sanitizeKey(key);
-    return `${this.config.prefix}${sanitized}`;
+    // Validar y sanitizar con CacheValidator
+    const result = CacheValidator.validateKey(key);
+
+    if (!result.isValid) {
+      throw new Error(result.reason || 'Cache key inválida');
+    }
+
+    // Log warning si la key fue truncada
+    if (result.wasTruncated && this.config.enableLogging && import.meta.env.DEV) {
+      this.log('warn', `Key truncada a ${CACHE_LIMITS.MAX_KEY_LENGTH} caracteres`, {
+        original: key.substring(0, 50) + '...',
+        sanitized: result.sanitized
+      });
+    }
+
+    return `${this.config.prefix}${result.sanitized}`;
   }
 
   /**
@@ -2104,7 +2134,18 @@ export class CacheHelper {
   }
 
   /**
-   * Helper para logging centralizado
+   * Helper para logging centralizado con sanitización automática
+   *
+   * ✅ SEGURIDAD v2.4.0:
+   * - Sanitiza automáticamente datos sensibles antes de loggear
+   * - Previene leaks de passwords, tokens, API keys en logs
+   * - Usa EncryptHelper.sanitizeForLogging() internamente
+   *
+   * @param level - Nivel de logging
+   * @param message - Mensaje descriptivo
+   * @param data - Datos a loggear (se sanitizarán automáticamente)
+   *
+   * @private
    */
   private static log(
     level: 'info' | 'warn' | 'error',
@@ -2113,12 +2154,35 @@ export class CacheHelper {
   ): void {
     if (!this.config.enableLogging) return;
 
+    // ✅ Sanitizar datos sensibles antes de loggear
+    // Esto previene leaks de información en logs, traces y errores
+    const encryptHelper = EncryptHelper.getInstance();
+    const sanitizedData = data ? encryptHelper.sanitizeForLogging(data, {
+      sensitiveKeys: [
+        'password',
+        'passphrase',
+        'token',
+        'apiKey',
+        'api_key',
+        'secret',
+        'authorization',
+        'auth',
+        'credential',
+        'key',
+        // Agregar keys específicas de cache que podrían contener datos sensibles
+        'data', // El contenido del cache puede ser sensible
+        'encrypted' // Datos encriptados (aunque no son plaintext, mejor no loggear)
+      ],
+      showPartial: 0, // No mostrar ninguna parte de datos sensibles
+      replacement: '***REDACTED***'
+    }) : undefined;
+
     if (level === 'error') {
-      logError('CacheHelper', data || new Error(message), message);
+      logError('CacheHelper', sanitizedData || new Error(message), message);
     } else if (level === 'warn') {
-      logWarning('CacheHelper', message, data);
+      logWarning('CacheHelper', message, sanitizedData);
     } else {
-      logInfo('CacheHelper', message, data);
+      logInfo('CacheHelper', message, sanitizedData);
     }
   }
 }

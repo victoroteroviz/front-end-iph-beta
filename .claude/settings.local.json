@@ -14,7 +14,8 @@
       "Bash(mkdir:*)",
       "Bash(mv:*)",
       "Bash(git checkout:*)",
-      "Bash(openssl rand:*)"
+      "Bash(openssl rand:*)",
+      "Bash(timeout 60 npx tsc:*)"
     ],
     "deny": [],
     "ask": []
