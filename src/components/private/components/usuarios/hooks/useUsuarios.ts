@@ -2,9 +2,16 @@
  * Hook personalizado para manejo del componente Usuarios
  * Maneja toda la lógica de negocio separada de la presentación
  *
- * @version 2.2.0
+ * @version 2.3.0
  * @since 2024-01-29
  * @updated 2025-01-31
+ *
+ * @changes v2.3.0
+ * - ✅ Eliminada función duplicada openDeleteModal() (15 líneas)
+ * - ✅ Simplificado checkPermissions() - reducción de variables innecesarias
+ * - ✅ Optimizado logging en checkPermissions() con cálculo directo
+ * - ✅ Eliminados imports no utilizados (isSuperAdmin, isAdmin)
+ * - ✅ Reducción total: ~18 líneas eliminadas
  *
  * @changes v2.2.0
  * - ✅ Eliminadas validaciones redundantes con validateExternalRoles()
@@ -31,8 +38,6 @@ import { showSuccess, showError, showWarning } from '../../../../../helper/notif
 import { logInfo, logError, logAuth } from '../../../../../helper/log/logger.helper';
 import {
   getUserRoles,
-  isSuperAdmin,
-  isAdmin,
   isSuperior,
   isElemento,
   isAdministrative
@@ -121,6 +126,7 @@ const useUsuarios = (): IUseUsuariosReturn => {
    * NOTA: La validación de acceso básico se hace en el componente padre
    * Este hook solo calcula permisos específicos para funcionalidades
    *
+   * @refactored v2.3.0 - Optimizado cálculo de permisos y logging
    * @refactored v2.2.0 - Simplificado con funciones directas del helper
    * @security Usa getUserRoles() con cache + validación Zod automática
    */
@@ -141,14 +147,11 @@ const useUsuarios = (): IUseUsuariosReturn => {
       return false;
     }
 
-    // ✅ Usar funciones directas del helper (no External)
-    const userIsSuperAdmin = isSuperAdmin();
-    const userIsAdmin = isAdmin();
-    const userIsSuperior = isSuperior();
-    const userIsElemento = isElemento();
-
     // ✅ Admin y SuperAdmin tienen todos los permisos de gestión
     const canAccessAdminFeatures = isAdministrative();
+
+    // ✅ Calcular permisos de equipo (Superior y Elemento)
+    const canViewTeamUsers = isSuperior() || isElemento();
 
     // Establecer permisos en el estado
     setState(prev => ({
@@ -157,14 +160,17 @@ const useUsuarios = (): IUseUsuariosReturn => {
       canEditUsers: canAccessAdminFeatures,
       canDeleteUsers: canAccessAdminFeatures,
       canViewAllUsers: canAccessAdminFeatures,
-      canViewTeamUsers: userIsSuperior || userIsElemento
+      canViewTeamUsers
     }));
+
+    // Obtener nombres de roles para logging
+    const roleNames = userRoles.map(r => r.nombre);
 
     logInfo('UsuariosHook', 'Permisos calculados correctamente', {
       rolesCount: userRoles.length,
-      roles: userRoles.map(r => r.nombre),
-      isSuperAdmin: userIsSuperAdmin,
-      isAdmin: userIsAdmin,
+      roles: roleNames,
+      isSuperAdmin: roleNames.includes('SuperAdmin'),
+      isAdmin: roleNames.includes('Administrador'),
       permissions: {
         canCreate: canAccessAdminFeatures,
         canEdit: canAccessAdminFeatures,
@@ -389,22 +395,6 @@ const useUsuarios = (): IUseUsuariosReturn => {
     });
   }, [state.canDeleteUsers]);
 
-  // Abrir modal de eliminación
-  const openDeleteModal = useCallback((usuario: IPaginatedUsers) => {
-    if (!state.canDeleteUsers) {
-      showWarning('No tienes permisos para eliminar usuarios', 'Acceso Denegado');
-      return;
-    }
-
-    setState(prev => ({
-      ...prev,
-      deleteModalOpen: true,
-      usuarioToDelete: usuario,
-      deleteError: null
-    }));
-
-    logInfo('UsuariosHook', 'Modal de eliminación abierto', { userId: usuario.id });
-  }, [state.canDeleteUsers]);
 
   // Cerrar modal de eliminación
   const closeDeleteModal = useCallback(() => {
@@ -540,7 +530,6 @@ const useUsuarios = (): IUseUsuariosReturn => {
     handleCreateUser,
     handleEditUser,
     handleDeleteUser,
-    openDeleteModal,
     closeDeleteModal,
     confirmDelete,
     refreshData,

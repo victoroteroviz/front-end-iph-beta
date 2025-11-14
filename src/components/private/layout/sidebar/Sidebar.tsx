@@ -210,9 +210,10 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < MOBILE_BREAKPOINT);
 
   // Items filtrados con memoización profunda
+  // ✅ getFilteredSidebarItems() ahora usa getUserRoles() internamente (sin parámetros)
   const filteredItems = useMemo(() => {
     if (!userRole) return [];
-    return getFilteredSidebarItems(userRole);
+    return getFilteredSidebarItems();
   }, [userRole]);
 
   // Pre-calcular valores boolean para optimizar renders

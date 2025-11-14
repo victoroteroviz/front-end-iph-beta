@@ -220,13 +220,14 @@ export const getData = async (params: Params): Promise<Response> => {
 
 ## 📊 MÉTRICAS DEL PROYECTO
 
-**Componentes:** 10 migrados completamente  
-**Interfaces:** 30+ TypeScript  
-**Servicios:** 11 implementados (1 refactorizado sin mocks)  
-**Hooks personalizados:** 13 (4 refactorizados v2.0)  
-**Componentes atómicos:** 40+  
-**Utilidades:** 3 (`utils/historial-iph/`)  
-**Reducción de código:** ~124 líneas eliminadas en refactorizaciones
+**Componentes:** 10 migrados completamente
+**Interfaces:** 30+ TypeScript
+**Servicios:** 11 implementados (1 refactorizado sin mocks)
+**Hooks personalizados:** 15 (6 refactorizados v2.0+)
+**Componentes atómicos:** 40+
+**Utilidades:** 3 (`utils/historial-iph/`)
+**Reducción de código:** ~193 líneas eliminadas en refactorizaciones
+**Archivos de configuración:** 3 refactorizados (sidebarConfig v2.0, app-routes v2.0, permissions config)
 
 ---
 
@@ -332,6 +333,67 @@ npm run lint     # Linting
 ---
 
 ## 📝 CHANGELOG
+
+### **v3.7.0** (2025-01-31) 🏗️ REFACTORIZACIÓN MÓDULO LAYOUT
+**Centralización Completa del Sistema de Roles en Componentes de Layout**
+
+#### **Cambios Principales:**
+1. ✅ **sidebarConfig.ts** refactorizado (v2.0.0)
+   - Eliminado parámetro `userRole: string` de `getFilteredSidebarItems()`
+   - Eliminado parámetro `userRole: string` de `userHasAccessToItem()`
+   - Eliminada función `getRoleLevel()` duplicada (12 líneas)
+   - Usa `getUserRoles()` centralizado (cache 60s + Zod)
+   - Usa `hasAnyRole()` del permissions.config
+   - Eliminada validación manual de roles
+   - Eliminado sistema de cache local (usa cache del helper)
+
+2. ✅ **useUserSession.ts** refactorizado (v2.0.0)
+   - Eliminada función `getPrimaryRole()` duplicada (12 líneas)
+   - Integrado `getUserRoles()` del helper centralizado
+   - Simplificado obtención de rol principal (usa ordenamiento del helper)
+   - Reducción de validaciones manuales
+
+3. ✅ **Sidebar.tsx** actualizado
+   - Eliminado parámetro `userRole` de llamada a `getFilteredSidebarItems()`
+   - Comentario agregado explicando uso de helper centralizado
+   - Mantiene memoización con `userRole` como dependencia (para recalcular al autenticarse)
+
+#### **Componentes Afectados:**
+| Componente | Versión | Cambios | Líneas Eliminadas |
+|------------|---------|---------|-------------------|
+| `sidebarConfig.ts` | v2.0.0 | Centralización completa | ~35 líneas |
+| `useUserSession.ts` | v2.0.0 | Eliminación de duplicados | ~15 líneas |
+| `Sidebar.tsx` | - | Actualización de firma | ~1 línea |
+| **Total** | - | - | **~50 líneas** |
+
+#### **Métricas de Mejora:**
+| Métrica | Antes | Después | Mejora |
+|---------|-------|---------|--------|
+| Funciones duplicadas | 2 | 0 | -100% |
+| Validaciones manuales | 3 | 0 | -100% |
+| Arrays hardcoded | 9 | 0 | -100% |
+| Usa helper centralizado | ❌ | ✅ | +100% |
+| Cache automático | Propio (5s) | Helper (60s) | +1100% TTL |
+| Validación Zod | ❌ | ✅ | Seguridad++ |
+
+#### **Beneficios:**
+- ✅ **DRY Mejorado**: Eliminadas todas las duplicaciones de lógica de roles
+- ✅ **Mantenibilidad**: Un solo lugar para cambiar lógica de roles
+- ✅ **Performance**: Cache optimizado de 60s vs 5s anterior
+- ✅ **Seguridad**: Validación Zod automática en todas las capas
+- ✅ **Consistencia**: Mismo comportamiento en toda la aplicación
+
+**Archivos modificados:**
+- `/src/components/private/layout/sidebar/config/sidebarConfig.ts` - v2.0.0
+- `/src/components/private/layout/hooks/useUserSession.ts` - v2.0.0
+- `/src/components/private/layout/sidebar/Sidebar.tsx` - Actualizado
+
+**Verificación:**
+- ✅ `npx tsc --noEmit --skipLibCheck` - Sin errores TypeScript
+- ✅ Todas las funcionalidades del sidebar mantienen su comportamiento
+- ✅ Navegación por roles funciona correctamente
+
+---
 
 ### **v3.6.0** (2025-01-31) 🔄 PERSISTENCIA DE PAGINACIÓN
 **Implementación de usePaginationPersistence en InformePolicial**
