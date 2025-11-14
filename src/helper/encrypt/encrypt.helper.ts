@@ -873,7 +873,7 @@ export class EncryptHelper {
   }
 
   /**
-   * Valida que una passphrase cumpla con los requisitos mínimos
+   * Valida internamente que una passphrase cumpla con los requisitos mínimos
    *
    * Usa el password-validator utility centralizado para mantener
    * consistencia y eliminar duplicación de código (DRY).
@@ -1558,7 +1558,7 @@ export class EncryptHelper {
 
       // Resolver passphrase (user > env > fallback)
       const resolvedPassphrase = this.resolvePassphrase(passphrase);
-      this.validatePassphrase(resolvedPassphrase);
+  this.validatePassphrase(resolvedPassphrase);
 
       // 1. Derivar clave desde passphrase (genera salt aleatorio único)
       // ✅ NO proporcionar salt aquí - deriveKey() generará uno aleatorio
@@ -1676,7 +1676,7 @@ export class EncryptHelper {
 
       // Resolver passphrase (debe ser la misma usada en encriptación)
       const resolvedPassphrase = this.resolvePassphrase(passphrase);
-      this.validatePassphrase(resolvedPassphrase);
+  this.validatePassphrase(resolvedPassphrase);
 
       // 1. Recuperar salt desde datos encriptados
       const storedSalt = this.base64ToArrayBuffer(encryptedData.salt);
@@ -1746,7 +1746,7 @@ export class EncryptHelper {
    * @example
    * ```typescript
    * const helper = EncryptHelper.getInstance();
-   * const result = helper.validatePassphrase('my-passphrase');
+   * const result = helper.evaluatePassphraseStrength('my-passphrase');
    *
    * if (!result.isValid) {
    *   console.error('Passphrase débil:', result.issues);
@@ -1758,13 +1758,13 @@ export class EncryptHelper {
    *
    * @since v2.1.0
    */
-  public validatePassphrase(passphrase: string): PassphraseValidationResult {
+  public evaluatePassphraseStrength(passphrase: string): PassphraseValidationResult {
     logInfo('EncryptHelper', 'Validando fuerza de passphrase', {
       length: passphrase.length,
       // NO loggear la passphrase misma
     });
 
-    const result = validatePassphrase(passphrase);
+  const result = validatePassphrase(passphrase);
 
     if (!result.isValid) {
       logWarning(

@@ -674,8 +674,13 @@ class CircuitBreaker {
   private stateChangedAt = Date.now();
   private nextAttemptAt?: number;
   private halfOpenRequests = 0;
+  private readonly config: CircuitBreakerConfig;
+  private readonly endpoint: string;
 
-  constructor(private config: CircuitBreakerConfig, private endpoint: string) {
+  constructor(config: CircuitBreakerConfig, endpoint: string) {
+    this.config = config;
+    this.endpoint = endpoint;
+
     logDebug('CircuitBreaker', `Circuit breaker initialized for ${endpoint}`, {
       failureThreshold: config.failureThreshold,
       openDuration: config.openDuration,
@@ -699,7 +704,7 @@ class CircuitBreaker {
         // Funcionamiento normal
         return;
 
-      case 'OPEN':
+      case 'OPEN': {
         // Verificar si es momento de intentar recovery
         if (this.nextAttemptAt && now >= this.nextAttemptAt) {
           this.transitionToHalfOpen();
@@ -729,6 +734,7 @@ class CircuitBreaker {
             nextAttemptAt: this.nextAttemptAt
           }
         );
+      }
 
       case 'HALF_OPEN':
         // Limitar requests durante prueba
@@ -930,11 +936,15 @@ class RateLimiter {
   private totalRequests = 0;
   private totalRejected = 0;
   private readonly burstSize: number;
+  private readonly config: { limit: number; window: number; burstSize?: number };
+  private readonly identifier: string;
 
   constructor(
-    private config: { limit: number; window: number; burstSize?: number },
-    private identifier: string
+    config: { limit: number; window: number; burstSize?: number },
+    identifier: string
   ) {
+    this.config = config;
+    this.identifier = identifier;
     this.capacity = config.limit;
     this.tokens = config.limit; // Bucket empieza lleno
     this.refillRate = config.limit / config.window; // tokens por ms
@@ -1627,7 +1637,7 @@ class HttpHelper {
         }
         return false;
 
-      case 'endpoint':
+      case 'endpoint': {
         if (!endpoint || !method) {
           logWarning('HttpHelper', 'Endpoint and method required for endpoint reset');
           return false;
@@ -1646,8 +1656,9 @@ class HttpHelper {
           return true;
         }
         return false;
+      }
 
-      case 'all':
+      case 'all': {
         let count = 0;
         if (this.globalRateLimiter) {
           this.globalRateLimiter.reset();
@@ -1659,6 +1670,7 @@ class HttpHelper {
         }
         logInfo('HttpHelper', 'All rate limiters reset', { count });
         return count > 0;
+      }
     }
   }
 
