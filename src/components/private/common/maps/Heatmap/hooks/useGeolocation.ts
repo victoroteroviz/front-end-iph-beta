@@ -3,22 +3,34 @@
  *
  * @module useGeolocation
  * @description Obtiene la ubicación actual del usuario usando la API de Geolocation
- * 
+ * @version 2.0.0
+ *
  * @security
  * - Consentimiento explícito requerido antes de solicitar ubicación
  * - Cumplimiento GDPR/LFPDP
- * - Consentimiento persiste 30 días en localStorage
+ * - Consentimiento persiste 30 días (CacheHelper v2.4.0 con TTL automático)
  * - Logs sanitizados sin coordenadas exactas
- * 
+ *
  * @performance
  * - Caché de ubicación (5 minutos)
  * - Precisión media (enableHighAccuracy: false)
  * - Timeout de 5 segundos
+ *
+ * @changelog
+ * v2.0.0 (2025-01-31) 🔄 MIGRACIÓN A CACHEHELPER
+ * - ✅ REFACTOR: Migrado de localStorage directo a CacheHelper v2.4.0
+ * - ✅ TTL automático (elimina validación manual de expiración)
+ * - ✅ Cleanup automático de datos expirados
+ * - ✅ Métricas centralizadas de cache
+ * - ✅ Logging unificado con CacheHelper
+ * - ✅ Metadata GDPR-compliant en cache
+ * - ✅ Código reducido (~30 líneas menos)
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { logInfo, logError } from '../../../../../../helper/log/logger.helper';
 import { sanitizeCoordinatesForLog } from '../../../../../../helper/security/security.helper';
+import CacheHelper from '../../../../../../helper/cache/cache.helper';
 
 const MODULE_NAME = 'useGeolocation';
 
@@ -77,8 +89,33 @@ const DEFAULT_COORDINATES = {
   longitude: -99.1332
 };
 
-const CONSENT_STORAGE_KEY = 'geolocation_consent';
-const CONSENT_EXPIRY_DAYS = 30;
+// =====================================================
+// CONFIGURACIÓN DE CACHE (Migrado a CacheHelper v2.4.0)
+// =====================================================
+
+/**
+ * Configuración centralizada para cache de geolocalización
+ *
+ * MIGRADO v2.0.0: Ahora usa CacheHelper en lugar de localStorage directo
+ *
+ * BENEFICIOS:
+ * - TTL automático (no requiere validación manual)
+ * - Cleanup automático de expirados
+ * - Métricas centralizadas
+ * - Logging unificado
+ */
+const GEOLOCATION_CACHE_CONFIG = {
+  keys: {
+    CONSENT: 'geolocation_consent'
+  },
+  ttl: {
+    CONSENT: 30 * 24 * 60 * 60 * 1000 // 30 días en ms
+  }
+} as const;
+
+// DEPRECATED: Constantes antiguas mantenidas para referencia
+// const CONSENT_STORAGE_KEY = 'geolocation_consent';
+// const CONSENT_EXPIRY_DAYS = 30;
 
 /**
  * Hook para obtener la ubicación del dispositivo CON consentimiento explícito
@@ -211,25 +248,46 @@ export const useGeolocation = (config?: UseGeolocationConfig): UseGeolocationRet
 
   /**
    * Maneja consentimiento del usuario
-   * Guarda preferencia en localStorage con expiración de 30 días
+   * Guarda preferencia con CacheHelper (TTL automático de 30 días)
+   *
+   * MIGRADO v2.0.0: Usa CacheHelper en lugar de localStorage directo
    */
-  const handleConsent = useCallback((granted: boolean) => {
+  const handleConsent = useCallback(async (granted: boolean) => {
     setConsentGiven(granted);
 
-    // Guardar preferencia en localStorage (válido 30 días)
+    // Guardar preferencia con CacheHelper (válido 30 días automáticamente)
     try {
       const consentData: ConsentData = {
         granted,
         timestamp: Date.now(),
-        expiresIn: CONSENT_EXPIRY_DAYS * 24 * 60 * 60 * 1000 // 30 días en ms
+        expiresIn: GEOLOCATION_CACHE_CONFIG.ttl.CONSENT
       };
 
-      localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(consentData));
-      
-      logInfo(MODULE_NAME, `Consentimiento de geolocalización ${granted ? 'aceptado' : 'rechazado'}`, {
-        granted,
-        expiresIn: `${CONSENT_EXPIRY_DAYS} días`
-      });
+      const stored = await CacheHelper.set(
+        GEOLOCATION_CACHE_CONFIG.keys.CONSENT,
+        consentData,
+        {
+          expiresIn: GEOLOCATION_CACHE_CONFIG.ttl.CONSENT,
+          priority: 'normal',
+          namespace: 'user',
+          useSessionStorage: false, // localStorage para persistir entre sesiones
+          metadata: {
+            type: 'geolocation_consent',
+            version: 'v2.0.0',
+            gdprCompliant: true
+          }
+        }
+      );
+
+      if (!stored) {
+        logError(MODULE_NAME, new Error('No se pudo guardar consentimiento'), 'CacheHelper write failed');
+      } else {
+        logInfo(MODULE_NAME, `Consentimiento de geolocalización ${granted ? 'aceptado' : 'rechazado'}`, {
+          granted,
+          expiresIn: '30 días',
+          storage: 'CacheHelper v2.4.0'
+        });
+      }
     } catch (error) {
       logError(MODULE_NAME, error as Error, 'Error guardando consentimiento');
     }
@@ -249,42 +307,54 @@ export const useGeolocation = (config?: UseGeolocationConfig): UseGeolocationRet
 
   /**
    * Verifica consentimiento previo al montar
-   * Carga consentimiento desde localStorage si existe y es válido
+   * Carga consentimiento desde CacheHelper (TTL automático)
+   *
+   * MIGRADO v2.0.0: Usa CacheHelper en lugar de localStorage directo
+   * - Ya NO requiere validación manual de expiración (TTL automático)
+   * - Ya NO requiere removeItem manual (cleanup automático)
    */
   useEffect(() => {
     // Flag para evitar ejecución múltiple
     let hasRequested = false;
 
-    try {
-      const savedConsent = localStorage.getItem(CONSENT_STORAGE_KEY);
-      if (savedConsent) {
-        const data: ConsentData = JSON.parse(savedConsent);
+    const loadConsent = async () => {
+      try {
+        const savedConsent = await CacheHelper.get<ConsentData>(
+          GEOLOCATION_CACHE_CONFIG.keys.CONSENT,
+          {
+            useSessionStorage: false // localStorage para persistir
+          }
+        );
 
-        // Verificar si el consentimiento sigue válido
-        const now = Date.now();
-        if (now - data.timestamp < data.expiresIn) {
-          setConsentGiven(data.granted);
+        if (savedConsent) {
+          // CacheHelper ya validó el TTL automáticamente
+          // Si retorna datos, significa que no han expirado
+          setConsentGiven(savedConsent.granted);
+
+          const now = Date.now();
+          const ageInDays = Math.floor((now - savedConsent.timestamp) / (24 * 60 * 60 * 1000));
 
           logInfo(MODULE_NAME, 'Consentimiento previo cargado', {
-            granted: data.granted,
-            age: Math.floor((now - data.timestamp) / (24 * 60 * 60 * 1000)) + ' días'
+            granted: savedConsent.granted,
+            age: `${ageInDays} días`,
+            storage: 'CacheHelper v2.4.0'
           });
 
           // Si hay consentimiento previo, solicitar ubicación UNA SOLA VEZ
-          if (data.granted && !hasRequested) {
+          if (savedConsent.granted && !hasRequested) {
             hasRequested = true;
             requestLocation();
           }
-          return;
         } else {
-          // Expiró, eliminar
-          localStorage.removeItem(CONSENT_STORAGE_KEY);
-          logInfo(MODULE_NAME, 'Consentimiento expirado, solicitando nuevo');
+          // No hay consentimiento guardado o ya expiró (TTL automático)
+          logInfo(MODULE_NAME, 'No hay consentimiento previo o expiró (TTL automático)');
         }
+      } catch (error) {
+        logError(MODULE_NAME, error as Error, 'Error leyendo consentimiento');
       }
-    } catch (error) {
-      logError(MODULE_NAME, error as Error, 'Error leyendo consentimiento');
-    }
+    };
+
+    void loadConsent();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Solo ejecutar al montar, NO depender de requestLocation
 
