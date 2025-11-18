@@ -40,30 +40,53 @@ const SIDEBAR_WIDTHS = {
  * Helper para detectar si una ruta está activa (incluyendo rutas hijas y relacionadas)
  *
  * @description Compara la ruta actual con la ruta del item del sidebar.
- * Soporta tres tipos de detección:
+ * Soporta cuatro tipos de detección:
  * 1. Ruta exacta: /usuarios === /usuarios
  * 2. Ruta hija directa: /usuarios/nuevo empieza con /usuarios/
- * 3. Ruta relacionada: /informeejecutivo/:id tiene parentSidebarId='iphActivo'
+ * 3. Origen dinámico: location.state.from coincide con itemId (para breadcrumbs dinámicos)
+ * 4. Ruta relacionada: /informeejecutivo/:id tiene parentSidebarId='iphActivo' (fallback)
  *
  * @param currentPath - Path actual de la URL (location.pathname)
  * @param itemPath - Path del item del sidebar
  * @param itemId - ID del item del sidebar para verificar parentSidebarId
+ * @param navigationState - Estado de navegación (location.state) para detección dinámica
  * @returns true si la ruta está activa (exacta, hija o relacionada)
  *
  * @example
- * isRouteActive('/usuarios', '/usuarios', 'usuarios') // true - ruta exacta
- * isRouteActive('/usuarios/nuevo', '/usuarios', 'usuarios') // true - ruta hija
- * isRouteActive('/informeejecutivo/123', '/informepolicial', 'iphActivo') // true - relacionada
- * isRouteActive('/inicio', '/iniciador', 'inicio') // false - no coincide
+ * isRouteActive('/usuarios', '/usuarios', 'usuarios', null) // true - ruta exacta
+ * isRouteActive('/usuarios/nuevo', '/usuarios', 'usuarios', null) // true - ruta hija
+ * isRouteActive('/informeejecutivo/123', '/historialiph', 'historial', { from: 'historial-iph' }) // true - origen dinámico
+ * isRouteActive('/informeejecutivo/123', '/informepolicial', 'iphActivo', null) // true - relacionada (fallback)
  */
-const isRouteActive = (currentPath: string, itemPath: string, itemId: string): boolean => {
+const isRouteActive = (
+  currentPath: string,
+  itemPath: string,
+  itemId: string,
+  navigationState?: { from?: string } | null
+): boolean => {
   // 1. Comparación exacta - caso más común
   if (currentPath === itemPath) return true;
 
   // 2. Detectar ruta hija directa: debe empezar con itemPath seguido de "/"
   if (currentPath.startsWith(`${itemPath}/`)) return true;
 
-  // 3. Detectar ruta relacionada vía parentSidebarId
+  // 3. NUEVO: Detectar origen dinámico desde location.state (prioridad sobre parentSidebarId)
+  // Mapeo de 'from' (navigation state) a IDs del sidebar
+  if (navigationState?.from) {
+    const originToSidebarId: Record<string, string> = {
+      'historial-iph': 'historial',        // Historial de IPH → ID: 'historial'
+      'informe-policial': 'iphActivo'      // Listado de Referencias → ID: 'iphActivo'
+    };
+
+    const dynamicParentId = originToSidebarId[navigationState.from];
+
+    // Si hay origen dinámico, SOLO considerar ese origen
+    // No usar fallback a parentSidebarId para evitar doble selección
+    return dynamicParentId === itemId;
+  }
+
+  // 4. Fallback: Detectar ruta relacionada vía parentSidebarId hardcodeado
+  // Solo se ejecuta cuando NO hay navigationState.from
   const parentId = getParentSidebarId(currentPath);
   if (parentId && parentId === itemId) return true;
 
@@ -427,7 +450,12 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
                 <SidebarItem
                   key={item.id}
                   item={item}
-                  isActive={isRouteActive(location.pathname, item.to, item.id)}
+                  isActive={isRouteActive(
+                    location.pathname,
+                    item.to,
+                    item.id,
+                    location.state as { from?: string } | null
+                  )}
                   isCollapsed={shouldCollapse}
                   onNavigate={isMobile ? handleNavigation : undefined}
                 />
