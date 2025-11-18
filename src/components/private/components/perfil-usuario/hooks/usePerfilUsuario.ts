@@ -2,9 +2,14 @@
  * Hook personalizado para manejo del componente PerfilUsuario
  * Maneja toda la lógica de negocio separada de la presentación
  *
- * @version 2.1.0
+ * @version 2.2.0
  * @since 2024-01-29
  * @updated 2025-01-31
+ *
+ * @changes v2.2.0 (2025-01-31)
+ * - ✅ Protección de seguridad: campos bloqueados al editar SuperAdmin
+ * - ✅ Detecta si el usuario editado es SuperAdmin (isEditingSuperAdmin)
+ * - ✅ Deshabilita roles y contraseña por seguridad
  *
  * @changes v2.1.0 (2025-01-31)
  * - ✅ Solo SuperAdmin puede asignar rol SuperAdmin a otros usuarios
@@ -258,7 +263,8 @@ const initialState: IPerfilUsuarioState = {
   canEdit: false,
   canCreate: false,
   canViewSensitiveData: false,
-  isSuperAdmin: false
+  isSuperAdmin: false,
+  isEditingSuperAdmin: false
 };
 
 // =====================================================
@@ -354,10 +360,10 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
 
   const loadUserData = useCallback(async (userId: string) => {
     setState(prev => ({ ...prev, isLoading: true }));
-    
+
     try {
       const userData = await getUsuarioById(userId);
-      
+
       // Mapear roles del usuario a formato de react-select
       const rolesSeleccionados: IRolOption[] = userData.user_roles
         ?.filter(r => r.privilegio?.is_active !== false)
@@ -366,6 +372,11 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
           label: state.rolesDisponibles.find(rol => rol.id === r.privilegioId)?.nombre || ''
         }))
         ?.filter(rol => rol.label !== '') || [];
+
+      // Verificar si el usuario que se está editando es SuperAdmin
+      const userBeingEditedIsSuperAdmin = rolesSeleccionados.some(
+        rol => rol.label === 'SuperAdmin'
+      );
 
       const formDataFromDB = {
         nombre: userData.nombre || '',
@@ -399,10 +410,14 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
         formData: formDataFromDB,
         rolesUsuarios: rolesTransformados,
         isLoading: false,
-        isEditing: true
+        isEditing: true,
+        isEditingSuperAdmin: userBeingEditedIsSuperAdmin
       }));
 
-      logInfo('PerfilUsuarioHook', 'Datos de usuario cargados', { userId });
+      logInfo('PerfilUsuarioHook', 'Datos de usuario cargados', {
+        userId,
+        isEditingSuperAdmin: userBeingEditedIsSuperAdmin
+      });
     } catch (error) {
       logError('PerfilUsuarioHook', error, `Error al cargar usuario ID: ${userId}`);
       showError('Error al cargar los datos del usuario', 'Error de Carga');

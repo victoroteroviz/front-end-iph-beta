@@ -11,9 +11,10 @@
  * - Migrado de localStorage → sessionStorage
  * - Logging completo de eventos
  * - Solo SuperAdmin puede asignar rol SuperAdmin
+ * - Protección de seguridad: roles y contraseña bloqueados al editar SuperAdmin
  *
  * @author Equipo IPH
- * @version 2.1.0
+ * @version 2.2.0
  * @updated 2025-01-31
  */
 
@@ -99,7 +100,8 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
     canCreate,
     canViewSensitiveData,
     permissionsResolved,
-    isSuperAdmin
+    isSuperAdmin,
+    isEditingSuperAdmin
   } = state;
 
   const gradosList = useMemo(() => {
@@ -474,8 +476,29 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
         {/* Sección: Seguridad (disponible tanto para creación como edición) */}
         <FormSection title="Seguridad" icon={Award}>
           <div className="grid md:grid-cols-1 gap-4">
-            {/* Información adicional para modo edición */}
-            {isEditing && (
+            {/* Advertencia de seguridad para usuarios SuperAdmin */}
+            {isEditingSuperAdmin && (
+              <div className="mb-3 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-red-800 mb-1">
+                      Protección de Seguridad Activada
+                    </p>
+                    <p className="text-sm text-red-700">
+                      Este usuario tiene el rol <strong>SuperAdmin</strong>. Por seguridad, la <strong>contraseña</strong> y los <strong>roles</strong> no pueden ser modificados desde esta interfaz. Contacta al administrador del sistema para cambios en estos campos.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Información adicional para modo edición normal */}
+            {isEditing && !isEditingSuperAdmin && (
               <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
                   <strong>Nota:</strong> Deja este campo vacío si no deseas cambiar la contraseña.
@@ -492,6 +515,7 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
               placeholder={isEditing ? "Ingresa nueva contraseña (opcional)" : "Ingresa tu contraseña"}
               required={!isEditing}
               autoComplete="new-password"
+              disabled={isEditingSuperAdmin}
             />
 
               {/* Requisitos de contraseña - Lista dinámica siempre visible */}
@@ -533,15 +557,15 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
               rolesSeleccionados={formData.rolesSeleccionados}
               onChange={handleRoleChange}
               error={formErrors.rolesSeleccionados}
-              disabled={isSubmitting}
-              canEditRoles={canViewSensitiveData}
+              disabled={isSubmitting || isEditingSuperAdmin}
+              canEditRoles={canViewSensitiveData && !isEditingSuperAdmin}
               isSuperAdmin={isSuperAdmin}
             />
-            
-            {formData.rolesSeleccionados.length > 0 && (
+
+            {formData.rolesSeleccionados.length > 0 && !isEditingSuperAdmin && (
               <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
                 <p className="text-sm text-yellow-800">
-                  <strong>Importante:</strong> Los cambios en roles afectarán los permisos del usuario 
+                  <strong>Importante:</strong> Los cambios en roles afectarán los permisos del usuario
                   de manera inmediata tras guardar.
                 </p>
               </div>
