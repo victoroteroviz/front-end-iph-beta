@@ -684,10 +684,18 @@ const useInformePolicial = (
     logAuth('iph_view_accessed', true, {
       iphId: registro.id,
       referencia: registro.n_referencia,
-      tipo: registro.tipo?.nombre
+      tipo: registro.tipo?.nombre,
+      origen: 'Listado de Referencias'
     });
 
-    navigate(`/informeejecutivo/${registro.id}`);
+    // Pasar información de origen en el state de navegación
+    navigate(`/informeejecutivo/${registro.id}`, {
+      state: {
+        from: 'informe-policial',
+        fromLabel: 'Listado de Referencias',
+        fromPath: '/informepolicial'
+      }
+    });
   }, [canViewRecord, navigate]);
 
   // =====================================================

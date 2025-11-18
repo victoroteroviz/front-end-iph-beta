@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { RefreshCw, FileX, FileText, ArrowLeft } from 'lucide-react';
 
 // Hook personalizado
@@ -34,6 +34,7 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
   showPDFButton = false
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     state,
@@ -44,10 +45,33 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
   const [activeTab, setActiveTab] = useState('datos-generales');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Handler para volver atrás
+  /**
+   * Extrae información de origen de la navegación
+   * Permite detectar desde qué vista se llegó al InformeEjecutivo
+   */
+  const navigationState = location.state as {
+    from?: string;
+    fromLabel?: string;
+    fromPath?: string;
+  } | null;
+
+  // Determinar origen con fallback a Listado de Referencias
+  const origin = {
+    from: navigationState?.from || 'informe-policial',
+    label: navigationState?.fromLabel || 'Listado de Referencias',
+    path: navigationState?.fromPath || '/informepolicial'
+  };
+
+  /**
+   * Handler para volver atrás
+   * Navega al origen detectado dinámicamente
+   */
   const handleGoBack = () => {
-    navigate('/informepolicial');
-    logInfo('InformeEjecutivo', 'Usuario regresó a Listado de Referencias');
+    navigate(origin.path);
+    logInfo('InformeEjecutivo', `Usuario regresó a ${origin.label}`, {
+      origenDetectado: origin.from,
+      rutaDestino: origin.path
+    });
   };
 
   // Configuración de tabs basada en el tipo de IPH
@@ -106,10 +130,18 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
     });
   }, [informeId, readonly, showPDFButton]);
 
-  // Breadcrumbs items
+  /**
+   * Breadcrumbs dinámicos según el origen de navegación
+   * Se adaptan automáticamente dependiendo de si viene desde:
+   * - Listado de Referencias (iph-activo)
+   * - Historial de IPH (historial-iph)
+   */
   const breadcrumbItems: BreadcrumbItem[] = useMemo(() => {
     const items: BreadcrumbItem[] = [
-      { label: 'Listado de Referencias', path: '/informepolicial' }
+      {
+        label: origin.label,
+        path: origin.path
+      }
     ];
 
     const iph = state.responseData?.iph;
@@ -120,7 +152,7 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
     }
 
     return items;
-  }, [state.responseData]);
+  }, [state.responseData, origin.label, origin.path]);
 
   // Estado de carga inicial
   if (state.isLoading && !state.responseData) {

@@ -245,7 +245,7 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
   /**
    * Handler para ver detalle de un registro
    * Comportamiento diferenciado por rol:
-   * - SuperAdmin: Redirige a InformeEjecutivo
+   * - SuperAdmin: Redirige a InformeEjecutivo (con información de origen)
    * - Otros roles: Abre modal normal
    */
   const handleVerDetalle = useCallback((registro: RegistroHistorialIPH) => {
@@ -253,9 +253,18 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
     if (permisos.esSuperAdmin) {
       logInfo('HistorialTable', 'SuperAdmin: Redirigiendo a InformeEjecutivo', {
         registroId: registro.id,
-        numeroReferencia: registro.numeroReferencia
+        numeroReferencia: registro.numeroReferencia,
+        origen: 'Historial de IPH'
       });
-      navigate(`/informeejecutivo/${registro.id}`);
+
+      // Pasar información de origen en el state de navegación
+      navigate(`/informeejecutivo/${registro.id}`, {
+        state: {
+          from: 'historial-iph',
+          fromLabel: 'Historial de IPH',
+          fromPath: '/historialiph'
+        }
+      });
       return;
     }
 
