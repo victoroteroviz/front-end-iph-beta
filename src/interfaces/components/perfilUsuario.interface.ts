@@ -136,6 +136,7 @@ export interface IPerfilUsuarioState {
   canEdit: boolean;
   canCreate: boolean;
   canViewSensitiveData: boolean;
+  isSuperAdmin?: boolean; // Nuevo: indica si el usuario actual es SuperAdmin
 }
 
 // =====================================================

@@ -2,9 +2,14 @@
  * Hook personalizado para manejo del componente PerfilUsuario
  * Maneja toda la lógica de negocio separada de la presentación
  *
- * @version 2.0.0
+ * @version 2.1.0
  * @since 2024-01-29
- * @updated 2025-01-30
+ * @updated 2025-01-31
+ *
+ * @changes v2.1.0 (2025-01-31)
+ * - ✅ Solo SuperAdmin puede asignar rol SuperAdmin a otros usuarios
+ * - ✅ Calcula y expone isSuperAdmin en el estado
+ * - ✅ Pasa permiso al componente RolesSelector
  *
  * @changes v2.0.0
  * - ✅ Validación de roles refactorizada usando helpers centralizados
@@ -252,7 +257,8 @@ const initialState: IPerfilUsuarioState = {
   permissionsResolved: false,
   canEdit: false,
   canCreate: false,
-  canViewSensitiveData: false
+  canViewSensitiveData: false,
+  isSuperAdmin: false
 };
 
 // =====================================================
@@ -284,7 +290,8 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
     const userRoles = getUserRoles();
 
     // Determinar permisos basado en roles usando helpers centralizados
-    const hasAdminRole = isSuperAdmin(userRoles) || isAdmin(userRoles);
+    const userIsSuperAdmin = isSuperAdmin(userRoles);
+    const hasAdminRole = userIsSuperAdmin || isAdmin(userRoles);
     const isCurrentUser = Boolean(userData?.id && userData.id.toString() === id);
 
     setState(prev => ({
@@ -292,10 +299,12 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
       permissionsResolved: true,
       canCreate: hasAdminRole,
       canEdit: hasAdminRole || isCurrentUser,
-      canViewSensitiveData: hasAdminRole
+      canViewSensitiveData: hasAdminRole,
+      isSuperAdmin: userIsSuperAdmin // Guardar si es SuperAdmin
     }));
 
     logInfo('PerfilUsuarioHook', 'Permisos calculados', {
+      isSuperAdmin: userIsSuperAdmin,
       hasAdminRole,
       isCurrentUser,
       canEdit: hasAdminRole || isCurrentUser

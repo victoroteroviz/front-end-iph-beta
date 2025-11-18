@@ -1,12 +1,19 @@
 /**
  * Componente atómico RolesSelector
  * Selector multiselección para roles usando react-select
+ *
+ * @version 2.1.0
+ * @changes v2.1.0 (2025-01-31)
+ * - ✅ Solo SuperAdmin puede asignar rol SuperAdmin
+ * - ✅ Filtrado automático de opciones según permisos
+ * - ✅ Logging estructurado con logDebug
  */
 
 import React, { useMemo } from 'react';
 import Select, { type StylesConfig } from 'react-select';
 import { AlertCircle, Users } from 'lucide-react';
 import type { IRol, IRolOption } from '../../../../../interfaces/components/perfilUsuario.interface';
+import { logDebug } from '../../../../../helper/log/logger.helper';
 
 interface RolesSelectorProps {
   rolesDisponibles: IRol[];
@@ -15,6 +22,7 @@ interface RolesSelectorProps {
   error?: string;
   disabled?: boolean;
   canEditRoles?: boolean;
+  isSuperAdmin?: boolean; // Nuevo: indica si el usuario actual es SuperAdmin
 }
 
 const RolesSelector: React.FC<RolesSelectorProps> = ({
@@ -23,18 +31,45 @@ const RolesSelector: React.FC<RolesSelectorProps> = ({
   onChange,
   error,
   disabled = false,
-  canEditRoles = true
+  canEditRoles = true,
+  isSuperAdmin = false
 }) => {
-  // Convertir roles disponibles a opciones de react-select
+  /**
+   * Convertir roles disponibles a opciones de react-select
+   * Filtra el rol SuperAdmin si el usuario actual NO es SuperAdmin
+   */
   const options = useMemo<IRolOption[]>(() => {
     if (!Array.isArray(rolesDisponibles)) {
       return [];
     }
-    return rolesDisponibles.map((rol) => ({
+
+    // Mapear todos los roles a opciones
+    const allOptions = rolesDisponibles.map((rol) => ({
       value: rol.id,
       label: rol.nombre
     }));
-  }, [rolesDisponibles]);
+
+    // Si NO es SuperAdmin, filtrar el rol SuperAdmin
+    if (!isSuperAdmin) {
+      const filteredOptions = allOptions.filter(
+        (option) => option.label !== 'SuperAdmin'
+      );
+
+      logDebug('RolesSelector', 'Roles filtrados (sin SuperAdmin)', {
+        totalRoles: allOptions.length,
+        rolesDisponibles: filteredOptions.length,
+        rolesOcultos: allOptions.length - filteredOptions.length
+      });
+
+      return filteredOptions;
+    }
+
+    logDebug('RolesSelector', 'Roles sin filtrar (SuperAdmin puede ver todo)', {
+      totalRoles: allOptions.length
+    });
+
+    return allOptions;
+  }, [rolesDisponibles, isSuperAdmin]);
 
   // Estilos personalizados para react-select
   const customStyles = useMemo<StylesConfig<IRolOption, true>>(() => ({

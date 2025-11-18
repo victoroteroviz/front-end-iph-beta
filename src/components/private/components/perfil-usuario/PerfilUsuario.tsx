@@ -1,6 +1,6 @@
 /**
  * Componente PerfilUsuario - Refactorizado con TypeScript y arquitectura moderna
- * 
+ *
  * CARACTERÍSTICAS:
  * - Gestión completa CRUD de usuarios (crear/editar/ver)
  * - Control de acceso por roles (SuperAdmin, Admin, Usuario actual)
@@ -10,9 +10,11 @@
  * - Hook personalizado para lógica de negocio
  * - Migrado de localStorage → sessionStorage
  * - Logging completo de eventos
- * 
+ * - Solo SuperAdmin puede asignar rol SuperAdmin
+ *
  * @author Equipo IPH
- * @version 2.0.0
+ * @version 2.1.0
+ * @updated 2025-01-31
  */
 
 import React, { useEffect, useMemo } from 'react';
@@ -96,7 +98,8 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
     canEdit,
     canCreate,
     canViewSensitiveData,
-    permissionsResolved
+    permissionsResolved,
+    isSuperAdmin
   } = state;
 
   const gradosList = useMemo(() => {
@@ -532,6 +535,7 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
               error={formErrors.rolesSeleccionados}
               disabled={isSubmitting}
               canEditRoles={canViewSensitiveData}
+              isSuperAdmin={isSuperAdmin}
             />
             
             {formData.rolesSeleccionados.length > 0 && (

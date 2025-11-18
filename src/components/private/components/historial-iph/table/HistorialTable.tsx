@@ -2,8 +2,16 @@
  * Componente HistorialTable
  * Tabla principal para mostrar los registros del historial de IPH
  *
- * @version 2.1.0
+ * @version 2.2.0
  * @since 2024-01-30
+ *
+ * @changes v2.2.0 (2025-01-31)
+ * - ✅ Validación de roles con helpers centralizados
+ * - ✅ SuperAdmin: Redirige a InformeEjecutivo al hacer clic en ver detalle
+ * - ✅ Superior y otros roles: Abre modal normal
+ * - ✅ Elemento: Columna de acciones completamente oculta
+ * - ✅ Logging estructurado con logDebug para permisos
+ * - ✅ Performance optimizada con useMemo para cálculo de permisos
  *
  * @changes v2.1.0
  * - ✅ Refactorizado formateo de fechas para usar funciones centralizadas
@@ -22,6 +30,7 @@ import {
   FileText,
   Clock
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 // Interfaces
 import type {
@@ -34,7 +43,14 @@ import type {
 import { getStatusConfig } from '../../../../../config/status.config';
 
 // Helpers
-import { logInfo } from '../../../../../helper/log/logger.helper';
+import { logInfo, logDebug } from '../../../../../helper/log/logger.helper';
+import { getUserRoles } from '../../../../../helper/role/role.helper';
+
+// Permisos
+import {
+  isSuperAdmin,
+  isElemento
+} from '../../../../../config/permissions.config';
 
 // ==================== FORMATTERS OPTIMIZADOS ====================
 
@@ -105,6 +121,33 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
   onEditarEstatus,
   className = ''
 }) => {
+
+  // ==================== HOOKS ====================
+
+  const navigate = useNavigate();
+
+  /**
+   * Permisos del usuario calculados una sola vez
+   * Cache automático con TTL de 60s desde getUserRoles()
+   */
+  const permisos = useMemo(() => {
+    const userRoles = getUserRoles();
+
+    const esSuperAdmin = isSuperAdmin(userRoles);
+    const esElemento = isElemento(userRoles);
+
+    logDebug('HistorialTable', 'Permisos calculados', {
+      esSuperAdmin,
+      esElemento,
+      rolesCount: userRoles.length
+    });
+
+    return {
+      esSuperAdmin,
+      esElemento,
+      canViewActions: !esElemento // Elemento NO puede ver acciones
+    };
+  }, []);
 
   // ==================== CALLBACKS OPTIMIZADOS ====================
 
@@ -201,11 +244,28 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
 
   /**
    * Handler para ver detalle de un registro
+   * Comportamiento diferenciado por rol:
+   * - SuperAdmin: Redirige a InformeEjecutivo
+   * - Otros roles: Abre modal normal
    */
   const handleVerDetalle = useCallback((registro: RegistroHistorialIPH) => {
-    logInfo('HistorialTable', 'Solicitando ver detalle de registro', { registroId: registro.id });
+    // SuperAdmin → Redirigir a InformeEjecutivo
+    if (permisos.esSuperAdmin) {
+      logInfo('HistorialTable', 'SuperAdmin: Redirigiendo a InformeEjecutivo', {
+        registroId: registro.id,
+        numeroReferencia: registro.numeroReferencia
+      });
+      navigate(`/informeejecutivo/${registro.id}`);
+      return;
+    }
+
+    // Superior u otros roles → Modal normal
+    logInfo('HistorialTable', 'Solicitando ver detalle de registro (modal)', {
+      registroId: registro.id,
+      numeroReferencia: registro.numeroReferencia
+    });
     onVerDetalle(registro);
-  }, [onVerDetalle]);
+  }, [permisos.esSuperAdmin, navigate, onVerDetalle]);
 
   /**
    * Handler para cambio de estatus
@@ -253,113 +313,122 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
 
   /**
    * Columnas de la tabla - memoizadas con dependencias correctas
+   * La columna de acciones solo se muestra si NO es Elemento
    */
-  const columns = useMemo(() => [
-    {
-      key: 'numeroReferencia',
-      label: 'No. Referencia',
-      width: 'w-32',
-      render: (registro: RegistroHistorialIPH) => (
-        <div className="flex items-center gap-1">
-          <span className="inline-flex items-center px-2 py-1 rounded-md bg-[#fdf7f1] border border-[#c2b186]/30 font-mono text-sm text-[#4d4725] font-semibold">
-            #{registro.numeroReferencia}
-          </span>
-        </div>
-      )
-    },
-    {
-      key: 'fechaCreacion',
-      label: 'Fecha/Hora',
-      width: 'w-32',
-      render: (registro: RegistroHistorialIPH) => (
-        <div className="text-sm">
-          <div className="flex items-center gap-1 text-gray-900">
-            <Calendar size={12} className="text-gray-400" />
-            {formatDate(registro.fechaCreacion)}
-          </div>
-          <div className="flex items-center gap-1 text-gray-500 text-xs">
-            <Clock size={12} className="text-gray-400" />
-            {formatTime(registro.fechaCreacion)}
-          </div>
-        </div>
-      )
-    },
-    {
-      key: 'ubicacion',
-      label: 'Ubicación',
-      width: 'w-48',
-      render: (registro: RegistroHistorialIPH) => formatUbicacionInteligente(registro.ubicacion)
-    },
-    {
-      key: 'tipoDelito',
-      label: 'Tipo de Delito',
-      width: 'w-40',
-      render: (registro: RegistroHistorialIPH) => (
-        <div className="text-sm">
+  const columns = useMemo(() => {
+    const baseColumns = [
+      {
+        key: 'numeroReferencia',
+        label: 'No. Referencia',
+        width: 'w-32',
+        render: (registro: RegistroHistorialIPH) => (
           <div className="flex items-center gap-1">
-            <FileText size={12} className="text-gray-400 flex-shrink-0" />
-            <span
-              className="text-gray-900 font-medium"
-              title={registro.tipoDelito}
-            >
-              {truncateText(registro.tipoDelito, 25)}
+            <span className="inline-flex items-center px-2 py-1 rounded-md bg-[#fdf7f1] border border-[#c2b186]/30 font-mono text-sm text-[#4d4725] font-semibold">
+              #{registro.numeroReferencia}
             </span>
           </div>
-        </div>
-      )
-    },
-    {
-      key: 'estatus',
-      label: 'Estatus',
-      width: 'w-32',
-      render: (registro: RegistroHistorialIPH) => (
-        <EstatusComponent registro={registro} />
-      )
-    },
-    {
-      key: 'usuario',
-      label: 'Usuario',
-      width: 'w-40',
-      render: (registro: RegistroHistorialIPH) => (
-        <div className="text-sm">
-          <div className="flex items-center gap-1">
-            <User size={12} className="text-gray-400" />
-            <span
-              className="text-gray-900"
-              title={registro.usuario}
-            >
-              {truncateText(registro.usuario, 20)}
-            </span>
+        )
+      },
+      {
+        key: 'fechaCreacion',
+        label: 'Fecha/Hora',
+        width: 'w-32',
+        render: (registro: RegistroHistorialIPH) => (
+          <div className="text-sm">
+            <div className="flex items-center gap-1 text-gray-900">
+              <Calendar size={12} className="text-gray-400" />
+              {formatDate(registro.fechaCreacion)}
+            </div>
+            <div className="flex items-center gap-1 text-gray-500 text-xs">
+              <Clock size={12} className="text-gray-400" />
+              {formatTime(registro.fechaCreacion)}
+            </div>
           </div>
-        </div>
-      )
-    },
-    {
-      key: 'acciones',
-      label: 'Acciones',
-      width: 'w-16',
-      render: (registro: RegistroHistorialIPH) => (
-        <div className="flex items-center justify-center">
-          <button
-            onClick={() => handleVerDetalle(registro)}
-            disabled={loading}
-            className="
-              p-1.5 text-[#4d4725] hover:text-white
-              hover:bg-[#4d4725] rounded-md
-              transition-colors duration-200
-              cursor-pointer
-              disabled:opacity-50 disabled:cursor-not-allowed
-              focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-1
-            "
-            title={`Ver detalle del registro ${registro.numeroReferencia}`}
-            aria-label={`Ver detalle del registro ${registro.numeroReferencia}`}
-          >
-            <Eye size={16} />
-          </button>
-        </div>
-      )
+        )
+      },
+      {
+        key: 'ubicacion',
+        label: 'Ubicación',
+        width: 'w-48',
+        render: (registro: RegistroHistorialIPH) => formatUbicacionInteligente(registro.ubicacion)
+      },
+      {
+        key: 'tipoDelito',
+        label: 'Tipo de Delito',
+        width: 'w-40',
+        render: (registro: RegistroHistorialIPH) => (
+          <div className="text-sm">
+            <div className="flex items-center gap-1">
+              <FileText size={12} className="text-gray-400 flex-shrink-0" />
+              <span
+                className="text-gray-900 font-medium"
+                title={registro.tipoDelito}
+              >
+                {truncateText(registro.tipoDelito, 25)}
+              </span>
+            </div>
+          </div>
+        )
+      },
+      {
+        key: 'estatus',
+        label: 'Estatus',
+        width: 'w-32',
+        render: (registro: RegistroHistorialIPH) => (
+          <EstatusComponent registro={registro} />
+        )
+      },
+      {
+        key: 'usuario',
+        label: 'Usuario',
+        width: 'w-40',
+        render: (registro: RegistroHistorialIPH) => (
+          <div className="text-sm">
+            <div className="flex items-center gap-1">
+              <User size={12} className="text-gray-400" />
+              <span
+                className="text-gray-900"
+                title={registro.usuario}
+              >
+                {truncateText(registro.usuario, 20)}
+              </span>
+            </div>
+          </div>
+        )
+      }
+    ];
+
+    // Solo agregar columna de acciones si NO es Elemento
+    if (permisos.canViewActions) {
+      baseColumns.push({
+        key: 'acciones',
+        label: 'Acciones',
+        width: 'w-16',
+        render: (registro: RegistroHistorialIPH) => (
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleVerDetalle(registro)}
+              disabled={loading}
+              className="
+                p-1.5 text-[#4d4725] hover:text-white
+                hover:bg-[#4d4725] rounded-md
+                transition-colors duration-200
+                cursor-pointer
+                disabled:opacity-50 disabled:cursor-not-allowed
+                focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-1
+              "
+              title={`Ver detalle del registro ${registro.numeroReferencia}`}
+              aria-label={`Ver detalle del registro ${registro.numeroReferencia}`}
+            >
+              <Eye size={16} />
+            </button>
+          </div>
+        )
+      });
     }
-  ], [loading, truncateText, formatUbicacionInteligente, handleVerDetalle]);
+
+    return baseColumns;
+  }, [loading, truncateText, formatUbicacionInteligente, handleVerDetalle, permisos.canViewActions]);
 
   // ==================== RENDER STATES ====================
 
