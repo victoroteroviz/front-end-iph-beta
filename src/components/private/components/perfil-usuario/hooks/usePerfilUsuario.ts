@@ -2,9 +2,17 @@
  * Hook personalizado para manejo del componente PerfilUsuario
  * Maneja toda la lógica de negocio separada de la presentación
  *
- * @version 2.2.0
+ * @version 2.3.0
  * @since 2024-01-29
  * @updated 2025-01-31
+ *
+ * @changes v2.3.0 (2025-01-31)
+ * - ✅ Control de acceso granular: SuperAdmin puede editar todo (incluso otros SuperAdmins)
+ * - ✅ Admin puede crear/editar usuarios pero NO puede editar SuperAdmins
+ * - ✅ Bloqueo selectivo de campos solo para Admins editando SuperAdmins
+ * - ✅ Campos bloqueados para Admin: correo electrónico, contraseña y roles
+ * - ✅ Pantalla de acceso denegado mejorada con contexto
+ * - ✅ Nuevo flag: canEditSuperAdmin (solo SuperAdmin)
  *
  * @changes v2.2.0 (2025-01-31)
  * - ✅ Protección de seguridad: campos bloqueados al editar SuperAdmin
@@ -264,7 +272,8 @@ const initialState: IPerfilUsuarioState = {
   canCreate: false,
   canViewSensitiveData: false,
   isSuperAdmin: false,
-  isEditingSuperAdmin: false
+  isEditingSuperAdmin: false,
+  canEditSuperAdmin: false
 };
 
 // =====================================================
@@ -285,20 +294,27 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
 
   /**
    * Verifica los permisos del usuario para operaciones en perfiles
-   * - SuperAdmin y Admin: Pueden crear, editar y ver datos sensibles
-   * - Usuario actual: Puede editar su propio perfil
    *
-   * @refactored v2.0.0 - Usa helpers centralizados
+   * **Reglas de acceso:**
+   * - SuperAdmin: Puede crear, editar y ver TODO (incluso otros SuperAdmins)
+   * - Admin: Puede crear y editar usuarios, pero NO puede editar SuperAdmins
+   * - Usuario actual: Puede editar solo su propio perfil
+   * - Otros roles: Sin acceso (se redirigen a error)
+   *
+   * @refactored v2.2.0 - Control granular por rol
    * @security Validación Zod + cache 5s + jerarquía automática
    */
   const checkPermissions = useCallback(() => {
     const userData = getUserData();
     const userRoles = getUserRoles();
 
-    // Determinar permisos basado en roles usando helpers centralizados
+    // Determinar roles del usuario actual
     const userIsSuperAdmin = isSuperAdmin(userRoles);
-    const hasAdminRole = userIsSuperAdmin || isAdmin(userRoles);
+    const userIsAdmin = isAdmin(userRoles);
     const isCurrentUser = Boolean(userData?.id && userData.id.toString() === id);
+
+    // Permisos base
+    const hasAdminRole = userIsSuperAdmin || userIsAdmin;
 
     setState(prev => ({
       ...prev,
@@ -306,11 +322,13 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
       canCreate: hasAdminRole,
       canEdit: hasAdminRole || isCurrentUser,
       canViewSensitiveData: hasAdminRole,
-      isSuperAdmin: userIsSuperAdmin // Guardar si es SuperAdmin
+      isSuperAdmin: userIsSuperAdmin,
+      canEditSuperAdmin: userIsSuperAdmin // Solo SuperAdmin puede editar otros SuperAdmins
     }));
 
     logInfo('PerfilUsuarioHook', 'Permisos calculados', {
       isSuperAdmin: userIsSuperAdmin,
+      isAdmin: userIsAdmin,
       hasAdminRole,
       isCurrentUser,
       canEdit: hasAdminRole || isCurrentUser
@@ -405,14 +423,24 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
         is_active: role.privilegio?.is_active || true
       })) || [];
 
-      setState(prev => ({
-        ...prev,
-        formData: formDataFromDB,
-        rolesUsuarios: rolesTransformados,
-        isLoading: false,
-        isEditing: true,
-        isEditingSuperAdmin: userBeingEditedIsSuperAdmin
-      }));
+      setState(prev => {
+        // Verificar si Admin está intentando editar SuperAdmin (no permitido)
+        const isAdminEditingSuperAdmin =
+          !prev.isSuperAdmin &&
+          prev.canViewSensitiveData &&
+          userBeingEditedIsSuperAdmin;
+
+        return {
+          ...prev,
+          formData: formDataFromDB,
+          rolesUsuarios: rolesTransformados,
+          isLoading: false,
+          isEditing: true,
+          isEditingSuperAdmin: userBeingEditedIsSuperAdmin,
+          // Admin no puede editar si el usuario es SuperAdmin
+          canEdit: isAdminEditingSuperAdmin ? false : prev.canEdit
+        };
+      });
 
       logInfo('PerfilUsuarioHook', 'Datos de usuario cargados', {
         userId,

@@ -3,18 +3,22 @@
  *
  * CARACTERÍSTICAS:
  * - Gestión completa CRUD de usuarios (crear/editar/ver)
- * - Control de acceso por roles (SuperAdmin, Admin, Usuario actual)
+ * - Control de acceso granular por roles
  * - Validación robusta con Zod
  * - Sistema de notificaciones integrado
  * - Componentes atómicos reutilizables
  * - Hook personalizado para lógica de negocio
  * - Migrado de localStorage → sessionStorage
  * - Logging completo de eventos
- * - Solo SuperAdmin puede asignar rol SuperAdmin
- * - Protección de seguridad: roles y contraseña bloqueados al editar SuperAdmin
+ *
+ * CONTROL DE ACCESO:
+ * - SuperAdmin: Edita TODO (incluso otros SuperAdmins) + asigna cualquier rol
+ * - Admin: Crea/edita usuarios normales, NO puede editar SuperAdmins, NO asigna rol SuperAdmin
+ *          Al ver perfil SuperAdmin: correo, contraseña y roles bloqueados
+ * - Otros roles: Solo pueden editar su propio perfil
  *
  * @author Equipo IPH
- * @version 2.2.0
+ * @version 2.3.0
  * @updated 2025-01-31
  */
 
@@ -101,7 +105,8 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
     canViewSensitiveData,
     permissionsResolved,
     isSuperAdmin,
-    isEditingSuperAdmin
+    isEditingSuperAdmin,
+    canEditSuperAdmin
   } = state;
 
   const gradosList = useMemo(() => {
@@ -262,13 +267,30 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
           <div className="mb-8">
             <Breadcrumbs items={breadcrumbItems} />
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-            <div className="text-yellow-600 text-lg font-medium mb-2 font-poppins">
-              Acceso Restringido
+          <div className="bg-white rounded-xl border border-red-200 p-8 text-center">
+            <div className="flex justify-center mb-4">
+              <svg className="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
             </div>
-            <p className="text-yellow-700 font-poppins">
-              No tienes permisos para {isEditing ? 'editar este usuario' : 'crear usuarios'}.
+            <div className="text-red-600 text-xl font-bold mb-3 font-poppins">
+              Acceso Denegado
+            </div>
+            <p className="text-red-700 font-poppins text-lg mb-4">
+              {isEditing && isEditingSuperAdmin
+                ? 'No tienes permisos para editar usuarios con rol SuperAdmin. Solo los SuperAdmins pueden editar otros SuperAdmins.'
+                : `No tienes permisos para ${isEditing ? 'editar este usuario' : 'crear usuarios'}.`
+              }
             </p>
+            <p className="text-gray-600 font-poppins text-sm">
+              Si crees que esto es un error, contacta al administrador del sistema.
+            </p>
+            <button
+              onClick={handleGoBack}
+              className="mt-6 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-poppins"
+            >
+              Regresar
+            </button>
           </div>
         </div>
       </div>
@@ -318,6 +340,20 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Advertencia de seguridad para Admins editando SuperAdmin */}
+        {isEditingSuperAdmin && !canEditSuperAdmin && (
+          <div className="mb-4 px-4 py-2.5 bg-red-50 border-l-4 border-red-500 rounded-r-md">
+            <div className="flex items-center gap-2.5">
+              <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <p className="text-sm text-red-800 font-poppins">
+                <strong>Usuario SuperAdmin:</strong> Los campos de <strong>correo</strong>, <strong>contraseña</strong> y <strong>roles</strong> están bloqueados. Solo SuperAdmins pueden modificarlos.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Contenedor del formulario */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -382,8 +418,9 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
               placeholder="usuario@iph.gob.mx"
               required
               autoComplete="email"
+              disabled={isEditingSuperAdmin && !canEditSuperAdmin}
             />
-            
+
             <FormField
               label="Teléfono"
               type="tel"
@@ -476,27 +513,6 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
         {/* Sección: Seguridad (disponible tanto para creación como edición) */}
         <FormSection title="Seguridad" icon={Award}>
           <div className="grid md:grid-cols-1 gap-4">
-            {/* Advertencia de seguridad para usuarios SuperAdmin */}
-            {isEditingSuperAdmin && (
-              <div className="mb-3 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-red-800 mb-1">
-                      Protección de Seguridad Activada
-                    </p>
-                    <p className="text-sm text-red-700">
-                      Este usuario tiene el rol <strong>SuperAdmin</strong>. Por seguridad, la <strong>contraseña</strong> y los <strong>roles</strong> no pueden ser modificados desde esta interfaz. Contacta al administrador del sistema para cambios en estos campos.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Información adicional para modo edición normal */}
             {isEditing && !isEditingSuperAdmin && (
               <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -515,7 +531,7 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
               placeholder={isEditing ? "Ingresa nueva contraseña (opcional)" : "Ingresa tu contraseña"}
               required={!isEditing}
               autoComplete="new-password"
-              disabled={isEditingSuperAdmin}
+              disabled={isEditingSuperAdmin && !canEditSuperAdmin}
             />
 
               {/* Requisitos de contraseña - Lista dinámica siempre visible */}
@@ -557,12 +573,12 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
               rolesSeleccionados={formData.rolesSeleccionados}
               onChange={handleRoleChange}
               error={formErrors.rolesSeleccionados}
-              disabled={isSubmitting || isEditingSuperAdmin}
-              canEditRoles={canViewSensitiveData && !isEditingSuperAdmin}
+              disabled={isSubmitting || (isEditingSuperAdmin && !canEditSuperAdmin)}
+              canEditRoles={canViewSensitiveData && !(isEditingSuperAdmin && !canEditSuperAdmin)}
               isSuperAdmin={isSuperAdmin}
             />
 
-            {formData.rolesSeleccionados.length > 0 && !isEditingSuperAdmin && (
+            {formData.rolesSeleccionados.length > 0 && !(isEditingSuperAdmin && !canEditSuperAdmin) && (
               <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
                 <p className="text-sm text-yellow-800">
                   <strong>Importante:</strong> Los cambios en roles afectarán los permisos del usuario

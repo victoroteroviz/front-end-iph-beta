@@ -138,6 +138,7 @@ export interface IPerfilUsuarioState {
   canViewSensitiveData: boolean;
   isSuperAdmin?: boolean; // Indica si el usuario actual es SuperAdmin
   isEditingSuperAdmin?: boolean; // Indica si el usuario que se está editando es SuperAdmin
+  canEditSuperAdmin?: boolean; // Indica si puede editar usuarios SuperAdmin (solo SuperAdmin puede)
 }
 
 // =====================================================
