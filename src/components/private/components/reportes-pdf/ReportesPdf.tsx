@@ -34,12 +34,14 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import type { IReporteCard } from '../../../../interfaces/IReporte';
 import { reportesCardsConfig } from './config/reportesConfig';
+import { REPORTES_ENDPOINTS } from './config/constants';
 import { ReportesHeader, ReportesGrid } from './components/layout';
 import { Breadcrumbs, type BreadcrumbItem } from '../../../shared/components/breadcrumbs';
 import AccessDenied from '../../../shared/components/access-denied';
 import useReportesPdf from './hooks/useReportesPdf';
 import { logDebug } from '../../../../helper/log/logger.helper';
 import './styles/ReportesPdf.css';
+import ReporteDiarioForm from './components/form/ReporteDiarioForm';
 
 /**
  * ReportesPdf Component
@@ -81,6 +83,7 @@ const ReportesPdf: React.FC = () => {
    * Importada desde config/reportesConfig.tsx
    */
   const [reportes] = useState<IReporteCard[]>(reportesCardsConfig);
+  const [reporteSeleccionado, setReporteSeleccionado] = useState<IReporteCard | null>(null);
   // #endregion
 
   // =====================================================
@@ -98,19 +101,28 @@ const ReportesPdf: React.FC = () => {
       return;
     }
 
+    if (reporte.endpoint === REPORTES_ENDPOINTS.DIARIO || reporte.parametros?.requiereFormulario) {
+      logDebug('ReportesPdf', 'Abriendo formulario de reporte diario', {
+        reporteId: reporte.id,
+        endpoint: reporte.endpoint
+      });
+      setReporteSeleccionado(reporte);
+      return;
+    }
+
     logDebug('ReportesPdf', 'Generando reporte PDF', {
       reporteId: reporte.id,
       reporteTitulo: reporte.titulo,
       endpoint: reporte.endpoint
     });
 
-    // TODO: Aquí se pueden agregar filtros si el reporte los requiere
-    // Por ahora generamos sin filtros (el backend debería manejar defaults)
     const filtros = undefined;
-
-    // Generar reporte
     await generarReporte(reporte, filtros);
   }, [generarReporte]);
+
+  const handleCerrarFormulario = useCallback(() => {
+    setReporteSeleccionado(null);
+  }, []);
   // #endregion
 
   // =====================================================
@@ -148,6 +160,15 @@ const ReportesPdf: React.FC = () => {
         title="Acceso Restringido"
         message="Esta sección está disponible solo para Administradores, SuperAdmins y Superiores."
         iconType="shield"
+      />
+    );
+  }
+
+  if (reporteSeleccionado && reporteSeleccionado.endpoint === REPORTES_ENDPOINTS.DIARIO) {
+    return (
+      <ReporteDiarioForm
+        reporte={reporteSeleccionado}
+        onClose={handleCerrarFormulario}
       />
     );
   }

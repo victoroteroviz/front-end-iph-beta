@@ -44,6 +44,8 @@ export const REPORTES_COLORS = {
  * Rutas de la API que generan los diferentes tipos de reportes en PDF
  */
 export const REPORTES_ENDPOINTS = {
+  /** Reporte diario generado vía servicio PDF dedicado */
+  DIARIO: '/api/pdf-reporte/reporte-diario',
   /** Reporte general de IPH */
   GENERAL: '/api/reportes/general',
 
