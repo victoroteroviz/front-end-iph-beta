@@ -51,7 +51,7 @@ const MODULE_NAME = 'GeocodingCacheV2';
  * - Performance (L1 memoria + L2 localStorage)
  */
 const GEOCODING_CACHE_CONFIG = {
-  namespace: 'geocoding' as const,
+  namespace: 'data' as const, // 'data' es un namespace válido para cache de geocoding
   ttl: 7 * 24 * 60 * 60 * 1000, // 7 días en ms
   priority: 'normal' as const,
   precision: 4, // Decimales de coordenadas (~11m precisión)
@@ -187,9 +187,10 @@ class GeocodingCacheV2 {
   public async get(lat: number, lng: number): Promise<I_ReverseGeocodingResult | null> {
     const key = this.generateKey(lat, lng);
 
-    const cached = await CacheHelper.get<I_ReverseGeocodingResult>(key, {
-      useSessionStorage: false // localStorage para persistir entre sesiones
-    });
+    const cached = await CacheHelper.get<I_ReverseGeocodingResult>(
+      key,
+      false // useSessionStorage: false para localStorage persistente entre sesiones
+    );
 
     if (cached) {
       logDebug(MODULE_NAME, 'Cache hit', {
@@ -286,15 +287,15 @@ class GeocodingCacheV2 {
     const globalStats = CacheHelper.getStats();
 
     // CacheHelper v2.4.0 proporciona métricas globales
-    // TODO v3.0.0: Filtrar por namespace 'geocoding'
+    // TODO v3.0.0: Filtrar por namespace 'data' (geocoding)
     return {
-      totalEntries: globalStats.memoryCacheSize + globalStats.storageCacheSize,
+      totalEntries: (globalStats.l1Cache?.items || 0) + globalStats.totalItems,
       hits: globalStats.hits,
       misses: globalStats.misses,
       hitRate: globalStats.hitRate,
       oldestEntry: null, // No disponible en CacheHelper stats actuales
       newestEntry: null, // No disponible en CacheHelper stats actuales
-      cacheSize: globalStats.totalStorageSize
+      cacheSize: globalStats.totalSize
     };
   }
 
@@ -302,13 +303,13 @@ class GeocodingCacheV2 {
    * Obtiene el tamaño actual del caché
    *
    * NOTA: Retorna total de items en CacheHelper (no filtrado por namespace).
-   * En v3.0.0 se filtrará por namespace.
+   * En v3.0.0 se filtrará por namespace 'data'.
    *
    * @returns Número de entradas en cache
    */
   public size(): number {
     const stats = CacheHelper.getStats();
-    return stats.memoryCacheSize + stats.storageCacheSize;
+    return (stats.l1Cache?.items || 0) + stats.totalItems;
   }
 }
 

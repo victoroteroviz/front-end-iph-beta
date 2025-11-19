@@ -321,9 +321,7 @@ export const useGeolocation = (config?: UseGeolocationConfig): UseGeolocationRet
       try {
         const savedConsent = await CacheHelper.get<ConsentData>(
           GEOLOCATION_CACHE_CONFIG.keys.CONSENT,
-          {
-            useSessionStorage: false // localStorage para persistir
-          }
+          false // useSessionStorage: false para localStorage persistente
         );
 
         if (savedConsent) {

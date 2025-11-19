@@ -210,6 +210,8 @@ export type CacheItem<T> = {
   encrypted?: boolean;
   /** IV usado para encriptación (si encrypted es true) */
   encryptionIV?: string;
+  /** Salt usado para derivación de clave PBKDF2 (si encrypted es true) - Requerido desde EncryptHelper v2.0 */
+  encryptionSalt?: string;
   /** Metadata adicional opcional */
   metadata?: Record<string, unknown>;
 };
@@ -1117,10 +1119,28 @@ export class CacheHelper {
 
         // Desencriptar si es necesario
         if (l1Item.encrypted && l1Item.encryptionIV) {
+          // ✅ MIGRATION CHECK: Detectar datos legacy sin salt (pre-EncryptHelper v2.0)
+          // Los datos legacy no tienen salt y no se pueden desencriptar con el nuevo sistema
+          if (!l1Item.encryptionSalt) {
+            this.log('warn', `🔄 Migration: Limpiando cache legacy L1 sin salt (pre-v2.0): "${key}"`, {
+              namespace: l1Item.namespace,
+              priority: l1Item.priority,
+              migration: 'EncryptHelper v2.0',
+              action: 'auto-cleanup',
+              note: 'Cache encriptado legacy será eliminado y regenerado'
+            });
+
+            // Limpiar cache legacy incompatible
+            this.remove(key, useSessionStorage);
+            this.metrics.recordMiss();
+            return null;
+          }
+
           try {
             const decryptResult = await decryptString({
               encrypted: l1Item.data as string,
               iv: l1Item.encryptionIV,
+              salt: l1Item.encryptionSalt,
               algorithm: 'AES-GCM',
               timestamp: l1Item.timestamp
             });
@@ -1132,7 +1152,7 @@ export class CacheHelper {
             this.log('error', `Error desencriptando desde L1: "${key}"`, error);
             // Si falla la desencriptación, remover item corrupto
             this.remove(key, useSessionStorage);
-            this.metrics.misses++;
+            this.metrics.recordMiss();
             return null;
           }
         }
@@ -1202,10 +1222,28 @@ export class CacheHelper {
 
       // Desencriptar si es necesario
       if (cacheItem.encrypted && cacheItem.encryptionIV) {
+        // ✅ MIGRATION CHECK: Detectar datos legacy sin salt (pre-EncryptHelper v2.0)
+        // Los datos legacy no tienen salt y no se pueden desencriptar con el nuevo sistema
+        if (!cacheItem.encryptionSalt) {
+          this.log('warn', `🔄 Migration: Limpiando cache legacy L2 sin salt (pre-v2.0): "${key}"`, {
+            namespace: cacheItem.namespace,
+            priority: cacheItem.priority,
+            migration: 'EncryptHelper v2.0',
+            action: 'auto-cleanup',
+            note: 'Cache encriptado legacy será eliminado y regenerado'
+          });
+
+          // Limpiar cache legacy incompatible
+          this.remove(key, useSessionStorage);
+          this.metrics.recordMiss();
+          return null;
+        }
+
         try {
           const decryptResult = await decryptString({
             encrypted: cacheItem.data as string,
             iv: cacheItem.encryptionIV,
+            salt: cacheItem.encryptionSalt,
             algorithm: 'AES-GCM',
             timestamp: cacheItem.timestamp
           });
@@ -1217,7 +1255,7 @@ export class CacheHelper {
           this.log('error', `Error desencriptando desde L2: "${key}"`, error);
           // Si falla la desencriptación, remover item corrupto
           this.remove(key, useSessionStorage);
-          this.metrics.misses++;
+          this.metrics.recordMiss();
           return null;
         }
       }

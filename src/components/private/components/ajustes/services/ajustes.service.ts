@@ -183,7 +183,12 @@ export const verificarPermisoSeccion = async (
   userRoles: Array<string | IRole>
 ): Promise<boolean> => {
   try {
-    const config = await getAjustesConfiguration(userRoles);
+    // Normalizar roles: filtrar solo objetos IRole (descartar strings si los hay)
+    const roleObjects = userRoles.filter((role): role is IRole =>
+      typeof role === 'object' && role !== null && 'id' in role && 'nombre' in role
+    );
+
+    const config = await getAjustesConfiguration(roleObjects);
     const seccion = config.secciones.find(s => s.id === seccionId);
 
     return !!seccion && seccion.habilitado;
