@@ -178,7 +178,23 @@ const ENV_VARIABLES = {
  */
 const getEnvironmentPassphrase = (): string | undefined => {
   try {
-    // Verificar variables de entorno de Vite (import.meta.env) - Método principal en frontend
+    // ✅ ACCESO DIRECTO A import.meta.env (funciona en Vite)
+    const passphrase = import.meta.env.VITE_ENCRYPT_PASSPHRASE || import.meta.env.VITE_ENCRYPTION_KEY;
+
+    // 🔍 DEBUG LOG - Ver resultado
+    console.log('🔍 [DEBUG] Todas las variables de entorno VITE_:',
+      Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'))
+    );
+    console.log('🔍 [DEBUG] VITE_ENCRYPT_PASSPHRASE value:', import.meta.env.VITE_ENCRYPT_PASSPHRASE);
+    console.log('🔍 [DEBUG] VITE_ENCRYPTION_KEY value:', import.meta.env.VITE_ENCRYPTION_KEY);
+    console.log('🔍 [DEBUG] Passphrase obtenida:', passphrase ? `${passphrase.substring(0, 15)}...` : 'NINGUNA');
+
+    // Si encontramos passphrase, retornarla inmediatamente
+    if (passphrase) {
+      return passphrase;
+    }
+
+    // Fallback: Intentar acceso indirecto (compatibilidad con builds antiguos)
     const globalWithImport = globalThis as { import?: { meta?: { env?: Record<string, string> } } };
     if (typeof globalThis !== 'undefined' && globalWithImport.import?.meta?.env) {
       const env = globalWithImport.import.meta.env;
@@ -284,17 +300,29 @@ const generateSecureFallbackPassphrase = (): string => {
  * - Si no existe, genera passphrase temporal aleatoria (solo para desarrollo/testing)
  * - En producción, se validará que exista passphrase de variables de entorno
  */
-const DEFAULT_ENCRYPT_CONFIG: EncryptHelperConfig = {
-  defaultHashAlgorithm: 'SHA-256',
-  saltLength: 32,
-  hashIterations: 600000, // OWASP 2024: 600k para máxima seguridad (se ajusta por ambiente)
-  encryptionAlgorithm: 'AES-GCM',
-  keyLength: 256,
-  enableLogging: true,
-  environment: 'development',
-  defaultPassphrase: getEnvironmentPassphrase() || generateSecureFallbackPassphrase(),
-  useEnvironmentPassphrase: true
-};
+const DEFAULT_ENCRYPT_CONFIG: EncryptHelperConfig = (() => {
+  const envPassphrase = getEnvironmentPassphrase();
+  const passphrase = envPassphrase || generateSecureFallbackPassphrase();
+
+  // 🔍 DEBUG LOG - Verificar origen de passphrase
+  console.log('🔐 [EncryptHelper] Passphrase source:', {
+    fromEnv: !!envPassphrase,
+    passphrasePreview: passphrase.substring(0, 15) + '...',
+    length: passphrase.length
+  });
+
+  return {
+    defaultHashAlgorithm: 'SHA-256',
+    saltLength: 32,
+    hashIterations: 600000, // OWASP 2024: 600k para máxima seguridad (se ajusta por ambiente)
+    encryptionAlgorithm: 'AES-GCM',
+    keyLength: 256,
+    enableLogging: true,
+    environment: 'development',
+    defaultPassphrase: passphrase,
+    useEnvironmentPassphrase: true
+  };
+})();
 
 /**
  * Configuraciones específicas por ambiente
