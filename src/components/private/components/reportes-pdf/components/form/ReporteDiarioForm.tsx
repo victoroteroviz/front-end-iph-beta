@@ -23,51 +23,46 @@ import { showError, showSuccess, showInfo } from '@/helper/notification/notifica
 
 const MODULE = 'ReporteDiarioForm';
 
-/**
- * Estado de la sección de uso de dispositivos.
- */
-interface UsoSectionState {
+interface UsoTabletsState {
   devicesTitle: string;
-  primaryCount: string;
-  totalCount: string;
+  tabletsEnUso: string;
+  totalTablets: string;
+}
+
+interface UsoLaptopState {
+  devicesTitle: string;
+  laptopsEnUso: string;
+  totalLaptops: string;
   registrosElaborados: string;
+  registrosJusticiaCivica: string;
+  registrosProbableDelictivo: string;
+  iphJusticiaCivica: string;
+  iphJusticiaConDetenidos: string;
+  iphJusticiaSinDetenidos: string;
+  iphProbableDelictivo: string;
+  iphDelictivoConDetenidos: string;
+  iphDelictivoSinDetenidos: string;
   registrosNuevosSemana: string;
   registrosNuevosDia: string;
 }
 
-/**
- * Estado de una actividad capturada en el formulario.
- */
 interface ActivityFormState {
   title: string;
   description: string;
-  imageUrlsRaw: string;
   files: File[];
 }
 
-/**
- * Props del componente ReporteDiarioForm.
- */
 export interface ReporteDiarioFormProps {
-  /** Tarjeta de reporte asociada al formulario. */
   reporte: IReporteCard;
-  /** Callback para regresar a la vista de tarjetas. */
   onClose: () => void;
 }
 
-/**
- * Crea una actividad vacía para inicializar el formulario.
- */
 const createEmptyActivity = (): ActivityFormState => ({
   title: '',
   description: '',
-  imageUrlsRaw: '',
   files: []
 });
 
-/**
- * Obtiene la fecha actual en formato YYYY-MM-DD.
- */
 const todayIsoDate = (): string => {
   const now = new Date();
   const yyyy = now.getFullYear();
@@ -79,25 +74,27 @@ const todayIsoDate = (): string => {
 const maxUploadFiles = 5;
 const maxActivities = 10;
 
-/**
- * Componente que renderiza el formulario completo para el reporte diario.
- */
 const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose }) => {
   const [reportDate, setReportDate] = useState<string>(todayIsoDate());
   const [includePageBreak, setIncludePageBreak] = useState<boolean>(false);
-  const [usoTablets, setUsoTablets] = useState<UsoSectionState>({
-    devicesTitle: '',
-    primaryCount: '',
-    totalCount: '',
-    registrosElaborados: '',
-    registrosNuevosSemana: '',
-    registrosNuevosDia: ''
+  const [usoTablets, setUsoTablets] = useState<UsoTabletsState>({
+    devicesTitle: 'Tablets en uso',
+    tabletsEnUso: '',
+    totalTablets: ''
   });
-  const [usoLaptops, setUsoLaptops] = useState<UsoSectionState>({
+  const [usoLaptops, setUsoLaptops] = useState<UsoLaptopState>({
     devicesTitle: '',
-    primaryCount: '',
-    totalCount: '',
+    laptopsEnUso: '',
+    totalLaptops: '',
     registrosElaborados: '',
+    registrosJusticiaCivica: '',
+    registrosProbableDelictivo: '',
+    iphJusticiaCivica: '',
+    iphJusticiaConDetenidos: '',
+    iphJusticiaSinDetenidos: '',
+    iphProbableDelictivo: '',
+    iphDelictivoConDetenidos: '',
+    iphDelictivoSinDetenidos: '',
     registrosNuevosSemana: '',
     registrosNuevosDia: ''
   });
@@ -115,12 +112,12 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
     };
   }, [pdfResult]);
 
-  const updateUsoSection = useCallback((
-    setter: React.Dispatch<React.SetStateAction<UsoSectionState>>,
-    key: keyof UsoSectionState,
-    value: string
-  ) => {
-    setter(prev => ({ ...prev, [key]: value }));
+  const updateUsoTablets = useCallback((key: keyof UsoTabletsState, value: string) => {
+    setUsoTablets(prev => ({ ...prev, [key]: value }));
+  }, []);
+
+  const updateUsoLaptops = useCallback((key: keyof UsoLaptopState, value: string) => {
+    setUsoLaptops(prev => ({ ...prev, [key]: value }));
   }, []);
 
   const handleActivityChange = useCallback((index: number, key: keyof ActivityFormState, value: string | FileList | null) => {
@@ -165,13 +162,6 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
     });
   }, []);
 
-  const parseImageUrls = useCallback((raw: string): string[] => {
-    return raw
-      .split(/\r?\n|,/)
-      .map(entry => entry.trim())
-      .filter(entry => entry.length > 0);
-  }, []);
-
   const toNumberOrUndefined = useCallback((value: string): number | undefined => {
     if (!value || !value.trim()) {
       return undefined;
@@ -181,21 +171,20 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
   }, []);
 
   const hasUsoTabletsData = useMemo(() => {
-    return Object.values(usoTablets).some(value => value.trim() !== '');
+    return usoTablets.tabletsEnUso.trim() !== '' || usoTablets.totalTablets.trim() !== '';
   }, [usoTablets]);
 
   const hasUsoLaptopsData = useMemo(() => {
-    return Object.values(usoLaptops).some(value => value.trim() !== '');
+    return (Object.values(usoLaptops) as string[]).some(value => value.trim() !== '');
   }, [usoLaptops]);
 
   const hasActivities = useMemo(() => {
     return activities.some(activity => {
       const hasText = activity.title.trim() || activity.description.trim();
-      const hasUrls = parseImageUrls(activity.imageUrlsRaw).length > 0;
       const hasFiles = activity.files.length > 0;
-      return Boolean(hasText || hasUrls || hasFiles);
+      return Boolean(hasText || hasFiles);
     });
-  }, [activities, parseImageUrls]);
+  }, [activities]);
 
   const buildFormData = useCallback((): FormData => {
     const formData = new FormData();
@@ -209,67 +198,98 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
     const usoAppEntries: Record<string, unknown> = {};
     const usoLaptopEntries: Record<string, unknown> = {};
 
-    (Object.entries(usoTablets) as [keyof UsoSectionState, string][]).forEach(([key, value]) => {
-      if (!value.trim()) {
-        return;
-      }
-      if (key === 'devicesTitle') {
-        formData.append('usoApp[devicesTitle]', value.trim());
-        usoAppEntries.devicesTitle = value.trim();
-        return;
-      }
-      const mappedKey = key === 'primaryCount' ? 'tabletsEnUso' : key === 'totalCount' ? 'totalTablets' : key;
-      formData.append(`usoApp[${mappedKey}]`, value.trim());
-      usoAppEntries[mappedKey] = toNumberOrUndefined(value) ?? 0;
-    });
+    const tabletsEnUsoTrimmed = usoTablets.tabletsEnUso.trim();
+    const totalTabletsTrimmed = usoTablets.totalTablets.trim();
+    const shouldSendTablets = tabletsEnUsoTrimmed !== '' || totalTabletsTrimmed !== '';
 
-    (Object.entries(usoLaptops) as [keyof UsoSectionState, string][]).forEach(([key, value]) => {
-      if (!value.trim()) {
-        return;
-      }
-      if (key === 'devicesTitle') {
-        formData.append('usoLaptopApp[devicesTitle]', value.trim());
-        usoLaptopEntries.devicesTitle = value.trim();
-        return;
-      }
-      const mappedKey = key === 'primaryCount' ? 'laptopsEnUso' : key === 'totalCount' ? 'totalLaptops' : key;
-      formData.append(`usoLaptopApp[${mappedKey}]`, value.trim());
-      usoLaptopEntries[mappedKey] = toNumberOrUndefined(value) ?? 0;
-    });
+    if (shouldSendTablets) {
+      const title = usoTablets.devicesTitle.trim() || 'Tablets en uso';
+      formData.append('usoApp[devicesTitle]', title);
+      usoAppEntries.devicesTitle = title;
 
-    const payloadActivities = activities.map((activity, index) => {
-      const imageUrls = parseImageUrls(activity.imageUrlsRaw);
-      const entry = {
-        title: activity.title.trim() || undefined,
-        description: activity.description.trim() || undefined,
-        imageUrls: imageUrls.length ? imageUrls : undefined
-      };
-
-      if (activity.title.trim()) {
-        formData.append(`activities[${index}][title]`, activity.title.trim());
+      if (tabletsEnUsoTrimmed !== '') {
+        formData.append('usoApp[tabletsEnUso]', tabletsEnUsoTrimmed);
+        usoAppEntries.tabletsEnUso = toNumberOrUndefined(tabletsEnUsoTrimmed) ?? 0;
       }
-      if (activity.description.trim()) {
-        formData.append(`activities[${index}][description]`, activity.description.trim());
+
+      if (totalTabletsTrimmed !== '') {
+        formData.append('usoApp[totalTablets]', totalTabletsTrimmed);
+        usoAppEntries.totalTablets = toNumberOrUndefined(totalTabletsTrimmed) ?? 0;
+      }
+    }
+
+    const shouldSendLaptops = (Object.values(usoLaptops) as string[]).some(value => value.trim() !== '');
+
+    if (shouldSendLaptops) {
+      if (usoLaptops.devicesTitle.trim()) {
+        const title = usoLaptops.devicesTitle.trim();
+        formData.append('usoLaptopApp[devicesTitle]', title);
+        usoLaptopEntries.devicesTitle = title;
+      }
+
+      const laptopFieldEntries: Array<[keyof UsoLaptopState, string]> = [
+        ['laptopsEnUso', 'laptopsEnUso'],
+        ['totalLaptops', 'totalLaptops'],
+        ['registrosElaborados', 'registrosElaborados'],
+        ['registrosJusticiaCivica', 'registrosJusticiaCivica'],
+        ['registrosProbableDelictivo', 'registrosProbableDelictivo'],
+        ['iphJusticiaCivica', 'iphJusticiaCivica'],
+        ['iphJusticiaConDetenidos', 'iphJusticiaConDetenidos'],
+        ['iphJusticiaSinDetenidos', 'iphJusticiaSinDetenidos'],
+        ['iphProbableDelictivo', 'iphProbableDelictivo'],
+        ['iphDelictivoConDetenidos', 'iphDelictivoConDetenidos'],
+        ['iphDelictivoSinDetenidos', 'iphDelictivoSinDetenidos'],
+        ['registrosNuevosSemana', 'registrosNuevosSemana'],
+        ['registrosNuevosDia', 'registrosNuevosDia']
+      ];
+
+      laptopFieldEntries.forEach(([stateKey, payloadKey]) => {
+        const rawValue = usoLaptops[stateKey].trim();
+        if (!rawValue) {
+          return;
+        }
+        formData.append(`usoLaptopApp[${payloadKey}]`, rawValue);
+        usoLaptopEntries[payloadKey] = toNumberOrUndefined(rawValue) ?? 0;
+      });
+    }
+
+    const payloadActivities = activities.reduce<Array<{ title?: string; description?: string }>>((acc, activity, index) => {
+      const title = activity.title.trim();
+      const description = activity.description.trim();
+      const hasFiles = activity.files.length > 0;
+
+      if (title) {
+        formData.append(`activities[${index}][title]`, title);
+      }
+      if (description) {
+        formData.append(`activities[${index}][description]`, description);
       }
       activity.files.forEach(file => {
         formData.append(`activities[${index}]`, file, file.name);
       });
 
-      return entry;
-    });
+      if (title || description || hasFiles) {
+        acc.push({
+          title: title || undefined,
+          description: description || undefined
+        });
+      }
+
+      return acc;
+    }, []);
 
     const payload = {
       reportDate,
       activitiesIncludePageBreak: includePageBreak || undefined,
       usoApp: Object.keys(usoAppEntries).length ? usoAppEntries : undefined,
       usoLaptopApp: Object.keys(usoLaptopEntries).length ? usoLaptopEntries : undefined,
-      activities: payloadActivities.filter(activity => activity.title || activity.description || activity.imageUrls)
+      activities: payloadActivities
     };
 
     formData.append('payload', JSON.stringify(payload));
 
     return formData;
-  }, [activities, includePageBreak, parseImageUrls, reportDate, toNumberOrUndefined, usoLaptops, usoTablets]);
+  }, [activities, includePageBreak, reportDate, toNumberOrUndefined, usoLaptops, usoTablets]);
 
   const resetPdfPreview = useCallback(() => {
     pdfResult?.revokeObjectUrl();
@@ -397,27 +417,16 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
             <section className="space-y-4">
               <header>
                 <h2 className="text-lg font-semibold text-[#4d4725]">Uso de aplicación en tablets</h2>
-                <p className="text-sm text-[#6b6b47]">Captura únicamente los campos donde dispongas de información actualizada.</p>
+                <p className="text-sm text-[#6b6b47]">El título se envía como "Tablets en uso". El backend calcula los demás indicadores.</p>
               </header>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Título personalizado</label>
-                  <input
-                    type="text"
-                    maxLength={50}
-                    value={usoTablets.devicesTitle}
-                    onChange={event => updateUsoSection(setUsoTablets, 'devicesTitle', event.target.value)}
-                    placeholder="TABLETS EN USO"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#4d4725] mb-1">Tablets en uso</label>
                   <input
                     type="number"
                     min={0}
-                    value={usoTablets.primaryCount}
-                    onChange={event => updateUsoSection(setUsoTablets, 'primaryCount', event.target.value)}
+                    value={usoTablets.tabletsEnUso}
+                    onChange={event => updateUsoTablets('tabletsEnUso', event.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
                   />
                 </div>
@@ -426,38 +435,8 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
                   <input
                     type="number"
                     min={0}
-                    value={usoTablets.totalCount}
-                    onChange={event => updateUsoSection(setUsoTablets, 'totalCount', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Registros elaborados</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoTablets.registrosElaborados}
-                    onChange={event => updateUsoSection(setUsoTablets, 'registrosElaborados', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Registros nuevos (semana)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoTablets.registrosNuevosSemana}
-                    onChange={event => updateUsoSection(setUsoTablets, 'registrosNuevosSemana', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Registros nuevos (día)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoTablets.registrosNuevosDia}
-                    onChange={event => updateUsoSection(setUsoTablets, 'registrosNuevosDia', event.target.value)}
+                    value={usoTablets.totalTablets}
+                    onChange={event => updateUsoTablets('totalTablets', event.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
                   />
                 </div>
@@ -467,17 +446,17 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
             <section className="space-y-4">
               <header>
                 <h2 className="text-lg font-semibold text-[#4d4725]">Uso de aplicación en laptops</h2>
-                <p className="text-sm text-[#6b6b47]">Completa los datos en caso de contar con laptops asignadas.</p>
+                <p className="text-sm text-[#6b6b47]">Captura cada métrica con los datos más recientes disponibles.</p>
               </header>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Título personalizado</label>
+                <div className="sm:col-span-3">
+                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Título de la sección</label>
                   <input
                     type="text"
                     maxLength={50}
                     value={usoLaptops.devicesTitle}
-                    onChange={event => updateUsoSection(setUsoLaptops, 'devicesTitle', event.target.value)}
-                    placeholder="LAPTOPS EN USO"
+                    onChange={event => updateUsoLaptops('devicesTitle', event.target.value)}
+                    placeholder="Laptops activas"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
                   />
                 </div>
@@ -486,8 +465,8 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
                   <input
                     type="number"
                     min={0}
-                    value={usoLaptops.primaryCount}
-                    onChange={event => updateUsoSection(setUsoLaptops, 'primaryCount', event.target.value)}
+                    value={usoLaptops.laptopsEnUso}
+                    onChange={event => updateUsoLaptops('laptopsEnUso', event.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
                   />
                 </div>
@@ -496,8 +475,8 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
                   <input
                     type="number"
                     min={0}
-                    value={usoLaptops.totalCount}
-                    onChange={event => updateUsoSection(setUsoLaptops, 'totalCount', event.target.value)}
+                    value={usoLaptops.totalLaptops}
+                    onChange={event => updateUsoLaptops('totalLaptops', event.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
                   />
                 </div>
@@ -507,7 +486,87 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
                     type="number"
                     min={0}
                     value={usoLaptops.registrosElaborados}
-                    onChange={event => updateUsoSection(setUsoLaptops, 'registrosElaborados', event.target.value)}
+                    onChange={event => updateUsoLaptops('registrosElaborados', event.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Registros justicia cívica</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={usoLaptops.registrosJusticiaCivica}
+                    onChange={event => updateUsoLaptops('registrosJusticiaCivica', event.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Registros probable delictivo</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={usoLaptops.registrosProbableDelictivo}
+                    onChange={event => updateUsoLaptops('registrosProbableDelictivo', event.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#4d4725] mb-1">IPH justicia cívica</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={usoLaptops.iphJusticiaCivica}
+                    onChange={event => updateUsoLaptops('iphJusticiaCivica', event.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#4d4725] mb-1">IPH justicia con detenidos</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={usoLaptops.iphJusticiaConDetenidos}
+                    onChange={event => updateUsoLaptops('iphJusticiaConDetenidos', event.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#4d4725] mb-1">IPH justicia sin detenidos</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={usoLaptops.iphJusticiaSinDetenidos}
+                    onChange={event => updateUsoLaptops('iphJusticiaSinDetenidos', event.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#4d4725] mb-1">IPH probable delictivo</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={usoLaptops.iphProbableDelictivo}
+                    onChange={event => updateUsoLaptops('iphProbableDelictivo', event.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#4d4725] mb-1">IPH delictivo con detenidos</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={usoLaptops.iphDelictivoConDetenidos}
+                    onChange={event => updateUsoLaptops('iphDelictivoConDetenidos', event.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#4d4725] mb-1">IPH delictivo sin detenidos</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={usoLaptops.iphDelictivoSinDetenidos}
+                    onChange={event => updateUsoLaptops('iphDelictivoSinDetenidos', event.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
                   />
                 </div>
@@ -517,7 +576,7 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
                     type="number"
                     min={0}
                     value={usoLaptops.registrosNuevosSemana}
-                    onChange={event => updateUsoSection(setUsoLaptops, 'registrosNuevosSemana', event.target.value)}
+                    onChange={event => updateUsoLaptops('registrosNuevosSemana', event.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
                   />
                 </div>
@@ -527,7 +586,7 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
                     type="number"
                     min={0}
                     value={usoLaptops.registrosNuevosDia}
-                    onChange={event => updateUsoSection(setUsoLaptops, 'registrosNuevosDia', event.target.value)}
+                    onChange={event => updateUsoLaptops('registrosNuevosDia', event.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
                   />
                 </div>
@@ -565,7 +624,7 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-[#4d4725] mb-1">Título</label>
                         <input
@@ -578,16 +637,6 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-[#4d4725] mb-1">Enlaces de imagen (uno por línea)</label>
-                        <textarea
-                          value={activity.imageUrlsRaw}
-                          onChange={event => handleActivityChange(index, 'imageUrlsRaw', event.target.value)}
-                          rows={3}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                          placeholder={'https://cdn.example.com/foto-1.jpg\nhttps://cdn.example.com/foto-2.jpg'}
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
                         <label className="block text-sm font-medium text-[#4d4725] mb-1">Descripción</label>
                         <textarea
                           value={activity.description}
@@ -597,7 +646,7 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
                           placeholder="Cobertura y recorrido en sector norte"
                         />
                       </div>
-                      <div className="sm:col-span-2">
+                      <div>
                         <label className="block text-sm font-medium text-[#4d4725] mb-1">Imágenes (opcional)</label>
                         <label className="flex items-center justify-center gap-2 w-full border-2 border-dashed border-gray-300 rounded-xl px-4 py-6 text-sm text-gray-500 hover:border-[#c2b186] hover:text-[#c2b186] transition-colors cursor-pointer">
                           <Upload className="w-4 h-4" />

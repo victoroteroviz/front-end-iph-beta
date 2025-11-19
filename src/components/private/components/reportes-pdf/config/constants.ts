@@ -46,32 +46,7 @@ export const REPORTES_COLORS = {
 export const REPORTES_ENDPOINTS = {
   /** Reporte diario generado vía servicio PDF dedicado */
   DIARIO: '/api/pdf-reporte/reporte-diario',
-  /** Reporte general de IPH */
-  GENERAL: '/api/reportes/general',
-
-  /** Reporte de Justicia Cívica */
-  JUSTICIA_CIVICA: '/api/reportes/justicia-civica',
-
-  /** Reporte de Probable Hecho Delictivo */
-  PROBABLE_DELICTIVO: '/api/reportes/probable-delictivo',
-
-  /** Reporte de usuarios y creación de IPH */
-  USUARIOS_IPH: '/api/reportes/usuarios-iph',
-
-  /** Reporte mensual consolidado */
-  MENSUAL: '/api/reportes/mensual',
-
-  /** Reporte anual consolidado */
-  ANUAL: '/api/reportes/anual',
-
-  /** Reporte personalizado con filtros */
-  PERSONALIZADO: '/api/reportes/personalizado',
-
-  /** Reporte de estadísticas por periodo */
-  ESTADISTICAS_PERIODO: '/api/reportes/estadisticas-periodo',
-
-  /** Reporte de mapas de calor */
-  MAPAS_CALOR: '/api/reportes/mapas-calor',
+  
 } as const;
 
 /**

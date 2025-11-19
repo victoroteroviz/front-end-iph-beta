@@ -21,21 +21,6 @@ import { REPORTES_COLORS, REPORTES_ENDPOINTS } from './constants';
  */
 export const reportesCardsConfig: IReporteCard[] = [
   {
-    id: 'reporte-general',
-    titulo: 'Reporte General de IPH',
-    descripcion: 'Reporte completo con todas las estadísticas de IPH: Justicia Cívica y Probable Hecho Delictivo',
-    icono: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="reporte-icon">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-      </svg>
-    ),
-    habilitado: true,
-    color: REPORTES_COLORS.IPH_PRIMARY,
-    endpoint: REPORTES_ENDPOINTS.GENERAL,
-    tipo: undefined,
-    requiereFiltros: false,
-  },
-  {
     id: 'reporte-diario',
     titulo: 'Reporte Diario Operativo',
     descripcion: 'Genera el informe diario con métricas de uso y actividades, incluye carga opcional de evidencias fotográficas.',
@@ -45,26 +30,32 @@ export const reportesCardsConfig: IReporteCard[] = [
       </svg>
     ),
     habilitado: true,
-    color: REPORTES_COLORS.INFO,
+    color: REPORTES_COLORS.IPH_PRIMARY,
     endpoint: REPORTES_ENDPOINTS.DIARIO,
-    tipo: 'general',
-    requiereFiltros: true,
+    tipo: 'Owner',
+    requiereFiltros: false,
     parametros: {
       requiereFormulario: true
     }
   },
   {
-    id: 'reporte-justicia-civica',
-    titulo: ' Reporte de Justicia Cívica',
-    descripcion: 'Reporte detallado de incidentes y estadísticas de Justicia Cívica',
+    id: 'reporte-general',
+    titulo: 'Reporte General de IPH',
+    descripcion: 'Reporte completo con todas las estadísticas de IPH: Justicia Cívica y Probable Hecho Delictivo',
     icono: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="reporte-icon">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        ),
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+      </svg>
+    ),
     habilitado: false,
-    endpoint: ''
-  }
+    color: REPORTES_COLORS.IPH_PRIMARY,
+    endpoint: '',
+    tipo: undefined,
+    requiereFiltros: false,
+    parametros:{
+      requiereFormulario: false
+    }
+  },
   
 ];
 
