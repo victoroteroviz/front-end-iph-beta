@@ -34,8 +34,6 @@ interface UsoLaptopState {
   laptopsEnUso: string;
   totalLaptops: string;
   registrosElaborados: string;
-  registrosJusticiaCivica: string;
-  registrosProbableDelictivo: string;
   iphJusticiaCivica: string;
   iphJusticiaConDetenidos: string;
   iphJusticiaSinDetenidos: string;
@@ -87,8 +85,6 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
     laptopsEnUso: '',
     totalLaptops: '',
     registrosElaborados: '',
-    registrosJusticiaCivica: '',
-    registrosProbableDelictivo: '',
     iphJusticiaCivica: '',
     iphJusticiaConDetenidos: '',
     iphJusticiaSinDetenidos: '',
@@ -231,8 +227,6 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
         ['laptopsEnUso', 'laptopsEnUso'],
         ['totalLaptops', 'totalLaptops'],
         ['registrosElaborados', 'registrosElaborados'],
-        ['registrosJusticiaCivica', 'registrosJusticiaCivica'],
-        ['registrosProbableDelictivo', 'registrosProbableDelictivo'],
         ['iphJusticiaCivica', 'iphJusticiaCivica'],
         ['iphJusticiaConDetenidos', 'iphJusticiaConDetenidos'],
         ['iphJusticiaSinDetenidos', 'iphJusticiaSinDetenidos'],
@@ -448,147 +442,142 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
                 <h2 className="text-lg font-semibold text-[#4d4725]">Uso de aplicación en laptops</h2>
                 <p className="text-sm text-[#6b6b47]">Captura cada métrica con los datos más recientes disponibles.</p>
               </header>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-3">
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Título de la sección</label>
-                  <input
-                    type="text"
-                    maxLength={50}
-                    value={usoLaptops.devicesTitle}
-                    onChange={event => updateUsoLaptops('devicesTitle', event.target.value)}
-                    placeholder="Laptops activas"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="sm:col-span-3">
+                    <label className="block text-sm font-medium text-[#4d4725] mb-1">Título de la sección</label>
+                    <input
+                      type="text"
+                      maxLength={50}
+                      value={usoLaptops.devicesTitle}
+                      onChange={event => updateUsoLaptops('devicesTitle', event.target.value)}
+                      placeholder="Laptops activas"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#4d4725] mb-1">Laptops en uso</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={usoLaptops.laptopsEnUso}
+                      onChange={event => updateUsoLaptops('laptopsEnUso', event.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#4d4725] mb-1">Total de laptops</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={usoLaptops.totalLaptops}
+                      onChange={event => updateUsoLaptops('totalLaptops', event.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#4d4725] mb-1">Registros elaborados</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={usoLaptops.registrosElaborados}
+                      onChange={event => updateUsoLaptops('registrosElaborados', event.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Laptops en uso</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoLaptops.laptopsEnUso}
-                    onChange={event => updateUsoLaptops('laptopsEnUso', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Total de laptops</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoLaptops.totalLaptops}
-                    onChange={event => updateUsoLaptops('totalLaptops', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Registros elaborados</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoLaptops.registrosElaborados}
-                    onChange={event => updateUsoLaptops('registrosElaborados', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Registros justicia cívica</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoLaptops.registrosJusticiaCivica}
-                    onChange={event => updateUsoLaptops('registrosJusticiaCivica', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Registros probable delictivo</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoLaptops.registrosProbableDelictivo}
-                    onChange={event => updateUsoLaptops('registrosProbableDelictivo', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">IPH justicia cívica</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoLaptops.iphJusticiaCivica}
-                    onChange={event => updateUsoLaptops('iphJusticiaCivica', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">IPH justicia con detenidos</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoLaptops.iphJusticiaConDetenidos}
-                    onChange={event => updateUsoLaptops('iphJusticiaConDetenidos', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">IPH justicia sin detenidos</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoLaptops.iphJusticiaSinDetenidos}
-                    onChange={event => updateUsoLaptops('iphJusticiaSinDetenidos', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">IPH probable delictivo</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoLaptops.iphProbableDelictivo}
-                    onChange={event => updateUsoLaptops('iphProbableDelictivo', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">IPH delictivo con detenidos</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoLaptops.iphDelictivoConDetenidos}
-                    onChange={event => updateUsoLaptops('iphDelictivoConDetenidos', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">IPH delictivo sin detenidos</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoLaptops.iphDelictivoSinDetenidos}
-                    onChange={event => updateUsoLaptops('iphDelictivoSinDetenidos', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Registros nuevos (semana)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoLaptops.registrosNuevosSemana}
-                    onChange={event => updateUsoLaptops('registrosNuevosSemana', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#4d4725] mb-1">Registros nuevos (día)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={usoLaptops.registrosNuevosDia}
-                    onChange={event => updateUsoLaptops('registrosNuevosDia', event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
-                  />
+
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
+                    <div className="p-4 space-y-4">
+                      <h3 className="text-sm font-semibold text-[#4d4725]">Registro IPH justicia cívica</h3>
+                      <div>
+                        <label className="block text-sm font-medium text-[#4d4725] mb-1">Total IPH justicia cívica</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={usoLaptops.iphJusticiaCivica}
+                          onChange={event => updateUsoLaptops('iphJusticiaCivica', event.target.value)}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#4d4725] mb-1">Con detenidos</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={usoLaptops.iphJusticiaConDetenidos}
+                          onChange={event => updateUsoLaptops('iphJusticiaConDetenidos', event.target.value)}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#4d4725] mb-1">Sin detenidos</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={usoLaptops.iphJusticiaSinDetenidos}
+                          onChange={event => updateUsoLaptops('iphJusticiaSinDetenidos', event.target.value)}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                        />
+                      </div>
+                    </div>
+                    <div className="p-4 space-y-4">
+                      <h3 className="text-sm font-semibold text-[#4d4725]">Registro probable delictivo</h3>
+                      <div>
+                        <label className="block text-sm font-medium text-[#4d4725] mb-1">Total IPH probable delictivo</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={usoLaptops.iphProbableDelictivo}
+                          onChange={event => updateUsoLaptops('iphProbableDelictivo', event.target.value)}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#4d4725] mb-1">Delictivo con detenidos</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={usoLaptops.iphDelictivoConDetenidos}
+                          onChange={event => updateUsoLaptops('iphDelictivoConDetenidos', event.target.value)}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#4d4725] mb-1">Delictivo sin detenidos</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={usoLaptops.iphDelictivoSinDetenidos}
+                          onChange={event => updateUsoLaptops('iphDelictivoSinDetenidos', event.target.value)}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 border-t border-gray-200">
+                    <div>
+                      <label className="block text-sm font-medium text-[#4d4725] mb-1">Registros nuevos (semana)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={usoLaptops.registrosNuevosSemana}
+                        onChange={event => updateUsoLaptops('registrosNuevosSemana', event.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#4d4725] mb-1">Registros nuevos (día)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={usoLaptops.registrosNuevosDia}
+                        onChange={event => updateUsoLaptops('registrosNuevosDia', event.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c2b186]"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>
