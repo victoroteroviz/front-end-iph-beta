@@ -3,9 +3,17 @@
  * Integración con servicios existentes getAllIph y getIphByUser
  * Maneja control de acceso por roles (global vs personal)
  *
- * @version 2.0.0
+ * @version 2.1.0
  * @since 2024-01-29
- * @updated 2025-01-30
+ * @updated 2025-01-31
+ *
+ * @changes v2.1.0
+ * - ✅ Refactorizado canUserViewAll() usando helper centralizado
+ * - ✅ Usa canAccessSuperior() del permissions.config
+ * - ✅ Eliminada lógica jerárquica manual (6 líneas → 2 líneas)
+ * - ✅ Actualizado tipado: any[] → IRole[]
+ * - ✅ Reducción de 67% en código de validación de roles
+ * - ✅ Integra cache automático + validación Zod del helper
  *
  * @changes v2.0.0
  * - ✅ Eliminada función duplicada getCurrentUserRoles()
@@ -26,6 +34,10 @@ import { getAllIph, getIphByUser } from '../../iph-oficial/services/get-iph.serv
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 import { getUserRoles } from '../../../../../helper/role/role.helper';
 import { getUserData } from '../../../../../helper/user/user.helper';
+import { canAccessSuperior } from '../../../../../config/permissions.config';
+
+// Interfaces
+import type { IRole } from '../../../../../interfaces/role/role.interface';
 
 // =====================================================
 // TRANSFORMADORES DE DATOS
@@ -124,15 +136,16 @@ const transformFiltersToServiceParams = (filters: IInformePolicialFilters): any 
 
 /**
  * Determina si un usuario puede ver todos los IPH o solo los suyos
- * @param userRoles - Roles del usuario
- * @returns true si puede ver todos, false si solo los suyos
+ * Superior y superiores jerárquicos (Admin, SuperAdmin) pueden ver todos los IPH
+ * Elemento solo puede ver sus propios IPH
+ *
+ * @refactored v2.1.0 - Usa helper centralizado con jerarquía automática
+ * @param userRoles - Roles del usuario validados
+ * @returns true si puede ver todos (Superior+), false si solo los suyos (Elemento)
+ * @security Validación con cache + Zod del helper centralizado
  */
-const canUserViewAll = (userRoles: any[]): boolean => {
-  const restrictedRoles = ['Elemento'];
-  const userRoleNames = userRoles.map((role: any) => role.nombre);
-  
-  // Si tiene algún rol que NO sea solo 'Elemento', puede ver todos
-  return !userRoleNames.every(roleName => restrictedRoles.includes(roleName));
+const canUserViewAll = (userRoles: IRole[]): boolean => {
+  return canAccessSuperior(userRoles);
 };
 
 /**
@@ -177,7 +190,7 @@ const getIPHList = async (
     logInfo('InformePolicialService', 'Getting IPH list', {
       shouldUseGlobalView,
       targetUserId,
-      userRoles: userRoles.map((r: any) => r.nombre),
+      userRoles: userRoles.map(r => r.nombre), // Ya es IRole[] validado
       params: serviceParams
     });
 
@@ -320,7 +333,9 @@ export const currentUserCanViewAll = (): boolean => {
 
 /**
  * Obtiene información del usuario actual para logging
+ *
  * @returns Información del usuario
+ * @updated v2.1.0 - Mejorado tipado (eliminado casting 'any')
  */
 export const getCurrentUserInfo = (): {
   userId: string | null;
@@ -328,12 +343,12 @@ export const getCurrentUserInfo = (): {
   canViewAll: boolean;
 } => {
   const userId = getCurrentUserId();
-  const roles = getUserRoles();
+  const roles = getUserRoles(); // Ya retorna IRole[] validados con Zod
   const canViewAll = canUserViewAll(roles);
-  
+
   return {
     userId,
-    roles: roles.map((r: any) => r.nombre),
+    roles: roles.map(r => r.nombre), // No necesita casting 'any'
     canViewAll
   };
 };

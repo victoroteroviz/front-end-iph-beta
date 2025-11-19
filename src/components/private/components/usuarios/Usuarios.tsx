@@ -21,7 +21,7 @@ import AccessDenied from '../../../shared/components/access-denied';
 
 // Helpers
 import { logInfo } from '../../../../helper/log/logger.helper';
-import { getUserRoles, isAdministrative, validateExternalRoles } from '../../../../helper/role/role.helper';
+import { isAdministrative } from '../../../../helper/role/role.helper';
 
 // Configuración
 const USE_VIRTUALIZATION = false; // Cambiar a true para tablas con >100 usuarios
@@ -34,19 +34,16 @@ const Usuarios: React.FC<UsuariosProps> = ({
   className = ''
 }) => {
   // #region validacion rol
-  // ✅ PASO 1: Obtener y validar roles (sin hooks custom aún)
-  const userRoles = getUserRoles();
-
-  // ✅ Memoizar validRoles para evitar re-renders innecesarios
-  const validRoles = useMemo(
-    () => validateExternalRoles(userRoles),
-    [userRoles]
-  );
-
-  // ✅ Calcular acceso
+  /**
+   * Validación de acceso para gestión de usuarios
+   * Solo Admin y SuperAdmin pueden acceder a este módulo
+   *
+   * @refactored v2.2.0 - Simplificado con helper centralizado
+   * @security Usa getUserRoles() con cache + validación Zod automática
+   */
   const hasAccess = useMemo(
-    () => isAdministrative(validRoles),
-    [validRoles]
+    () => isAdministrative(), // ← Usa sessionStorage automáticamente
+    []
   );
   // #endregion validacion rol
 
@@ -69,16 +66,15 @@ const Usuarios: React.FC<UsuariosProps> = ({
   // ✅ useEffect con condicional INTERNO (no antes del hook)
   useEffect(() => {
     // Solo hacer logging si tiene acceso
-    if (hasAccess && validRoles.length > 0) {
+    if (hasAccess) {
       logInfo('Usuarios', 'Componente montado con permisos validados', {
         totalUsuarios: state.usuarios.length,
         canCreateUsers: state.canCreateUsers,
         canEditUsers: state.canEditUsers,
-        canDeleteUsers: state.canDeleteUsers,
-        userRoles: validRoles.map(r => r.nombre)
+        canDeleteUsers: state.canDeleteUsers
       });
     }
-  }, [hasAccess, validRoles, state.usuarios.length, state.canCreateUsers, state.canEditUsers, state.canDeleteUsers]);
+  }, [hasAccess, state.usuarios.length, state.canCreateUsers, state.canEditUsers, state.canDeleteUsers]);
 
   // ✅ Memoizar breadcrumbItems para evitar re-creación
   const breadcrumbItems = useMemo<BreadcrumbItem[]>(
@@ -95,7 +91,7 @@ const Usuarios: React.FC<UsuariosProps> = ({
   const TableComponent = shouldUseVirtualization ? VirtualizedTable : UsuariosTable;
 
   // ✅ PASO 3: Validación DESPUÉS de todos los hooks
-  if (!hasAccess || validRoles.length === 0) {
+  if (!hasAccess) {
     return (
       <AccessDenied
         title="Acceso Restringido"

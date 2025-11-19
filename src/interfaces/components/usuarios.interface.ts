@@ -192,7 +192,6 @@ export interface IUseUsuariosReturn {
   handleDeleteUser: (usuario: IPaginatedUsers) => void;
   
   // Funciones del modal de eliminación
-  openDeleteModal: (usuario: IPaginatedUsers) => void;
   closeDeleteModal: () => void;
   confirmDelete: () => Promise<void>;
   

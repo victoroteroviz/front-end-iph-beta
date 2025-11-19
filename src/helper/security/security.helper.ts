@@ -172,6 +172,9 @@ class SecurityHelper {
   /**
    * Obtiene número de intentos fallidos desencriptando datos
    *
+   * Compatible con datos legacy (pre-v2.1.1) que no tienen campo `salt`.
+   * Los datos legacy se limpian automáticamente y se retorna 0.
+   *
    * @param identifier Identificador único del usuario
    * @returns Promesa que resuelve al número de intentos fallidos
    *
@@ -189,7 +192,22 @@ class SecurityHelper {
       // Parsear EncryptionResult
       const encryptionResult: EncryptionResult = JSON.parse(encryptedData);
 
-      // Desencriptar datos
+      // ✅ MIGRATION CHECK: Detectar datos legacy sin salt (pre-v2.1.1)
+      if (!encryptionResult.salt) {
+        logWarning('SecurityHelper', '🔄 Migration: Limpiando datos legacy sin salt (pre-v2.1.1)', {
+          identifier,
+          component: 'getFailedAttempts',
+          migration: 'EncryptHelper v2.1.1',
+          action: 'auto-cleanup'
+        });
+
+        // Limpiar datos legacy incompatibles
+        sessionStorage.removeItem(`${this.ATTEMPTS_STORAGE_KEY}_${identifier}`);
+
+        return 0;
+      }
+
+      // ✅ Datos tienen salt, proceder con desencriptación normal
       const decrypted = await decryptData(encryptionResult);
       const parsed = JSON.parse(decrypted);
 
@@ -211,6 +229,9 @@ class SecurityHelper {
   /**
    * Verifica si la cuenta está bloqueada desencriptando datos
    *
+   * Compatible con datos legacy (pre-v2.1.1) que no tienen campo `salt`.
+   * Los datos legacy se limpian automáticamente y se retorna false (no bloqueado).
+   *
    * @param identifier Identificador único del usuario
    * @returns Promesa que resuelve a true si está bloqueada, false si no
    *
@@ -231,7 +252,23 @@ class SecurityHelper {
       // Parsear EncryptionResult
       const encryptionResult: EncryptionResult = JSON.parse(lockData);
 
-      // Desencriptar datos
+      // ✅ MIGRATION CHECK: Detectar datos legacy sin salt (pre-v2.1.1)
+      if (!encryptionResult.salt) {
+        logWarning('SecurityHelper', '🔄 Migration: Limpiando datos de bloqueo legacy sin salt (pre-v2.1.1)', {
+          identifier,
+          component: 'isAccountLocked',
+          migration: 'EncryptHelper v2.1.1',
+          action: 'auto-cleanup',
+          securityNote: 'Usuario previamente bloqueado será desbloqueado (migración única)'
+        });
+
+        // Limpiar datos legacy incompatibles
+        sessionStorage.removeItem(`${this.LOCKOUT_STORAGE_KEY}_${identifier}`);
+
+        return false;
+      }
+
+      // ✅ Datos tienen salt, proceder con desencriptación normal
       const decrypted = await decryptData(encryptionResult);
       const parsed = JSON.parse(decrypted);
       const lockUntil = parsed.lockUntil || 0;
@@ -260,6 +297,9 @@ class SecurityHelper {
   /**
    * Obtiene tiempo restante de bloqueo en minutos desencriptando datos
    *
+   * Compatible con datos legacy (pre-v2.1.1) que no tienen campo `salt`.
+   * Los datos legacy se limpian automáticamente y se retorna 0.
+   *
    * @param identifier Identificador único del usuario
    * @returns Promesa que resuelve al tiempo restante en minutos
    *
@@ -279,7 +319,22 @@ class SecurityHelper {
       // Parsear EncryptionResult
       const encryptionResult: EncryptionResult = JSON.parse(lockData);
 
-      // Desencriptar datos
+      // ✅ MIGRATION CHECK: Detectar datos legacy sin salt (pre-v2.1.1)
+      if (!encryptionResult.salt) {
+        logWarning('SecurityHelper', '🔄 Migration: Limpiando datos de tiempo de bloqueo legacy sin salt (pre-v2.1.1)', {
+          identifier,
+          component: 'getLockoutTimeRemaining',
+          migration: 'EncryptHelper v2.1.1',
+          action: 'auto-cleanup'
+        });
+
+        // Limpiar datos legacy incompatibles
+        sessionStorage.removeItem(`${this.LOCKOUT_STORAGE_KEY}_${identifier}`);
+
+        return 0;
+      }
+
+      // ✅ Datos tienen salt, proceder con desencriptación normal
       const decrypted = await decryptData(encryptionResult);
       const parsed = JSON.parse(decrypted);
       const lockUntil = parsed.lockUntil || 0;

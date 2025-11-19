@@ -4,9 +4,22 @@
  * Migrado completamente a TypeScript con arquitectura moderna
  * Auto-refresh cada 5 minutos con control manual
  *
+ * @version 2.0.0
+ * @since 2024-01-29
+ * @updated 2025-01-31
+ *
+ * @changes v2.0.0
+ * - ✅ Validación de roles refactorizada con patrón memoizado
+ * - ✅ Usa canAccessSuperior() del permissions.config
+ * - ✅ Eliminada validación manual compleja (51 → 3 líneas, -94%)
+ * - ✅ Eliminado array hardcoded de roles permitidos
+ * - ✅ Removidos imports innecesarios (validateCurrentUserRoles, hasAnyRole)
+ * - ✅ Logging separado en useEffect independiente
+ * - ✅ Reducción total: ~48 líneas eliminadas
+ *
  * @security Control de acceso por roles
  * - Solo SuperAdmin, Administrador y Superior tienen acceso
- * - Validación con Role Helper v2.1.0 (Zod + Cache)
+ * - Validación con canAccessSuperior() (Zod + Cache 60s + Jerarquía)
  * - Elemento no tiene acceso a este módulo
  */
 
@@ -38,11 +51,8 @@ import Pagination from "../../../shared/components/pagination";
 
 // Helpers
 import { logInfo, logWarning } from "../../../../helper/log/logger.helper";
-import {
-  getUserRoles,
-  validateCurrentUserRoles,
-  hasAnyRole,
-} from "../../../../helper/role/role.helper";
+import { getUserRoles } from "../../../../helper/role/role.helper";
+import { canAccessSuperior } from "../../../../config/permissions.config";
 
 // Interfaces
 import type { IInformePolicialProps } from "../../../../interfaces/components/informe-policial.interface";
@@ -53,70 +63,26 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
   autoRefreshInterval = INFORME_POLICIAL_CONFIG.AUTO_REFRESH_INTERVAL,
   showAutoRefreshIndicator = true,
 }) => {
-  // ==================== VALIDACIÓN DE ROLES (Debe ejecutarse primero) ====================
+  // =====================================================
+  // VALIDACIÓN DE ROLES
+  // =====================================================
+  // #region 🔐 VALIDACIÓN DE ACCESO - Centralizado
 
   /**
-   * Valida permisos de acceso al componente
+   * Verifica si el usuario tiene permisos para acceder al módulo
    * Solo SuperAdmin, Administrador y Superior tienen acceso
+   * Elemento no tiene acceso a este módulo
    *
-   * @security Usa Role Helper v2.1.0 con:
-   * - Validación Zod automática
-   * - Cache de 5 segundos
-   * - Auto-sanitización de datos corruptos
+   * @refactored v2.0.0 - Validación centralizada con patrón memoizado
+   * @security Validación Zod + cache 60s + jerarquía automática
    */
-  const roleValidation = useMemo(() => {
-    // Obtener roles del usuario (usa cache automáticamente)
-    const userRoles = getUserRoles();
+  const hasAccess = useMemo(() => canAccessSuperior(getUserRoles()), []);
 
-    // Validar estructura de roles
-    const validation = validateCurrentUserRoles();
+  // #endregion
 
-    if (!validation.isValid) {
-      logWarning("InformePolicial", "Acceso denegado - Roles inválidos");
-      return {
-        hasAccess: false,
-        reason: "invalid_roles",
-        message:
-          "No se pudieron validar tus credenciales. Por favor, cierra sesión e inicia sesión nuevamente.",
-      };
-    }
-
-    // Verificar si tiene alguno de los roles permitidos
-    const allowedRoles = ["SuperAdmin", "Administrador", "Superior"];
-    const hasPermission = hasAnyRole(allowedRoles, userRoles);
-
-    if (!hasPermission) {
-      logWarning(
-        "InformePolicial",
-        "Acceso denegado - Sin permisos suficientes"
-      );
-      return {
-        hasAccess: false,
-        reason: "insufficient_permissions",
-        message:
-          "No tienes permisos para acceder al módulo de Informe Policial. Este módulo requiere permisos de Supervisor o superiores.",
-      };
-    }
-
-    // Acceso concedido
-    logInfo(
-      "InformePolicial",
-      "Acceso concedido al módulo de Informe Policial",
-      {
-        matchedRole: validation.matchedRole,
-        rolesCount: userRoles.length,
-      }
-    );
-
-    return {
-      hasAccess: true,
-      reason: "authorized",
-      message: "Acceso autorizado",
-      userRole: validation.matchedRole,
-    };
-  }, []); // Solo se ejecuta una vez (cache se mantiene por 5s en el helper)
-
-  // ==================== HOOKS (Se ejecutan DESPUÉS de validación) ====================
+  // =====================================================
+  // HOOKS
+  // =====================================================
 
   /**
    * Hook principal con parámetro 'enabled' basado en permisos
@@ -134,31 +100,35 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
     timeUntilNextRefresh,
     isAnyLoading,
     visibleRecords,
-  } = useInformePolicial(autoRefreshInterval, roleValidation.hasAccess);
+  } = useInformePolicial(autoRefreshInterval, hasAccess);
 
-  // Log cuando el componente se monta
+  // =====================================================
+  // EFFECTS
+  // =====================================================
+
+  /**
+   * Efecto de logging de acceso
+   * Registra si el usuario tiene acceso o no al módulo
+   */
   useEffect(() => {
-    if (roleValidation.hasAccess) {
-      logInfo("InformePolicial", "Component mounted", {
+    if (hasAccess) {
+      logInfo("InformePolicial", "Acceso autorizado al módulo de Informe Policial", {
         autoRefreshInterval: autoRefreshInterval / 1000 / 60, // en minutos
         showAutoRefreshIndicator,
-        userCanViewAll: state.userCanViewAll,
-        userRole: roleValidation.userRole,
       });
+    } else {
+      logWarning("InformePolicial", "Acceso denegado - Sin permisos suficientes");
     }
-  }, [
-    autoRefreshInterval,
-    showAutoRefreshIndicator,
-    state.userCanViewAll,
-    roleValidation,
-  ]);
+  }, [hasAccess, autoRefreshInterval, showAutoRefreshIndicator]);
 
-  // ==================== COMPONENTE DE ACCESO DENEGADO ====================
+  // =====================================================
+  // COMPONENTE DE ACCESO DENEGADO
+  // =====================================================
 
   /**
    * Muestra mensaje de error cuando no tiene permisos
    */
-  if (!roleValidation.hasAccess) {
+  if (!hasAccess) {
     return (
       <div
         className="min-h-screen p-4 md:p-6 lg:p-8"
@@ -182,7 +152,8 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
               </h2>
 
               <p className="text-gray-700 mb-6 font-poppins text-lg max-w-md mx-auto">
-                {roleValidation.message}
+                No tienes permisos para acceder al módulo de Informe Policial.
+                Este módulo requiere permisos de Supervisor o superiores.
               </p>
 
               <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 shadow-sm">
@@ -190,12 +161,6 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
                   <strong className="font-bold">Permisos requeridos:</strong>{" "}
                   SuperAdmin, Administrador o Superior
                 </p>
-                {roleValidation.reason === "invalid_roles" && (
-                  <p className="text-sm text-red-700 font-poppins mt-2">
-                    Tus credenciales no pudieron ser validadas. Esto puede
-                    deberse a datos corruptos en la sesión.
-                  </p>
-                )}
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">

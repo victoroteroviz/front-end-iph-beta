@@ -1,12 +1,26 @@
-import React from 'react';
-import { Home, BarChart, FileText, Clock, Users, Settings, FileCheck, UserCog, UserPen, ChartNoAxesColumn, ChartNoAxesCombined } from 'lucide-react';
-import { ALLOWED_ROLES } from '../../../../../config/env.config';
-import type { SidebarConfig, SidebarItemConfig } from '../../../../../interfaces/components/dashboard.interface';
-
 /**
  * Configuración del Sidebar - Sistema escalable basado en roles
  * Implementa principios DRY y single source of truth
+ *
+ * @version 2.0.0
+ * @since 2024-01-29
+ * @updated 2025-01-31
+ *
+ * @changes v2.0.0
+ * - ✅ Refactorizado getFilteredSidebarItems() para usar getUserRoles() centralizado
+ * - ✅ Refactorizado userHasAccessToItem() para usar hasAnyRole() del role.helper
+ * - ✅ Eliminada función getRoleLevel() duplicada (existe en sistema centralizado)
+ * - ✅ Eliminada validación manual de roles (usa Zod automático del helper)
+ * - ✅ Eliminado parámetro userRole de getFilteredSidebarItems (obtiene roles internamente)
+ * - ✅ Reducción total: ~35 líneas eliminadas
  */
+
+import React from 'react';
+import { Home, BarChart, FileText, Clock, Users, Settings, FileCheck, UserCog, UserPen, ChartNoAxesColumn, ChartNoAxesCombined } from 'lucide-react';
+import type { SidebarConfig, SidebarItemConfig } from '../../../../../interfaces/components/dashboard.interface';
+
+// Helpers centralizados
+import { getUserRoles, hasAnyRole } from '../../../../../helper/role/role.helper';
 
 /**
  * Configuración principal del sidebar
@@ -90,53 +104,43 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
   ]
 };
 
-// Cache para evitar recálculos innecesarios
-const filterCache = new Map<string, SidebarItemConfig[]>();
-
 /**
- * Obtiene los items del sidebar filtrados por el rol del usuario - OPTIMIZADO
+ * Obtiene los items del sidebar filtrados por los roles del usuario
  *
- * @param userRole - Rol del usuario actual
+ * @refactored v2.0.0 - Usa getUserRoles() centralizado con cache + Zod
  * @returns Array de items filtrados y ordenados
+ *
+ * @description
+ * - Obtiene roles del usuario desde helper centralizado (cache 60s + Zod)
+ * - Filtra items usando hasAnyRole() del permissions.config
+ * - Retorna items ordenados por propiedad order
+ *
+ * @example
+ * ```typescript
+ * const items = getFilteredSidebarItems();
+ * // Retorna items accesibles para el usuario actual
+ * ```
  */
-export const getFilteredSidebarItems = (userRole: string): SidebarItemConfig[] => {
-  if (!userRole) return [];
+export const getFilteredSidebarItems = (): SidebarItemConfig[] => {
+  // ✅ Obtener roles del usuario (con cache + validación Zod automática)
+  const userRoles = getUserRoles();
 
-  // Verificar cache primero
-  if (filterCache.has(userRole)) {
-    return filterCache.get(userRole)!;
-  }
+  // Si no hay roles, retornar array vacío
+  if (userRoles.length === 0) return [];
 
-  // Optimizar verificación de rol válido
-  const userRoleLower = userRole.toLowerCase();
-  const isValidRole = ALLOWED_ROLES.some(allowedRole =>
-    allowedRole.nombre.toLowerCase() === userRoleLower
-  );
-
-  if (!isValidRole) {
-    filterCache.set(userRole, []);
-    return [];
-  }
-
-  // Filtrar items de manera más eficiente
+  // ✅ Filtrar items usando helper centralizado
   const filteredItems = SIDEBAR_CONFIG.items.filter(item => {
+    // Items sin roles requeridos son accesibles para todos
     if (!item.requiredRoles || item.requiredRoles.length === 0) {
       return true;
     }
 
-    // Optimizar comparación de roles
-    return item.requiredRoles.some(requiredRole =>
-      requiredRole.toLowerCase() === userRoleLower
-    );
+    // ✅ Usar hasAnyRole del helper centralizado
+    return hasAnyRole(item.requiredRoles, userRoles);
   });
 
-  // Ordenar una sola vez
-  const sortedItems = filteredItems.sort((a, b) => (a.order || 999) - (b.order || 999));
-
-  // Guardar en cache
-  filterCache.set(userRole, sortedItems);
-
-  return sortedItems;
+  // Ordenar por propiedad order
+  return filteredItems.sort((a, b) => (a.order || 999) - (b.order || 999));
 };
 
 /**
@@ -151,40 +155,29 @@ export const getSidebarItemById = (itemId: string): SidebarItemConfig | undefine
 
 /**
  * Verifica si un usuario tiene acceso a un item específico
- * 
+ *
+ * @refactored v2.0.0 - Usa getUserRoles() y hasAnyRole() centralizados
  * @param itemId - ID del item a verificar
- * @param userRole - Rol del usuario
  * @returns true si tiene acceso, false en caso contrario
+ *
+ * @example
+ * ```typescript
+ * const canAccess = userHasAccessToItem('usuarios');
+ * // Retorna true si el usuario tiene permisos para ver usuarios
+ * ```
  */
-export const userHasAccessToItem = (itemId: string, userRole: string): boolean => {
+export const userHasAccessToItem = (itemId: string): boolean => {
   const item = getSidebarItemById(itemId);
   if (!item || item.isDisabled) return false;
 
+  // Items sin roles requeridos son accesibles para todos
   if (!item.requiredRoles || item.requiredRoles.length === 0) {
     return true;
   }
 
-  return item.requiredRoles.some(requiredRole => 
-    requiredRole.toLowerCase() === userRole.toLowerCase()
-  );
-};
-
-/**
- * Obtiene el nivel jerárquico de un rol
- * Útil para comparaciones de permisos
- * 
- * @param userRole - Rol del usuario
- * @returns Nivel jerárquico (menor número = mayor privilegio)
- */
-export const getRoleLevel = (userRole: string): number => {
-  const roleLevels: Record<string, number> = {
-    'superadmin': 1,
-    'administrador': 2,
-    'superior': 3,
-    'elemento': 4
-  };
-
-  return roleLevels[userRole.toLowerCase()] || 999;
+  // ✅ Usar helper centralizado
+  const userRoles = getUserRoles();
+  return hasAnyRole(item.requiredRoles, userRoles);
 };
 
 /**
@@ -194,6 +187,5 @@ export default {
   SIDEBAR_CONFIG,
   getFilteredSidebarItems,
   getSidebarItemById,
-  userHasAccessToItem,
-  getRoleLevel
+  userHasAccessToItem
 };

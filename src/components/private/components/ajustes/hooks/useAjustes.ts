@@ -1,7 +1,16 @@
 /**
  * @fileoverview Hook personalizado para gestión de ajustes del sistema
- * @version 1.0.0
+ * @version 2.0.0
  * @description Hook que maneja la lógica de negocio del componente Ajustes
+ * @updated 2025-01-31
+ *
+ * @changes v2.0.0
+ * - ✅ Eliminado parsing manual de sessionStorage (lines 118-126)
+ * - ✅ Usa getUserRoles() centralizado del role.helper
+ * - ✅ Simplificada obtención de roles con cache automático (60s TTL)
+ * - ✅ Integración de validación Zod automática
+ * - ✅ Eliminado bloque try/catch redundante (~9 líneas)
+ * - ✅ Reducción de código: 9 líneas eliminadas
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -18,6 +27,7 @@ import {
   verificarPermisoSeccion
 } from '../services/ajustes.service';
 import { canAccessAdmin, canAccessSuperAdmin } from '../../../../../config/permissions.config';
+import { getUserRoles } from '../../../../../helper/role/role.helper';
 import { showSuccess, showError, showInfo } from '../../../../../helper/notification/notification.helper';
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 
@@ -114,16 +124,13 @@ export const useAjustes = (): UseAjustesReturn => {
     seccionesFiltradas: []
   });
 
-  // Obtener roles del usuario desde sessionStorage
-  const userRoles = useMemo(() => {
-    try {
-      const rolesData = sessionStorage.getItem('roles');
-      return rolesData ? JSON.parse(rolesData) : [];
-    } catch (error) {
-      logError('useAjustes', error, 'Error al obtener roles de usuario');
-      return [];
-    }
-  }, []);
+  /**
+   * Obtener roles del usuario desde sessionStorage
+   *
+   * @refactored v2.0.0 - Usa helper centralizado con cache + validación Zod
+   * @security Cache automático (60s TTL) + validación de estructura
+   */
+  const userRoles = useMemo(() => getUserRoles(), []);
 
   // Verificar permisos del usuario
   const tienePermisoAdmin = useMemo(() => {

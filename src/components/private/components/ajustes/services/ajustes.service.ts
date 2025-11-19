@@ -5,6 +5,7 @@
  */
 
 import type { IAjustesResponse, ICatalogo } from '../../../../../interfaces/ajustes';
+import type { IRole } from '../../../../../interfaces/role/role.interface';
 import { getMockAjustesData, getMockCatalogos, filtrarSeccionesPorRol } from '../mock/ajustes/ajustes.mock';
 import { logInfo, logError } from '../../../../../helper/log/logger.helper';
 
@@ -14,18 +15,18 @@ const USE_MOCK_DATA = true;
 /**
  * @function getAjustesConfiguration
  * @description Obtiene la configuración completa de ajustes del sistema
- * @param {string[]} userRoles - Roles del usuario para filtrar secciones
+ * @param {IRole[]} userRoles - Roles del usuario para filtrar secciones
  * @returns {Promise<IAjustesResponse>} Configuración de ajustes
  * @throws {Error} Error al obtener la configuración
  *
  * @example
  * ```typescript
- * const userRoles = ['SuperAdmin'];
+ * const userRoles = getUserRoles(); // IRole[]
  * const config = await getAjustesConfiguration(userRoles);
  * console.log(config.secciones); // Secciones filtradas por rol
  * ```
  */
-export const getAjustesConfiguration = async (userRoles: string[]): Promise<IAjustesResponse> => {
+export const getAjustesConfiguration = async (userRoles: IRole[]): Promise<IAjustesResponse> => {
   try {
     logInfo('AjustesService', 'Obteniendo configuración de ajustes', { userRoles });
 
@@ -66,7 +67,7 @@ export const getAjustesConfiguration = async (userRoles: string[]): Promise<IAju
 /**
  * @function getCatalogosDisponibles
  * @description Obtiene la lista de catálogos disponibles para administración
- * @param {string[]} userRoles - Roles del usuario para control de permisos
+ * @param {(string | IRole)[]} userRoles - Roles del usuario para control de permisos
  * @returns {Promise<ICatalogo[]>} Lista de catálogos disponibles
  * @throws {Error} Error al obtener los catálogos
  *
@@ -77,7 +78,7 @@ export const getAjustesConfiguration = async (userRoles: string[]): Promise<IAju
  * console.log(catalogos); // Lista de catálogos con permisos
  * ```
  */
-export const getCatalogosDisponibles = async (userRoles: string[]): Promise<ICatalogo[]> => {
+export const getCatalogosDisponibles = async (userRoles: Array<string | IRole>): Promise<ICatalogo[]> => {
   try {
     logInfo('AjustesService', 'Obteniendo catálogos disponibles', { userRoles });
 
@@ -114,7 +115,7 @@ export const getCatalogosDisponibles = async (userRoles: string[]): Promise<ICat
  * @description Actualiza la configuración de una sección específica
  * @param {string} seccionId - ID de la sección a actualizar
  * @param {Partial<any>} configuracion - Nueva configuración
- * @param {string[]} userRoles - Roles del usuario para validación
+ * @param {(string | IRole)[]} userRoles - Roles del usuario para validación
  * @returns {Promise<boolean>} Resultado de la actualización
  * @throws {Error} Error al actualizar la configuración
  *
@@ -129,8 +130,8 @@ export const getCatalogosDisponibles = async (userRoles: string[]): Promise<ICat
  */
 export const actualizarConfiguracionSeccion = async (
   seccionId: string,
-  configuracion: Partial<any>,
-  userRoles: string[]
+  configuracion: Partial<Record<string, unknown>>,
+  userRoles: Array<string | IRole>
 ): Promise<boolean> => {
   try {
     logInfo('AjustesService', 'Actualizando configuración de sección', {
@@ -169,7 +170,7 @@ export const actualizarConfiguracionSeccion = async (
  * @function verificarPermisoSeccion
  * @description Verifica si el usuario tiene permisos para acceder a una sección
  * @param {string} seccionId - ID de la sección
- * @param {string[]} userRoles - Roles del usuario
+ * @param {(string | IRole)[]} userRoles - Roles del usuario
  * @returns {Promise<boolean>} Resultado de la verificación
  *
  * @example
@@ -179,7 +180,7 @@ export const actualizarConfiguracionSeccion = async (
  */
 export const verificarPermisoSeccion = async (
   seccionId: string,
-  userRoles: string[]
+  userRoles: Array<string | IRole>
 ): Promise<boolean> => {
   try {
     const config = await getAjustesConfiguration(userRoles);

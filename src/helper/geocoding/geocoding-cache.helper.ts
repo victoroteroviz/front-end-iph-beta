@@ -1,15 +1,44 @@
 /**
- * Sistema de caché para Geocoding Reverso
- * 
+ * Sistema de caché para Geocoding Reverso - v1.0.0 (DEPRECATED)
+ *
+ * @deprecated ESTE ARCHIVO ESTÁ DEPRECADO desde 2025-01-31
+ * @see geocoding-cache-v2.helper.ts - Nueva versión que usa CacheHelper v2.4.0
+ *
+ * ⚠️ AVISO DE MIGRACIÓN:
+ * Este archivo implementa cache propio con Map + localStorage.
+ * Ha sido reemplazado por geocoding-cache-v2.helper.ts que usa
+ * CacheHelper centralizado para eliminar duplicación de código.
+ *
+ * RAZONES DE DEPRECACIÓN:
+ * - Duplica funcionalidad de CacheHelper (~150 líneas duplicadas)
+ * - LRU, TTL, persistencia reimplementados innecesariamente
+ * - Métricas propias en lugar de usar métricas centralizadas
+ * - Mantenimiento duplicado
+ *
+ * PLAN DE MIGRACIÓN:
+ * - v2.0.0: Todos los consumidores migrados a geocoding-cache-v2.helper
+ * - v3.0.0: Este archivo será eliminado completamente
+ *
+ * PARA MIGRAR:
+ * ```typescript
+ * // ANTES (v1 - DEPRECATED):
+ * import { geocodingCache } from '@/helper/geocoding/geocoding-cache.helper';
+ *
+ * // DESPUÉS (v2 - RECOMENDADO):
+ * import { geocodingCacheV2 as geocodingCache } from '@/helper/geocoding/geocoding-cache-v2.helper';
+ * // API es 100% compatible, solo cambiar import
+ * ```
+ *
  * @module GeocodingCache
  * @description Cache LRU con persistencia en localStorage para optimizar requests a Nominatim
- * 
+ * @version 1.0.0
+ *
  * @performance
  * - Reduce requests a API externa de ~100/min a ~2-3/min
  * - Cache hit rate esperado: >90%
  * - Persistencia en localStorage para mantener entre sesiones
  * - LRU (Least Recently Used) con máximo 500 entradas
- * 
+ *
  * @security
  * - Coordenadas redondeadas a 4 decimales (~11m precisión)
  * - TTL de 7 días para datos de direcciones

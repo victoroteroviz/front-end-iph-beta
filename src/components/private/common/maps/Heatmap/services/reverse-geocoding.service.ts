@@ -1,24 +1,32 @@
 /**
  * Servicio de Geocoding Reverso
  * Convierte coordenadas geográficas en direcciones legibles
- * 
+ *
  * @module ReverseGeocodingService
  * @description Servicio optimizado con caché y rate limiting para Nominatim
- * 
+ * @version 2.0.0
+ *
  * @performance
- * - Cache LRU con persistencia en localStorage
+ * - Cache con CacheHelper v2.4.0 (L1 memoria + L2 localStorage)
  * - Rate limiting 1 req/segundo (política de Nominatim)
  * - Cache hit rate esperado: >90%
- * 
+ *
  * @security
  * - Email de contacto real en User-Agent
  * - Validación de coordenadas
  * - Logging sanitizado (sin coordenadas exactas)
+ *
+ * @changelog
+ * v2.0.0 (2025-01-31) 🔄 MIGRACIÓN A CACHEHELPER
+ * - ✅ REFACTOR: Migrado geocodingCache v1 a v2 (usa CacheHelper)
+ * - ✅ API compatible (sin breaking changes en servicios)
+ * - ✅ Performance mejorado con L1 + L2 cache
+ * - ✅ TTL y LRU automáticos
  */
 
 import { logInfo, logError } from '../../../../../../helper/log/logger.helper';
 import { sanitizeCoordinatesForLog } from '../../../../../../helper/security/security.helper';
-import { geocodingCache } from '../../../../../../helper/geocoding/geocoding-cache.helper';
+import { geocodingCacheV2 as geocodingCache } from '../../../../../../helper/geocoding/geocoding-cache-v2.helper';
 import { geocodingRateLimiter } from '../../../../../../helper/geocoding/rate-limiter.helper';
 
 const MODULE_NAME = 'ReverseGeocodingService';
@@ -108,10 +116,10 @@ export const getReverseGeocoding = async (
       throw new Error('Coordenadas fuera de rango válido');
     }
 
-    // 2. Verificar caché PRIMERO
-    const cached = geocodingCache.get(lat, lng);
+    // 2. Verificar caché PRIMERO (ahora async con CacheHelper v2)
+    const cached = await geocodingCache.get(lat, lng);
     if (cached) {
-      logInfo(MODULE_NAME, 'Dirección obtenida de caché', {
+      logInfo(MODULE_NAME, 'Dirección obtenida de caché (CacheHelper v2.4.0)', {
         ...sanitizedLocation,
         address: cached.displayName,
         cacheMetrics: geocodingCache.getMetrics()
@@ -159,16 +167,17 @@ export const getReverseGeocoding = async (
       return formattedResult;
     });
 
-    // 4. Guardar en caché
-    geocodingCache.set(lat, lng, result);
+    // 4. Guardar en caché (ahora async con CacheHelper v2)
+    await geocodingCache.set(lat, lng, result);
 
     // Sanitizar coordenadas antes de loggear (privacidad)
     const sanitizedLocationSuccess = sanitizeCoordinatesForLog(lat, lng);
-    logInfo(MODULE_NAME, 'Geocoding reverso exitoso (API)', {
+    logInfo(MODULE_NAME, 'Geocoding reverso exitoso (API + cached)', {
       ...sanitizedLocationSuccess,
       address: result.displayName,
       queueSize: geocodingRateLimiter.getQueueSize(),
-      cacheMetrics: geocodingCache.getMetrics()
+      cacheMetrics: geocodingCache.getMetrics(),
+      storage: 'CacheHelper v2.4.0'
     });
 
     return result;

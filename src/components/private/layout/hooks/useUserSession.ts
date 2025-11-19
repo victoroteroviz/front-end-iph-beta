@@ -1,27 +1,38 @@
+/**
+ * Hook personalizado para manejar la sesión de usuario en el Dashboard
+ *
+ * @version 2.0.0
+ * @since 2024-01-29
+ * @updated 2025-01-31
+ *
+ * @changes v2.0.0
+ * - ✅ Eliminada función getPrimaryRole() duplicada (12 líneas)
+ * - ✅ Integrado getUserRoles() del helper centralizado (cache 60s + Zod)
+ * - ✅ Simplificado obtención de rol principal (usa ordenamiento del helper)
+ * - ✅ Reducción total: ~15 líneas eliminadas
+ *
+ * Características:
+ * - Integración con sistema de roles refactorizado
+ * - Uso de sessionStorage en lugar de localStorage
+ * - Logging de eventos de sesión
+ * - Estados de carga optimizados
+ * - Logout seguro con limpieza completa
+ *
+ * @returns Estado y funciones de la sesión de usuario
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Helpers
 import { isUserAuthenticated, getUserFromStorage, clearNavigationData } from '../../../../helper/navigation/navigation.helper';
+import { getUserRoles } from '../../../../helper/role/role.helper';
 import { logInfo, logError, logWarning } from '../../../../helper/log/logger.helper';
 import { showSuccess, showWarning } from '../../../../helper/notification/notification.helper';
 import { isTokenExpired, getStoredToken } from '../../../../helper/security/jwt.helper';
 
 // Interfaces
 import type { UserSessionState, UserData } from '../../../../interfaces/components/dashboard.interface';
-
-/**
- * Hook personalizado para manejar la sesión de usuario en el Dashboard
- * 
- * Características:
- * - Integración con sistema de roles refactorizado
- * - Uso de sessionStorage en lugar de localStorage  
- * - Logging de eventos de sesión
- * - Estados de carga optimizados
- * - Logout seguro con limpieza completa
- * 
- * @returns Estado y funciones de la sesión de usuario
- */
 const useUserSession = (): UserSessionState => {
   const navigate = useNavigate();
   
@@ -73,10 +84,11 @@ const useUserSession = (): UserSessionState => {
         return;
       }
 
-      // Obtener datos del usuario
-      const userData = getUserFromStorage();
-      if (!userData || !userData.roles || userData.roles.length === 0) {
-        logError('useUserSession', 'Datos de usuario inválidos o sin roles', 'Limpiando sesión');
+      // ✅ Obtener roles del helper centralizado (cache 60s + Zod + ordenamiento por jerarquía)
+      const userRoles = getUserRoles();
+
+      if (userRoles.length === 0) {
+        logError('useUserSession', new Error('Sin roles'), 'Usuario sin roles en el sistema');
         clearNavigationData();
         setState({
           userRole: null,
@@ -87,12 +99,14 @@ const useUserSession = (): UserSessionState => {
         return;
       }
 
-      // Determinar el rol principal (el de mayor jerarquía)
-      const roleNames = userData.roles.map(role => role.nombre || '').filter(Boolean);
-      const primaryRole = getPrimaryRole(roleNames);
+      // ✅ El rol principal es el primero del array (ya ordenado por jerarquía en el helper)
+      const primaryRole = userRoles[0].nombre;
 
-      if (!primaryRole) {
-        logError('useUserSession', 'No se pudo determinar rol principal del usuario', 'Roles disponibles: ' + roleNames.join(', '));
+      // Obtener datos adicionales del usuario (nombre, apellidos, foto)
+      const userData = getUserFromStorage();
+      if (!userData) {
+        logError('useUserSession', new Error('Datos de usuario no encontrados'), 'Limpiando sesión');
+        clearNavigationData();
         setState({
           userRole: null,
           userData: null,
@@ -123,7 +137,7 @@ const useUserSession = (): UserSessionState => {
       logInfo('useUserSession', 'Sesión de usuario cargada exitosamente', {
         userId: userData.id,
         userRole: primaryRole,
-        totalRoles: userData.roles.length
+        totalRoles: userRoles.length
       });
 
     } catch (error) {
@@ -171,25 +185,6 @@ const useUserSession = (): UserSessionState => {
     isLoading: state.isLoading,
     logout
   };
-};
-
-/**
- * Determina el rol principal basado en jerarquía
- * 
- * @param roles - Array de nombres de roles
- * @returns Nombre del rol principal o null
- */
-const getPrimaryRole = (roles: string[]): string | null => {
-  const roleHierarchy = ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'];
-  
-  for (const hierarchyRole of roleHierarchy) {
-    const foundRole = roles.find(role => 
-      role.toLowerCase() === hierarchyRole.toLowerCase()
-    );
-    if (foundRole) return foundRole;
-  }
-  
-  return roles[0] || null;
 };
 
 export default useUserSession;

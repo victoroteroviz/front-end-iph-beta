@@ -1,0 +1,31 @@
+Métrica,Valor
+Total de Tareas,38
+Tareas Críticas,6
+Tareas Altas,14
+Tareas Medias,14
+Tareas Bajas,4
+Esfuerzo Total (horas),130
+Esfuerzo Total (días),16.25
+Sprints Recomendados,4
+Duración Estimada,4-5 semanas
+
+Categoría,Cantidad Tareas,Esfuerzo (horas),Esfuerzo (días),Porcentaje del Total
+Seguridad,12,44,5.5,37%
+Performance,7,26,3.25,22%
+Arquitectura,7,26,3.25,22%
+Testing,5,23,2.88,19%
+Código Limpio,3,3,0.38,3%
+Documentación,4,8,1,7%
+TOTAL,38,130,16.25,100%
+
+Prioridad,Cantidad,Porcentaje
+P0 - Crítica,6,16%
+P1 - Alta,14,37%
+P2 - Media,14,37%
+P3 - Baja,4,11%
+
+Sprint,Tareas,Esfuerzo (horas),Esfuerzo (días),Descripción
+Sprint 1,9,20,2.5,Seguridad Crítica - Eliminar vulnerabilidades bloqueantes
+Sprint 2,11,22,2.75,Performance & Calidad - Optimizar y limpiar código
+Sprint 3,12,49,6.13,Arquitectura & Testing - Refactorizar y tests completos
+Sprint 4,6,26,3.25,Features Avanzadas - Rotación de claves y Web Workers
