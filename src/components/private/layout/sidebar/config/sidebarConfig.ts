@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-import { Home, BarChart, FileText, Clock, Users, Settings, FileCheck, UserCog, UserPen, ChartNoAxesColumn, ChartNoAxesCombined } from 'lucide-react';
+import { Home, BarChart, FileText, Clock, Users, Settings, FileCheck, UserCog, UserPen, ChartNoAxesColumn, ChartNoAxesCombined, FileBarChart } from 'lucide-react';
 import type { SidebarConfig, SidebarItemConfig } from '../../../../../interfaces/components/dashboard.interface';
 
 // Helpers centralizados
@@ -51,12 +51,20 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       order: 2
     },
     {
+      id: 'reportes-pdf',
+      label: 'Reportes PDF',
+      to: '/reportes-pdf',
+      icon: React.createElement(FileBarChart, { size: 20 }),
+      requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
+      order: 3
+    },
+    {
       id: 'iphActivo',
       label: 'IPH\'s Activos',
       to: '/informepolicial',
       icon: React.createElement(FileText, { size: 20 }),
       requiredRoles: ['SuperAdmin', 'Administrador', 'Superior'],
-      order: 3
+      order: 4
     },
     {
       id: 'historial',
@@ -64,7 +72,7 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       to: '/historialiph',
       icon: React.createElement(Clock, { size: 20 }),
       requiredRoles: ['SuperAdmin', 'Administrador', 'Superior', 'Elemento'],
-      order: 4
+      order: 5
     },
     {
       id: 'usuarios',
@@ -72,7 +80,7 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       to: '/usuarios',
       icon: React.createElement(UserPen, { size: 20 }),
       requiredRoles: ['SuperAdmin', 'Administrador'],
-      order: 5
+      order: 6
     },
     {
       id: 'reportes',
@@ -80,7 +88,7 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       to: '/reportes',
       icon: React.createElement(FileCheck, { size: 20 }),
       requiredRoles: ['SuperAdmin'],
-      order: 6,
+      order: 7,
       isDisabled: true
     },
     {
@@ -88,7 +96,7 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       label: 'Gestión Grupos',
       to: '/gestion-grupos',
       requiredRoles: ['SuperAdmin'],
-      order: 7,
+      order: 8,
       isDisabled: true,
       icon: React.createElement(UserCog, { size: 20 })
     },
@@ -98,7 +106,7 @@ export const SIDEBAR_CONFIG: SidebarConfig = {
       to: '/ajustes',
       icon: React.createElement(Settings, { size: 20 }),
       requiredRoles: ['SuperAdmin',],
-      order: 8,
+      order: 9,
       isDisabled: true
     }
   ]

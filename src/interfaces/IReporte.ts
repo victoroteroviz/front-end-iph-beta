@@ -30,7 +30,7 @@ export interface IReporteCard {
   endpoint: string;
 
   /** Tipo de reporte (para clasificación) */
-  tipo?: 'justicia-civica' | 'probable-delictivo' | 'general' | 'usuarios' | 'personalizado';
+  tipo?: 'justicia-civica' | 'probable-delictivo' | 'general' | 'usuarios' | 'personalizado' | 'Owner';
 
   /** Indica si requiere filtros de fecha */
   requiereFiltros?: boolean;
