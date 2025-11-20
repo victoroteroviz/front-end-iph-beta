@@ -31,7 +31,7 @@
  * @author Senior Full-Stack Developer
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import type { IReporteCard } from '../../../../interfaces/IReporte';
 import { reportesCardsConfig } from './config/reportesConfig';
 import { REPORTES_ENDPOINTS } from './config/constants';
@@ -42,6 +42,7 @@ import useReportesPdf from './hooks/useReportesPdf';
 import { logDebug } from '../../../../helper/log/logger.helper';
 import './styles/ReportesPdf.css';
 import ReporteDiarioForm from './components/form/ReporteDiarioForm';
+import { useSearchParams } from 'react-router-dom';
 
 /**
  * ReportesPdf Component
@@ -84,6 +85,35 @@ const ReportesPdf: React.FC = () => {
    */
   const [reportes] = useState<IReporteCard[]>(reportesCardsConfig);
   const [reporteSeleccionado, setReporteSeleccionado] = useState<IReporteCard | null>(null);
+  const reporteSeleccionadoRef = useRef<IReporteCard | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    reporteSeleccionadoRef.current = reporteSeleccionado;
+  }, [reporteSeleccionado]);
+
+  useEffect(() => {
+    const reporteIdParam = searchParams.get('reporteId');
+    if (!reporteIdParam) {
+      return;
+    }
+
+    const reporteConfig = reportes.find(reporte => reporte.id === reporteIdParam);
+    const admiteFormulario = reporteConfig?.endpoint === REPORTES_ENDPOINTS.DIARIO || reporteConfig?.parametros?.requiereFormulario;
+
+    if (!reporteConfig || !admiteFormulario) {
+      setSearchParams(prevParams => {
+        const nextParams = new URLSearchParams(prevParams);
+        nextParams.delete('reporteId');
+        return nextParams;
+      }, { replace: true });
+      return;
+    }
+
+    if (!reporteSeleccionadoRef.current || reporteSeleccionadoRef.current.id !== reporteConfig.id) {
+      setReporteSeleccionado(reporteConfig);
+    }
+  }, [reportes, searchParams, setSearchParams]);
   // #endregion
 
   // =====================================================
@@ -107,6 +137,11 @@ const ReportesPdf: React.FC = () => {
         endpoint: reporte.endpoint
       });
       setReporteSeleccionado(reporte);
+      setSearchParams(prevParams => {
+        const nextParams = new URLSearchParams(prevParams);
+        nextParams.set('reporteId', reporte.id);
+        return nextParams;
+      }, { replace: true });
       return;
     }
 
@@ -118,11 +153,16 @@ const ReportesPdf: React.FC = () => {
 
     const filtros = undefined;
     await generarReporte(reporte, filtros);
-  }, [generarReporte]);
+  }, [generarReporte, setSearchParams]);
 
   const handleCerrarFormulario = useCallback(() => {
     setReporteSeleccionado(null);
-  }, []);
+    setSearchParams(prevParams => {
+      const nextParams = new URLSearchParams(prevParams);
+      nextParams.delete('reporteId');
+      return nextParams;
+    }, { replace: true });
+  }, [setSearchParams]);
   // #endregion
 
   // =====================================================

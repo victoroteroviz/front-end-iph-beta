@@ -11,7 +11,7 @@ import React, {
   useMemo,
   useState
 } from 'react';
-import { ArrowLeft, FileDown, Plus, Trash2, Upload } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, FileDown, Plus, Trash2, Upload } from 'lucide-react';
 import PDFViewer from '@/components/private/common/PDFViewer';
 import type { IReporteCard } from '@/interfaces/IReporte';
 import {
@@ -443,6 +443,10 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
           <div className="px-6 py-5 border-b border-[#c2b186]/20 bg-gradient-to-r from-[#fdf7f1] to-white">
             <h1 className="text-2xl font-bold text-[#4d4725] font-poppins tracking-tight">{reporte.titulo}</h1>
             <p className="text-sm text-gray-600 font-poppins mt-1">Captura la información requerida para generar el informe diario en PDF.</p>
+            <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-300 rounded-lg text-sm text-yellow-800">
+              <AlertTriangle className="w-4 h-4" />
+              <span>Este formulario se encuentra en versión beta y puede presentar errores.</span>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="px-6 py-6 space-y-10">
