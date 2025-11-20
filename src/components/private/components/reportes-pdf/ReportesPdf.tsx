@@ -188,11 +188,19 @@ const ReportesPdf: React.FC = () => {
           <Breadcrumbs items={breadcrumbItems} />
         </div>
 
-        {/* Header con métricas */}
-        <ReportesHeader
-          enabledCount={enabledCount}
-          totalCount={totalCount}
-        />
+        {/* Header principal - DISEÑO MEJORADO con gradientes */}
+        <div className="relative bg-gradient-to-br from-white via-[#fdf7f1] to-white rounded-2xl border border-[#c2b186]/30 p-6 mb-6 shadow-lg shadow-[#4d4725]/5 overflow-hidden">
+          {/* Patrón de fondo decorativo */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#948b54]/5 rounded-full blur-3xl -z-10" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#c2b186]/5 rounded-full blur-3xl -z-10" />
+
+          <div className="relative z-10">
+            <ReportesHeader
+              enabledCount={enabledCount}
+              totalCount={totalCount}
+            />
+          </div>
+        </div>
 
         {/* Indicador de generación activa */}
         {generando && (

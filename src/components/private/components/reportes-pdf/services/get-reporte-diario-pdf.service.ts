@@ -61,8 +61,8 @@
 
 import { z } from 'zod';
 import httpHelper from '@/helper/http/http.helper';
-import type { HttpResponse } from '@/helper/http/http.helper';
-import { logDebug, logInfo, logWarning, logError } from '@/helper/log/logger.helper';
+import type { HttpResponse, HttpError } from '@/helper/http/http.helper';
+import logger, { logDebug, logInfo, logWarning, logError } from '@/helper/log/logger.helper';
 import { showError, showSuccess } from '@/helper/notification/notification.helper';
 
 // =====================================================
@@ -70,17 +70,66 @@ import { showError, showSuccess } from '@/helper/notification/notification.helpe
 // =====================================================
 
 /**
- * Schema de validación para sección de Uso de Aplicación
+ * Schema de validación para sección de Uso de Aplicación en TABLETS
  *
- * Aplica para tanto tablets como laptops.
  * Todos los campos son opcionales según la documentación de la API.
  */
 const UsoAppSchema = z.object({
-  /** Número de dispositivos en uso actualmente (provisto por cliente) */
+  /** Número de tablets en uso actualmente (provisto por cliente) */
   tabletsEnUso: z.number().int().nonnegative().optional(),
 
-  /** Total de dispositivos disponibles (provisto por cliente) */
+  /** Total de tablets disponibles (provisto por cliente) */
   totalTablets: z.number().int().nonnegative().optional(),
+
+  /** Título personalizado para la sección (máx 50 caracteres) */
+  devicesTitle: z.string().max(50).optional(),
+
+  /** Registros elaborados totales (auto-poblado si disponible) */
+  registrosElaborados: z.number().int().nonnegative().optional(),
+
+  /** Registros de Justicia Cívica (auto-poblado) */
+  registrosJusticiaCivica: z.number().int().nonnegative().optional(),
+
+  /** Registros de Probable Delictivo (auto-poblado) */
+  registrosProbableDelictivo: z.number().int().nonnegative().optional(),
+
+  /** IPH de Justicia Cívica totales (auto-poblado) */
+  iphJusticiaCivica: z.number().int().nonnegative().optional(),
+
+  /** IPH con detenidos (auto-poblado) */
+  iphJusticiaConDetenidos: z.number().int().nonnegative().optional(),
+
+  /** IPH sin detenidos (auto-poblado) */
+  iphJusticiaSinDetenidos: z.number().int().nonnegative().optional(),
+
+  /** IPH Probable Delictivo (auto-poblado) */
+  iphProbableDelictivo: z.number().int().nonnegative().optional(),
+
+  /** IPH delictivo con detenidos (auto-poblado) */
+  iphDelictivoConDetenidos: z.number().int().nonnegative().optional(),
+
+  /** IPH delictivo sin detenidos (auto-poblado) */
+  iphDelictivoSinDetenidos: z.number().int().nonnegative().optional(),
+
+  /** Registros nuevos de la semana (auto-poblado) */
+  registrosNuevosSemana: z.number().int().nonnegative().optional(),
+
+  /** Registros nuevos del día (auto-poblado) */
+  registrosNuevosDia: z.number().int().nonnegative().optional(),
+}).strict();
+
+/**
+ * Schema de validación para sección de Uso de Aplicación en LAPTOPS
+ *
+ * Estructura idéntica a tablets pero con campos específicos para laptops.
+ * Todos los campos son opcionales según la documentación de la API.
+ */
+const UsoLaptopAppSchema = z.object({
+  /** Número de laptops en uso actualmente (provisto por cliente) */
+  laptopsEnUso: z.number().int().nonnegative().optional(),
+
+  /** Total de laptops disponibles (provisto por cliente) */
+  totalLaptops: z.number().int().nonnegative().optional(),
 
   /** Título personalizado para la sección (máx 50 caracteres) */
   devicesTitle: z.string().max(50).optional(),
@@ -147,7 +196,7 @@ const ReporteDiarioPayloadSchema = z.object({
   usoApp: UsoAppSchema.optional(),
 
   /** Sección de uso de aplicación en laptops */
-  usoLaptopApp: UsoAppSchema.optional(),
+  usoLaptopApp: UsoLaptopAppSchema.optional(),
 
   /** Lista de actividades realizadas */
   activities: z.array(ActivitySchema).max(20).optional(),
@@ -161,9 +210,14 @@ const ReporteDiarioPayloadSchema = z.object({
 // =====================================================
 
 /**
- * Interface para sección de Uso de Aplicación (Tablets o Laptops)
+ * Interface para sección de Uso de Aplicación en TABLETS
  */
 export type UsoApp = z.infer<typeof UsoAppSchema>;
+
+/**
+ * Interface para sección de Uso de Aplicación en LAPTOPS
+ */
+export type UsoLaptopApp = z.infer<typeof UsoLaptopAppSchema>;
 
 /**
  * Interface para una Actividad
@@ -174,6 +228,11 @@ export type Activity = z.infer<typeof ActivitySchema>;
  * Interface principal para el payload del reporte diario
  */
 export type ReporteDiarioPayload = z.infer<typeof ReporteDiarioPayloadSchema>;
+
+type ReporteDiarioPayloadSnapshot = Partial<Pick<ReporteDiarioPayload, 'reportDate' | 'usoApp' | 'usoLaptopApp' | 'activities'>>;
+
+const isReporteDiarioPayloadSnapshot = (value: unknown): value is ReporteDiarioPayloadSnapshot =>
+  typeof value === 'object' && value !== null;
 
 /**
  * Opciones de configuración para la generación del PDF
@@ -221,41 +280,45 @@ export interface GeneratePDFResult {
 /**
  * Tipos de errores específicos del servicio
  */
-export enum PDFErrorType {
+export const PDFErrorType = {
   /** Error de validación de datos de entrada */
-  VALIDATION = 'VALIDATION',
+  VALIDATION: 'VALIDATION',
 
   /** No se proporcionó información suficiente para generar el reporte */
-  NO_DATA = 'NO_DATA',
+  NO_DATA: 'NO_DATA',
 
   /** Error de red o timeout */
-  NETWORK = 'NETWORK',
+  NETWORK: 'NETWORK',
 
   /** Error del servidor (500) */
-  SERVER = 'SERVER',
+  SERVER: 'SERVER',
 
   /** Error de autenticación */
-  AUTH = 'AUTH',
+  AUTH: 'AUTH',
 
   /** El response no es un PDF válido */
-  INVALID_PDF = 'INVALID_PDF',
+  INVALID_PDF: 'INVALID_PDF',
 
   /** Error desconocido */
-  UNKNOWN = 'UNKNOWN'
-}
+  UNKNOWN: 'UNKNOWN'
+} as const;
+
+export type PDFErrorType = (typeof PDFErrorType)[keyof typeof PDFErrorType];
 
 /**
  * Error personalizado para operaciones de PDF
  */
 export class PDFServiceError extends Error {
-  constructor(
-    public type: PDFErrorType,
-    message: string,
-    public originalError?: unknown,
-    public details?: unknown
-  ) {
+  public readonly type: PDFErrorType;
+  public readonly originalError?: unknown;
+  public readonly details?: unknown;
+
+  constructor(type: PDFErrorType, message: string, originalError?: unknown, details?: unknown) {
     super(message);
     this.name = 'PDFServiceError';
+    this.type = type;
+    this.originalError = originalError;
+    this.details = details;
   }
 }
 
@@ -289,6 +352,12 @@ const DEFAULT_CONFIG = {
   MIN_PDF_SIZE: 1024,
 } as const;
 
+const isHttpError = (value: unknown): value is HttpError =>
+  typeof value === 'object' &&
+  value !== null &&
+  'type' in value &&
+  typeof (value as { type: unknown }).type === 'string';
+
 // =====================================================
 // FUNCIONES DE VALIDACIÓN
 // =====================================================
@@ -311,11 +380,13 @@ const DEFAULT_CONFIG = {
 export function validatePayload(payload: unknown): ReporteDiarioPayload {
   const MODULE = 'ReporteDiarioPDFService';
 
+  const payloadSnapshot = isReporteDiarioPayloadSnapshot(payload) ? payload : undefined;
+
   logDebug(MODULE, 'Validando payload con Zod', {
-    hasReportDate: !!(payload as any)?.reportDate,
-    hasUsoApp: !!(payload as any)?.usoApp,
-    hasUsoLaptopApp: !!(payload as any)?.usoLaptopApp,
-    hasActivities: !!(payload as any)?.activities,
+    hasReportDate: Boolean(payloadSnapshot?.reportDate),
+    hasUsoApp: Boolean(payloadSnapshot?.usoApp),
+    hasUsoLaptopApp: Boolean(payloadSnapshot?.usoLaptopApp),
+    hasActivities: Boolean(payloadSnapshot?.activities),
   });
 
   try {
@@ -354,13 +425,13 @@ export function validatePayload(payload: unknown): ReporteDiarioPayload {
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const formattedErrors = error.errors.map(err => ({
-        path: err.path.join('.'),
-        message: err.message,
-        code: err.code
+      const formattedErrors = error.issues.map((issue: z.ZodIssue) => ({
+        path: issue.path.join('.'),
+        message: issue.message,
+        code: issue.code
       }));
 
-      logError(MODULE, 'Error de validación Zod', {
+      logger.error(MODULE, 'Error de validación Zod', {
         errors: formattedErrors,
         payload
       });
@@ -379,7 +450,7 @@ export function validatePayload(payload: unknown): ReporteDiarioPayload {
     }
 
     // Error desconocido
-    logError(MODULE, 'Error desconocido en validación', error);
+  logError(MODULE, error, 'Error desconocido en validación');
     throw new PDFServiceError(
       PDFErrorType.UNKNOWN,
       `Error inesperado en validación: ${String(error)}`,
@@ -406,7 +477,7 @@ function validatePDFResponse(response: HttpResponse<Blob>, blob: Blob): void {
   );
 
   if (!isValidContentType) {
-    logError(MODULE, 'Content-Type inválido en response', {
+    logger.error(MODULE, 'Content-Type inválido en response', {
       contentType,
       expected: DEFAULT_CONFIG.ACCEPTED_CONTENT_TYPES,
       status: response.status
@@ -422,7 +493,7 @@ function validatePDFResponse(response: HttpResponse<Blob>, blob: Blob): void {
 
   // Validar tamaño del Blob
   if (blob.size < DEFAULT_CONFIG.MIN_PDF_SIZE) {
-    logError(MODULE, 'PDF demasiado pequeño (posible error)', {
+    logger.error(MODULE, 'PDF demasiado pequeño (posible error)', {
       size: blob.size,
       minSize: DEFAULT_CONFIG.MIN_PDF_SIZE
     });
@@ -585,7 +656,7 @@ export function downloadPDFBlob(blob: Blob, fileName: string = DEFAULT_CONFIG.DE
     logInfo(MODULE, 'Descarga iniciada exitosamente', { fileName });
 
   } catch (error) {
-    logError(MODULE, 'Error en descarga de PDF', error);
+  logError(MODULE, error, 'Error en descarga de PDF');
     throw new PDFServiceError(
       PDFErrorType.UNKNOWN,
       `Error al descargar PDF: ${String(error)}`,
@@ -632,7 +703,7 @@ export function openPDFInNewTab(blob: Blob): void {
     logInfo(MODULE, 'PDF abierto en nueva pestaña exitosamente');
 
   } catch (error) {
-    logError(MODULE, 'Error al abrir PDF en nueva pestaña', error);
+  logError(MODULE, error, 'Error al abrir PDF en nueva pestaña');
     throw new PDFServiceError(
       PDFErrorType.UNKNOWN,
       `Error al abrir PDF: ${String(error)}`,
@@ -691,7 +762,7 @@ export function openPDFInNewTab(blob: Blob): void {
  *
  * @example
  * ```typescript
- * // Generar reporte con actividades e imágenes
+ * // Generar reporte con tablets, laptops, actividades e imágenes
  * const result = await generateReporteDiarioPDF({
  *   reportDate: '2025-11-18',
  *   usoApp: { tabletsEnUso: 18, totalTablets: 30 },
@@ -777,7 +848,7 @@ export async function generateReporteDiarioPDF(
     if (!response.ok) {
       const errorMessage = `Error del servidor: ${response.status} ${response.statusText}`;
 
-      logError(MODULE, errorMessage, {
+      logger.error(MODULE, errorMessage, {
         status: response.status,
         statusText: response.statusText,
         duration: response.duration
@@ -851,7 +922,7 @@ export async function generateReporteDiarioPDF(
 
     // Si ya es PDFServiceError, re-throw
     if (error instanceof PDFServiceError) {
-      logError(MODULE, `Error generando PDF [${error.type}]`, {
+      logger.error(MODULE, `Error generando PDF [${error.type}]`, {
         message: error.message,
         type: error.type,
         duration: `${duration}ms`,
@@ -866,10 +937,10 @@ export async function generateReporteDiarioPDF(
     }
 
     // Error HTTP del httpHelper
-    if (error && typeof error === 'object' && 'type' in error) {
-      const httpError = error as any;
+    if (isHttpError(error)) {
+      const httpError = error;
 
-      logError(MODULE, 'Error HTTP en generación de PDF', {
+      logger.error(MODULE, 'Error HTTP en generación de PDF', {
         type: httpError.type,
         message: httpError.message,
         status: httpError.status,
@@ -903,7 +974,7 @@ export async function generateReporteDiarioPDF(
     }
 
     // Error desconocido
-    logError(MODULE, 'Error desconocido generando PDF', error);
+    logError(MODULE, error, 'Error desconocido generando PDF');
 
     const unknownError = new PDFServiceError(
       PDFErrorType.UNKNOWN,
@@ -974,7 +1045,7 @@ export async function generateReporteDiarioPDFMultipart(
   // Contar archivos en FormData para logging
   let fileCount = 0;
   let fieldCount = 0;
-  for (const [key, value] of formData.entries()) {
+  for (const [, value] of formData.entries()) {
     if (value instanceof File) {
       fileCount++;
     } else {
@@ -1026,7 +1097,7 @@ export async function generateReporteDiarioPDFMultipart(
     if (!response.ok) {
       const errorMessage = `Error del servidor: ${response.status} ${response.statusText}`;
 
-      logError(MODULE, errorMessage, {
+      logger.error(MODULE, errorMessage, {
         status: response.status,
         statusText: response.statusText,
         duration: response.duration
@@ -1101,7 +1172,7 @@ export async function generateReporteDiarioPDFMultipart(
 
     // Si ya es PDFServiceError, re-throw
     if (error instanceof PDFServiceError) {
-      logError(MODULE, `Error generando PDF multipart [${error.type}]`, {
+      logger.error(MODULE, `Error generando PDF multipart [${error.type}]`, {
         message: error.message,
         type: error.type,
         duration: `${duration}ms`,
@@ -1116,10 +1187,10 @@ export async function generateReporteDiarioPDFMultipart(
     }
 
     // Error HTTP del httpHelper
-    if (error && typeof error === 'object' && 'type' in error) {
-      const httpError = error as any;
+    if (isHttpError(error)) {
+      const httpError = error;
 
-      logError(MODULE, 'Error HTTP en generación de PDF multipart', {
+      logger.error(MODULE, 'Error HTTP en generación de PDF multipart', {
         type: httpError.type,
         message: httpError.message,
         status: httpError.status,
@@ -1153,7 +1224,7 @@ export async function generateReporteDiarioPDFMultipart(
     }
 
     // Error desconocido
-    logError(MODULE, 'Error desconocido generando PDF multipart', error);
+  logError(MODULE, error, 'Error desconocido generando PDF multipart');
 
     const unknownError = new PDFServiceError(
       PDFErrorType.UNKNOWN,

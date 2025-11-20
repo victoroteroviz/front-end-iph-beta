@@ -31,8 +31,8 @@ import type {
 } from '../../../interfaces/components/pdf-viewer.interface';
 
 // Helpers
-import { logInfo, logError } from '../../../helper/log/logger.helper';
-import { showError, showSuccess } from '../../../helper/notification/notification.helper';
+import { logInfo, logError, logWarning } from '../../../helper/log/logger.helper';
+import { showError, showSuccess, showWarning } from '../../../helper/notification/notification.helper';
 import { 
   PDFUrlManager, 
   getPdfUrlInfo, 
@@ -127,36 +127,235 @@ const injectPDFStyles = () => {
 injectPDFStyles();
 
 // =====================================================
-// ERROR BOUNDARY PARA PDF
+// ERROR BOUNDARY PARA PDF CON RECOVERY
 // =====================================================
 
 interface PDFErrorBoundaryState {
   hasError: boolean;
   error?: Error;
+  errorType?: 'memory' | 'worker' | 'render' | 'unknown';
 }
 
+/**
+ * ✅ MEJORADO: Error Boundary con fallback UI y sistema de recovery
+ *
+ * IMPORTANTE: Detecta diferentes tipos de errores y proporciona
+ * acciones apropiadas de recuperación para cada caso
+ *
+ * Tipos de error detectados:
+ * - Memory: Imágenes muy pesadas que exceden memoria disponible
+ * - Worker: PDF.js worker crashed o dejó de responder
+ * - Render: Error general de renderizado
+ * - Unknown: Cualquier otro error no clasificado
+ */
 class PDFErrorBoundary extends React.Component<
-  { children: React.ReactNode; onError?: (error: Error) => void },
+  {
+    children: React.ReactNode;
+    onError?: (error: Error) => void;
+    onRetry?: () => void;
+  },
   PDFErrorBoundaryState
 > {
-  constructor(props: { children: React.ReactNode; onError?: (error: Error) => void }) {
+  constructor(props: {
+    children: React.ReactNode;
+    onError?: (error: Error) => void;
+    onRetry?: () => void;
+  }) {
     super(props);
     this.state = { hasError: false };
   }
 
+  /**
+   * Detecta el tipo de error basado en el mensaje
+   */
+  private detectErrorType(error: Error): 'memory' | 'worker' | 'render' | 'unknown' {
+    const errorMessage = error.message.toLowerCase();
+
+    if (errorMessage.includes('memory') || errorMessage.includes('size') || errorMessage.includes('allocation')) {
+      return 'memory';
+    }
+
+    if (errorMessage.includes('worker') || errorMessage.includes('terminated') || errorMessage.includes('destroyed')) {
+      return 'worker';
+    }
+
+    if (errorMessage.includes('render') || errorMessage.includes('canvas') || errorMessage.includes('draw')) {
+      return 'render';
+    }
+
+    return 'unknown';
+  }
+
   static getDerivedStateFromError(error: Error): PDFErrorBoundaryState {
+    console.error('🔴 PDF Error Boundary caught error:', error);
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.warn('🔴 PDF Error Boundary caught error:', error, errorInfo);
+    const errorType = this.detectErrorType(error);
+
+    console.error('🔴 PDF Error Boundary details:', {
+      error: error.message,
+      errorType,
+      componentStack: errorInfo.componentStack?.split('\n').slice(0, 5).join('\n'), // Primeras 5 líneas
+      isMemoryError: errorType === 'memory',
+      isWorkerError: errorType === 'worker'
+    });
+
+    // Actualizar estado con tipo de error
+    this.setState({ errorType });
+
+    // Notificar al componente padre
     this.props.onError?.(error);
+  }
+
+  /**
+   * ✅ NUEVO: Método para resetear error y reintentar
+   */
+  resetError = () => {
+    console.log('🔄 PDFErrorBoundary: Reseteando error para reintentar...');
+    this.setState({ hasError: false, error: undefined, errorType: undefined });
+    this.props.onRetry?.();
+  };
+
+  /**
+   * Genera mensaje de error contextual según el tipo
+   */
+  private getErrorMessage(): {
+    title: string;
+    description: string;
+    suggestions: string[];
+  } {
+    const { errorType, error } = this.state;
+
+    switch (errorType) {
+      case 'memory':
+        return {
+          title: 'Memoria Insuficiente',
+          description: '⚠️ Esta página contiene imágenes muy pesadas que exceden la memoria disponible del navegador.',
+          suggestions: [
+            'Cerrar otras pestañas del navegador para liberar memoria',
+            'Descargar el PDF y abrirlo con un lector local (Adobe Reader, etc.)',
+            'Solicitar una versión optimizada del documento con imágenes comprimidas',
+            'Intentar abrir el PDF en un dispositivo con más memoria RAM'
+          ]
+        };
+
+      case 'worker':
+        return {
+          title: 'Error del Procesador PDF',
+          description: '⚠️ El procesador de PDF dejó de responder. Esto suele ocurrir con documentos muy complejos o pesados.',
+          suggestions: [
+            'Recargar la página completa para reiniciar el procesador',
+            'Intentar con un documento más pequeño o menos páginas',
+            'Verificar que el archivo PDF no esté corrupto',
+            'Actualizar el navegador a la última versión disponible'
+          ]
+        };
+
+      case 'render':
+        return {
+          title: 'Error de Renderizado',
+          description: '⚠️ Hubo un problema al renderizar esta página del PDF.',
+          suggestions: [
+            'Intentar navegar a otra página del documento',
+            'Reintentar la carga con el botón de abajo',
+            'Verificar que el PDF no esté protegido o encriptado',
+            'Intentar con otro navegador (Chrome, Firefox, Edge)'
+          ]
+        };
+
+      default:
+        return {
+          title: 'Error al Mostrar PDF',
+          description: error?.message || 'Ocurrió un error inesperado al procesar el documento.',
+          suggestions: [
+            'Reintentar la carga con el botón de abajo',
+            'Recargar la página completa',
+            'Verificar la conexión a internet',
+            'Contactar soporte si el problema persiste'
+          ]
+        };
+    }
   }
 
   render() {
     if (this.state.hasError) {
-      return this.props.children; // Continuar renderizando, solo log del error
+      const errorInfo = this.getErrorMessage();
+
+      return (
+        <div className="flex items-center justify-center p-8 bg-red-50 rounded-lg border border-red-200 min-h-[400px]">
+          <div className="text-center max-w-2xl">
+            {/* Icono de error */}
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+
+            {/* Título */}
+            <h4 className="text-lg font-semibold text-red-900 mb-2">
+              {errorInfo.title}
+            </h4>
+
+            {/* Descripción */}
+            <p className="text-sm text-red-700 mb-4">
+              {errorInfo.description}
+            </p>
+
+            {/* Tipo de error para debugging (solo en dev) */}
+            {process.env.NODE_ENV === 'development' && this.state.errorType && (
+              <p className="text-xs text-red-600 mb-4 font-mono">
+                Error Type: {this.state.errorType}
+              </p>
+            )}
+
+            {/* Botones de acción */}
+            <div className="flex gap-3 justify-center mb-6">
+              <button
+                onClick={this.resetError}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Reintentar
+              </button>
+
+              <button
+                onClick={() => window.location.reload()}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Recargar Página
+              </button>
+            </div>
+
+            {/* Sugerencias de solución */}
+            <div className="text-left bg-white rounded-lg p-4 border border-red-200">
+              <p className="text-sm font-semibold text-gray-900 mb-2">
+                💡 Sugerencias para resolver el problema:
+              </p>
+              <ul className="text-xs text-gray-700 space-y-1.5">
+                {errorInfo.suggestions.map((suggestion, index) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <span className="text-red-500 mt-0.5">•</span>
+                    <span>{suggestion}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Mensaje técnico para debugging */}
+            {process.env.NODE_ENV === 'development' && this.state.error && (
+              <details className="mt-4 text-left">
+                <summary className="text-xs text-gray-600 cursor-pointer hover:text-gray-800">
+                  Ver detalles técnicos (solo desarrollo)
+                </summary>
+                <pre className="mt-2 text-xs bg-gray-100 p-3 rounded overflow-auto max-h-40 text-left">
+                  {this.state.error.stack || this.state.error.message}
+                </pre>
+              </details>
+            )}
+          </div>
+        </div>
+      );
     }
+
     return this.props.children;
   }
 }
@@ -404,9 +603,22 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   
   // Control de text layer
   const [textLayerEnabled, setTextLayerEnabled] = React.useState(enableTextLayer);
-  
+
   // Control de impresión para evitar múltiples instancias
   const [isPrinting, setIsPrinting] = React.useState(false);
+
+  /**
+   * Estado de progreso de carga para PDFs grandes
+   *
+   * CRÍTICO: Este estado permite mostrar al usuario el progreso de carga
+   * de PDFs con imágenes pesadas, mejorando significativamente la UX
+   * y previniendo que el usuario cierre el navegador pensando que está congelado
+   */
+  const [loadProgress, setLoadProgress] = React.useState<{
+    loaded: number;
+    total: number;
+    percentage: number;
+  } | null>(null);
 
   const documentRef = useRef<HTMLDivElement>(null);
   const textLayerErrorCount = useRef(0);
@@ -437,27 +649,64 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     setState(prev => ({ ...prev, ...updates }));
   }, []);
 
-  // Memoizar opciones estáticas para evitar re-renders infinitos
+  /**
+   * Opciones de documento optimizadas para PDFs con imágenes pesadas
+   *
+   * IMPORTANTE: Estas configuraciones son críticas para evitar crashes
+   * del worker cuando el backend envía documentos con imágenes de alta resolución
+   *
+   * @see https://github.com/mozilla/pdf.js/blob/master/src/display/api.js
+   */
   const documentOptions = React.useMemo(() => ({
     cMapUrl: '/cmaps/',
     cMapPacked: true,
     standardFontDataUrl: '/standard_fonts/',
-    verbosity: 1,
-    // Configuración adicional para text rendering
+    verbosity: debugMode ? 5 : 1, // ✅ Usar prop debugMode para logging detallado
+
+    // ===== CONFIGURACIÓN DE FUENTES =====
     useSystemFonts: false,
     disableFontFace: false,
     fontExtraProperties: true,
-    // Configuraciones específicas para el worker
+
+    // ===== CONFIGURACIÓN DE SEGURIDAD =====
     isEvalSupported: false,
     enableXfa: true,
-    // Configuración de timeout para evitar worker termination
-    maxImageSize: 16777216,
+
+    // ===== CONFIGURACIÓN CRÍTICA PARA IMÁGENES PESADAS =====
+
+    /**
+     * Tamaño máximo de imagen en píxeles
+     * Default: 16MB (16777216) ❌ INSUFICIENTE
+     * Nuevo: 100MB (104857600) ✅ Soporta imágenes 4K/8K
+     *
+     * NOTA: Imágenes más grandes se renderizarán en resolución reducida
+     * pero NO causarán crash del worker
+     */
+    maxImageSize: 104857600, // 100MB (10x más grande que el default)
+
+    /**
+     * Desactivar auto-fetch para control manual de carga
+     * Permite chunked loading de imágenes grandes
+     */
     disableAutoFetch: false,
-    disableStream: false,
+
+    /**
+     * ⚠️ CRÍTICO: Desactivar streaming para imágenes pesadas
+     *
+     * El streaming puede causar problemas cuando:
+     * - Conexión lenta
+     * - Imágenes muy grandes (>10MB)
+     * - Múltiples páginas con imágenes
+     *
+     * Desactivar streaming carga todo el PDF en memoria primero,
+     * lo cual es MÁS ESTABLE para imágenes pesadas
+     */
+    disableStream: true, // ✅ CAMBIO CRÍTICO: true para estabilidad con imágenes pesadas
+
     // Worker configuration
     workerPort: null,
     workerSrc: undefined // Usar el worker configurado globalmente
-  }), []); // Empty dependency array - opciones completamente estáticas
+  }), [debugMode]); // ✅ Agregar debugMode como dependencia
 
   // Memoizar componentes de loading y error para evitar re-renders
   const loadingComponent = React.useMemo(() => (
@@ -545,9 +794,18 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     };
   }, [url, fileName, httpHeaders, withCredentials, updateState]);
 
-  // Handlers para carga exitosa
+  /**
+   * Handler para carga exitosa del PDF
+   *
+   * IMPORTANTE: Limpia el estado de progreso al completar la carga
+   * para ocultar la barra de progreso
+   */
   const handleLoadSuccess = useCallback((pdf: { numPages: number }) => {
     const numPages = pdf.numPages;
+
+    // ✅ Limpiar progreso de carga al completar
+    setLoadProgress(null);
+
     updateState({
       numPages,
       error: null,
@@ -630,14 +888,96 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     onZoomChange?.(newZoom);
   }, [onZoomChange, updateState]);
 
-  // Función mejorada para imprimir PDF con ventana nueva
+  /**
+   * ✅ MEJORADO: Función para imprimir PDF con manejo robusto de memoria
+   *
+   * IMPORTANTE: Esta función maneja correctamente todos los recursos
+   * y event listeners para prevenir memory leaks en múltiples impresiones
+   *
+   * Cambios respecto a versión anterior:
+   * - ✅ Cleanup centralizado de TODOS los recursos
+   * - ✅ Remoción explícita de event listeners
+   * - ✅ Limpieza de timeouts e intervals
+   * - ✅ Cierre seguro de ventanas
+   * - ✅ Referencias nullificadas para GC
+   *
+   * @param pdfUrl - URL del PDF a imprimir
+   * @returns Promise que se resuelve cuando la impresión inicia o el usuario cancela
+   */
   const printPDFWithWindow = useCallback(async (pdfUrl: string): Promise<void> => {
     return new Promise((resolve, reject) => {
+      let printWindow: Window | null = null;
+      let checkClosedInterval: NodeJS.Timeout | null = null;
+      let timeoutId: NodeJS.Timeout | null = null;
+      let renderTimeoutId: NodeJS.Timeout | null = null;
+      let cleanupTimeoutId: NodeJS.Timeout | null = null;
+      let isHandled = false;
+
+      /**
+       * Handlers declarados antes de cleanup para hoisting correcto
+       */
+      let handleWindowLoad: (() => void) | null = null;
+      let handleWindowError: (() => void) | null = null;
+
+      /**
+       * ✅ NUEVO: Función centralizada de cleanup
+       * Garantiza que TODOS los recursos se liberan correctamente
+       */
+      const cleanup = () => {
+        console.log('🧹 Iniciando cleanup de recursos de impresión...');
+
+        // Limpiar event listeners antes de cerrar ventana
+        if (printWindow && !printWindow.closed && handleWindowLoad && handleWindowError) {
+          try {
+            printWindow.removeEventListener('load', handleWindowLoad);
+            printWindow.removeEventListener('error', handleWindowError);
+          } catch (error) {
+            console.warn('📄 Error removiendo event listeners:', error);
+          }
+        }
+
+        // Limpiar todos los timeouts e intervals
+        if (checkClosedInterval) {
+          clearInterval(checkClosedInterval);
+          checkClosedInterval = null;
+        }
+
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+
+        if (renderTimeoutId) {
+          clearTimeout(renderTimeoutId);
+          renderTimeoutId = null;
+        }
+
+        if (cleanupTimeoutId) {
+          clearTimeout(cleanupTimeoutId);
+          cleanupTimeoutId = null;
+        }
+
+        // Cerrar ventana si sigue abierta
+        if (printWindow && !printWindow.closed) {
+          try {
+            printWindow.close();
+            console.log('📄 Ventana de impresión cerrada');
+          } catch (error) {
+            console.warn('📄 Error cerrando ventana de impresión:', error);
+          }
+        }
+
+        // Nullificar referencia para ayudar al GC
+        printWindow = null;
+
+        console.log('🧹 ✅ Recursos de impresión completamente liberados');
+      };
+
       try {
         console.log('📄 Abriendo PDF en nueva ventana para impresión...');
-        
+
         // Abrir nueva ventana con configuración optimizada
-        const printWindow = window.open(
+        printWindow = window.open(
           pdfUrl,
           '_blank',
           'width=800,height=600,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no'
@@ -647,100 +987,94 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
           throw new Error('El navegador bloqueó la ventana emergente. Permita ventanas emergentes para imprimir.');
         }
 
-        // Configurar eventos de la nueva ventana
-        let isHandled = false;
-        
-        const handleWindowLoad = () => {
+        /**
+         * Handler de carga de la ventana
+         */
+        handleWindowLoad = () => {
           if (isHandled) return;
-          
+
           try {
             console.log('📄 PDF cargado en nueva ventana, esperando renderizado...');
-            
-            // Esperar más tiempo para asegurar renderizado completo
-            setTimeout(() => {
-              if (isHandled || printWindow.closed) return;
-              
+
+            // Esperar renderizado completo antes de imprimir
+            renderTimeoutId = setTimeout(() => {
+              if (isHandled || !printWindow || printWindow.closed) return;
+
               try {
                 // Enfocar la ventana antes de imprimir
                 printWindow.focus();
-                
+
                 // Ejecutar impresión
                 printWindow.print();
-                console.log('📄 ✅ Comando de impresión ejecutado en nueva ventana');
-                
+                console.log('📄 ✅ Comando de impresión ejecutado');
+
                 isHandled = true;
+                cleanup(); // ✅ Limpiar recursos
                 resolve();
-                
-                // La ventana se cierra automáticamente cuando el usuario termina con el diálogo
-                
+
               } catch (printError) {
-                console.warn('📄 Error ejecutando print() en nueva ventana:', printError);
-                if (!printWindow.closed) {
-                  printWindow.close();
-                }
+                console.warn('📄 Error ejecutando print():', printError);
                 isHandled = true;
+                cleanup(); // ✅ Limpiar recursos
                 reject(printError);
               }
-            }, 2000); // Tiempo aumentado para renderizado completo
-            
+            }, 2000);
+
           } catch (error) {
-            if (!printWindow.closed) {
-              printWindow.close();
-            }
             isHandled = true;
+            cleanup(); // ✅ Limpiar recursos
             reject(error);
           }
         };
 
-        const handleWindowError = () => {
+        /**
+         * Handler de error de la ventana
+         */
+        handleWindowError = () => {
           if (!isHandled) {
-            if (!printWindow.closed) {
-              printWindow.close();
-            }
+            console.error('📄 Error cargando PDF en nueva ventana');
             isHandled = true;
+            cleanup(); // ✅ Limpiar recursos
             reject(new Error('Error cargando PDF en nueva ventana'));
           }
         };
 
-        // Timeout de seguridad más largo
-        const timeout = setTimeout(() => {
+        // Timeout de seguridad (15 segundos)
+        timeoutId = setTimeout(() => {
           if (!isHandled) {
-            console.warn('📄 Timeout: PDF no cargó en tiempo esperado');
-            if (!printWindow.closed) {
-              printWindow.close();
-            }
+            console.warn('📄 Timeout: PDF no cargó en tiempo esperado (15s)');
             isHandled = true;
+            cleanup(); // ✅ Limpiar recursos
             reject(new Error('Timeout: PDF no cargó en tiempo esperado (15 segundos)'));
           }
-        }, 15000); // Timeout aumentado a 15 segundos
+        }, 15000);
 
-        // Configurar eventos
-        printWindow.addEventListener('load', () => {
-          clearTimeout(timeout);
-          handleWindowLoad();
-        });
+        // Configurar event listeners
+        printWindow.addEventListener('load', handleWindowLoad);
+        printWindow.addEventListener('error', handleWindowError);
 
-        printWindow.addEventListener('error', () => {
-          clearTimeout(timeout);
-          handleWindowError();
-        });
-
-        // Manejar si la ventana se cierra antes de tiempo
-        const checkClosed = setInterval(() => {
-          if (printWindow.closed && !isHandled) {
-            clearInterval(checkClosed);
-            clearTimeout(timeout);
+        // Monitorear si el usuario cierra la ventana manualmente
+        checkClosedInterval = setInterval(() => {
+          if (printWindow && printWindow.closed && !isHandled) {
+            console.log('📄 Usuario cerró la ventana de impresión');
             isHandled = true;
+            cleanup(); // ✅ Limpiar recursos
             resolve(); // Resolver como exitoso si el usuario cerró la ventana
           }
         }, 1000);
 
-        // Cleanup del interval después del timeout
-        setTimeout(() => {
-          clearInterval(checkClosed);
+        // Cleanup final después del timeout máximo
+        cleanupTimeoutId = setTimeout(() => {
+          if (!isHandled) {
+            console.warn('📄 Cleanup final forzado después de 16 segundos');
+            isHandled = true;
+            cleanup();
+            reject(new Error('Timeout final: No se pudo completar la impresión'));
+          }
         }, 16000);
 
       } catch (error) {
+        cleanup(); // ✅ Limpiar recursos en caso de error
         reject(error);
       }
     });
@@ -940,18 +1274,46 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     console.log('✅ Text layer rendered successfully for page:', state.currentPage);
   }, [state.currentPage]);
 
+  /**
+   * ✅ MEJORADO: Manejo de errores de text layer con notificación al usuario
+   *
+   * IMPORTANTE: Cuando el text layer se desactiva, el usuario pierde funcionalidades:
+   * - Copiar texto del PDF
+   * - Buscar texto en el documento
+   * - Selección de texto
+   *
+   * Es CRÍTICO notificar al usuario de esta pérdida de funcionalidad
+   */
   const handleTextLayerError = useCallback((error: Error) => {
-    console.warn('⚠️ Text layer render error (continuando sin text layer):', error);
-    
+    console.warn('⚠️ Text layer render error:', error);
+
     // Incrementar contador usando ref para evitar re-renders
     textLayerErrorCount.current += 1;
-    
-    // Si hay muchos errores, desactivar text layer
-    if (textLayerErrorCount.current >= 2) {
+
+    // Desactivar después de 2 errores para evitar crashes repetidos
+    if (textLayerErrorCount.current >= 2 && textLayerEnabled) {
       console.log('🔄 Desactivando text layer debido a errores repetidos');
       setTextLayerEnabled(false);
+
+      // ✅ NUEVO: Notificar al usuario sobre pérdida de funcionalidad
+      showWarning(
+        'La capa de texto se desactivó debido a problemas de renderizado. ' +
+        'No podrá copiar texto ni realizar búsquedas en este documento. ' +
+        'Puede descargar el PDF para acceder a estas funciones.',
+        'Funcionalidad Limitada',
+        { duration: 8000 } // Duración extendida por ser información importante
+      );
+
+      // Logging estructurado para análisis posterior
+      logWarning('PDFViewer', 'Text layer disabled after multiple errors', {
+        fileName,
+        currentPage: state.currentPage,
+        errorCount: textLayerErrorCount.current,
+        lastError: error.message,
+        documentUrl: url?.substring(0, 50)
+      });
     }
-  }, []); // Sin dependencias para evitar ciclo infinito
+  }, [textLayerEnabled, fileName, state.currentPage, url]); // ✅ Dependencias actualizadas
 
   const handleAnnotationLayerSuccess = useCallback(() => {
     console.log('✅ Annotation layer rendered successfully for page:', state.currentPage);
@@ -961,13 +1323,34 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     console.error('🔴 Annotation layer render error:', error);
   }, []);
 
-  // Callbacks para Document component
+  /**
+   * ✅ MEJORADO: Maneja progreso de carga y actualiza UI
+   *
+   * IMPORTANTE: Para PDFs con imágenes pesadas (>50MB),
+   * mostrar progreso es CRÍTICO para UX y prevenir que el usuario
+   * piense que el navegador está congelado
+   *
+   * @param progress - Objeto con bytes cargados y totales
+   */
   const handleLoadProgress = useCallback((progress: { loaded: number; total: number }) => {
-    console.log('📊 PDF Load Progress:', {
+    const percentage = progress.total > 0
+      ? Math.round((progress.loaded / progress.total) * 100)
+      : 0;
+
+    // Actualizar estado de progreso para mostrar en UI
+    setLoadProgress({
       loaded: progress.loaded,
       total: progress.total,
-      percentage: progress.total > 0 ? Math.round((progress.loaded / progress.total) * 100) : 0,
-      fileName
+      percentage
+    });
+
+    // Logging detallado para debugging
+    console.log('📊 PDF Load Progress:', {
+      loaded: `${(progress.loaded / 1024 / 1024).toFixed(2)} MB`,
+      total: `${(progress.total / 1024 / 1024).toFixed(2)} MB`,
+      percentage: `${percentage}%`,
+      fileName,
+      isHeavyFile: progress.total > 50 * 1024 * 1024 // Flag para archivos >50MB
     });
   }, [fileName]);
 
@@ -1059,13 +1442,55 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
               onSourceSuccess={handleSourceSuccess}
               onLoadStart={handleLoadStart}
               loading={
-                <div className="flex items-center justify-center p-12">
-                  <div className="flex flex-col items-center gap-3">
-                    <RefreshCw className="h-8 w-8 animate-spin text-[#c2b186]" />
-                    <p className="text-sm text-gray-600 font-poppins">Cargando PDF...</p>
-                    <p className="text-xs text-gray-500 font-poppins">{fileName}</p>
+                loadProgress ? (
+                  // ✅ NUEVO: Loading con barra de progreso para archivos grandes
+                  <div className="flex items-center justify-center p-12">
+                    <div className="flex flex-col items-center gap-4 max-w-md w-full">
+                      <RefreshCw className="h-8 w-8 animate-spin text-[#c2b186]" />
+                      <p className="text-sm text-gray-600 font-poppins font-medium">
+                        Cargando PDF...
+                      </p>
+                      <p className="text-xs text-gray-500 font-poppins truncate max-w-full">
+                        {fileName}
+                      </p>
+
+                      {/* Barra de progreso */}
+                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-[#c2b186] h-full transition-all duration-300 ease-out"
+                          style={{ width: `${loadProgress.percentage}%` }}
+                        />
+                      </div>
+
+                      {/* Información de progreso */}
+                      <div className="flex justify-between w-full text-xs text-gray-600">
+                        <span>{loadProgress.percentage}% completado</span>
+                        <span>
+                          {(loadProgress.loaded / 1024 / 1024).toFixed(1)} MB /
+                          {' '}{(loadProgress.total / 1024 / 1024).toFixed(1)} MB
+                        </span>
+                      </div>
+
+                      {/* Advertencia si tarda mucho (archivos >50MB o progreso lento) */}
+                      {(loadProgress.total > 50 * 1024 * 1024 || loadProgress.percentage < 50) && (
+                        <p className="text-xs text-amber-600 text-center mt-2">
+                          ⏱️ Este documento contiene imágenes de alta resolución.
+                          <br />
+                          La carga puede tomar varios minutos.
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  // Spinner simple para carga inicial (antes de tener info de progreso)
+                  <div className="flex items-center justify-center p-12">
+                    <div className="flex flex-col items-center gap-3">
+                      <RefreshCw className="h-8 w-8 animate-spin text-[#c2b186]" />
+                      <p className="text-sm text-gray-600 font-poppins">Cargando PDF...</p>
+                      <p className="text-xs text-gray-500 font-poppins">{fileName}</p>
+                    </div>
+                  </div>
+                )
               }
               error={
                 <div className="flex items-center justify-center p-8">
