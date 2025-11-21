@@ -89,16 +89,12 @@ if ! load_env_file ".env.production"; then
     log_warning "No se pudo cargar .env.production, usando valores por defecto"
     
     # Valores por defecto como fallback
-    export VITE_API_BASE_URL="https://iph01.okip.com.mx"
     export VITE_APP_ENVIRONMENT="production"
+    export VITE_API_BASE_URL="https://iph01.okip.com.mx"
     export VITE_SUPERADMIN_ROLE='[{"id":1,"nombre":"SuperAdmin"}]'
     export VITE_ADMIN_ROLE='[{"id":2,"nombre":"Administrador"}]'
     export VITE_SUPERIOR_ROLE='[{"id":3,"nombre":"Superior"}]'
     export VITE_ELEMENTO_ROLE='[{"id":4,"nombre":"Elemento"}]'
-    export VITE_LOG_LEVEL="1"
-    export VITE_LOG_CONSOLE="true"
-    export VITE_LOG_STORAGE="true"
-    export VITE_LOG_MAX_ENTRIES="1000"
     export VITE_HTTP_TIMEOUT="30000"
     export VITE_HTTP_RETRIES="3"
     export VITE_HTTP_RETRY_DELAY="1000"
@@ -107,12 +103,14 @@ if ! load_env_file ".env.production"; then
     export VITE_AUTH_TOKEN_KEY="auth_token"
     export VITE_DEBUG_MODE="false"
     export VITE_APP_NAME="IPH Frontend"
+    export VITE_ENCRYPT_PASSPHRASE=""
 fi
 
 log_success "Variables de entorno cargadas correctamente"
 
 # 1. Build de la imagen Docker con build arguments
 log_info "Construyendo imagen Docker con variables de entorno..."
+log_info "IMPORTANTE: Logger se configura automáticamente según VITE_APP_ENVIRONMENT=$VITE_APP_ENVIRONMENT"
 if sudo docker build \
     --build-arg VITE_APP_ENVIRONMENT="$VITE_APP_ENVIRONMENT" \
     --build-arg VITE_API_BASE_URL="$VITE_API_BASE_URL" \
@@ -120,10 +118,6 @@ if sudo docker build \
     --build-arg VITE_ADMIN_ROLE="$VITE_ADMIN_ROLE" \
     --build-arg VITE_SUPERIOR_ROLE="$VITE_SUPERIOR_ROLE" \
     --build-arg VITE_ELEMENTO_ROLE="$VITE_ELEMENTO_ROLE" \
-    --build-arg VITE_LOG_LEVEL="$VITE_LOG_LEVEL" \
-    --build-arg VITE_LOG_CONSOLE="$VITE_LOG_CONSOLE" \
-    --build-arg VITE_LOG_STORAGE="$VITE_LOG_STORAGE" \
-    --build-arg VITE_LOG_MAX_ENTRIES="$VITE_LOG_MAX_ENTRIES" \
     --build-arg VITE_HTTP_TIMEOUT="$VITE_HTTP_TIMEOUT" \
     --build-arg VITE_HTTP_RETRIES="$VITE_HTTP_RETRIES" \
     --build-arg VITE_HTTP_RETRY_DELAY="$VITE_HTTP_RETRY_DELAY" \
@@ -133,12 +127,20 @@ if sudo docker build \
     --build-arg VITE_DEBUG_MODE="$VITE_DEBUG_MODE" \
     --build-arg VITE_APP_VERSION="$VERSION" \
     --build-arg VITE_APP_NAME="$VITE_APP_NAME" \
+    --build-arg VITE_ENCRYPT_PASSPHRASE="$VITE_ENCRYPT_PASSPHRASE" \
     -t $IMAGE_NAME:$VERSION .; then
     log_success "Imagen construida exitosamente: $IMAGE_NAME:$VERSION"
-    log_info "Variables usadas en build:"
-    log_info "  - VITE_API_BASE_URL: $VITE_API_BASE_URL"
+    log_info "Variables críticas usadas en build:"
     log_info "  - VITE_APP_ENVIRONMENT: $VITE_APP_ENVIRONMENT"
+    log_info "  - VITE_API_BASE_URL: $VITE_API_BASE_URL"
     log_info "  - VITE_APP_VERSION: $VERSION"
+    log_info "  - VITE_DEBUG_MODE: $VITE_DEBUG_MODE"
+    log_info ""
+    log_info "Configuración de Logger (automática por ambiente):"
+    log_info "  - minLevel: WARN (solo warnings, errors y critical)"
+    log_info "  - console: false (sin logs en navegador)"
+    log_info "  - storage: true (guarda en sessionStorage)"
+    log_info "  - rateLimiting: true"
 else
     log_error "Error al construir la imagen Docker"
     exit 1

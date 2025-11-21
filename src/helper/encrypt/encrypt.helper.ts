@@ -18,7 +18,7 @@
  * @version 1.0.0
  */
 
-import { logInfo, logError, logWarning } from '../log/logger.helper';
+import { logInfo, logError, logWarning, logDebug, logCritical } from '../log/logger.helper';
 import { validatePasswordOrThrow, PASSPHRASE_VALIDATION } from '@/utils/validators/password-validator.util';
 
 // =====================================================
@@ -182,12 +182,12 @@ const getEnvironmentPassphrase = (): string | undefined => {
     const passphrase = import.meta.env.VITE_ENCRYPT_PASSPHRASE || import.meta.env.VITE_ENCRYPTION_KEY;
 
     // 🔍 DEBUG LOG - Ver resultado
-    console.log('🔍 [DEBUG] Todas las variables de entorno VITE_:',
-      Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'))
-    );
-    console.log('🔍 [DEBUG] VITE_ENCRYPT_PASSPHRASE value:', import.meta.env.VITE_ENCRYPT_PASSPHRASE);
-    console.log('🔍 [DEBUG] VITE_ENCRYPTION_KEY value:', import.meta.env.VITE_ENCRYPTION_KEY);
-    console.log('🔍 [DEBUG] Passphrase obtenida:', passphrase ? `${passphrase.substring(0, 15)}...` : 'NINGUNA');
+    logDebug('EncryptHelper', 'Variables de entorno VITE_ disponibles', {
+      availableKeys: Object.keys(import.meta.env).filter(key => key.startsWith('VITE_')),
+      hasEncryptPassphrase: !!import.meta.env.VITE_ENCRYPT_PASSPHRASE,
+      hasEncryptionKey: !!import.meta.env.VITE_ENCRYPTION_KEY,
+      passphraseSource: passphrase ? 'found' : 'not_found'
+    });
 
     // Si encontramos passphrase, retornarla inmediatamente
     if (passphrase) {
@@ -260,23 +260,20 @@ const generateSecureFallbackPassphrase = (): string => {
 
     // Logging de advertencia en TODOS los ambientes (incluso producción)
     // porque usar passphrase temporal es una configuración insegura
-    console.warn(
-      '⚠️  ADVERTENCIA DE SEGURIDAD - ENCRYPT HELPER:\n' +
-      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-      'Se está usando una passphrase temporal aleatoria.\n\n' +
-      'IMPLICACIONES:\n' +
-      '• Los datos encriptados NO podrán desencriptarse después de recargar\n' +
-      '• Esta passphrase solo debe usarse para datos de SESIÓN TEMPORAL\n' +
-      '• NO usar para datos persistentes (localStorage, IndexedDB, etc.)\n\n' +
-      'SOLUCIÓN:\n' +
-      'Configure VITE_ENCRYPT_PASSPHRASE en variables de entorno:\n' +
-      '  1. Generar passphrase segura: openssl rand -base64 32\n' +
-      '  2. Agregar a .env: VITE_ENCRYPT_PASSPHRASE=<passphrase>\n' +
-      '  3. Reiniciar servidor de desarrollo\n\n' +
-      'PRODUCCIÓN:\n' +
-      'Esta configuración NO es válida en producción.\n' +
-      'El helper lanzará error si se intenta usar sin passphrase configurada.\n' +
-      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+    logCritical(
+      'EncryptHelper',
+      '⚠️ ADVERTENCIA DE SEGURIDAD: Usando passphrase temporal aleatoria',
+      {
+        warning: 'Los datos encriptados NO podrán desencriptarse después de recargar',
+        usage: 'Solo para datos de SESIÓN TEMPORAL',
+        notFor: 'localStorage, IndexedDB, datos persistentes',
+        solution: {
+          step1: 'Generar passphrase: openssl rand -base64 32',
+          step2: 'Agregar a .env: VITE_ENCRYPT_PASSPHRASE=<passphrase>',
+          step3: 'Reiniciar servidor de desarrollo'
+        },
+        production: 'Esta configuración NO es válida en producción'
+      }
     );
 
     return passphrase;
@@ -305,10 +302,10 @@ const DEFAULT_ENCRYPT_CONFIG: EncryptHelperConfig = (() => {
   const passphrase = envPassphrase || generateSecureFallbackPassphrase();
 
   // 🔍 DEBUG LOG - Verificar origen de passphrase
-  console.log('🔐 [EncryptHelper] Passphrase source:', {
-    fromEnv: !!envPassphrase,
-    passphrasePreview: passphrase.substring(0, 15) + '...',
-    length: passphrase.length
+  logDebug('EncryptHelper', 'Passphrase configurada', {
+    fromEnvironment: !!envPassphrase,
+    passphraseLength: passphrase.length,
+    source: envPassphrase ? 'VITE_ENCRYPT_PASSPHRASE env variable' : 'Generated fallback (temporary)'
   });
 
   return {
@@ -664,35 +661,27 @@ export class EncryptHelper {
     this.config = this.initializeConfig(config);
     this.validateCryptoSupport();
 
-    // Log detallado de configuración inicial (siempre en development)
+    // Log detallado de configuración inicial (solo en development)
     if (this.config.environment === 'development' || this.config.enableLogging) {
-      console.group('🔐 EncryptHelper v2.1.1 Inicializado');
-      console.log('📊 Configuración:');
-      console.table({
-        'Ambiente detectado': this.config.environment,
-        'Iteraciones PBKDF2': this.config.hashIterations.toLocaleString(),
-        'Algoritmo': this.config.encryptionAlgorithm,
-        'Hash Algorithm': this.config.defaultHashAlgorithm
-      });
-      console.log('🔍 Detección de Ambiente:');
-      console.table({
-        'Vite MODE': typeof import.meta !== 'undefined' ? import.meta.env?.MODE : 'N/A',
-        'Vite PROD': typeof import.meta !== 'undefined' ? import.meta.env?.PROD : 'N/A',
-        'Vite DEV': typeof import.meta !== 'undefined' ? import.meta.env?.DEV : 'N/A',
-        'Hostname': typeof window !== 'undefined' ? window.location.hostname : 'N/A'
-      });
-      console.log('⚡ Estimación de Performance:');
       const estimatedTime = Math.round((this.config.hashIterations / 1000) * 0.5);
-      console.table({
-        'Tiempo estimado por operación': `~${estimatedTime}ms`,
-        'Impacto UX': estimatedTime < 50 ? '✅ Fluido' : estimatedTime < 150 ? '⚠️ Notable' : '🔴 Lento'
-      });
-      console.groupEnd();
-
-      logInfo('EncryptHelper', 'Encrypt Helper inicializado correctamente', {
-        algorithm: this.config.defaultHashAlgorithm,
-        iterations: this.config.hashIterations,
-        environment: this.config.environment
+      
+      logInfo('EncryptHelper', '🔐 EncryptHelper v2.1.1 Inicializado', {
+        configuration: {
+          environment: this.config.environment,
+          hashIterations: this.config.hashIterations,
+          algorithm: this.config.encryptionAlgorithm,
+          hashAlgorithm: this.config.defaultHashAlgorithm
+        },
+        environmentDetection: {
+          viteMode: typeof import.meta !== 'undefined' ? import.meta.env?.MODE : 'N/A',
+          viteProd: typeof import.meta !== 'undefined' ? import.meta.env?.PROD : 'N/A',
+          viteDev: typeof import.meta !== 'undefined' ? import.meta.env?.DEV : 'N/A',
+          hostname: typeof window !== 'undefined' ? window.location.hostname : 'N/A'
+        },
+        performanceEstimation: {
+          estimatedTimePerOperation: `~${estimatedTime}ms`,
+          uxImpact: estimatedTime < 50 ? '✅ Fluido' : estimatedTime < 150 ? '⚠️ Notable' : '🔴 Lento'
+        }
       });
     }
   }
