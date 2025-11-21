@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { logInfo, logWarning, logError } from '../helper/log/logger.helper';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
@@ -40,7 +41,7 @@ const RolesArraySchema = z.array(RoleSchema)
  */
 const parseAndValidateRole = (envVar: string | undefined, roleName: string): any[] => {
   if (!envVar) {
-    console.warn(`[env.config] Variable ${roleName} no definida en .env`);
+    logWarning('env.config', `Variable ${roleName} no definida en .env`);
     return [];
   }
 
@@ -49,10 +50,14 @@ const parseAndValidateRole = (envVar: string | undefined, roleName: string): any
 
     // Validar que sea array
     if (!Array.isArray(parsed)) {
-      console.error(
-        `[env.config] ERROR CRÍTICO: ${roleName} no es un array. ` +
-        `Formato esperado: [{"id":1,"nombre":"..."}]. ` +
-        `Recibido: ${typeof parsed}`
+      logError(
+        'env.config',
+        { 
+          variable: roleName, 
+          receivedType: typeof parsed,
+          expectedFormat: '[{"id":1,"nombre":"..."}]'
+        },
+        `${roleName} no es un array`
       );
       return [];
     }
@@ -61,9 +66,10 @@ const parseAndValidateRole = (envVar: string | undefined, roleName: string): any
     const validation = RolesArraySchema.safeParse(parsed);
 
     if (!validation.success) {
-      console.error(
-        `[env.config] ERROR CRÍTICO: ${roleName} tiene estructura inválida:`,
-        validation.error.issues
+      logError(
+        'env.config',
+        { variable: roleName, issues: validation.error.issues },
+        `${roleName} tiene estructura inválida`
       );
       return [];
     }
@@ -71,9 +77,10 @@ const parseAndValidateRole = (envVar: string | undefined, roleName: string): any
     return validation.data;
 
   } catch (error) {
-    console.error(
-      `[env.config] ERROR CRÍTICO: No se pudo parsear ${roleName}:`,
-      error instanceof Error ? error.message : 'Error desconocido'
+    logError(
+      'env.config',
+      error,
+      `No se pudo parsear ${roleName}`
     );
     return [];
   }
@@ -127,17 +134,20 @@ const buildAllowedRoles = (): any[] => {
   const validRoles = roles.filter((role) => {
     // Verificar que sea objeto
     if (typeof role !== 'object' || role === null) {
-      console.error(
-        `[env.config] ERROR: Elemento inválido en ALLOWED_ROLES (tipo: ${typeof role})`
+      logError(
+        'env.config',
+        { roleType: typeof role },
+        'Elemento inválido en ALLOWED_ROLES'
       );
       return false;
     }
 
     // Verificar que tenga las propiedades requeridas
     if (typeof role.id !== 'number' || typeof role.nombre !== 'string') {
-      console.error(
-        `[env.config] ERROR: Rol con estructura inválida:`,
-        role
+      logError(
+        'env.config',
+        role,
+        'Rol con estructura inválida'
       );
       return false;
     }
@@ -146,15 +156,18 @@ const buildAllowedRoles = (): any[] => {
   });
 
   if (validRoles.length === 0) {
-    console.error(
-      '[env.config] ERROR CRÍTICO: ALLOWED_ROLES está vacío. ' +
-      'El sistema no tiene roles válidos configurados. ' +
-      'Verifica tu archivo .env y asegúrate de usar el formato: ' +
-      '[{"id":1,"nombre":"NombreRol"}]'
+    logError(
+      'env.config',
+      {
+        message: 'El sistema no tiene roles válidos configurados',
+        expectedFormat: '[{"id":1,"nombre":"NombreRol"}]'
+      },
+      'ALLOWED_ROLES está vacío'
     );
   } else if (validRoles.length !== roles.length) {
-    console.warn(
-      `[env.config] ADVERTENCIA: ${roles.length - validRoles.length} rol(es) inválido(s) filtrado(s) de ALLOWED_ROLES`
+    logWarning(
+      'env.config',
+      `${roles.length - validRoles.length} rol(es) inválido(s) filtrado(s) de ALLOWED_ROLES`
     );
   }
 
@@ -165,13 +178,16 @@ export const ALLOWED_ROLES = buildAllowedRoles();
 
 // Log de inicialización
 if (ALLOWED_ROLES.length > 0) {
-  console.info(
-    `[env.config] ✅ ALLOWED_ROLES inicializado correctamente con ${ALLOWED_ROLES.length} rol(es)`,
-    ALLOWED_ROLES.map(r => r.nombre)
+  logInfo(
+    'env.config',
+    `✅ ALLOWED_ROLES inicializado correctamente con ${ALLOWED_ROLES.length} rol(es)`,
+    { roles: ALLOWED_ROLES.map(r => r.nombre) }
   );
 } else {
-  console.error(
-    '[env.config] ❌ ALLOWED_ROLES vacío - El sistema no funcionará correctamente'
+  logError(
+    'env.config',
+    { rolesCount: 0 },
+    'ALLOWED_ROLES vacío - El sistema no funcionará correctamente'
   );
 }
 
@@ -203,23 +219,20 @@ function getAppEnvironment(): 'development' | 'staging' | 'production' {
   
   // Validar explícitamente los valores permitidos
   if (env === 'development' || env === 'staging' || env === 'production') {
-    console.info(
-      `[env.config] ✅ Ambiente configurado: ${env}`
-    );
+    logInfo('env.config', `✅ Ambiente configurado: ${env}`);
     return env;
   }
   
   // Log de warning si el valor es inválido o no está definido
   if (env !== undefined && env !== null && env !== '') {
-    console.warn(
-      `[env.config] ⚠️ Ambiente inválido "${env}". ` +
-      `Valores permitidos: development, staging, production. ` +
-      `Usando 'development' por defecto.`
+    logWarning(
+      'env.config',
+      `⚠️ Ambiente inválido "${env}". Valores permitidos: development, staging, production. Usando 'development' por defecto.`
     );
   } else {
-    console.warn(
-      '[env.config] ⚠️ Variable VITE_APP_ENVIRONMENT no definida. ' +
-      'Usando \'development\' por defecto.'
+    logWarning(
+      'env.config',
+      "⚠️ Variable VITE_APP_ENVIRONMENT no definida. Usando 'development' por defecto."
     );
   }
   
