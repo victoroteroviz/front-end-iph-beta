@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ChevronRight, Home, icons } from 'lucide-react';
 
 /**
@@ -24,7 +24,7 @@ export interface BreadcrumbItem {
   /** Nombre del icono de Lucide React */
   iconName?: string;
   /** Función onClick personalizada para navegación interna */
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
 /**
@@ -66,8 +66,6 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   className = '',
   separator
 }) => {
-  const location = useLocation();
-
   // Si no hay items, no mostrar breadcrumbs
   if (!items || items.length === 0) {
     return null;
@@ -97,11 +95,11 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
    */
   const getIconComponent = (iconName: string): React.ReactNode => {
     try {
-      const IconComponent = (icons as any)[iconName];
+      const IconComponent = (icons as Record<string, React.ComponentType<{ size?: number }>>)[iconName];
       if (IconComponent) {
         return React.createElement(IconComponent, { size: 14 });
       }
-    } catch (error) {
+    } catch {
       // Si hay error, no mostrar icono
     }
     return null;
@@ -160,7 +158,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
           key={index}
           onClick={(e) => {
             e.preventDefault();
-            item.onClick!();
+            item.onClick!(e);
           }}
           className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200 truncate bg-transparent border-none cursor-pointer p-0"
           title={item.label}

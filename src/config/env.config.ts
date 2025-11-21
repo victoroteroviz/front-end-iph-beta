@@ -175,8 +175,55 @@ if (ALLOWED_ROLES.length > 0) {
   );
 }
 
+/**
+ * Obtiene el ambiente de la aplicación desde variables de entorno
+ * con validación explícita
+ * 
+ * @returns El ambiente configurado o 'development' por defecto
+ * 
+ * IMPORTANTE: Esta función valida explícitamente que el valor sea uno
+ * de los ambientes permitidos antes de retornarlo, previniendo
+ * configuraciones incorrectas que podrían comprometer la seguridad
+ * o el comportamiento de la aplicación.
+ * 
+ * @example
+ * ```typescript
+ * // En .env:
+ * VITE_APP_ENVIRONMENT=production
+ * 
+ * // Resultado:
+ * APP_ENVIRONMENT === 'production' // ✓
+ * ```
+ * 
+ * @since 1.0.0
+ * @version 2.0.0 - Fix de precedencia de operadores
+ */
 function getAppEnvironment(): 'development' | 'staging' | 'production' {
-  return import.meta.env.VITE_APP_ENVIRONMENT as 'development' | 'staging' | 'production' || 'development';
+  const env = import.meta.env.VITE_APP_ENVIRONMENT;
+  
+  // Validar explícitamente los valores permitidos
+  if (env === 'development' || env === 'staging' || env === 'production') {
+    console.info(
+      `[env.config] ✅ Ambiente configurado: ${env}`
+    );
+    return env;
+  }
+  
+  // Log de warning si el valor es inválido o no está definido
+  if (env !== undefined && env !== null && env !== '') {
+    console.warn(
+      `[env.config] ⚠️ Ambiente inválido "${env}". ` +
+      `Valores permitidos: development, staging, production. ` +
+      `Usando 'development' por defecto.`
+    );
+  } else {
+    console.warn(
+      '[env.config] ⚠️ Variable VITE_APP_ENVIRONMENT no definida. ' +
+      'Usando \'development\' por defecto.'
+    );
+  }
+  
+  return 'development';
 }
 
 export const APP_ENVIRONMENT = getAppEnvironment();

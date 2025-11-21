@@ -229,7 +229,7 @@ const ReportesPdf: React.FC = () => {
         </div>
 
         {/* Header principal - DISEÑO MEJORADO con gradientes */}
-        <div className="relative bg-gradient-to-br from-white via-[#fdf7f1] to-white rounded-2xl border border-[#c2b186]/30 p-6 mb-6 shadow-lg shadow-[#4d4725]/5 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-white via-[#fdf7f1] to-white rounded-xl border border-[#c2b186]/30 p-6 mb-6 shadow-md overflow-hidden">
           {/* Patrón de fondo decorativo */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#948b54]/5 rounded-full blur-3xl -z-10" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#c2b186]/5 rounded-full blur-3xl -z-10" />
@@ -244,24 +244,24 @@ const ReportesPdf: React.FC = () => {
 
         {/* Indicador de generación activa */}
         {generando && (
-          <div className="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg animate-fadeIn">
+          <div className="mb-6 bg-[#fdf7f1] border-l-4 border-[#948b54] p-4 rounded-r-lg animate-fadeIn">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-5 h-5 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-5 h-5 border-3 border-[#948b54] border-t-transparent rounded-full animate-spin"></div>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-blue-800">
+                <p className="text-sm font-semibold text-[#4d4725] font-poppins">
                   {estado.mensaje || 'Generando reporte...'}
                 </p>
                 {estado.progreso !== undefined && estado.progreso > 0 && (
                   <div className="mt-2">
-                    <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div className="w-full bg-[#c2b186]/20 rounded-full h-2">
                       <div
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        className="bg-gradient-to-r from-[#948b54] to-[#4d4725] h-2 rounded-full transition-all duration-300"
                         style={{ width: `${estado.progreso}%` }}
                       ></div>
                     </div>
-                    <p className="text-xs text-blue-600 mt-1">{estado.progreso}%</p>
+                    <p className="text-xs text-[#4d4725] font-poppins mt-1">{estado.progreso}%</p>
                   </div>
                 )}
               </div>
@@ -279,7 +279,7 @@ const ReportesPdf: React.FC = () => {
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-700">
+                <p className="text-sm font-semibold text-red-700 font-poppins">
                   {estado.error}
                 </p>
               </div>
@@ -296,18 +296,18 @@ const ReportesPdf: React.FC = () => {
         />
 
         {/* Nota informativa */}
-        <div className="mt-8 bg-[#eff6ff] border border-[#bfdbfe] rounded-lg p-4">
+        <div className="mt-8 bg-[#fdf7f1] border border-[#c2b186]/30 rounded-xl p-4 shadow-sm">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-5 h-5 bg-[#3b82f6] rounded-full flex items-center justify-center mt-0.5">
+            <div className="flex-shrink-0 w-5 h-5 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-full flex items-center justify-center mt-0.5 shadow-sm">
               <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-[#1e40af] mb-1">
+              <h4 className="text-sm font-bold text-[#4d4725] font-poppins mb-1">
                 Información sobre Reportes PDF
               </h4>
-              <p className="text-sm text-[#1e40af]">
+              <p className="text-sm text-gray-600 font-poppins">
                 Los reportes se generan directamente desde el backend con los datos más actualizados del sistema.
                 El tiempo de generación puede variar según la cantidad de datos y filtros aplicados.
               </p>

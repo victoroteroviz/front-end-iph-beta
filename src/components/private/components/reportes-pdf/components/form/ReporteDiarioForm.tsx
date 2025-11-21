@@ -11,8 +11,7 @@ import React, {
   useMemo,
   useState
 } from 'react';
-import { AlertTriangle, ArrowLeft, FileDown, Plus, Trash2, Upload } from 'lucide-react';
-import PDFViewer from '@/components/private/common/PDFViewer';
+import { AlertTriangle, ArrowLeft, Plus, Trash2, Upload } from 'lucide-react';
 import type { IReporteCard } from '@/interfaces/IReporte';
 import {
   fetchReporteDiarioPdf,
@@ -21,6 +20,7 @@ import {
 import { logDebug, logInfo, logError } from '@/helper/log/logger.helper';
 import { showError, showSuccess, showInfo } from '@/helper/notification/notification.helper';
 import { Breadcrumbs, type BreadcrumbItem } from '@/components/shared/components/breadcrumbs';
+import PDFViewerScreen from '../viewer/PDFViewerScreen';
 
 const MODULE = 'ReporteDiarioForm';
 
@@ -102,6 +102,7 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
   const [activities, setActivities] = useState<ActivityFormState[]>([createEmptyActivity()]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [pdfResult, setPdfResult] = useState<FetchReporteDiarioPdfResult | null>(null);
+  const [showPdfViewer, setShowPdfViewer] = useState<boolean>(false);
 
   const totalSelectedFiles = useMemo(() => {
     return activities.reduce((acc, activity) => acc + activity.files.length, 0);
@@ -340,7 +341,12 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
   const resetPdfPreview = useCallback(() => {
     pdfResult?.revokeObjectUrl();
     setPdfResult(null);
+    setShowPdfViewer(false);
   }, [pdfResult]);
+
+  const handleBackFromViewer = useCallback(() => {
+    setShowPdfViewer(false);
+  }, []);
 
   const handleSubmit = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -375,7 +381,14 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
       });
 
       setPdfResult(result);
-      showSuccess('Reporte diario generado exitosamente. Puedes visualizarlo o descargarlo.');
+      setShowPdfViewer(true);
+
+      logDebug(MODULE, '🎯 Estado actualizado para mostrar PDF viewer', {
+        showPdfViewer: true,
+        hasPdfResult: !!result
+      });
+
+      showSuccess('Reporte diario generado exitosamente.');
 
       logInfo(MODULE, 'Reporte diario generado', {
         status: result.status,
@@ -391,33 +404,43 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
     }
   }, [activities.length, buildFormData, hasActivities, hasUsoLaptopsData, hasUsoTabletsData, includePageBreak, isSubmitting, reportDate, resetPdfPreview, totalSelectedFiles]);
 
-  const openPdfInNewTab = useCallback(() => {
-    if (pdfResult?.objectUrl) {
-      window.open(pdfResult.objectUrl, '_blank', 'noopener');
-    }
-  }, [pdfResult]);
-
-  const downloadPdf = useCallback(() => {
-    if (!pdfResult) {
-      return;
-    }
-
-    const link = document.createElement('a');
-    link.href = pdfResult.objectUrl ?? '';
-    link.download = pdfResult.fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, [pdfResult]);
-
   // Breadcrumbs dinámicos
   const breadcrumbItems = useMemo<BreadcrumbItem[]>(
     () => [
-      { label: 'Generación de Reportes PDF', href: '#', onClick: onClose },
+      {
+        label: 'Generación de Reportes PDF',
+        onClick: (e) => {
+          e.preventDefault();
+          onClose();
+        }
+      },
       { label: reporte.titulo, isActive: true }
     ],
     [reporte.titulo, onClose]
   );
+
+  // Si está mostrando el visor PDF, renderizar pantalla completa
+  if (showPdfViewer && pdfResult) {
+    logDebug(MODULE, '📺 Renderizando PDFViewerScreen (pantalla completa)', {
+      showPdfViewer,
+      hasPdfResult: !!pdfResult,
+      fileName: pdfResult.fileName
+    });
+
+    return (
+      <PDFViewerScreen
+        pdfResult={pdfResult}
+        reportTitle={reporte.titulo}
+        onBack={handleBackFromViewer}
+        onBackToList={onClose}
+      />
+    );
+  }
+
+  logDebug(MODULE, '📝 Renderizando formulario', {
+    showPdfViewer,
+    hasPdfResult: !!pdfResult
+  });
 
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8">
@@ -766,43 +789,6 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
             </div>
           </form>
         </div>
-
-        {pdfResult && pdfResult.objectUrl && (
-          <section className="mt-10 bg-white border border-[#c2b186]/30 rounded-xl shadow-md overflow-hidden">
-            <header className="px-6 py-4 border-b border-[#c2b186]/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gradient-to-r from-[#fdf7f1] to-white">
-              <div>
-                <h2 className="text-xl font-bold text-[#4d4725] font-poppins">Vista previa del reporte</h2>
-                <p className="text-sm text-gray-600 font-poppins">{pdfResult.fileName}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={openPdfInNewTab}
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-[#948b54] text-[#948b54] rounded-lg text-sm font-semibold font-poppins hover:bg-[#948b54] hover:text-white hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer"
-                >
-                  <FileDown className="w-4 h-4" />
-                  Abrir en nueva pestaña
-                </button>
-                <button
-                  type="button"
-                  onClick={downloadPdf}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-[#948b54] to-[#4d4725] text-white rounded-lg text-sm font-semibold font-poppins hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
-                >
-                  Descargar PDF
-                </button>
-              </div>
-            </header>
-            <div className="h-[720px] bg-gray-200">
-              <PDFViewer
-                url={pdfResult.objectUrl}
-                fileName={pdfResult.fileName}
-                showDownloadButton={false}
-                showPrintButton={true}
-                height="720px"
-              />
-            </div>
-          </section>
-        )}
       </div>
     </div>
   );

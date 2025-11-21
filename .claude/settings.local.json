@@ -17,7 +17,8 @@
       "Bash(openssl rand:*)",
       "Bash(timeout 60 npx tsc:*)",
       "Bash(cat:*)",
-      "Bash(node -c:*)"
+      "Bash(node -c:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []
