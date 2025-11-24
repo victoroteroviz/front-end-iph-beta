@@ -176,55 +176,76 @@ const buildAllowedRoles = (): any[] => {
 
 export const ALLOWED_ROLES = buildAllowedRoles();
 
-// Log de inicialización
-if (ALLOWED_ROLES.length > 0) {
-  logInfo(
-    'env.config',
-    `✅ ALLOWED_ROLES inicializado correctamente con ${ALLOWED_ROLES.length} rol(es)`,
-    { roles: ALLOWED_ROLES.map(r => r.nombre) }
-  );
-} else {
-  logError(
-    'env.config',
-    { rolesCount: 0 },
-    'ALLOWED_ROLES vacío - El sistema no funcionará correctamente'
-  );
-}
+// Log de inicialización (lazy - se ejecuta después de que todos los módulos estén cargados)
+let isLogged = false;
+export const logAllowedRolesStatus = () => {
+  if (isLogged) return;
+  isLogged = true;
+
+  if (ALLOWED_ROLES.length > 0) {
+    logInfo(
+      'env.config',
+      `✅ ALLOWED_ROLES inicializado correctamente con ${ALLOWED_ROLES.length} rol(es)`,
+      { roles: ALLOWED_ROLES.map(r => r.nombre) }
+    );
+  } else {
+    logError(
+      'env.config',
+      { rolesCount: 0 },
+      'ALLOWED_ROLES vacío - El sistema no funcionará correctamente'
+    );
+  }
+};
 
 /**
  * Obtiene el ambiente de la aplicación desde variables de entorno
  * con validación explícita
- * 
+ *
  * @returns El ambiente configurado o 'development' por defecto
- * 
+ *
  * IMPORTANTE: Esta función valida explícitamente que el valor sea uno
  * de los ambientes permitidos antes de retornarlo, previniendo
  * configuraciones incorrectas que podrían comprometer la seguridad
  * o el comportamiento de la aplicación.
- * 
+ *
  * @example
  * ```typescript
  * // En .env:
  * VITE_APP_ENVIRONMENT=production
- * 
+ *
  * // Resultado:
  * APP_ENVIRONMENT === 'production' // ✓
  * ```
- * 
+ *
  * @since 1.0.0
  * @version 2.0.0 - Fix de precedencia de operadores
+ * @version 2.1.0 - Removed logging from initialization to prevent circular dependency
  */
 function getAppEnvironment(): 'development' | 'staging' | 'production' {
   const env = import.meta.env.VITE_APP_ENVIRONMENT;
-  
+
   // Validar explícitamente los valores permitidos
   if (env === 'development' || env === 'staging' || env === 'production') {
-    logInfo('env.config', `✅ Ambiente configurado: ${env}`);
     return env;
   }
-  
-  // Log de warning si el valor es inválido o no está definido
-  if (env !== undefined && env !== null && env !== '') {
+
+  // Retornar 'development' por defecto si el valor es inválido
+  return 'development';
+}
+
+export const APP_ENVIRONMENT = getAppEnvironment();
+
+// Función para loggear el ambiente (se llama después de la inicialización)
+let isEnvLogged = false;
+export const logEnvironmentStatus = () => {
+  if (isEnvLogged) return;
+  isEnvLogged = true;
+
+  const env = import.meta.env.VITE_APP_ENVIRONMENT;
+
+  if (env === 'development' || env === 'staging' || env === 'production') {
+    logInfo('env.config', `✅ Ambiente configurado: ${env}`);
+  } else if (env !== undefined && env !== null && env !== '') {
     logWarning(
       'env.config',
       `⚠️ Ambiente inválido "${env}". Valores permitidos: development, staging, production. Usando 'development' por defecto.`
@@ -235,8 +256,4 @@ function getAppEnvironment(): 'development' | 'staging' | 'production' {
       "⚠️ Variable VITE_APP_ENVIRONMENT no definida. Usando 'development' por defecto."
     );
   }
-  
-  return 'development';
-}
-
-export const APP_ENVIRONMENT = getAppEnvironment();
+};

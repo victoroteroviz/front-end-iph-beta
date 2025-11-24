@@ -18,7 +18,8 @@
       "Bash(timeout 60 npx tsc:*)",
       "Bash(cat:*)",
       "Bash(node -c:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(docker login --username victoroteroviz)"
     ],
     "deny": [],
     "ask": []

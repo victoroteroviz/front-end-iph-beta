@@ -111,7 +111,7 @@ log_success "Variables de entorno cargadas correctamente"
 # 1. Build de la imagen Docker con build arguments
 log_info "Construyendo imagen Docker con variables de entorno..."
 log_info "IMPORTANTE: Logger se configura automáticamente según VITE_APP_ENVIRONMENT=$VITE_APP_ENVIRONMENT"
-if sudo docker build \
+if docker build \
     --build-arg VITE_APP_ENVIRONMENT="$VITE_APP_ENVIRONMENT" \
     --build-arg VITE_API_BASE_URL="$VITE_API_BASE_URL" \
     --build-arg VITE_SUPERADMIN_ROLE="$VITE_SUPERADMIN_ROLE" \
@@ -148,7 +148,7 @@ fi
 
 # 2. Tag de la imagen (versión específica y latest)
 log_info "Creando tags para DockerHub..."
-if sudo docker tag $IMAGE_NAME:$VERSION $DOCKER_USERNAME/$IMAGE_NAME:$VERSION; then
+if docker tag $IMAGE_NAME:$VERSION $DOCKER_USERNAME/$IMAGE_NAME:$VERSION; then
     log_success "Tag creado exitosamente: $DOCKER_USERNAME/$IMAGE_NAME:$VERSION"
 else
     log_error "Error al crear el tag de versión"
@@ -156,7 +156,7 @@ else
 fi
 
 # Crear también tag 'latest'
-if sudo docker tag $IMAGE_NAME:$VERSION $DOCKER_USERNAME/$IMAGE_NAME:latest; then
+if docker tag $IMAGE_NAME:$VERSION $DOCKER_USERNAME/$IMAGE_NAME:latest; then
     log_success "Tag 'latest' creado exitosamente: $DOCKER_USERNAME/$IMAGE_NAME:latest"
 else
     log_error "Error al crear el tag 'latest'"
@@ -165,7 +165,7 @@ fi
 
 # 3. Push a DockerHub (ambas versiones)
 log_info "Subiendo imagen con versión a DockerHub..."
-if sudo docker push $DOCKER_USERNAME/$IMAGE_NAME:$VERSION; then
+if docker push $DOCKER_USERNAME/$IMAGE_NAME:$VERSION; then
     log_success "Imagen con versión subida exitosamente a DockerHub"
 else
     log_error "Error al subir la imagen con versión a DockerHub"
@@ -173,7 +173,7 @@ else
 fi
 
 log_info "Subiendo imagen 'latest' a DockerHub..."
-if sudo docker push $DOCKER_USERNAME/$IMAGE_NAME:latest; then
+if docker push $DOCKER_USERNAME/$IMAGE_NAME:latest; then
     log_success "Imagen 'latest' subida exitosamente a DockerHub"
 else
     log_error "Error al subir la imagen 'latest' a DockerHub"
