@@ -4,42 +4,8 @@ FROM node:current-alpine AS builder
 # Se instalan dependencias necesarias para el build
 RUN apk add --no-cache libc6-compat
 
-# Se definen argumentos de build para las variables de entorno de Vite
-# IMPORTANTE: Solo variables que se usan realmente en la aplicación
-ARG VITE_APP_ENVIRONMENT
-ARG VITE_API_BASE_URL
-ARG VITE_SUPERADMIN_ROLE
-ARG VITE_ADMIN_ROLE
-ARG VITE_SUPERIOR_ROLE
-ARG VITE_ELEMENTO_ROLE
-ARG VITE_HTTP_TIMEOUT
-ARG VITE_HTTP_RETRIES
-ARG VITE_HTTP_RETRY_DELAY
-ARG VITE_AUTH_HEADER_NAME
-ARG VITE_AUTH_HEADER_PREFIX
-ARG VITE_AUTH_TOKEN_KEY
-ARG VITE_DEBUG_MODE
-ARG VITE_APP_VERSION
-ARG VITE_APP_NAME
-ARG VITE_ENCRYPT_PASSPHRASE
-
-# Se convierten los argumentos a variables de entorno para Vite
-ENV VITE_APP_ENVIRONMENT=$VITE_APP_ENVIRONMENT
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-ENV VITE_SUPERADMIN_ROLE=$VITE_SUPERADMIN_ROLE
-ENV VITE_ADMIN_ROLE=$VITE_ADMIN_ROLE
-ENV VITE_SUPERIOR_ROLE=$VITE_SUPERIOR_ROLE
-ENV VITE_ELEMENTO_ROLE=$VITE_ELEMENTO_ROLE
-ENV VITE_HTTP_TIMEOUT=$VITE_HTTP_TIMEOUT
-ENV VITE_HTTP_RETRIES=$VITE_HTTP_RETRIES
-ENV VITE_HTTP_RETRY_DELAY=$VITE_HTTP_RETRY_DELAY
-ENV VITE_AUTH_HEADER_NAME=$VITE_AUTH_HEADER_NAME
-ENV VITE_AUTH_HEADER_PREFIX=$VITE_AUTH_HEADER_PREFIX
-ENV VITE_AUTH_TOKEN_KEY=$VITE_AUTH_TOKEN_KEY
-ENV VITE_DEBUG_MODE=$VITE_DEBUG_MODE
-ENV VITE_APP_VERSION=$VITE_APP_VERSION
-ENV VITE_APP_NAME=$VITE_APP_NAME
-ENV VITE_ENCRYPT_PASSPHRASE=$VITE_ENCRYPT_PASSPHRASE
+# NOTA: Ya NO necesitamos pasar variables de entorno aquí
+# Las variables se configurarán en RUNTIME con el entrypoint script
 
 # Se establece el directorio de trabajo
 WORKDIR /app
@@ -79,6 +45,10 @@ USER nextjs
 # Se copian solo los archivos construidos
 COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
 
+# Se copia el entrypoint script (antes de cambiar a usuario no-root)
+COPY --chown=nextjs:nodejs docker-entrypoint.sh /app/
+RUN chmod +x /app/docker-entrypoint.sh
+
 # Se expone el puerto 4173
 EXPOSE 4173
 
@@ -86,7 +56,5 @@ EXPOSE 4173
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node --version || exit 1
 
-# Comando para iniciar la aplicación en modo SPA (Single Page Application)
-# -s: activa SPA mode, redirige todas las rutas a index.html
-# -l: puerto a escuchar
-CMD ["serve", "-s", "dist", "-l", "4173", "--no-port-switching", "--no-clipboard"]
+# Entrypoint que genera config.js en runtime y luego inicia serve
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

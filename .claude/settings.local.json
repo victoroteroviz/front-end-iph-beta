@@ -19,7 +19,8 @@
       "Bash(cat:*)",
       "Bash(node -c:*)",
       "Bash(rm:*)",
-      "Bash(docker login --username victoroteroviz)"
+      "Bash(docker login --username victoroteroviz)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []

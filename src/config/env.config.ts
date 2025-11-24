@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import { logInfo, logWarning, logError } from '../helper/log/logger.helper';
+import runtimeConfig from './runtime.config';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// API Base URL - Usa runtime config con fallback a import.meta.env
+export const API_BASE_URL = runtimeConfig.apiBaseUrl;
 
 // ==================== SCHEMAS DE VALIDACIÓN ====================
 
@@ -221,19 +223,8 @@ export const logAllowedRolesStatus = () => {
  * @version 2.0.0 - Fix de precedencia de operadores
  * @version 2.1.0 - Removed logging from initialization to prevent circular dependency
  */
-function getAppEnvironment(): 'development' | 'staging' | 'production' {
-  const env = import.meta.env.VITE_APP_ENVIRONMENT;
-
-  // Validar explícitamente los valores permitidos
-  if (env === 'development' || env === 'staging' || env === 'production') {
-    return env;
-  }
-
-  // Retornar 'development' por defecto si el valor es inválido
-  return 'development';
-}
-
-export const APP_ENVIRONMENT = getAppEnvironment();
+// APP_ENVIRONMENT - Usa runtime config con fallback automático
+export const APP_ENVIRONMENT = runtimeConfig.appEnvironment;
 
 // Función para loggear el ambiente (se llama después de la inicialización)
 let isEnvLogged = false;
