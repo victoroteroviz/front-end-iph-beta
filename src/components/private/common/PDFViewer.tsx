@@ -31,7 +31,7 @@ import type {
 } from '../../../interfaces/components/pdf-viewer.interface';
 
 // Helpers
-import { logInfo, logError, logWarning } from '../../../helper/log/logger.helper';
+import { logInfo, logError, logWarning, logDebug } from '../../../helper/log/logger.helper';
 import { showError, showSuccess, showWarning } from '../../../helper/notification/notification.helper';
 import { 
   PDFUrlManager, 
@@ -42,21 +42,27 @@ import {
 } from '../../../helper/pdf/pdf-url.helper';
 
 // Configurar worker de PDF.js con configuración robusta
-console.log('🔧 PDFViewer configurando worker');
-console.log('📋 PDF.js Version:', pdfjs.version);
+const MODULE_NAME = 'PDFViewer';
+
+logDebug(MODULE_NAME, '🔧 Configurando worker de PDF.js');
+logDebug(MODULE_NAME, `📋 PDF.js Version: ${pdfjs.version}`);
 
 // Configuración mejorada del worker con múltiples fallbacks
 const configureWorker = () => {
   try {
     // Primera opción: Worker local desde public
     pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
-    console.log('✅ Worker configurado localmente:', pdfjs.GlobalWorkerOptions.workerSrc);
+    logInfo(MODULE_NAME, '✅ Worker configurado localmente', {
+      workerSrc: pdfjs.GlobalWorkerOptions.workerSrc
+    });
     return true;
   } catch {
     try {
       // Segundo fallback: CDN
       pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
-      console.log('✅ Worker configurado desde CDN:', pdfjs.GlobalWorkerOptions.workerSrc);
+      logInfo(MODULE_NAME, '✅ Worker configurado desde CDN', {
+        workerSrc: pdfjs.GlobalWorkerOptions.workerSrc
+      });
       return true;
     } catch {
       try {
@@ -65,10 +71,12 @@ const configureWorker = () => {
           'pdfjs-dist/build/pdf.worker.min.mjs',
           import.meta.url,
         ).toString();
-        console.log('✅ Worker configurado con import.meta.url:', pdfjs.GlobalWorkerOptions.workerSrc);
+        logInfo(MODULE_NAME, '✅ Worker configurado con import.meta.url', {
+          workerSrc: pdfjs.GlobalWorkerOptions.workerSrc
+        });
         return true;
       } catch (finalError) {
-        console.error('❌ Error configurando worker PDF.js:', finalError);
+        logError(MODULE_NAME, finalError, 'Error configurando worker PDF.js');
         return false;
       }
     }
@@ -77,7 +85,7 @@ const configureWorker = () => {
 
 const workerConfigured = configureWorker();
 if (!workerConfigured) {
-  console.warn('⚠️ Worker de PDF.js no configurado correctamente, algunos PDFs podrían no cargar');
+  logWarning(MODULE_NAME, '⚠️ Worker de PDF.js no configurado correctamente, algunos PDFs podrían no cargar');
 }
 
 // Inyectar estilos CSS mínimos para text layer
@@ -119,7 +127,7 @@ const injectPDFStyles = () => {
       }
     `;
     document.head.appendChild(style);
-    console.log('✅ PDF.js enhanced styles injected');
+    logDebug(MODULE_NAME, '✅ PDF.js enhanced styles injected');
   }
 };
 
@@ -187,20 +195,16 @@ class PDFErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError(error: Error): PDFErrorBoundaryState {
-    console.error('🔴 PDF Error Boundary caught error:', error);
+    logError('PDFErrorBoundary', error, 'Error Boundary capturó error');
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     const errorType = this.detectErrorType(error);
 
-    console.error('🔴 PDF Error Boundary details:', {
-      error: error.message,
-      errorType,
-      componentStack: errorInfo.componentStack?.split('\n').slice(0, 5).join('\n'), // Primeras 5 líneas
-      isMemoryError: errorType === 'memory',
-      isWorkerError: errorType === 'worker'
-    });
+    // Log del error con contexto detallado
+    const contextDetails = `Error Boundary - Tipo: ${errorType}, Memory: ${errorType === 'memory'}, Worker: ${errorType === 'worker'}, Stack: ${errorInfo.componentStack?.split('\n').slice(0, 5).join('\n')}`;
+    logError('PDFErrorBoundary', error, contextDetails);
 
     // Actualizar estado con tipo de error
     this.setState({ errorType });
@@ -213,7 +217,7 @@ class PDFErrorBoundary extends React.Component<
    * ✅ NUEVO: Método para resetear error y reintentar
    */
   resetError = () => {
-    console.log('🔄 PDFErrorBoundary: Reseteando error para reintentar...');
+    logInfo('PDFErrorBoundary', '🔄 Reseteando error para reintentar');
     this.setState({ hasError: false, error: undefined, errorType: undefined });
     this.props.onRetry?.();
   };
@@ -634,11 +638,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
         if (cleanupTimeoutId) {
           clearTimeout(parseInt(cleanupTimeoutId));
         }
-        
+
         document.body.removeChild(existingIframe);
-        console.log('📄 Iframe de impresión limpiado al desmontar componente');
+        logDebug(MODULE_NAME, '📄 Iframe de impresión limpiado al desmontar componente');
       }
-      
+
       // Resetear contador de errores de text layer
       textLayerErrorCount.current = 0;
     };
@@ -752,13 +756,13 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
         // Reset estados solo si seguimos activos
         if (isActive) {
-          updateState({ 
-            error: null, 
+          updateState({
+            error: null,
             isLoading: true,
-            isLoaded: false 
+            isLoaded: false
           });
 
-          console.log('🟢 PDFViewer URL processed:', {
+          logDebug(MODULE_NAME, '🟢 URL procesada exitosamente', {
             url: url.substring(0, 50) + (url.length > 50 ? '...' : ''),
             fileName,
             type: info.type,
@@ -770,10 +774,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
       } catch (error) {
         if (isActive) {
-          console.error('❌ PDFViewer URL processing failed:', error);
-          updateState({ 
+          logError(MODULE_NAME, error, 'Error procesando URL');
+          updateState({
             error: error instanceof Error ? error : new Error(String(error)),
-            isLoading: false 
+            isLoading: false
           });
         }
       }
@@ -813,13 +817,13 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
       isLoading: false
     });
 
-    logInfo('PDFViewer', 'PDF loaded successfully', {
+    logInfo(MODULE_NAME, 'PDF cargado exitosamente', {
       fileName,
       numPages,
-      url
+      url: url?.substring(0, 50) + (url && url.length > 50 ? '...' : '')
     });
 
-    console.log('✅ PDF Document loaded:', { numPages, fileName });
+    logDebug(MODULE_NAME, '✅ Documento PDF cargado', { numPages, fileName });
     onLoadSuccess?.(numPages);
   }, [fileName, url, onLoadSuccess, updateState]);
 
@@ -831,15 +835,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
       isLoading: false
     });
 
-    logError('PDFViewer', `Error loading PDF - ${error.message}`, undefined);
-
-    // Debug logging para desarrollo
-    console.error('🔴 PDFViewer Error:', {
-      fileName,
-      url,
-      error: error.message,
-      fullError: error
-    });
+    const contextDetails = `Error cargando PDF - Archivo: ${fileName || 'sin nombre'}, URL: ${url?.substring(0, 50)}${url && url.length > 50 ? '...' : ''}`;
+    logError(MODULE_NAME, error, contextDetails);
 
     showError(`Error al cargar el PDF: ${error.message}`);
     onError?.(error);
@@ -924,7 +921,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
        * Garantiza que TODOS los recursos se liberan correctamente
        */
       const cleanup = () => {
-        console.log('🧹 Iniciando cleanup de recursos de impresión...');
+        logDebug(MODULE_NAME, '🧹 Iniciando cleanup de recursos de impresión');
 
         // Limpiar event listeners antes de cerrar ventana
         if (printWindow && !printWindow.closed && handleWindowLoad && handleWindowError) {
@@ -932,7 +929,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
             printWindow.removeEventListener('load', handleWindowLoad);
             printWindow.removeEventListener('error', handleWindowError);
           } catch (error) {
-            console.warn('📄 Error removiendo event listeners:', error);
+            logWarning(MODULE_NAME, '📄 Error removiendo event listeners', error);
           }
         }
 
@@ -961,20 +958,20 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
         if (printWindow && !printWindow.closed) {
           try {
             printWindow.close();
-            console.log('📄 Ventana de impresión cerrada');
+            logDebug(MODULE_NAME, '📄 Ventana de impresión cerrada');
           } catch (error) {
-            console.warn('📄 Error cerrando ventana de impresión:', error);
+            logWarning(MODULE_NAME, '📄 Error cerrando ventana de impresión', error);
           }
         }
 
         // Nullificar referencia para ayudar al GC
         printWindow = null;
 
-        console.log('🧹 ✅ Recursos de impresión completamente liberados');
+        logDebug(MODULE_NAME, '🧹 ✅ Recursos de impresión completamente liberados');
       };
 
       try {
-        console.log('📄 Abriendo PDF en nueva ventana para impresión...');
+        logDebug(MODULE_NAME, '📄 Abriendo PDF en nueva ventana para impresión');
 
         // Abrir nueva ventana con configuración optimizada
         printWindow = window.open(
@@ -994,7 +991,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
           if (isHandled) return;
 
           try {
-            console.log('📄 PDF cargado en nueva ventana, esperando renderizado...');
+            logDebug(MODULE_NAME, '📄 PDF cargado en nueva ventana, esperando renderizado');
 
             // Esperar renderizado completo antes de imprimir
             renderTimeoutId = setTimeout(() => {
@@ -1006,14 +1003,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
                 // Ejecutar impresión
                 printWindow.print();
-                console.log('📄 ✅ Comando de impresión ejecutado');
+                logInfo(MODULE_NAME, '📄 ✅ Comando de impresión ejecutado');
 
                 isHandled = true;
                 cleanup(); // ✅ Limpiar recursos
                 resolve();
 
               } catch (printError) {
-                console.warn('📄 Error ejecutando print():', printError);
+                logWarning(MODULE_NAME, '📄 Error ejecutando print()', printError);
                 isHandled = true;
                 cleanup(); // ✅ Limpiar recursos
                 reject(printError);
@@ -1032,7 +1029,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
          */
         handleWindowError = () => {
           if (!isHandled) {
-            console.error('📄 Error cargando PDF en nueva ventana');
+            logError(MODULE_NAME, '📄 Error cargando PDF en nueva ventana');
             isHandled = true;
             cleanup(); // ✅ Limpiar recursos
             reject(new Error('Error cargando PDF en nueva ventana'));
@@ -1042,7 +1039,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
         // Timeout de seguridad (15 segundos)
         timeoutId = setTimeout(() => {
           if (!isHandled) {
-            console.warn('📄 Timeout: PDF no cargó en tiempo esperado (15s)');
+            logWarning(MODULE_NAME, '📄 Timeout: PDF no cargó en tiempo esperado (15s)');
             isHandled = true;
             cleanup(); // ✅ Limpiar recursos
             reject(new Error('Timeout: PDF no cargó en tiempo esperado (15 segundos)'));
@@ -1056,7 +1053,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
         // Monitorear si el usuario cierra la ventana manualmente
         checkClosedInterval = setInterval(() => {
           if (printWindow && printWindow.closed && !isHandled) {
-            console.log('📄 Usuario cerró la ventana de impresión');
+            logDebug(MODULE_NAME, '📄 Usuario cerró la ventana de impresión');
             isHandled = true;
             cleanup(); // ✅ Limpiar recursos
             resolve(); // Resolver como exitoso si el usuario cerró la ventana
@@ -1066,7 +1063,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
         // Cleanup final después del timeout máximo
         cleanupTimeoutId = setTimeout(() => {
           if (!isHandled) {
-            console.warn('📄 Cleanup final forzado después de 16 segundos');
+            logWarning(MODULE_NAME, '📄 Cleanup final forzado después de 16 segundos');
             isHandled = true;
             cleanup();
             reject(new Error('Timeout final: No se pudo completar la impresión'));
@@ -1089,24 +1086,24 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
       if (cleanupTimeoutId) {
         clearTimeout(parseInt(cleanupTimeoutId));
       }
-      
+
       document.body.removeChild(existingIframe);
-      console.log('📄 Recursos de impresión limpiados manualmente');
+      logDebug(MODULE_NAME, '📄 Recursos de impresión limpiados manualmente');
     }
   }, []);
 
   // Función mejorada para imprimir PDF con nueva ventana
   const printPDFDirect = useCallback(async (pdfUrl: string): Promise<boolean> => {
     try {
-      console.log('📄 Iniciando impresión del PDF...');
-      
+      logDebug(MODULE_NAME, '📄 Iniciando impresión del PDF');
+
       // Usar el nuevo método de ventana emergente
       await printPDFWithWindow(pdfUrl);
-      console.log('📄 ✅ Impresión completada');
+      logInfo(MODULE_NAME, '📄 ✅ Impresión completada');
       return true;
-      
+
     } catch (error) {
-      console.warn('📄 Error en impresión:', error);
+      logWarning(MODULE_NAME, '📄 Error en impresión', error);
       return false;
     }
   }, [printPDFWithWindow]);
@@ -1129,13 +1126,13 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
       const contentType = response.headers.get('Content-Type');
       if (contentType && !contentType.includes('pdf')) {
-        console.warn('📄 Respuesta no es PDF:', contentType);
+        logWarning(MODULE_NAME, '📄 Respuesta no es PDF', { contentType });
         return null;
       }
 
       return await response.blob();
     } catch (error) {
-      console.warn('📄 Error obteniendo PDF como blob:', error);
+      logWarning(MODULE_NAME, '📄 Error obteniendo PDF como blob', error);
       return null;
     }
   }, [httpHeaders, withCredentials]);
@@ -1149,7 +1146,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
     // Prevenir múltiples impresiones simultáneas
     if (isPrinting) {
-      console.log('📄 Impresión ya en progreso, ignorando nueva solicitud');
+      logDebug(MODULE_NAME, '📄 Impresión ya en progreso, ignorando nueva solicitud');
       showError('Impresión en progreso, espere por favor...');
       return;
     }
@@ -1157,18 +1154,18 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     setIsPrinting(true);
 
     try {
-      logInfo('PDFViewer', 'Print initiated', {
+      logInfo(MODULE_NAME, 'Impresión iniciada', {
         fileName,
         currentPage: state.currentPage,
         totalPages: state.numPages,
         urlType: urlInfo.type
       });
 
-      console.log('📄 Iniciando impresión para tipo:', urlInfo.type);
+      logDebug(MODULE_NAME, `📄 Iniciando impresión para tipo: ${urlInfo.type}`);
 
       // Estrategia simplificada: intentar impresión directa primero
       const printSuccess = await printPDFDirect(processedUrl);
-      
+
       if (printSuccess) {
         showSuccess('Diálogo de impresión abierto');
         onPrint?.(fileName);
@@ -1177,8 +1174,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
       // Si falla la impresión directa, intentar con blob para URLs externas
       if (urlInfo.type === 'external') {
-        console.log('📄 Impresión directa falló, intentando método blob...');
-        
+        logDebug(MODULE_NAME, '📄 Impresión directa falló, intentando método blob');
+
         try {
           const pdfBlob = await fetchPDFAsBlob(processedUrl);
           if (pdfBlob) {
@@ -1195,20 +1192,19 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
             }
           }
         } catch (blobError) {
-          console.warn('📄 No se pudo descargar PDF para impresión:', blobError);
+          logWarning(MODULE_NAME, '📄 No se pudo descargar PDF para impresión', blobError);
         }
       }
 
       // Fallback final: usar window.print() de la página actual
-      console.warn('📄 ⚠️ FALLBACK - usando window.print()');
+      logWarning(MODULE_NAME, '📄 ⚠️ FALLBACK - usando window.print()');
       window.print();
       showSuccess('Vista de página enviada a impresión');
       onPrint?.(fileName);
 
     } catch (error) {
-      console.error('📄 Error general en handlePrint:', error);
-      logError('PDFViewer', 'Print error', String(error));
-      
+      logError(MODULE_NAME, error, 'Error general en handlePrint');
+
       const errorMessage = error instanceof Error ? error.message : String(error);
       
       if (errorMessage.includes('bloqueó la ventana emergente')) {
@@ -1258,7 +1254,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
   // Memoizar callbacks para Page component - DEBE estar al nivel superior
   const handlePageLoadSuccess = useCallback((page: { originalWidth?: number; originalHeight?: number }) => {
-    console.log('✅ Page rendered successfully:', {
+    logDebug(MODULE_NAME, '✅ Página renderizada exitosamente', {
       pageNumber: state.currentPage,
       scale: state.zoom,
       width: page?.originalWidth,
@@ -1267,11 +1263,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   }, [state.currentPage, state.zoom]);
 
   const handlePageLoadError = useCallback((error: Error) => {
-    console.error('🔴 Page render error:', error);
+    logError(MODULE_NAME, error, 'Error de renderizado de página');
   }, []);
 
   const handleTextLayerSuccess = useCallback(() => {
-    console.log('✅ Text layer rendered successfully for page:', state.currentPage);
+    logDebug(MODULE_NAME, `✅ Text layer renderizado exitosamente para página ${state.currentPage}`);
   }, [state.currentPage]);
 
   /**
@@ -1285,14 +1281,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
    * Es CRÍTICO notificar al usuario de esta pérdida de funcionalidad
    */
   const handleTextLayerError = useCallback((error: Error) => {
-    console.warn('⚠️ Text layer render error:', error);
+    logWarning(MODULE_NAME, '⚠️ Error de renderizado de text layer', error);
 
     // Incrementar contador usando ref para evitar re-renders
     textLayerErrorCount.current += 1;
 
     // Desactivar después de 2 errores para evitar crashes repetidos
     if (textLayerErrorCount.current >= 2 && textLayerEnabled) {
-      console.log('🔄 Desactivando text layer debido a errores repetidos');
+      logInfo(MODULE_NAME, '🔄 Desactivando text layer debido a errores repetidos');
       setTextLayerEnabled(false);
 
       // ✅ NUEVO: Notificar al usuario sobre pérdida de funcionalidad
@@ -1316,11 +1312,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   }, [textLayerEnabled, fileName, state.currentPage, url]); // ✅ Dependencias actualizadas
 
   const handleAnnotationLayerSuccess = useCallback(() => {
-    console.log('✅ Annotation layer rendered successfully for page:', state.currentPage);
+    logDebug(MODULE_NAME, `✅ Annotation layer renderizado exitosamente para página ${state.currentPage}`);
   }, [state.currentPage]);
 
   const handleAnnotationLayerError = useCallback((error: unknown) => {
-    console.error('🔴 Annotation layer render error:', error);
+    logError(MODULE_NAME, error, 'Error de renderizado de annotation layer');
   }, []);
 
   /**
@@ -1345,7 +1341,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     });
 
     // Logging detallado para debugging
-    console.log('📊 PDF Load Progress:', {
+    logDebug(MODULE_NAME, '📊 Progreso de carga del PDF', {
       loaded: `${(progress.loaded / 1024 / 1024).toFixed(2)} MB`,
       total: `${(progress.total / 1024 / 1024).toFixed(2)} MB`,
       percentage: `${percentage}%`,
@@ -1355,22 +1351,22 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   }, [fileName]);
 
   const handleSourceError = useCallback((error: Error) => {
-    console.error('🔴 PDF Source Error:', error);
+    logError(MODULE_NAME, error, 'Error de fuente del PDF');
     handleLoadError(new Error(`Source error: ${error.message || error}`));
   }, [handleLoadError]);
 
   const handleSourceSuccess = useCallback(() => {
-    console.log('✅ PDF Source loaded successfully for:', fileName);
+    logDebug(MODULE_NAME, `✅ Fuente del PDF cargada exitosamente: ${fileName}`);
   }, [fileName]);
 
   const handleLoadStart = useCallback(() => {
-    console.log('🔄 PDF Load started for:', fileName);
+    logDebug(MODULE_NAME, `🔄 Inicio de carga del PDF: ${fileName}`);
     updateState({ isLoading: true });
   }, [fileName, updateState]);
 
   // Memoizar callback del error boundary para evitar re-renders
   const handleErrorBoundaryError = useCallback((error: Error) => {
-    console.warn('🔴 PDF rendering error caught by boundary:', error);
+    logWarning(MODULE_NAME, 'Error de renderizado capturado por boundary', error);
   }, []);
 
   return (

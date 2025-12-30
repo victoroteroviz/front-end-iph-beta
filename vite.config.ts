@@ -7,7 +7,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig(({ mode }) => {
   // Cargar variables de entorno
   const env = loadEnv(mode, process.cwd(), '');
-  const apiBaseUrl = env.VITE_API_BASE_URL || 'http://localhost:3000';
+  const apiBaseUrl = env.VITE_API_BASE_URL ? env.VITE_API_BASE_URL : '';
   const isDevelopment = mode === 'development';
 
   const config: UserConfig = {

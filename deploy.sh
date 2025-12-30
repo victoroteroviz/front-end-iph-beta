@@ -48,99 +48,45 @@ fi
 
 log_info "Iniciando deploy de $IMAGE_NAME:$VERSION"
 
-# Función para cargar variables de entorno desde archivo .env preservando formato JSON
-load_env_file() {
-    local env_file=$1
-    
-    if [ ! -f "$env_file" ]; then
-        log_error "Archivo $env_file no encontrado"
-        return 1
-    fi
-    
-    log_info "Cargando variables desde $env_file"
-    
-    # Leer línea por línea preservando comillas y espacios
-    while IFS= read -r line || [ -n "$line" ]; do
-        # Ignorar líneas vacías y comentarios
-        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
-        
-        # Extraer nombre y valor de la variable
-        if [[ $line =~ ^([A-Z_]+)=(.*)$ ]]; then
-            var_name="${BASH_REMATCH[1]}"
-            var_value="${BASH_REMATCH[2]}"
-            
-            # Exportar la variable preservando el valor exacto
-            export "$var_name=$var_value"
-            
-            # Log de variables cargadas (ocultar valores sensibles de roles por ser muy largos)
-            if [[ $var_name == *"ROLE"* ]]; then
-                log_info "  ✓ $var_name cargado"
-            else
-                log_info "  ✓ $var_name=$var_value"
-            fi
-        fi
-    done < "$env_file"
-    
-    return 0
-}
+# =====================================================
+# NOTA: Ya NO cargamos variables de .env.production
+# =====================================================
+# El build ahora es genérico (sin variables embebidas)
+# Las variables se configuran en RUNTIME en el servidor
+# mediante docker-compose.yml + .env del servidor
 
-# Cargar variables desde .env.production
-if ! load_env_file ".env.production"; then
-    log_warning "No se pudo cargar .env.production, usando valores por defecto"
-    
-    # Valores por defecto como fallback
-    export VITE_APP_ENVIRONMENT="production"
-    export VITE_API_BASE_URL="https://iph01.okip.com.mx"
-    export VITE_SUPERADMIN_ROLE='[{"id":1,"nombre":"SuperAdmin"}]'
-    export VITE_ADMIN_ROLE='[{"id":2,"nombre":"Administrador"}]'
-    export VITE_SUPERIOR_ROLE='[{"id":3,"nombre":"Superior"}]'
-    export VITE_ELEMENTO_ROLE='[{"id":4,"nombre":"Elemento"}]'
-    export VITE_HTTP_TIMEOUT="30000"
-    export VITE_HTTP_RETRIES="3"
-    export VITE_HTTP_RETRY_DELAY="1000"
-    export VITE_AUTH_HEADER_NAME="Authorization"
-    export VITE_AUTH_HEADER_PREFIX="Bearer"
-    export VITE_AUTH_TOKEN_KEY="auth_token"
-    export VITE_DEBUG_MODE="false"
-    export VITE_APP_NAME="IPH Frontend"
-    export VITE_ENCRYPT_PASSPHRASE=""
-fi
+log_info "Build genérico (runtime configuration) - No se requiere .env.production"
 
-log_success "Variables de entorno cargadas correctamente"
+# =====================================================
+# IMPORTANTE - RUNTIME CONFIGURATION
+# =====================================================
+# Esta imagen usa RUNTIME CONFIGURATION (no build-time)
+# Las variables de entorno se configuran cuando se ejecuta el contenedor,
+# NO durante el build. Esto permite:
+#   ✅ Una sola imagen para dev, staging y producción
+#   ✅ Cambiar configuración sin rebuild (solo restart)
+#   ✅ Mayor flexibilidad y menor tamaño de registro
+#
+# La configuración se realiza en docker-compose.yml del servidor
+# usando variables de entorno o archivos .env
+# =====================================================
 
-# 1. Build de la imagen Docker con build arguments
-log_info "Construyendo imagen Docker con variables de entorno..."
-log_info "IMPORTANTE: Logger se configura automáticamente según VITE_APP_ENVIRONMENT=$VITE_APP_ENVIRONMENT"
-if docker build \
-    --build-arg VITE_APP_ENVIRONMENT="$VITE_APP_ENVIRONMENT" \
-    --build-arg VITE_API_BASE_URL="$VITE_API_BASE_URL" \
-    --build-arg VITE_SUPERADMIN_ROLE="$VITE_SUPERADMIN_ROLE" \
-    --build-arg VITE_ADMIN_ROLE="$VITE_ADMIN_ROLE" \
-    --build-arg VITE_SUPERIOR_ROLE="$VITE_SUPERIOR_ROLE" \
-    --build-arg VITE_ELEMENTO_ROLE="$VITE_ELEMENTO_ROLE" \
-    --build-arg VITE_HTTP_TIMEOUT="$VITE_HTTP_TIMEOUT" \
-    --build-arg VITE_HTTP_RETRIES="$VITE_HTTP_RETRIES" \
-    --build-arg VITE_HTTP_RETRY_DELAY="$VITE_HTTP_RETRY_DELAY" \
-    --build-arg VITE_AUTH_HEADER_NAME="$VITE_AUTH_HEADER_NAME" \
-    --build-arg VITE_AUTH_HEADER_PREFIX="$VITE_AUTH_HEADER_PREFIX" \
-    --build-arg VITE_AUTH_TOKEN_KEY="$VITE_AUTH_TOKEN_KEY" \
-    --build-arg VITE_DEBUG_MODE="$VITE_DEBUG_MODE" \
-    --build-arg VITE_APP_VERSION="$VERSION" \
-    --build-arg VITE_APP_NAME="$VITE_APP_NAME" \
-    --build-arg VITE_ENCRYPT_PASSPHRASE="$VITE_ENCRYPT_PASSPHRASE" \
-    -t $IMAGE_NAME:$VERSION .; then
+# 1. Build de la imagen Docker (SIN variables de entorno)
+log_info "Construyendo imagen Docker..."
+log_info "NOTA: Esta es una imagen genérica (runtime configuration)"
+log_info "Las variables se configurarán en el servidor al ejecutar el contenedor"
+
+if docker build -t $IMAGE_NAME:$VERSION .; then
     log_success "Imagen construida exitosamente: $IMAGE_NAME:$VERSION"
-    log_info "Variables críticas usadas en build:"
-    log_info "  - VITE_APP_ENVIRONMENT: $VITE_APP_ENVIRONMENT"
-    log_info "  - VITE_API_BASE_URL: $VITE_API_BASE_URL"
-    log_info "  - VITE_APP_VERSION: $VERSION"
-    log_info "  - VITE_DEBUG_MODE: $VITE_DEBUG_MODE"
     log_info ""
-    log_info "Configuración de Logger (automática por ambiente):"
-    log_info "  - minLevel: WARN (solo warnings, errors y critical)"
-    log_info "  - console: false (sin logs en navegador)"
-    log_info "  - storage: true (guarda en sessionStorage)"
-    log_info "  - rateLimiting: true"
+    log_info "📦 Imagen genérica lista para deployment"
+    log_info "⚙️  La configuración se realizará en RUNTIME con docker-compose"
+    log_info ""
+    log_info "Ejemplo de uso en el servidor:"
+    log_info "  1. Configurar variables en .env del servidor"
+    log_info "  2. docker-compose down"
+    log_info "  3. docker-compose up -d"
+    log_info "  4. Verificar con: docker logs iph-frontend | head -20"
 else
     log_error "Error al construir la imagen Docker"
     exit 1

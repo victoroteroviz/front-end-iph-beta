@@ -20,7 +20,11 @@
       "Bash(node -c:*)",
       "Bash(rm:*)",
       "Bash(docker login --username victoroteroviz)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(ls:*)",
+      "Bash(NODE_ENV=production npm run build:*)",
+      "Bash(VITE_API_BASE_URL=\"\" sh -c 'API_BASE_URL=\"\"${VITE_API_BASE_URL:-https://iph01.okip.com.mx}\"\"; echo \"\"Resultado: $API_BASE_URL\"\"')",
+      "Bash(VITE_API_BASE_URL=\"https://test-siriph-api.okip.com.mx\" sh -c 'API_BASE_URL=\"\"${VITE_API_BASE_URL:-https://iph01.okip.com.mx}\"\"; echo \"\"Resultado: $API_BASE_URL\"\"')"
     ],
     "deny": [],
     "ask": []
