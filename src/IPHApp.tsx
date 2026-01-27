@@ -87,26 +87,6 @@ function AppRoutes({ loadingBarRef }: { loadingBarRef: React.RefObject<TopLoadin
   const routes = getAllRoutes();
   const { isTransitioning, startTransition: startRouteTransition } = useRouteTransition(loadingBarRef);
 
-  // ✅ SECURITY FIX: Detectar navegación desde bfcache (Back/Forward Cache)
-  // Previene que Chrome muestre páginas cacheadas después de logout
-  useEffect(() => {
-    const handlePageShow = (event: PageTransitionEvent) => {
-      // Si la página fue restaurada desde bfcache (persisted = true)
-      if (event.persisted) {
-        logInfo('IPHApp', '⚠️ Página restaurada desde bfcache - forzando recarga');
-        // Forzar recarga completa para revalidar autenticación
-        window.location.reload();
-      }
-    };
-
-    // Escuchar evento pageshow (se dispara cuando la página se muestra)
-    window.addEventListener('pageshow', handlePageShow);
-
-    return () => {
-      window.removeEventListener('pageshow', handlePageShow);
-    };
-  }, []);
-
   // Inicializar helpers al montar
   useEffect(() => {
     // Configurar CacheHelper con Two-Level Cache optimizado

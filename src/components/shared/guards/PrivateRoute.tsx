@@ -148,13 +148,21 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
   const [isLoadingRoles, setIsLoadingRoles] = useState(true);
   const [forceRevalidate, setForceRevalidate] = useState(0);
 
-  // ✅ SECURITY FIX: Detectar restauración desde bfcache
+  // ✅ SECURITY FIX: Detectar restauración desde bfcache solo si NO hay autenticación
   useEffect(() => {
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
-        // Página restaurada desde cache - forzar revalidación
-        logWarning('PrivateRoute', '⚠️ Página restaurada desde cache - forzando revalidación');
-        setForceRevalidate(prev => prev + 1);
+        // Verificar si hay autenticación válida
+        const token = getStoredToken();
+        const isAuth = isUserAuthenticated();
+        
+        // Solo forzar revalidación si NO hay autenticación válida
+        if (!token || !isAuth || isTokenExpired(token)) {
+          logWarning('PrivateRoute', '⚠️ Página restaurada desde cache sin autenticación válida - forzando revalidación');
+          setForceRevalidate(prev => prev + 1);
+        } else {
+          logInfo('PrivateRoute', '✅ Página restaurada desde cache con autenticación válida - no requiere revalidación');
+        }
       }
     };
 
