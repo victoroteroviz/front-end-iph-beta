@@ -73,6 +73,7 @@ const getIconForTab = (tabId: string) => {
     'anexo-b-uso-fuerza': Shield,
     'anexo-c-inspeccion': Package,
     'anexo-c-inspeccion-vehiculo': Car,
+    'anexo-c-uso-fuerza-civica': Shield,
     'anexo-d-inventario': Package,
     'anexo-e-entrevistas': MessageCircle,
     'anexo-f-entrega-recepcion': ArrowRightLeft,
@@ -340,7 +341,7 @@ const SectionModal: React.FC<SectionModalProps> = ({
                   title="Anexo B. Descripción de vehículo"
                   className="mb-0" 
                 />
-              ) : activeTab === 'anexo-b-uso-fuerza' ? (
+              ) : (activeTab === 'anexo-b-uso-fuerza' || activeTab === 'anexo-c-uso-fuerza-civica') ? (
                 <AnexoUsoFuerza 
                   usoFuerza={getActiveTabData()} 
                   className="mb-0" 

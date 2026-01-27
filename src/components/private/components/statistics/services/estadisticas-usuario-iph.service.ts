@@ -196,7 +196,7 @@ class EstadisticasUsuarioIphService {
 
       return response.data;
     } catch (error) {
-      console.error('Error al obtener ranking de mayores creadores:', error);
+      
       throw new Error('No se pudieron cargar las estadísticas de mayores creadores');
     }
   }
@@ -224,7 +224,7 @@ class EstadisticasUsuarioIphService {
 
       return response.data;
     } catch (error) {
-      console.error('Error al obtener ranking de menores creadores:', error);
+      
       throw new Error('No se pudieron cargar las estadísticas de menores creadores');
     }
   }
@@ -260,7 +260,7 @@ class EstadisticasUsuarioIphService {
 
       return response.data;
     } catch (error) {
-      console.error('Error al obtener totales:', error);
+      
       throw new Error('No se pudieron cargar los totales de estadísticas');
     }
   }

@@ -331,16 +331,13 @@ export const getIphById = async (id: string): Promise<ResponseIphData> => {
     
     // Validaciones opcionales de estructura crítica para la nueva estructura
     if (!iphFound.iph || (Array.isArray(iphFound.iph) && iphFound.iph.length === 0)) {
-      console.warn('Datos principales del IPH no encontrados:', { iphData: iphFound.iph });
+      throw new Error('Estructura de datos del IPH inválida o vacía');
     }
 
     // Validar estructura básica si iph no es array vacío
     if (!Array.isArray(iphFound.iph) && iphFound.iph) {
       if (!iphFound.iph.id || !iphFound.iph.nReferencia) {
-        console.warn('Campos críticos del IPH faltantes:', { 
-          id: iphFound.iph.id, 
-          referencia: iphFound.iph.nReferencia 
-        });
+        throw new Error('Campos críticos del IPH faltantes');
       }
     }
 

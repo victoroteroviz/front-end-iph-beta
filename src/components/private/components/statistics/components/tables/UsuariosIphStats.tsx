@@ -60,7 +60,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
       setMenoresData(menores);
       setTotalesData(totales);
     } catch (error) {
-      console.error('Error cargando estadísticas:', error);
+      
       onError(error instanceof Error ? error.message : 'Error desconocido');
     } finally {
       setLoading(false);

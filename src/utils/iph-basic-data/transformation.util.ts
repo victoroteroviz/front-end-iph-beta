@@ -39,13 +39,13 @@ export const convertToDate = (dateValue: string | Date | undefined): Date | unde
 
       // Validar que la fecha sea válida
       if (isNaN(date.getTime())) {
-        console.warn(`Fecha inválida recibida: ${dateValue}`);
+        
         return undefined;
       }
 
       return date;
     } catch (error) {
-      console.error(`Error al convertir fecha: ${dateValue}`, error);
+      
       return undefined;
     }
   }

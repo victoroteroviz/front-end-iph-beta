@@ -57,7 +57,7 @@ const UsuarioViewModal: React.FC<IUsuarioViewModalProps> = ({
       setUsuario(userData);
     } catch (err) {
       setError('Error al cargar la información del usuario');
-      console.error('Error loading user:', err);
+      
     } finally {
       setLoading(false);
     }
@@ -110,7 +110,7 @@ const UsuarioViewModal: React.FC<IUsuarioViewModalProps> = ({
         </div>
       );
     } catch (err) {
-      console.error('Error rendering user roles:', err);
+      
       return (
         <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-600 font-poppins text-sm">Error al mostrar roles del usuario</p>

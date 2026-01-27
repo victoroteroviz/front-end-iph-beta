@@ -79,13 +79,13 @@ export default defineConfig(({ mode }) => {
           secure: false,
           configure: (proxy: any, _options: any) => {
             proxy.on('error', (err: any, _req: any, _res: any) => {
-              console.log('🚨 Proxy error:', err);
+             
             });
             proxy.on('proxyReq', (proxyReq: any, req: any, _res: any) => {
-              console.log(`🔄 Proxy: ${req.method} ${req.url} → ${apiBaseUrl}${proxyReq.path}`);
+              
             });
             proxy.on('proxyRes', (proxyRes: any, req: any, _res: any) => {
-              console.log(`📦 Response: ${req.method} ${req.url} → ${proxyRes.statusCode}`);
+             
             });
           }
         },
@@ -95,15 +95,9 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
           configure: (proxy: any, _options: any) => {
-            proxy.on('error', (err: any, _req: any, _res: any) => {
-              console.log('🚨 Upload proxy error:', err);
-            });
-            proxy.on('proxyReq', (proxyReq: any, req: any, _res: any) => {
-              console.log(`📁 Upload proxy: ${req.method} ${req.url} → ${apiBaseUrl}${proxyReq.path}`);
-            });
-            proxy.on('proxyRes', (proxyRes: any, req: any, _res: any) => {
-              console.log(`🖼️ Upload response: ${req.method} ${req.url} → ${proxyRes.statusCode}`);
-            });
+            
+          
+           
           }
         }
       }

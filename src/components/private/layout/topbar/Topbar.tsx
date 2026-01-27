@@ -58,7 +58,7 @@ const Topbar: React.FC<Partial<TopbarProps>> = ({
         onLogout={onLogout}
         onProfileClick={() => {
           // TODO: Implementar navegación a perfil
-          console.log('Navigate to profile');
+          
         }}
       />
     </div>

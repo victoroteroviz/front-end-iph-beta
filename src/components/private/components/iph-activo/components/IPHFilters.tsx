@@ -263,7 +263,7 @@ const IPHFilters: React.FC<IIPHFiltersProps> = memo(({
     const validationResult = SearchInputSchema.safeParse(searchTerm);
     
     if (!validationResult.success) {
-      console.warn('IPHFilters: Invalid search input', validationResult.error);
+      
       return;
     }
 

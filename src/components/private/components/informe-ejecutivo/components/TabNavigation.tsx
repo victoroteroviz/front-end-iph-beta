@@ -49,9 +49,11 @@ const getIconForTab = (tabId: string) => {
     'puesta-disposicion': Users,
     'puesta-disposicion-primer-respondiente': Users,
     'anexo-a-detenciones': Users,
+    'anexo-a-detenciones-civica': Users,
     'anexo-b-uso-fuerza': Shield,
     'anexo-c-inspeccion': Package,
     'anexo-c-inspeccion-vehiculo': Car,
+    'anexo-c-uso-fuerza-civica': Shield,
     'anexo-d-inventario': Package,
     'anexo-e-entrevistas': MessageCircle,
     'anexo-f-entrega-recepcion': ArrowRightLeft,
@@ -149,10 +151,25 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
               {tabs.map((tab, index) => {
                 const IconComponent = getIconForTab(tab.id);
                 const isActive = activeTab === tab.id;
+                const prevTab = index > 0 ? tabs[index - 1] : null;
+                const showExtraSeparator = tab.isExtra && (!prevTab || !prevTab.isExtra);
                 
                 return (
+                  <React.Fragment key={tab.id}>
+                    {/* Separador para apartados extra */}
+                    {showExtraSeparator && (
+                      <div className="py-4 my-2">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#c2b186] to-transparent"></div>
+                          <span className="text-xs font-semibold text-[#c2b186] uppercase tracking-wider px-2 py-1 bg-[#fdf7f1] rounded-full border border-[#c2b186]/30">
+                            Extras
+                          </span>
+                          <div className="flex-1 h-px bg-gradient-to-r from-[#c2b186] via-[#c2b186] to-transparent"></div>
+                        </div>
+                      </div>
+                    )}
+                    
                   <button
-                    key={tab.id}
                     onClick={() => onTabChange(tab.id)}
                     className="
                       w-full flex items-center gap-3 p-3 rounded-lg text-left
@@ -206,6 +223,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
                       </div>
                     </div>
                   </button>
+                  </React.Fragment>
                 );
               })}
             </div>
@@ -217,10 +235,25 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
           <div className="max-h-80 overflow-y-auto">
             {tabs.map((tab, index) => {
               const IconComponent = getIconForTab(tab.id);
+              const prevTab = index > 0 ? tabs[index - 1] : null;
+              const showExtraSeparator = tab.isExtra && (!prevTab || !prevTab.isExtra);
               
               return (
+                <React.Fragment key={tab.id}>
+                  {/* Separador para apartados extra - móvil */}
+                  {showExtraSeparator && (
+                    <div className="py-3 px-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#c2b186] to-transparent"></div>
+                        <span className="text-xs font-semibold text-[#c2b186] uppercase tracking-wider">
+                          Extras
+                        </span>
+                        <div className="flex-1 h-px bg-gradient-to-r from-[#c2b186] via-[#c2b186] to-transparent"></div>
+                      </div>
+                    </div>
+                  )}
+                  
                 <button
-                  key={tab.id}
                   onClick={() => {
                     onTabChange(tab.id);
                     setIsCollapsed(true);
@@ -274,6 +307,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
                     </div>
                   </div>
                 </button>
+                </React.Fragment>
               );
             })}
           </div>

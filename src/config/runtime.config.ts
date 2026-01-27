@@ -184,9 +184,4 @@ export function logRuntimeConfig() {
   const config = runtimeConfig.getAll();
   const source = runtimeConfig.hasRuntimeConfig ? 'Runtime (Docker)' : 'Build time (Vite)';
 
-  console.log('📋 Configuración cargada:', {
-    source,
-    config,
-    hasRuntimeConfig: runtimeConfig.hasRuntimeConfig
-  });
 }

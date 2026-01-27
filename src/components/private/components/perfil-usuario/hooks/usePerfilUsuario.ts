@@ -861,14 +861,7 @@ const usePerfilUsuario = (): IUsePerfilUsuarioReturn => {
 
     const hasChanges = basicFieldsChanged || rolesChanged;
 
-    // Debug temporal para verificar comparación
-    console.log('🔄 Comparación de cambios:', {
-      basicFieldsChanged,
-      rolesChanged,
-      hasChanges,
-      currentRolesCount: current.rolesSeleccionados.length,
-      originalRolesCount: original.rolesSeleccionados.length
-    });
+
 
     return hasChanges;
   }, [state.formData, state.isEditing, originalData]);

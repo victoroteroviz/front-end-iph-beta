@@ -63,21 +63,21 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, on
   // Manejadores de cambio de filtros de JC
   const handleJcAnioChange = (anio: number) => {
     if (jcFiltros) {
-      console.log('📅 [StatisticsModal] Cambio de año JC:', anio);
+      
       setJcFiltros({ ...jcFiltros, anio });
     }
   };
 
   const handleJcMesChange = (mes: number) => {
     if (jcFiltros) {
-      console.log('📅 [StatisticsModal] Cambio de mes JC:', mes);
+      
       setJcFiltros({ ...jcFiltros, mes });
     }
   };
 
   const handleJcDiaChange = (dia: number) => {
     if (jcFiltros) {
-      console.log('📅 [StatisticsModal] Cambio de día JC:', dia);
+      
       setJcFiltros({ ...jcFiltros, dia });
     }
   };
@@ -85,21 +85,21 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, on
   // Manejadores de cambio de filtros de Probable Delictivo
   const handlePdAnioChange = (anio: number) => {
     if (pdFiltros) {
-      console.log('📅 [StatisticsModal] Cambio de año PD:', anio);
+      
       setPdFiltros({ ...pdFiltros, anio });
     }
   };
 
   const handlePdMesChange = (mes: number) => {
     if (pdFiltros) {
-      console.log('📅 [StatisticsModal] Cambio de mes PD:', mes);
+      
       setPdFiltros({ ...pdFiltros, mes });
     }
   };
 
   const handlePdDiaChange = (dia: number) => {
     if (pdFiltros) {
-      console.log('📅 [StatisticsModal] Cambio de día PD:', dia);
+      
       setPdFiltros({ ...pdFiltros, dia });
     }
   };
@@ -220,7 +220,7 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ statistic, isOpen, on
           );
       }
     } catch (err) {
-      console.error('Error al renderizar contenido:', err);
+      
       return (
         <div className="statistics-modal-error">
           <svg

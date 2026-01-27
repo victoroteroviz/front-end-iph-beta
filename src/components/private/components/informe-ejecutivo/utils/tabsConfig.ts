@@ -16,11 +16,13 @@ export interface TabConfig {
   label: string;
   dataKey: keyof ResponseIphData | 'iph'; // Permitir acceso directo a iph para archivos
   component: string; // Nombre del componente dummy por ahora
+  isExtra?: boolean; // Marca si es un apartado extra (separado visualmente)
 }
 
 export interface TabWithStatus extends TabConfig {
   status: TabStatus;
   hasData: boolean;
+  isExtra?: boolean;
 }
 
 // =====================================================
@@ -249,6 +251,13 @@ export const TABS_JUSTICIA_CIVICA_CON_DETENIDO: TabConfig[] = [
     label: 'Archivos del IPH',
     dataKey: 'iph',
     component: 'AnexoArchivos'
+  },
+  {
+    id: 'anexo-c-uso-fuerza-civica',
+    label: 'Anexo C. Uso de la Fuerza',
+    dataKey: 'usoFuerza',
+    component: 'AnexoUsoFuerza',
+    isExtra: true
   }
 ];
 
@@ -333,7 +342,7 @@ export const getTabsForIphType = (tipoIphNombre: string): TabConfig[] => {
   }
 
   // Fallback: usar configuración con más opciones
-  console.warn('Tipo de IPH no reconocido:', tipoIphNombre, 'normalizado:', normalizedType);
+  
   return TABS_DELICTIVOS_CON_DETENIDO;
 };
 

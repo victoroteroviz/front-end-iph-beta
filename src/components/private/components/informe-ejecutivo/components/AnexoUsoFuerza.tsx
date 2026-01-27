@@ -5,7 +5,7 @@
  * Mantiene diseño original con colores #c2b186, #fdf7f1
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { 
   Shield, 
   AlertTriangle,
@@ -22,7 +22,10 @@ import {
   ChevronUp,
   CheckCircle,
   XCircle,
-  Slash
+  Slash,
+  ChevronLeft,
+  ChevronRight,
+  Hash
 } from 'lucide-react';
 import type { IUsoFuerza } from '../../../../../interfaces/iph/iph.interface';
 
@@ -194,6 +197,63 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
   className = ''
 }) => {
   
+  // Estado para manejar múltiples incidentes de uso de fuerza
+  const [incidenteActivo, setIncidenteActivo] = useState(0);
+  
+  // Refs para manejo de scroll
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollPositionsRef = useRef<{ [key: number]: number }>({});
+
+  // Función para preservar la posición de scroll antes de cambiar de incidente
+  const preserveScrollPosition = useCallback(() => {
+    if (containerRef.current) {
+      scrollPositionsRef.current[incidenteActivo] = containerRef.current.scrollTop;
+    }
+  }, [incidenteActivo]);
+
+  // Función para restaurar la posición de scroll después de cambiar de incidente
+  const restoreScrollPosition = useCallback((index: number) => {
+    if (containerRef.current) {
+      const savedPosition = scrollPositionsRef.current[index] || 0;
+      // Usar requestAnimationFrame para asegurar que el DOM esté actualizado
+      requestAnimationFrame(() => {
+        if (containerRef.current) {
+          containerRef.current.scrollTo({
+            top: savedPosition,
+            behavior: 'smooth'
+          });
+        }
+      });
+    }
+  }, []);
+
+  // Función mejorada para cambiar de incidente con preservación de scroll
+  const cambiarIncidente = useCallback((nuevoIndice: number) => {
+    if (nuevoIndice >= 0 && nuevoIndice < (Array.isArray(usoFuerza) ? usoFuerza : [usoFuerza]).length) {
+      preserveScrollPosition();
+      setIncidenteActivo(nuevoIndice);
+      // Restaurar scroll después de un pequeño delay para permitir el re-render
+      setTimeout(() => restoreScrollPosition(nuevoIndice), 100);
+    }
+  }, [usoFuerza, preserveScrollPosition, restoreScrollPosition]);
+
+  // Scroll al inicio cuando se monta el componente
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, []);
+
+  // Limpiar posiciones guardadas cuando cambie la prop usoFuerza
+  useEffect(() => {
+    scrollPositionsRef.current = {};
+    setIncidenteActivo(0);
+    // Scroll al inicio cuando cambien los datos
+    if (containerRef.current) {
+      containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [usoFuerza]);
+  
   // Verificar si los datos están disponibles
   if (!usoFuerza || (Array.isArray(usoFuerza) && usoFuerza.length === 0)) {
     return (
@@ -218,8 +278,9 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
     );
   }
 
-  // Siempre tomar el primer elemento (backend lo manda como array pero siempre será uno)
-  const incidente = Array.isArray(usoFuerza) ? usoFuerza[0] : usoFuerza;
+  // Convertir a array si es objeto único
+  const incidentes = Array.isArray(usoFuerza) ? usoFuerza : [usoFuerza];
+  const incidente = incidentes[incidenteActivo];
 
   return (
     <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
@@ -228,20 +289,79 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
         style={{ backgroundColor: '#c2b186' }}
       >
         Anexo B. Uso de la Fuerza
+        {incidentes.length > 1 && (
+          <span className="ml-2 text-xs opacity-90">
+            ({incidenteActivo + 1} de {incidentes.length})
+          </span>
+        )}
       </h2>
       
       <div 
-        className="border border-gray-300 rounded-md shadow-sm p-6"
+        ref={containerRef}
+        className="border border-gray-300 rounded-md shadow-sm p-6 max-h-[80vh] overflow-y-auto"
         style={{ backgroundColor: '#fdf7f1' }}
       >
         
+        {/* Navegación entre incidentes si hay múltiples */}
+        {incidentes.length > 1 && (
+          <div className="mb-6 flex items-center justify-center gap-4 p-4 bg-white rounded-lg border border-[#c2b186]/20">
+            <button
+              onClick={() => cambiarIncidente(incidenteActivo - 1)}
+              disabled={incidenteActivo === 0}
+              className={`p-2 rounded-lg transition-colors ${
+                incidenteActivo === 0
+                  ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                  : 'text-[#4d4725] hover:bg-[#c2b186] hover:text-white'
+              }`}
+              title="Incidente anterior"
+              aria-label="Ir a incidente anterior"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            
+            <div className="text-center">
+              <div className="flex items-center gap-2 text-[#4d4725] font-poppins">
+                <Hash className="h-4 w-4" />
+                <span className="text-lg font-bold">
+                  Incidente {incidenteActivo + 1}
+                </span>
+                <span className="text-sm text-gray-500">
+                  de {incidentes.length}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Usa las flechas para navegar entre incidentes
+              </p>
+            </div>
+            
+            <button
+              onClick={() => cambiarIncidente(incidenteActivo + 1)}
+              disabled={incidenteActivo === incidentes.length - 1}
+              className={`p-2 rounded-lg transition-colors ${
+                incidenteActivo === incidentes.length - 1
+                  ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                  : 'text-[#4d4725] hover:bg-[#c2b186] hover:text-white'
+              }`}
+              title="Incidente siguiente"
+              aria-label="Ir a incidente siguiente"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+        )}
+        
         {/* Sección 1: Estadísticas de Víctimas */}
-        <div className="mb-6">
+        <div className="mb-6" id={`victimas-${incidenteActivo}`}>
           <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
             <div className="p-2 bg-[#c2b186] rounded-lg">
               <AlertTriangle className="h-5 w-5 text-white" />
             </div>
             Estadísticas de Víctimas
+            {incidentes.length > 1 && (
+              <span className="ml-auto text-sm font-normal text-gray-600 bg-white px-3 py-1 rounded-full border border-[#c2b186]/30">
+                Incidente {incidenteActivo + 1}/{incidentes.length}
+              </span>
+            )}
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -321,7 +441,7 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
         </div>
 
         {/* Sección 2: Tipo de Fuerza Aplicada */}
-        <div className="mb-6 pt-6 border-t border-gray-200">
+        <div className="mb-6 pt-6 border-t border-gray-200" id={`tipo-fuerza-${incidenteActivo}`}>
           <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
             <div className="p-2 bg-[#c2b186] rounded-lg">
               <Target className="h-5 w-5 text-white" />
@@ -354,7 +474,7 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
         </div>
 
         {/* Sección 3: Contexto del Incidente */}
-        <div className="mb-6 pt-6 border-t border-gray-200">
+        <div className="mb-6 pt-6 border-t border-gray-200" id={`contexto-${incidenteActivo}`}>
           <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
             <div className="p-2 bg-[#c2b186] rounded-lg">
               <FileText className="h-5 w-5 text-white" />
@@ -412,7 +532,7 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
 
         {/* Sección 4: Personal Participante */}
         {incidente.disposiciones && incidente.disposiciones.length > 0 && (
-          <div className="pt-6 border-t border-gray-200">
+          <div className="pt-6 border-t border-gray-200" id={`personal-${incidenteActivo}`}>
             <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
               <div className="p-2 bg-[#c2b186] rounded-lg">
                 <Users className="h-5 w-5 text-white" />

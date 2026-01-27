@@ -173,8 +173,8 @@ export const PaginationDebugPanel: React.FC<PaginationDebugPanelProps> = ({
       <div className="mt-3 pt-2 border-t border-gray-200 space-y-2">
         <button
           onClick={() => {
-            console.log('📊 Storage Data:', sessionStorage.getItem(fullKey));
-            console.log('📊 Parsed:', storageData);
+            
+            
           }}
           className="w-full px-3 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors font-medium"
         >
@@ -186,7 +186,7 @@ export const PaginationDebugPanel: React.FC<PaginationDebugPanelProps> = ({
             if (confirm('¿Limpiar datos de paginación guardados?')) {
               sessionStorage.removeItem(fullKey);
               setRefreshKey(k => k + 1);
-              console.log('🗑️ Paginación limpiada para:', fullKey);
+              
             }
           }}
           className="w-full px-3 py-1 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100 transition-colors font-medium"

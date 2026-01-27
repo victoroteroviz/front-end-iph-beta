@@ -254,7 +254,7 @@ export const UserDataGuardExample: React.FC<{
 
   React.useEffect(() => {
     if (!hasUserData()) {
-      console.warn('No hay datos de usuario, redirigiendo a login');
+      
       navigate('/login', { replace: true });
     }
   }, [navigate]);

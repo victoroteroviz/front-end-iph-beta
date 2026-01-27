@@ -147,7 +147,7 @@ export const useUserData = (options: UseUserDataOptions = {}): UseUserDataResult
         });
       }
     } catch (error) {
-      console.error('[useUserData] Error cargando datos:', error);
+      
       setUserData(null);
     } finally {
       setIsLoading(false);

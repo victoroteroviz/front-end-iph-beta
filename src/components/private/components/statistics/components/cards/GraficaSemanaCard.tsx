@@ -270,14 +270,7 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
     const targetSunday = new Date(targetMonday);
     targetSunday.setDate(targetMonday.getDate() + 6);
 
-    // Actualizar calendario siempre que cambie el offset
-    console.log('GraficaSemanaCard: Sincronizando calendario desde semanaOffset:', {
-      semanaOffset,
-      targetMonday: targetMonday.toISOString(),
-      targetSunday: targetSunday.toISOString(),
-      targetMondayLocal: targetMonday.toLocaleDateString('es-ES'),
-      targetSundayLocal: targetSunday.toLocaleDateString('es-ES')
-    });
+   
     setStartDate(targetMonday);
     setEndDate(targetSunday);
   }, [semanaOffset, getMondayOfWeek]); // Intencionalmente solo semanaOffset para evitar loops
@@ -469,15 +462,7 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
     const diffWeeks = Math.round(diffTime / (1000 * 60 * 60 * 24 * 7));
     const targetOffset = -diffWeeks;
 
-    console.log('GraficaSemanaCard: Sincronizando semanaOffset desde calendario:', {
-      label: validRange.label,
-      startDate: validRange.startDate.toISOString(),
-      endDate: validRange.endDate.toISOString(),
-      currentMonday: currentMonday.toISOString(),
-      selectedMonday: selectedMonday.toISOString(),
-      diffWeeks,
-      targetOffset
-    });
+
 
     // Actualizar semanaOffset a través del setter del padre
     setSemanaOffset(targetOffset);
@@ -499,7 +484,7 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
     setIsCalendarOpen(false);
 
     // ✅ CORRECCIÓN 4: Resetear a semana actual (offset 0) en lugar de fechas inválidas
-    console.log('GraficaSemanaCard: Clearing selection, resetting to current week (offset 0)');
+
     setSemanaOffset(0);
 
     // No es necesario actualizar startDate/endDate manualmente,
@@ -603,11 +588,10 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
             <button
               type="button"
               onClick={() => {
-                console.log('🔙 Button: Clicking "Atrás" - current offset:', semanaOffset);
+
                 setSemanaOffset((prev) => {
                   // ✅ CORRECCIÓN 3: Aplicar límite inferior para evitar valores excesivamente negativos
                   const newOffset = Math.max(prev - 1, -7);
-                  console.log('🔙 Button: Setting offset from', prev, 'to', newOffset, '(limit: -7)');
                   return newOffset;
                 });
               }}
@@ -625,11 +609,9 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
             <button
               type="button"
               onClick={() => {
-                console.log('🔜 Button: Clicking "Adelante" - current offset:', semanaOffset);
                 setSemanaOffset((prev) => {
                   // ✅ CORRECCIÓN 3: Aplicar límite superior para garantizar que nunca supere 0
                   const newOffset = Math.min(prev + 1, 0);
-                  console.log('🔜 Button: Setting offset from', prev, 'to', newOffset, '(limit: 0)');
                   return newOffset;
                 });
               }}
