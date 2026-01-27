@@ -77,14 +77,14 @@ export default defineConfig(({ mode }) => {
           target: apiBaseUrl,
           changeOrigin: true,
           secure: false,
-          configure: (proxy: any, _options: any) => {
-            proxy.on('error', (err: any, _req: any, _res: any) => {
+          configure: (_proxy: any, _options: any) => {
+            _proxy.on('error', (_err: any, _req: any, _res: any) => {
              
             });
-            proxy.on('proxyReq', (proxyReq: any, req: any, _res: any) => {
+            _proxy.on('proxyReq', (_proxyReq: any, _req: any, _res: any) => {
               
             });
-            proxy.on('proxyRes', (proxyRes: any, req: any, _res: any) => {
+            _proxy.on('proxyRes', (_proxyRes: any, _req: any, _res: any) => {
              
             });
           }
@@ -94,7 +94,7 @@ export default defineConfig(({ mode }) => {
           target: apiBaseUrl,
           changeOrigin: true,
           secure: false,
-          configure: (proxy: any, _options: any) => {
+          configure: (_proxy: any, _options: any) => {
             
           
            

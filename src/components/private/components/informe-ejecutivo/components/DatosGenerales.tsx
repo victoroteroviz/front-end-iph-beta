@@ -303,7 +303,7 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
   // Construir URLs de imágenes con manejo robusto para desarrollo/producción
   const imageUrls =
     iphData.fotos && iphData.fotos.length > 0
-      ? iphData.fotos.map((fotoPath, index) => {
+      ? iphData.fotos.map((fotoPath, _index) => {
           const finalUrl = buildImageUrl(fotoPath);
 
           return finalUrl;

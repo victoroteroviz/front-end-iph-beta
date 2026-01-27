@@ -271,7 +271,7 @@ const PDFThumbnail: React.FC<PDFThumbnailProps> = memo(
       setError(null);
     }, []);
 
-    const handlePageLoadError = useCallback((err: Error) => {
+    const handlePageLoadError = useCallback((_err: Error) => {
       
       setError("Error al cargar página");
     }, []);

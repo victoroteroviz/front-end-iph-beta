@@ -240,7 +240,7 @@ const Inicio: React.FC<InicioProps> = ({ className = "" }) => {
                 semanaOffset={semanaOffset}
                 setSemanaOffset={setSemanaOffset}
                 loading={loading}
-                onDateRangeChange={(startDate, endDate) => {
+                onDateRangeChange={(startDate, _endDate) => {
                   // Calcular diferencia en semanas desde hoy hasta la fecha de fin del rango
                   const hoy = new Date();
                   const inicioSemanaActual = new Date(hoy);
