@@ -67,7 +67,8 @@ const useUserSession = (): UserSessionState => {
           isAuthenticated: false,
           isLoading: false
         });
-        navigate('/');
+        // ✅ SECURITY FIX: replace: true previene volver con botón "back"
+        navigate('/', { replace: true });
         return;
       }
 
@@ -80,7 +81,8 @@ const useUserSession = (): UserSessionState => {
           isAuthenticated: false,
           isLoading: false
         });
-        navigate('/');
+        // ✅ SECURITY FIX: replace: true previene volver con botón "back"
+        navigate('/', { replace: true });
         return;
       }
 
@@ -164,10 +166,12 @@ const useUserSession = (): UserSessionState => {
         isLoading: false
       });
       showSuccess('Sesión cerrada correctamente');
-      navigate('/');
+      // ✅ SECURITY FIX: replace: true previene volver con botón "back"
+      navigate('/', { replace: true });
     } catch (error) {
       logError('useUserSession', error, 'Error durante el logout');
-      navigate('/');
+      // ✅ SECURITY FIX: replace: true también en caso de error
+      navigate('/', { replace: true });
     }
   }, [navigate]);
 

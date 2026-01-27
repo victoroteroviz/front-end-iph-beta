@@ -59,6 +59,18 @@ const DashboardContent: React.FC<DashboardProps> = ({
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
 
   
+  // ✅ SECURITY FIX: Prevenir que el navegador cachee páginas protegidas
+  React.useEffect(() => {
+    // Deshabilitar bfcache para páginas protegidas
+    // Esto previene que Chrome muestre páginas cacheadas después de logout
+    const preventBFCache = () => {
+      // Agregar listener vacío para beforeunload previene bfcache
+      window.addEventListener('beforeunload', () => {});
+    };
+
+    preventBFCache();
+  }, []);
+
   // Log cuando se monta el dashboard
   React.useEffect(() => {
     if (isAuthenticated && userRole && userData) {

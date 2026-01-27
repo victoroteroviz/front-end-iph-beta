@@ -146,6 +146,21 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
   // showLoading controla el fallback mientras se hidratan roles
 }) => {
   const [isLoadingRoles, setIsLoadingRoles] = useState(true);
+  const [forceRevalidate, setForceRevalidate] = useState(0);
+
+  // ✅ SECURITY FIX: Detectar restauración desde bfcache
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        // Página restaurada desde cache - forzar revalidación
+        logWarning('PrivateRoute', '⚠️ Página restaurada desde cache - forzando revalidación');
+        setForceRevalidate(prev => prev + 1);
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -249,7 +264,7 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
       reason: 'authorized',
       redirectTo: null
     };
-  }, [isLoadingRoles, requiredRoles]);
+  }, [isLoadingRoles, requiredRoles, forceRevalidate]);
 
   if (!accessValidation) {
     return showLoading ? <RouteLoadingFallback /> : null;
