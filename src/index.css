@@ -2,6 +2,65 @@
 @import 'leaflet/dist/leaflet.css';
 @import 'react-datepicker/dist/react-datepicker.css';
 
+:root {
+  --color-iph-primary: #1a2744;
+  --color-iph-secondary: #4246b2;
+  --color-iph-tertiary: #787dff;
+  --color-iph-background: #f4f4f4;
+
+  /* Paleta extendida para módulos legacy migrados a tema global */
+  --color-iph-primary-dark: #4d4725;
+  --color-iph-secondary-soft: #948b54;
+  --color-iph-accent: #b8ab84;
+  --color-iph-accent-soft: #c2b186;
+  --color-iph-light-surface: #fdf7f1;
+  --color-iph-primary-light-08: #4d472515;
+  --color-iph-primary-light-12: #4d472520;
+  --color-iph-primary-light-25: #4d472540;
+  --color-iph-border-soft-25: #b8ab8440;
+
+  --color-pd-diaria: #8b5a3c;
+  --color-pd-mensual: #d4a574;
+  --color-pd-anual: #c2926a;
+
+  --color-state-success: #10b981;
+  --color-state-success-bg: #d1fae5;
+  --color-state-success-text: #065f46;
+  --color-state-warning: #f59e0b;
+  --color-state-warning-bg: #fef3c7;
+  --color-state-warning-text: #92400e;
+  --color-state-danger: #ef4444;
+  --color-state-danger-strong: #dc2626;
+  --color-state-danger-bg: #fee2e2;
+  --color-state-danger-text: #991b1b;
+  --color-state-info: #3b82f6;
+  --color-state-info-cyan: #0891b2;
+  --color-state-info-bg: #dbeafe;
+  --color-state-info-text: #1e40af;
+
+  --color-neutral-50: #f9fafb;
+  --color-neutral-100: #f3f4f6;
+  --color-neutral-200: #e5e7eb;
+  --color-neutral-300: #d1d5db;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-500: #6b7280;
+  --color-neutral-600: #4b5563;
+  --color-neutral-700: #374151;
+  --color-neutral-800: #1f2937;
+  --color-neutral-900: #111827;
+  --color-neutral-white: #ffffff;
+
+  --color-chart-indigo: #4f46e5;
+  --color-chart-violet: #7c3aed;
+  --color-chart-purple: #8b5cf6;
+  --color-chart-pink: #be185d;
+  --color-chart-orange: #ea580c;
+  --color-chart-emerald: #059669;
+  --color-chart-teal: #0d9488;
+  --color-chart-blue: #2563eb;
+  --color-chart-sky: #0284c7;
+}
+
 /* Animación de shake para elementos con error - versión más suave */
 @keyframes shake {
   0%, 20%, 40%, 60%, 80% {

@@ -26,8 +26,8 @@ import { getUserRoles, hasAnyRole } from '../../../../../helper/role/role.helper
  * Configuración principal del sidebar
  */
 // Import del logo y isotipo
-import logoBlanco from '../../../../../assets/iph/siriph_completo_blanco.webp';
-import isotipoBlanco from '../../../../../assets/iph/IPH_Isotipo_Blanco.webp';
+import logoBlanco from '../../../../../assets/images/fides_blanco.png';
+import isotipoBlanco from '../../../../../assets/icons/fides_icon_blanco.png';
 
 export const SIDEBAR_CONFIG: SidebarConfig = {
   title: 'IPH',

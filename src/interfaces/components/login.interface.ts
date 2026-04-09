@@ -33,7 +33,7 @@ export interface FieldValidationErrors {
 }
 
 // Tipos de error específicos del Login
-export type LoginErrorType = 
+export type LoginErrorType =
   | 'INVALID_CREDENTIALS'
   | 'NETWORK_ERROR'
   | 'SERVER_ERROR'
@@ -76,16 +76,6 @@ export interface LoginLogicHook {
   updateFormData: (updates: Partial<LoginFormData>) => void;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   checkAuthentication: () => void;
-}
-
-// Constantes para el tema visual
-export interface LoginThemeColors {
-  primary: string;
-  background: string;
-  border: string;
-  textSecondary: string;
-  buttonPrimary: string;
-  buttonHover: string;
 }
 
 // Constantes de tiempo para animaciones

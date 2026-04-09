@@ -10,7 +10,7 @@ import React from 'react';
 import type { RespuestaJC } from '../../../../../interfaces/estadisticas-jc';
 import GraficaBarrasJC from '../components/charts/GraficaBarrasJC';
 import GraficaPromedioJC from '../components/charts/GraficaPromedioJC';
-import { PD_COLORS } from '../config/colorsConfig';
+import { PD_COLORS } from '../config/constants';
 
 export interface ProbableDelictivoGraficasProps {
   /** Estadísticas diarias */

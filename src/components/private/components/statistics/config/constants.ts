@@ -8,27 +8,45 @@
  */
 export const STATISTICS_COLORS = {
   // Colores IPH principales
-  IPH_PRIMARY: '#948b54',
-  IPH_SECONDARY: '#c2b186',
-  IPH_DARK: '#4d4725',
-  IPH_LIGHT: '#fdf7f1',
+  IPH_PRIMARY: 'var(--color-iph-primary)',
+  IPH_SECONDARY: 'var(--color-iph-secondary)',
+  IPH_DARK: 'var(--color-iph-tertiary)',
+  IPH_LIGHT: 'var(--color-iph-background)',
 
   // Colores de estado
-  SUCCESS: '#059669',      // Verde - Para datos positivos
-  WARNING: '#f59e0b',      // Ámbar - Para alertas
-  DANGER: '#dc2626',       // Rojo - Para datos críticos
-  INFO: '#0891b2',         // Cyan - Para información
+  SUCCESS: 'var(--color-chart-emerald)',      // Verde - Para datos positivos
+  WARNING: 'var(--color-state-warning)',      // Ámbar - Para alertas
+  DANGER: 'var(--color-state-danger-strong)', // Rojo - Para datos críticos
+  INFO: 'var(--color-state-info-cyan)',       // Cyan - Para información
 
   // Colores adicionales
-  INDIGO: '#4f46e5',
-  VIOLET: '#7c3aed',
-  PURPLE: '#8b5cf6',
-  PINK: '#be185d',
-  ORANGE: '#ea580c',
-  EMERALD: '#059669',
-  TEAL: '#0d9488',
-  BLUE: '#2563eb',
-  SKY: '#0284c7'
+  INDIGO: 'var(--color-chart-indigo)',
+  VIOLET: 'var(--color-chart-violet)',
+  PURPLE: 'var(--color-chart-purple)',
+  PINK: 'var(--color-chart-pink)',
+  ORANGE: 'var(--color-chart-orange)',
+  EMERALD: 'var(--color-chart-emerald)',
+  TEAL: 'var(--color-chart-teal)',
+  BLUE: 'var(--color-chart-blue)',
+  SKY: 'var(--color-chart-sky)'
+} as const;
+
+/**
+ * Colores para gráficas de Justicia Cívica
+ */
+export const JC_COLORS = {
+  diaria: 'var(--color-iph-primary)',
+  mensual: 'var(--color-iph-secondary)',
+  anual: 'var(--color-iph-tertiary)'
+} as const;
+
+/**
+ * Colores para gráficas de Probable Delictivo
+ */
+export const PD_COLORS = {
+  diaria: 'var(--color-pd-diaria)',
+  mensual: 'var(--color-pd-mensual)',
+  anual: 'var(--color-pd-anual)'
 } as const;
 
 /**

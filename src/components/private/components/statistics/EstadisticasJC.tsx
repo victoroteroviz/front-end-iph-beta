@@ -34,7 +34,7 @@ import EstadisticasJCHeader from './sections/EstadisticasJCHeader';
 import AccessDenied from '../../../shared/components/access-denied';
 import { getUserRoles } from '../../../../helper/role/role.helper';
 import { canAccessSuperior } from '../../../../config/permissions.config';
-import { JC_COLORS } from './config/colorsConfig';
+import { JC_COLORS } from './config/constants';
 import { logDebug } from '../../../../helper/log/logger.helper';
 import './styles/EstadisticasJC.css';
 

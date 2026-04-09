@@ -22,6 +22,7 @@ import { hydrateUserDataCache, clearUserData } from '../../../../helper/user/use
  * @returns Token decodificado y validado
  * @throws Error con mensaje específico si el token es inválido o expirado
  */
+
 const decodeAndValidateToken = (tokenString: string): Token => {
   try {
     const token: Token = jwtDecode(tokenString) as Token;

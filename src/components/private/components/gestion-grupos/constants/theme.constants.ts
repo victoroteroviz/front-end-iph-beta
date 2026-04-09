@@ -8,43 +8,43 @@
  * Paleta de colores del tema
  */
 export const COLORS = {
-  primary: '#4d4725',
-  primaryLight: '#4d472515',
-  primaryLight20: '#4d472520',
-  primaryLight40: '#4d472540',
-  primaryBorder: '#b8ab8440',
-  background: '#f8f0e7',
+  primary: 'var(--color-iph-primary)',
+  primaryLight: 'var(--color-iph-primary-light-08)',
+  primaryLight20: 'var(--color-iph-primary-light-12)',
+  primaryLight40: 'var(--color-iph-primary-light-25)',
+  primaryBorder: 'var(--color-iph-border-soft-25)',
+  background: 'var(--color-iph-background)',
   
   // Estados
-  success: '#10b981',
-  successBg: '#d1fae5',
-  successText: '#065f46',
+  success: 'var(--color-state-success)',
+  successBg: 'var(--color-state-success-bg)',
+  successText: 'var(--color-state-success-text)',
   
-  error: '#ef4444',
-  errorBg: '#fee2e2',
-  errorText: '#991b1b',
+  error: 'var(--color-state-danger)',
+  errorBg: 'var(--color-state-danger-bg)',
+  errorText: 'var(--color-state-danger-text)',
   
-  warning: '#f59e0b',
-  warningBg: '#fef3c7',
-  warningText: '#92400e',
+  warning: 'var(--color-state-warning)',
+  warningBg: 'var(--color-state-warning-bg)',
+  warningText: 'var(--color-state-warning-text)',
   
-  info: '#3b82f6',
-  infoBg: '#dbeafe',
-  infoText: '#1e40af',
+  info: 'var(--color-state-info)',
+  infoBg: 'var(--color-state-info-bg)',
+  infoText: 'var(--color-state-info-text)',
   
   // Neutros
-  gray50: '#f9fafb',
-  gray100: '#f3f4f6',
-  gray200: '#e5e7eb',
-  gray300: '#d1d5db',
-  gray400: '#9ca3af',
-  gray500: '#6b7280',
-  gray600: '#4b5563',
-  gray700: '#374151',
-  gray800: '#1f2937',
-  gray900: '#111827',
+  gray50: 'var(--color-neutral-50)',
+  gray100: 'var(--color-neutral-100)',
+  gray200: 'var(--color-neutral-200)',
+  gray300: 'var(--color-neutral-300)',
+  gray400: 'var(--color-neutral-400)',
+  gray500: 'var(--color-neutral-500)',
+  gray600: 'var(--color-neutral-600)',
+  gray700: 'var(--color-neutral-700)',
+  gray800: 'var(--color-neutral-800)',
+  gray900: 'var(--color-neutral-900)',
   
-  white: '#ffffff',
+  white: 'var(--color-neutral-white)',
 } as const;
 
 /**
@@ -71,28 +71,4 @@ export const COMMON_STYLES = {
   },
   
   iconContainer: 'flex items-center justify-center w-12 h-12 rounded-lg',
-} as const;
-
-/**
- * Dimensiones y espaciados
- */
-export const SPACING = {
-  xs: '0.25rem',
-  sm: '0.5rem',
-  md: '1rem',
-  lg: '1.5rem',
-  xl: '2rem',
-  '2xl': '3rem',
-} as const;
-
-/**
- * Tamaños de iconos
- */
-export const ICON_SIZES = {
-  xs: 14,
-  sm: 16,
-  md: 20,
-  lg: 24,
-  xl: 32,
-  '2xl': 48,
 } as const;

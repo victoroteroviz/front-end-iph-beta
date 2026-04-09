@@ -13,6 +13,8 @@ export {
 // Constantes y utilidades
 export {
   STATISTICS_COLORS,
+  JC_COLORS,
+  PD_COLORS,
   STATISTICS_CATEGORIES,
   CARD_STATUS,
   STATISTICS_ROUTES,
@@ -25,18 +27,3 @@ export {
   titleToId,
   generateRouteFromTitle
 } from './constants';
-
-// Configuración de colores para gráficas
-export {
-  JC_COLORS,
-  PD_COLORS,
-  THEME_COLORS,
-  CHART_COLORS,
-  GRADIENT_COLORS,
-  OPACITIES,
-  ALL_COLORS,
-  getColorWithOpacity,
-  getColorsByType,
-  type StatisticsColorType,
-  type StatisticsType
-} from './colorsConfig';

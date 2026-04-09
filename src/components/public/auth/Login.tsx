@@ -18,34 +18,22 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
-// Assets
-import iphLogin from '../../../assets/iph/iphLogin.png';
-
 // Servicios
 import { login, isLoggedIn } from './services/login.service';
 
 // Helpers
 import { isUserAuthenticated } from '../../../helper/navigation/navigation.helper';
 import { showSuccess, showError, showWarning } from '../../../helper/notification/notification.helper';
-import { 
-  sanitizeInput, 
-  recordFailedAttempt, 
-  isAccountLocked,
-  getLockoutTimeRemaining,
-  clearFailedAttempts,
-  generateCSRFToken,
-  validateCSRFToken 
-} from '../../../helper/security/security.helper';
+import { sanitizeInput, recordFailedAttempt, clearFailedAttempts, generateCSRFToken, validateCSRFToken } from '../../../helper/security/security.helper';
 import { logInfo, logAuth } from '../../../helper/log/logger.helper';
 
 // Interfaces
-import type { 
-  LoginFormData, 
-  LoginState, 
+import type {
+  LoginFormData,
+  LoginState,
   LoginErrorType,
   FieldValidationErrors,
   FormValidationResult,
-  LoginThemeColors,
   LoginTiming
 } from '../../../interfaces/components/login.interface';
 
@@ -53,17 +41,6 @@ import type {
 // CONSTANTES Y CONFIGURACIÓN
 // =====================================================
 
-/**
- * Colores del tema - mantiene consistencia visual
- */
-const THEME_COLORS: LoginThemeColors = {
-  primary: '#4d4725',
-  background: '#f8f0e7',
-  border: '#cec7b2',
-  textSecondary: '#76715e',
-  buttonPrimary: '#948b54',
-  buttonHover: '#5e5531'
-};
 
 /**
  * Tiempos para animaciones y efectos
@@ -74,7 +51,7 @@ const TIMING: LoginTiming = {
 };
 
 /**
- * Esquema de validación Zod - Robusto pero no extremo
+ * Esquema de validación Zod
  */
 const loginValidationSchema = z.object({
   email: z
@@ -82,7 +59,7 @@ const loginValidationSchema = z.object({
     .min(1, 'El correo electrónico es requerido')
     .email('Formato de correo electrónico inválido')
     .max(254, 'Correo electrónico muy largo'),
-  
+
   password: z
     .string()
     .min(8, 'La contraseña debe tener al menos 8 caracteres')
@@ -91,7 +68,7 @@ const loginValidationSchema = z.object({
     .regex(/[a-z]/, 'La contraseña debe contener al menos una letra minúscula')
     .regex(/[0-9]/, 'La contraseña debe contener al menos un número')
     .regex(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/, 'La contraseña debe contener al menos un carácter especial'),
-  
+
   agreeTerms: z
     .boolean()
     .refine(val => val === true, 'Debes aceptar los Términos y Condiciones')
@@ -141,7 +118,7 @@ const LoadingSpinner: React.FC<{ size?: 'small' | 'medium' | 'large' }> = ({ siz
  */
 const getInputClasses = (hasError: boolean): string => {
   const baseClasses = 'w-full px-4 py-2 rounded border bg-white focus:outline-none focus:ring disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200';
-  return `${baseClasses} ${hasError ? 'border-red-500 focus:ring-red-200' : 'border-gray-300'}`;
+  return `${baseClasses} ${hasError ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-[var(--color-iph-primary)]'}`;
 };
 
 /**
@@ -161,7 +138,7 @@ const getCheckboxClasses = (hasError: boolean): string => {
  */
 const useLoginLogic = () => {
   const navigate = useNavigate();
-  
+
   const [state, setState] = useState<LoginState>({
     formData: {
       email: '',
@@ -183,7 +160,7 @@ const useLoginLogic = () => {
   const updateFormData = useCallback((updates: Partial<LoginFormData>) => {
     setState(prev => {
       const newFieldErrors = { ...prev.fieldErrors };
-      
+
       // Limpiar errores de los campos actualizados
       Object.keys(updates).forEach(key => {
         if (key in newFieldErrors) {
@@ -215,7 +192,7 @@ const useLoginLogic = () => {
    */
   const validateForm = useCallback((): FormValidationResult => {
     const result = loginValidationSchema.safeParse(state.formData);
-    
+
     if (result.success) {
       return { isValid: true, errors: {} };
     }
@@ -225,7 +202,7 @@ const useLoginLogic = () => {
 
     result.error.issues.forEach(issue => {
       const field = issue.path[0] as keyof LoginFormData;
-      
+
       if (field === 'email') {
         fieldErrors.email = issue.message;
         if (!globalError) globalError = 'EMAIL_VALIDATION_ERROR';
@@ -274,11 +251,11 @@ const useLoginLogic = () => {
 
     // Validar formulario
     const validation = validateForm();
-    
+
     if (!validation.isValid) {
-      setState(prev => ({ 
-        ...prev, 
-        fieldErrors: validation.errors 
+      setState(prev => ({
+        ...prev,
+        fieldErrors: validation.errors
       }));
 
       if (validation.errors.agreeTerms) {
@@ -288,15 +265,15 @@ const useLoginLogic = () => {
       if (validation.globalError) {
         showError(ERROR_MESSAGES[validation.globalError], 'Error de Validación');
       }
-      
+
       return;
     }
 
-    setState(prev => ({ 
-      ...prev, 
-      isLoading: true, 
-      error: null, 
-      fieldErrors: {} 
+    setState(prev => ({
+      ...prev,
+      isLoading: true,
+      error: null,
+      fieldErrors: {}
     }));
 
     try {
@@ -310,27 +287,27 @@ const useLoginLogic = () => {
 
       // Login exitoso
       logInfo('LoginComponent', 'Login exitoso');
-      
+
       // Limpiar intentos fallidos
       clearFailedAttempts(emailForTracking);
-      
+
       showSuccess('¡Bienvenido! Has iniciado sesión correctamente.');
 
       // Navegación simplificada - todos van a inicio
       setState(prev => ({ ...prev, isRedirecting: true }));
-      
+
       setTimeout(() => {
         navigate('/inicio');
       }, TIMING.redirectDelay);
 
     } catch (error) {
       const errorMessage = (error as Error).message;
-      
+
       // Registrar intento fallido
       recordFailedAttempt(emailForTracking);
-      
-      setState(prev => ({ 
-        ...prev, 
+
+      setState(prev => ({
+        ...prev,
         isLoading: false,
         fieldErrors: {
           email: 'Correo electrónico o contraseña incorrectos',
@@ -339,8 +316,8 @@ const useLoginLogic = () => {
       }));
 
       showError(errorMessage || ERROR_MESSAGES.INVALID_CREDENTIALS, 'Error de Autenticación');
-      
-      logAuth('login_failed', false, { 
+
+      logAuth('login_failed', false, {
         email: emailForTracking,
         error: errorMessage
       });
@@ -387,65 +364,42 @@ const Login: React.FC = () => {
   const { formData, isLoading, isRedirecting, fieldErrors } = state;
 
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center px-4 font-poppins"
-      style={{ backgroundColor: THEME_COLORS.background }}
-    >
-      <div 
-        className="max-w-md w-full p-8 rounded shadow-md text-center"
-        style={{ backgroundColor: THEME_COLORS.background }}
-      >
-        
+    <div className="min-h-screen flex items-center justify-center px-4 font-poppins bg-[var(--color-iph-background)]">
+      <div className="max-w-md w-full p-8 rounded shadow-md text-center bg-[var(--color-iph-background)]">
+
         {/* Logo */}
         <div className="mb-7">
-          <img 
-            src={iphLogin} 
-            alt="Logo IPH" 
-            className="mx-auto mb-4" 
+          <img
+            src='src/assets/images/fides.png'
+            alt="Logo IPH"
+            className="mx-auto mb-4"
           />
         </div>
 
-        <hr 
-          className="border-t border-2 mb-6 mx-auto"
-          style={{ borderColor: THEME_COLORS.border }}
-        />
+        <hr className="border-t border-2 mb-6 mx-auto border-[var(--color-iph-primary)]" />
 
         {/* Título */}
-        <h1 
-          className="text-3xl font-bold mb-2"
-          style={{ color: THEME_COLORS.primary }}
-        >
-          IPH
+        <h1 className="text-3xl font-bold mb-2 text-[var(--color-iph-primary)]">
+          Inicio de sesión
         </h1>
-        <p 
-          className="mb-6"
-          style={{ color: THEME_COLORS.primary }}
-        >
+        <p className="mb-6 text-[var(--color-iph-primary)]">
           {isRedirecting ? 'Redirigiendo...' : 'Introduce tus datos para continuar'}
         </p>
 
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="space-y-4 text-left" noValidate>
-          
+
           {/* Campo Email */}
           <div>
-            <label 
-              className="block mb-1 text-sm font-bold"
-              style={{ color: THEME_COLORS.textSecondary }}
-            >
+            <label className="block mb-1 text-sm font-bold text-[var(--color-iph-secondary)]">
               Introduce tu correo electrónico
             </label>
-            <input 
-              type="email" 
-              value={formData.email} 
+            <input
+              type="email"
+              value={formData.email}
               onChange={(e) => updateFormData({ email: e.target.value })}
-              placeholder="correo@ejemplo.com" 
+              placeholder="correo@ejemplo.com"
               className={getInputClasses(!!fieldErrors.email)}
-              style={{
-                ...(!fieldErrors.email && {
-                  '--tw-ring-color': THEME_COLORS.primary
-                } as React.CSSProperties)
-              }}
               disabled={isLoading || isRedirecting}
               autoComplete="email"
               autoCapitalize="none"
@@ -457,22 +411,14 @@ const Login: React.FC = () => {
 
           {/* Campo Contraseña */}
           <div>
-            <label 
-              className="block mb-1 text-sm font-bold"
-              style={{ color: THEME_COLORS.textSecondary }}
-            >
+            <label className="block mb-1 text-sm font-bold text-[var(--color-iph-secondary)]">
               Introduce tu contraseña
             </label>
-            <input 
-              type="password" 
-              value={formData.password} 
+            <input
+              type="password"
+              value={formData.password}
               onChange={(e) => updateFormData({ password: e.target.value })}
               className={getInputClasses(!!fieldErrors.password)}
-              style={{
-                ...(!fieldErrors.password && {
-                  '--tw-ring-color': THEME_COLORS.primary
-                } as React.CSSProperties)
-              }}
               disabled={isLoading || isRedirecting}
               autoComplete="current-password"
             />
@@ -482,25 +428,18 @@ const Login: React.FC = () => {
           </div>
 
           {/* Términos y Condiciones */}
-          <div className={`flex items-start gap-2 text-sm transition-transform duration-200 ${
-            isShaking ? 'shake-animation' : ''
-          }`}>
-            <input 
-              type="checkbox" 
-              checked={formData.agreeTerms} 
+          <div className={`flex items-start gap-2 text-sm transition-transform duration-200 ${isShaking ? 'shake-animation' : ''
+            }`}>
+            <input
+              type="checkbox"
+              checked={formData.agreeTerms}
               onChange={(e) => updateFormData({ agreeTerms: e.target.checked })}
-              className={getCheckboxClasses(!!fieldErrors.agreeTerms)}
-              style={{
-                accentColor: THEME_COLORS.primary
-              }}
+              className={`${getCheckboxClasses(!!fieldErrors.agreeTerms)} accent-[var(--color-iph-primary)]`}
               disabled={isLoading || isRedirecting}
             />
             <div>
-              <label 
-                className="font-bold transition-colors duration-200 cursor-pointer"
-                style={{ 
-                  color: fieldErrors.agreeTerms ? '#dc2626' : THEME_COLORS.primary
-                }}
+              <label
+                className={`font-bold transition-colors duration-200 cursor-pointer ${fieldErrors.agreeTerms ? 'text-red-600' : 'text-[var(--color-iph-primary)]'}`}
               >
                 Estoy de acuerdo con los Términos y Condiciones y la Política de Privacidad
               </label>
@@ -511,30 +450,17 @@ const Login: React.FC = () => {
           </div>
 
           {/* Botón Submit */}
-          <button 
-            type="submit" 
-            className="w-full py-2 mt-4 text-white font-bold rounded transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            style={{
-              backgroundColor: THEME_COLORS.buttonPrimary
-            }}
-            onMouseEnter={(e) => {
-              if (!isLoading && !isRedirecting) {
-                e.currentTarget.style.backgroundColor = THEME_COLORS.buttonHover;
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isLoading && !isRedirecting) {
-                e.currentTarget.style.backgroundColor = THEME_COLORS.buttonPrimary;
-              }
-            }}
+          <button
+            type="submit"
+            className="w-full py-2 mt-4 text-white font-bold rounded transition bg-[var(--color-iph-primary)] hover:bg-[var(--color-iph-secondary)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[var(--color-iph-primary)] flex items-center justify-center gap-2 cursor-pointer"
             disabled={isLoading || isRedirecting}
           >
             {(isLoading || isRedirecting) && <LoadingSpinner size="small" />}
-            {isRedirecting 
-              ? 'Redirigiendo...' 
-              : isLoading 
-                ? 'Iniciando sesión...' 
-                : 'Iniciar Sesión'
+            {isRedirecting
+              ? 'Redirigiendo...'
+              : isLoading
+                ? 'Iniciando sesión...'
+                : 'Ingresar'
             }
           </button>
 
