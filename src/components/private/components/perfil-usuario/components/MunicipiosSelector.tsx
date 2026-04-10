@@ -108,8 +108,8 @@ const MunicipiosSelector: React.FC<MunicipiosSelectorProps> = ({
         className={`
           relative w-full p-3 border rounded-lg transition-all duration-200
           ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:bg-gray-50 cursor-pointer'}
-          ${error ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-[#948b54]'}
-          ${isOpen ? 'ring-2 ring-[#948b54] border-[#948b54]' : ''}
+          ${error ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-[#4246b2]'}
+          ${isOpen ? 'ring-2 ring-[#4246b2] border-[#4246b2]' : ''}
         `}
         onClick={handleToggle}
       >
@@ -149,7 +149,7 @@ const MunicipiosSelector: React.FC<MunicipiosSelectorProps> = ({
                 placeholder="Buscar municipios... (ej: Guadalajara, Zapopan, etc.)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] focus:outline-none"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] focus:outline-none"
                 autoFocus
               />
             </div>
@@ -168,8 +168,8 @@ const MunicipiosSelector: React.FC<MunicipiosSelectorProps> = ({
                     key={municipio.id}
                     className={`
                       flex items-center justify-between px-3 py-2 cursor-pointer transition-colors duration-150
-                      hover:bg-[#f8f0e7]
-                      ${selectedMunicipioId === municipio.id.toString() ? 'bg-[#fdf7f1] text-[#4d4725]' : 'text-gray-900'}
+                      hover:bg-[#eef1ff]
+                      ${selectedMunicipioId === municipio.id.toString() ? 'bg-[#eef1ff] text-[#1a2744]' : 'text-gray-900'}
                     `}
                     onClick={() => handleSelect(municipio)}
                   >
@@ -187,7 +187,7 @@ const MunicipiosSelector: React.FC<MunicipiosSelectorProps> = ({
                       </div>
                     </div>
                     {selectedMunicipioId === municipio.id.toString() && (
-                      <Check className="h-4 w-4 text-[#4d4725]" />
+                      <Check className="h-4 w-4 text-[#1a2744]" />
                     )}
                   </div>
                 ))}
@@ -200,7 +200,7 @@ const MunicipiosSelector: React.FC<MunicipiosSelectorProps> = ({
                         e.stopPropagation();
                         showMoreMunicipios();
                       }}
-                      className="w-full px-3 py-2 text-sm text-[#4d4725] hover:bg-[#f8f0e7] transition-colors duration-150 cursor-pointer"
+                      className="w-full px-3 py-2 text-sm text-[#1a2744] hover:bg-[#eef1ff] transition-colors duration-150 cursor-pointer"
                     >
                       Ver más municipios ({municipios.length - displayCount} restantes)
                     </button>

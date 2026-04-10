@@ -62,7 +62,7 @@ const DummySection: React.FC<DummySectionProps> = ({
       {/* Header */}
       <h2 
         className="text-white text-sm font-semibold px-4 py-2 rounded-t-md mb-4"
-        style={{ backgroundColor: '#c2b186' }}
+        style={{ backgroundColor: '#787dff' }}
       >
         {sectionName}
       </h2>
@@ -70,15 +70,15 @@ const DummySection: React.FC<DummySectionProps> = ({
       {/* Contenido */}
       <div 
         className="border border-gray-300 rounded-md shadow-sm p-6"
-        style={{ backgroundColor: '#fdf7f1' }}
+        style={{ backgroundColor: '#eef1ff' }}
       >
         
         {/* Mensaje principal */}
         <div className="text-center mb-6">
           <div className="mb-4">
-            <Info className="h-16 w-16 mx-auto text-[#c2b186]" />
+            <Info className="h-16 w-16 mx-auto text-[#787dff]" />
           </div>
-          <h3 className="text-xl font-bold text-[#4d4725] font-poppins mb-2">
+          <h3 className="text-xl font-bold text-[#1a2744] font-poppins mb-2">
             Hola, soy el componente {sectionName}
           </h3>
           <p className="text-gray-600 font-poppins">
@@ -89,8 +89,8 @@ const DummySection: React.FC<DummySectionProps> = ({
         {/* Estado de datos */}
         <div className="bg-white rounded-lg p-4 mb-4">
           <div className="flex items-center gap-3 mb-3">
-            <Database className="h-5 w-5 text-[#4d4725]" />
-            <h4 className="font-semibold text-[#4d4725] font-poppins">Estado de los datos:</h4>
+            <Database className="h-5 w-5 text-[#1a2744]" />
+            <h4 className="font-semibold text-[#1a2744] font-poppins">Estado de los datos:</h4>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -131,7 +131,7 @@ const DummySection: React.FC<DummySectionProps> = ({
           <ul className="list-disc list-inside mt-2 space-y-1">
             <li>Implementar diseño específico para {sectionName}</li>
             <li>Procesar datos de tipo: {typeof data}</li>
-            <li>Mantener estilos: #c2b186 (header) y #fdf7f1 (fondo)</li>
+            <li>Mantener estilos: #787dff (header) y #eef1ff (fondo)</li>
             <li>Responsive design mobile-first</li>
           </ul>
         </div>

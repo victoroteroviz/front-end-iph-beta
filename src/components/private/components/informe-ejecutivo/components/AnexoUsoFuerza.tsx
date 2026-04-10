@@ -2,7 +2,7 @@
  * Componente AnexoUsoFuerza (Anexo B. Uso de la Fuerza)
  * Muestra la información detallada del uso de fuerza durante la intervención
  * Incluye estadísticas de víctimas, tipo de fuerza, contexto y personal participante
- * Mantiene diseño original con colores #c2b186, #fdf7f1
+ * Mantiene diseño original con colores #787dff, #eef1ff
  */
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
@@ -108,7 +108,7 @@ const CampoBooleano: React.FC<{
         <XCircle className="h-5 w-5 text-gray-500" />
       )}
       <div>
-        <p className="text-sm font-medium text-[#4d4725]">{label}</p>
+        <p className="text-sm font-medium text-[#1a2744]">{label}</p>
         <p className={`text-xs ${valor ? getIconColor().replace('text-', 'text-') : 'text-gray-500'}`}>
           {valor ? 'Sí aplicado' : 'No aplicado'}
         </p>
@@ -136,8 +136,8 @@ const TextoExpandible: React.FC<{
   const contenidoAMostrar = expandido ? contenido : contenido.substring(0, limite);
 
   return (
-    <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
-      <h4 className="text-sm font-semibold text-[#4d4725] mb-3 flex items-center gap-2">
+    <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
+      <h4 className="text-sm font-semibold text-[#1a2744] mb-3 flex items-center gap-2">
         <IconComponent className="h-4 w-4" />
         {titulo}
         <span className="text-xs text-gray-500 ml-auto">
@@ -158,7 +158,7 @@ const TextoExpandible: React.FC<{
         <div className="mt-4 pt-3 border-t border-gray-200 text-center">
           <button
             onClick={() => setExpandido(!expandido)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#c2b186] text-white rounded-lg hover:bg-[#a89770] transition-colors duration-200 font-medium text-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#787dff] text-white rounded-lg hover:bg-[#6167d9] transition-colors duration-200 font-medium text-sm"
           >
             {expandido ? (
               <>
@@ -260,16 +260,16 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
       <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
         <h2 
           className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-          style={{ backgroundColor: '#c2b186' }}
+          style={{ backgroundColor: '#787dff' }}
         >
           Anexo B. Uso de la Fuerza
         </h2>
         
         <div 
           className="border border-gray-300 rounded-md shadow-sm p-4"
-          style={{ backgroundColor: '#fdf7f1' }}
+          style={{ backgroundColor: '#eef1ff' }}
         >
-          <div className="text-center text-[#4d4725] py-4">
+          <div className="text-center text-[#1a2744] py-4">
             <Shield className="h-12 w-12 mx-auto mb-2 text-gray-400" />
             <p className="font-poppins">No se registró uso de fuerza en este caso</p>
           </div>
@@ -286,7 +286,7 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
     <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
       <h2 
         className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-        style={{ backgroundColor: '#c2b186' }}
+        style={{ backgroundColor: '#787dff' }}
       >
         Anexo B. Uso de la Fuerza
         {incidentes.length > 1 && (
@@ -299,19 +299,19 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
       <div 
         ref={containerRef}
         className="border border-gray-300 rounded-md shadow-sm p-6 max-h-[80vh] overflow-y-auto"
-        style={{ backgroundColor: '#fdf7f1' }}
+        style={{ backgroundColor: '#eef1ff' }}
       >
         
         {/* Navegación entre incidentes si hay múltiples */}
         {incidentes.length > 1 && (
-          <div className="mb-6 flex items-center justify-center gap-4 p-4 bg-white rounded-lg border border-[#c2b186]/20">
+          <div className="mb-6 flex items-center justify-center gap-4 p-4 bg-white rounded-lg border border-[#787dff]/20">
             <button
               onClick={() => cambiarIncidente(incidenteActivo - 1)}
               disabled={incidenteActivo === 0}
               className={`p-2 rounded-lg transition-colors ${
                 incidenteActivo === 0
                   ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                  : 'text-[#4d4725] hover:bg-[#c2b186] hover:text-white'
+                  : 'text-[#1a2744] hover:bg-[#787dff] hover:text-white'
               }`}
               title="Incidente anterior"
               aria-label="Ir a incidente anterior"
@@ -320,7 +320,7 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
             </button>
             
             <div className="text-center">
-              <div className="flex items-center gap-2 text-[#4d4725] font-poppins">
+              <div className="flex items-center gap-2 text-[#1a2744] font-poppins">
                 <Hash className="h-4 w-4" />
                 <span className="text-lg font-bold">
                   Incidente {incidenteActivo + 1}
@@ -340,7 +340,7 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
               className={`p-2 rounded-lg transition-colors ${
                 incidenteActivo === incidentes.length - 1
                   ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                  : 'text-[#4d4725] hover:bg-[#c2b186] hover:text-white'
+                  : 'text-[#1a2744] hover:bg-[#787dff] hover:text-white'
               }`}
               title="Incidente siguiente"
               aria-label="Ir a incidente siguiente"
@@ -352,13 +352,13 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
         
         {/* Sección 1: Estadísticas de Víctimas */}
         <div className="mb-6" id={`victimas-${incidenteActivo}`}>
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <AlertTriangle className="h-5 w-5 text-white" />
             </div>
             Estadísticas de Víctimas
             {incidentes.length > 1 && (
-              <span className="ml-auto text-sm font-normal text-gray-600 bg-white px-3 py-1 rounded-full border border-[#c2b186]/30">
+              <span className="ml-auto text-sm font-normal text-gray-600 bg-white px-3 py-1 rounded-full border border-[#787dff]/30">
                 Incidente {incidenteActivo + 1}/{incidentes.length}
               </span>
             )}
@@ -425,13 +425,13 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
 
           {/* Totales */}
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white p-3 rounded-lg border border-[#c2b186]/20 text-center">
+            <div className="bg-white p-3 rounded-lg border border-[#787dff]/20 text-center">
               <p className="text-lg font-bold text-yellow-700">
                 {(parseInt(incidente.lesionadosPersonas || '0') + parseInt(incidente.lesionadosAutoridad || '0'))}
               </p>
               <p className="text-sm text-gray-600">Total de Lesionados</p>
             </div>
-            <div className="bg-white p-3 rounded-lg border border-[#c2b186]/20 text-center">
+            <div className="bg-white p-3 rounded-lg border border-[#787dff]/20 text-center">
               <p className="text-lg font-bold text-red-700">
                 {(parseInt(incidente.fallecidosPersonas || '0') + parseInt(incidente.fallecidosAutoridad || '0'))}
               </p>
@@ -442,8 +442,8 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
 
         {/* Sección 2: Tipo de Fuerza Aplicada */}
         <div className="mb-6 pt-6 border-t border-gray-200" id={`tipo-fuerza-${incidenteActivo}`}>
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <Target className="h-5 w-5 text-white" />
             </div>
             Tipo de Fuerza Aplicada
@@ -475,8 +475,8 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
 
         {/* Sección 3: Contexto del Incidente */}
         <div className="mb-6 pt-6 border-t border-gray-200" id={`contexto-${incidenteActivo}`}>
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <FileText className="h-5 w-5 text-white" />
             </div>
             Contexto del Incidente
@@ -484,11 +484,11 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {incidente.tipoGrupoDelictivo ? (
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-                <Users className="h-5 w-5 text-[#c2b186]" />
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+                <Users className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Tipo de Grupo Delictivo</p>
-                  <p className="font-semibold text-[#4d4725]">{incidente.tipoGrupoDelictivo}</p>
+                  <p className="font-semibold text-[#1a2744]">{incidente.tipoGrupoDelictivo}</p>
                 </div>
               </div>
             ) : (
@@ -496,11 +496,11 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
             )}
 
             {incidente.tipoPadecimiento ? (
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-                <Heart className="h-5 w-5 text-[#c2b186]" />
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+                <Heart className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Tipo de Padecimiento</p>
-                  <p className="font-semibold text-[#4d4725]">{incidente.tipoPadecimiento}</p>
+                  <p className="font-semibold text-[#1a2744]">{incidente.tipoPadecimiento}</p>
                 </div>
               </div>
             ) : (
@@ -533,8 +533,8 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
         {/* Sección 4: Personal Participante */}
         {incidente.disposiciones && incidente.disposiciones.length > 0 && (
           <div className="pt-6 border-t border-gray-200" id={`personal-${incidenteActivo}`}>
-            <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <Users className="h-5 w-5 text-white" />
               </div>
               Personal Participante
@@ -547,14 +547,14 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
               {incidente.disposiciones.map((oficial, index) => (
                 <div 
                   key={index} 
-                  className="bg-white p-4 rounded-lg border border-[#c2b186]/30"
+                  className="bg-white p-4 rounded-lg border border-[#787dff]/30"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-[#c2b186] rounded-full">
+                    <div className="p-2 bg-[#787dff] rounded-full">
                       <User className="h-4 w-4 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[#4d4725] text-sm mb-1">
+                      <h4 className="font-semibold text-[#1a2744] text-sm mb-1">
                         {[oficial.nombre, oficial.primerApellido, oficial.segundoApellido]
                           .filter(Boolean)
                           .join(' ') || `Oficial ${index + 1}`
@@ -564,9 +564,9 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
                       <div className="space-y-1 text-xs text-gray-700">
                         {oficial.cargoGrado && (
                           <div className="flex items-center gap-2">
-                            <Shield className="h-3 w-3 text-[#c2b186]" />
+                            <Shield className="h-3 w-3 text-[#787dff]" />
                             <span className="font-medium">Cargo/Grado:</span>
-                            <span className="px-2 py-0.5 bg-[#c2b186] text-white rounded-full text-xs">
+                            <span className="px-2 py-0.5 bg-[#787dff] text-white rounded-full text-xs">
                               {oficial.cargoGrado}
                             </span>
                           </div>
@@ -574,7 +574,7 @@ const AnexoUsoFuerza: React.FC<AnexoUsoFuerzaProps> = ({
                         
                         {oficial.adscripcion && (
                           <div className="flex items-center gap-2">
-                            <Users className="h-3 w-3 text-[#c2b186]" />
+                            <Users className="h-3 w-3 text-[#787dff]" />
                             <span className="font-medium">Adscripción:</span>
                             <span>{oficial.adscripcion}</span>
                           </div>

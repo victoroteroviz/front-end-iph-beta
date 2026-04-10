@@ -30,14 +30,14 @@ interface LoadingSpinnerProps {
  * <LoadingSpinner 
  *   size="medium"
  *   message="Cargando datos..." 
- *   color="#4d4725"
+ *   color="#1a2744"
  * />
  * ```
  */
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
   size = 'medium',
   message,
-  color = '#4d4725',
+  color = '#1a2744',
   className = ''
 }) => {
   // Clases de tamaño

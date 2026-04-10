@@ -199,11 +199,11 @@ const SectionModal: React.FC<SectionModalProps> = ({
               
               {/* Información de la sección */}
               <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#c2b186] text-white">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#787dff] text-white">
                   <IconComponent className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-[#4d4725] font-poppins">
+                  <h2 className="text-xl font-bold text-[#1a2744] font-poppins">
                     {currentTab.label}
                   </h2>
                   <div className="flex items-center gap-3 mt-1">
@@ -235,7 +235,7 @@ const SectionModal: React.FC<SectionModalProps> = ({
                       p-3 rounded-xl transition-all duration-200 font-semibold shadow-md border-2
                       ${currentIndex === 0 
                         ? 'text-gray-400 cursor-not-allowed bg-gray-100 border-gray-200' 
-                        : 'text-[#4d4725] bg-white border-[#c2b186] hover:bg-[#c2b186] hover:text-white hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer'
+                        : 'text-[#1a2744] bg-white border-[#787dff] hover:bg-[#787dff] hover:text-white hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer'
                       }
                     `}
                     title="Sección anterior (←)"
@@ -250,7 +250,7 @@ const SectionModal: React.FC<SectionModalProps> = ({
                       p-3 rounded-xl transition-all duration-200 font-semibold shadow-md border-2
                       ${currentIndex === tabs.length - 1 
                         ? 'text-gray-400 cursor-not-allowed bg-gray-100 border-gray-200' 
-                        : 'text-[#4d4725] bg-white border-[#c2b186] hover:bg-[#c2b186] hover:text-white hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer'
+                        : 'text-[#1a2744] bg-white border-[#787dff] hover:bg-[#787dff] hover:text-white hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer'
                       }
                     `}
                     title="Sección siguiente (→)"
@@ -283,7 +283,7 @@ const SectionModal: React.FC<SectionModalProps> = ({
               </div>
               <div className="w-full bg-gray-200 rounded-full h-1">
                 <div 
-                  className="bg-[#c2b186] h-1 rounded-full transition-all duration-500"
+                  className="bg-[#787dff] h-1 rounded-full transition-all duration-500"
                   style={{ width: `${((currentIndex + 1) / tabs.length) * 100}%` }}
                 />
               </div>

@@ -1,7 +1,7 @@
 /**
  * Componente DatosGenerales
  * Muestra los datos básicos del IPH extraídos de I_IphData
- * Mantiene diseño original con colores #c2b186, #fdf7f1
+ * Mantiene diseño original con colores #787dff, #eef1ff
  */
 
 import React, { useState } from "react";
@@ -99,7 +99,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
       {/* Modal */}
       <div className="relative w-full max-w-7xl max-h-[95vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
         {/* Header mejorado */}
-        <div className="flex items-center justify-between p-6 bg-gradient-to-r from-[#c2b186] to-[#a89770] text-white">
+        <div className="flex items-center justify-between p-6 bg-gradient-to-r from-[#787dff] to-[#6167d9] text-white">
           <div className="flex items-center gap-4">
             <div className="p-2 bg-white/20 rounded-lg">
               <Image className="h-6 w-6" />
@@ -147,7 +147,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
                 className={`absolute left-6 top-1/2 transform -translate-y-1/2 p-4 rounded-full shadow-lg transition-all duration-200 ${
                   currentIndex === 0
                     ? "bg-gray-300 text-gray-500 modal-not-allowed"
-                    : "bg-white text-[#4d4725] hover:bg-[#c2b186] hover:text-white hover:scale-110 hover:shadow-xl modal-pointer-force"
+                    : "bg-white text-[#1a2744] hover:bg-[#787dff] hover:text-white hover:scale-110 hover:shadow-xl modal-pointer-force"
                 }`}
                 title="Imagen anterior (←)"
                 role="button"
@@ -163,7 +163,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
                 className={`absolute right-6 top-1/2 transform -translate-y-1/2 p-4 rounded-full shadow-lg transition-all duration-200 ${
                   currentIndex === images.length - 1
                     ? "bg-gray-300 text-gray-500 modal-not-allowed"
-                    : "bg-white text-[#4d4725] hover:bg-[#c2b186] hover:text-white hover:scale-110 hover:shadow-xl modal-pointer-force"
+                    : "bg-white text-[#1a2744] hover:bg-[#787dff] hover:text-white hover:scale-110 hover:shadow-xl modal-pointer-force"
                 }`}
                 title="Imagen siguiente (→)"
                 role="button"
@@ -207,14 +207,14 @@ const ImageModal: React.FC<ImageModalProps> = ({
         </div>
 
         {/* Footer mejorado */}
-        <div className="px-6 py-4 bg-[#fdf7f1] border-t border-[#c2b186]/20">
-          <div className="flex items-center justify-center gap-6 text-sm text-[#4d4725]">
+        <div className="px-6 py-4 bg-[#eef1ff] border-t border-[#787dff]/20">
+          <div className="flex items-center justify-center gap-6 text-sm text-[#1a2744]">
             <div className="flex items-center gap-2">
               <ChevronLeft className="h-4 w-4" />
               <ChevronRight className="h-4 w-4" />
               <span>Navegar con flechas del teclado</span>
             </div>
-            <div className="h-4 w-px bg-[#c2b186]/30"></div>
+            <div className="h-4 w-px bg-[#787dff]/30"></div>
             <div className="flex items-center gap-2">
               <kbd className="px-2 py-1 bg-gray-200 rounded text-xs font-mono">
                 Esc
@@ -261,16 +261,16 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
       <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
         <h2
           className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-          style={{ backgroundColor: "#c2b186" }}
+          style={{ backgroundColor: "#787dff" }}
         >
           Datos Generales IPH
         </h2>
 
         <div
           className="border border-gray-300 rounded-md shadow-sm p-4"
-          style={{ backgroundColor: "#fdf7f1" }}
+          style={{ backgroundColor: "#eef1ff" }}
         >
-          <div className="text-center text-[#4d4725] py-4">
+          <div className="text-center text-[#1a2744] py-4">
             <FileText className="h-12 w-12 mx-auto mb-2 text-gray-400" />
             <p className="font-poppins">No se encontraron datos del informe</p>
           </div>
@@ -335,21 +335,21 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
     <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
       <h2
         className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-        style={{ backgroundColor: "#c2b186" }}
+        style={{ backgroundColor: "#787dff" }}
       >
         Datos Generales IPH
       </h2>
 
       <div
         className="border border-gray-300 rounded-md shadow-sm p-6"
-        style={{ backgroundColor: "#fdf7f1" }}
+        style={{ backgroundColor: "#eef1ff" }}
       >
         {/* Grid principal de datos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-[#4d4725] font-poppins">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-[#1a2744] font-poppins">
           {/* Columna 1: Identificación */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-[#c2b186]" />
+              <FileText className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Referencia</p>
                 <p className="font-semibold">
@@ -359,7 +359,7 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-[#c2b186]" />
+              <FileText className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Folio Sistema</p>
                 <p className="font-semibold">
@@ -372,7 +372,7 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
           {/* Columna 2: Estado y Tipo */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-[#c2b186]" />
+              <CheckCircle className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Estatus</p>
                 <p className="font-semibold">
@@ -382,7 +382,7 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Tag className="h-5 w-5 text-[#c2b186]" />
+              <Tag className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Tipo IPH</p>
                 <p className="font-semibold">
@@ -392,7 +392,7 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Calendar className="h-5 w-5 text-[#c2b186]" />
+              <Calendar className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Fecha de creación</p>
                 <p className="font-semibold">
@@ -413,7 +413,7 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
           {/* Columna 3: Archivos y Recursos */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-[#c2b186]" />
+              <FileText className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Archivos</p>
                 <p className="font-semibold">
@@ -428,7 +428,7 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Image className="h-5 w-5 text-[#c2b186]" />
+              <Image className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Fotos</p>
                 <p className="font-semibold">
@@ -438,7 +438,7 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
                 {iphData.fotos && iphData.fotos.length > 0 && (
                   <button
                     onClick={() => handleImageClick(0)}
-                    className="text-xs text-[#c2b186] hover:text-[#a89770] mt-1 flex items-center gap-1 transition-colors font-medium cursor-pointer"
+                    className="text-xs text-[#787dff] hover:text-[#6167d9] mt-1 flex items-center gap-1 transition-colors font-medium cursor-pointer"
                   >
                     <Eye className="h-3 w-3" />
                     Ver galería completa
@@ -456,7 +456,7 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
               {/* Hechos */}
               {iphData.hechos && (
                 <div>
-                  <h4 className="text-sm font-semibold text-[#4d4725] mb-2 flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-[#1a2744] mb-2 flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     Resumen de Hechos
                   </h4>
@@ -479,7 +479,7 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
               {/* Observaciones */}
               {iphData.observaciones && (
                 <div>
-                  <h4 className="text-sm font-semibold text-[#4d4725] mb-2 flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-[#1a2744] mb-2 flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     Observaciones
                   </h4>
@@ -504,7 +504,7 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
         {/* Mapa de ubicación si está disponible */}
         {iphData.coordenadas && (
           <div className="mt-6 pt-4 border-t border-gray-200">
-            <h4 className="text-sm font-semibold text-[#4d4725] mb-4 flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-[#1a2744] mb-4 flex items-center gap-2">
               <Tag className="h-4 w-4" />
               Ubicación del Incidente
             </h4>
@@ -543,8 +543,8 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
         {/* Nueva sección de Galería de Imágenes después del mapa */}
         {imageUrls.length > 0 && (
           <div className="mt-8 pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-bold text-[#4d4725] mb-6 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-6 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <Image className="h-5 w-5 text-white" />
               </div>
               Galería de Evidencia Fotográfica
@@ -558,7 +558,7 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
               {imageUrls.map((imageUrl, index) => (
                 <div
                   key={index}
-                  className="relative group cursor-pointer bg-gray-100 rounded-xl overflow-hidden border-2 border-gray-200 hover:border-[#c2b186] hover:shadow-xl transition-all duration-300"
+                  className="relative group cursor-pointer bg-gray-100 rounded-xl overflow-hidden border-2 border-gray-200 hover:border-[#787dff] hover:shadow-xl transition-all duration-300"
                   onClick={() => handleImageClick(index)}
                   style={{ minHeight: "200px" }} // Altura mínima fija
                 >
@@ -584,19 +584,19 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
                     {/* Overlay simple */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white rounded-full p-2">
-                        <Eye className="h-5 w-5 text-[#4d4725]" />
+                        <Eye className="h-5 w-5 text-[#1a2744]" />
                       </div>
                     </div>
 
                     {/* Número de imagen */}
-                    <div className="absolute top-2 left-2 bg-[#c2b186] text-white text-sm font-semibold px-2 py-1 rounded-full">
+                    <div className="absolute top-2 left-2 bg-[#787dff] text-white text-sm font-semibold px-2 py-1 rounded-full">
                       {index + 1}
                     </div>
                   </div>
 
                   {/* Footer de la tarjeta */}
                   <div className="p-3 bg-white border-t">
-                    <p className="text-xs font-medium text-[#4d4725] text-center">
+                    <p className="text-xs font-medium text-[#1a2744] text-center">
                       Evidencia {index + 1}
                     </p>
                   </div>
@@ -605,9 +605,9 @@ const DatosGenerales: React.FC<DatosGeneralesProps> = ({
             </div>
 
             {/* Información de ayuda mejorada */}
-            <div className="mt-6 p-4 bg-[#fdf7f1] border border-[#c2b186]/20 rounded-lg">
-              <div className="flex items-center justify-center gap-2 text-sm text-[#4d4725]">
-                <Eye className="h-4 w-4 text-[#c2b186]" />
+            <div className="mt-6 p-4 bg-[#eef1ff] border border-[#787dff]/20 rounded-lg">
+              <div className="flex items-center justify-center gap-2 text-sm text-[#1a2744]">
+                <Eye className="h-4 w-4 text-[#787dff]" />
                 <span>
                   Haz clic en cualquier imagen para verla en tamaño completo con
                   navegación

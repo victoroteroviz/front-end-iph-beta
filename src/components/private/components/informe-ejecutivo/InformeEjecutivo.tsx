@@ -2,7 +2,7 @@
  * Componente InformeEjecutivo
  * Vista de solo lectura para mostrar datos completos de IPH
  * Consume getIphById con ResponseIphData
- * Mantiene diseño original con colores #c2b186, #fdf7f1
+ * Mantiene diseño original con colores #787dff, #eef1ff
  */
 
 import React, { useState, useMemo } from 'react';
@@ -163,8 +163,8 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
             <Breadcrumbs items={[{ label: 'Cargando...', isActive: true }]} />
           </div>
           <div className="text-center py-16">
-            <RefreshCw className="h-12 w-12 animate-spin mx-auto text-[#4d4725] mb-4" />
-            <h2 className="text-xl font-semibold text-[#4d4725] mb-2 font-poppins">
+            <RefreshCw className="h-12 w-12 animate-spin mx-auto text-[#1a2744] mb-4" />
+            <h2 className="text-xl font-semibold text-[#1a2744] mb-2 font-poppins">
               Cargando informe ejecutivo...
             </h2>
             <p className="text-gray-600 font-poppins">
@@ -193,7 +193,7 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={refreshInforme}
-                className="flex items-center gap-2 px-4 py-2 bg-[#4d4725] text-white rounded-lg hover:bg-[#3d3820] transition-colors font-poppins"
+                className="flex items-center gap-2 px-4 py-2 bg-[#1a2744] text-white rounded-lg hover:bg-[#3d3820] transition-colors font-poppins"
               >
                 <RefreshCw className="h-4 w-4" />
                 Intentar nuevamente
@@ -251,7 +251,7 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
             onClick={handleGoBack}
             className="
               flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all duration-200 font-semibold shadow-sm
-              text-[#4d4725] bg-white border-gray-300
+              text-[#1a2744] bg-white border-gray-300
               hover:bg-gray-50 hover:border-gray-400 hover:shadow-md hover:scale-105
               active:scale-95
               cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 font-poppins
@@ -267,11 +267,11 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-[#948b54] rounded-lg">
+              <div className="p-3 bg-[#4246b2] rounded-lg">
                 <FileText className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-[#4d4725] font-poppins">
+                <h1 className="text-2xl font-bold text-[#1a2744] font-poppins">
                   Informe Ejecutivo IPH
                 </h1>
                 {!Array.isArray(iph) && iph?.nReferencia && (
@@ -294,10 +294,10 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
                 disabled={state.isLoading}
                 className="
                   flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all duration-200 font-semibold shadow-sm
-                  text-white bg-[#4d4725] border-[#4d4725]
+                  text-white bg-[#1a2744] border-[#1a2744]
                   hover:bg-[#3d3820] hover:border-[#3d3820] hover:shadow-md hover:scale-105
                   active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
-                  cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-2 font-poppins
+                  cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:ring-offset-2 font-poppins
                 "
                 title="Actualizar datos del informe"
               >
@@ -331,7 +331,7 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
         {/* Información de ayuda */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
           <div className="max-w-2xl mx-auto">
-            <h3 className="text-lg font-semibold text-[#4d4725] font-poppins mb-3">
+            <h3 className="text-lg font-semibold text-[#1a2744] font-poppins mb-3">
               Selecciona una sección para ver su contenido
             </h3>
             <p className="text-gray-600 font-poppins mb-4">
@@ -355,7 +355,7 @@ const InformeEjecutivo: React.FC<IInformeEjecutivoProps> = ({
         <div className="mt-6 bg-gray-50 rounded-xl border border-gray-200 p-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-gray-600 font-poppins">
             <p className="flex items-center gap-2">
-              <span className="font-medium text-[#4d4725]">Informe Ejecutivo IPH</span>
+              <span className="font-medium text-[#1a2744]">Informe Ejecutivo IPH</span>
               <span>•</span>
               <span>Solo Lectura</span>
               {readonly && (

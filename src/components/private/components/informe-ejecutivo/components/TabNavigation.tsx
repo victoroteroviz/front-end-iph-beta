@@ -99,7 +99,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="w-full flex items-center justify-between p-4 text-left rounded-t-lg cursor-pointer"
-          style={{ backgroundColor: '#c2b186' }}
+          style={{ backgroundColor: '#787dff' }}
         >
           <div className="flex items-center gap-3">
             <span className="text-white font-semibold font-poppins">
@@ -126,7 +126,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
           <div className="p-3">
             {/* Header desktop */}
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-[#4d4725] font-poppins">
+              <h3 className="text-lg font-semibold text-[#1a2744] font-poppins">
                 Secciones del Informe
               </h3>
               <div className="flex items-center gap-4 text-xs text-gray-600">
@@ -160,11 +160,11 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
                     {showExtraSeparator && (
                       <div className="py-4 my-2">
                         <div className="flex items-center gap-3">
-                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#c2b186] to-transparent"></div>
-                          <span className="text-xs font-semibold text-[#c2b186] uppercase tracking-wider px-2 py-1 bg-[#fdf7f1] rounded-full border border-[#c2b186]/30">
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#787dff] to-transparent"></div>
+                          <span className="text-xs font-semibold text-[#787dff] uppercase tracking-wider px-2 py-1 bg-[#eef1ff] rounded-full border border-[#787dff]/30">
                             Extras
                           </span>
-                          <div className="flex-1 h-px bg-gradient-to-r from-[#c2b186] via-[#c2b186] to-transparent"></div>
+                          <div className="flex-1 h-px bg-gradient-to-r from-[#787dff] via-[#787dff] to-transparent"></div>
                         </div>
                       </div>
                     )}
@@ -183,7 +183,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
                     <div className="
                       flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold
                       transition-all duration-300 ease-in-out
-                      bg-gray-100 text-gray-600 group-hover:bg-[#c2b186] group-hover:text-white group-hover:scale-105
+                      bg-gray-100 text-gray-600 group-hover:bg-[#787dff] group-hover:text-white group-hover:scale-105
                     ">
                       {index + 1}
                     </div>
@@ -191,7 +191,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
                     {/* Icono */}
                     <div className="
                       transition-all duration-300 ease-in-out
-                      text-gray-500 group-hover:text-[#c2b186] group-hover:scale-105
+                      text-gray-500 group-hover:text-[#787dff] group-hover:scale-105
                     ">
                       <IconComponent className="h-5 w-5" />
                     </div>
@@ -201,7 +201,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
                       <div className="flex items-center justify-between">
                         <h4 className="
                           text-sm font-medium truncate transition-colors duration-300 ease-in-out
-                          text-gray-700 group-hover:text-[#4d4725]
+                          text-gray-700 group-hover:text-[#1a2744]
                         ">
                           {tab.label}
                         </h4>
@@ -215,7 +215,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
                             px-2 py-1 text-xs rounded-full border font-medium
                             transition-all duration-300 ease-in-out
                             ${getBadgeColor(tab.status)}
-                            group-hover:border-[#c2b186] group-hover:bg-[#fdf7f1]
+                            group-hover:border-[#787dff] group-hover:bg-[#eef1ff]
                           `}>
                             {getBadgeText(tab.status)}
                           </span>
@@ -244,11 +244,11 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
                   {showExtraSeparator && (
                     <div className="py-3 px-3">
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#c2b186] to-transparent"></div>
-                        <span className="text-xs font-semibold text-[#c2b186] uppercase tracking-wider">
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#787dff] to-transparent"></div>
+                        <span className="text-xs font-semibold text-[#787dff] uppercase tracking-wider">
                           Extras
                         </span>
-                        <div className="flex-1 h-px bg-gradient-to-r from-[#c2b186] via-[#c2b186] to-transparent"></div>
+                        <div className="flex-1 h-px bg-gradient-to-r from-[#787dff] via-[#787dff] to-transparent"></div>
                       </div>
                     </div>
                   )}
@@ -270,7 +270,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
                   <div className="
                     flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold
                     transition-all duration-300 ease-in-out
-                    bg-gray-200 text-gray-600 hover:bg-[#c2b186] hover:text-white hover:scale-105
+                    bg-gray-200 text-gray-600 hover:bg-[#787dff] hover:text-white hover:scale-105
                   ">
                     {index + 1}
                   </div>
@@ -278,7 +278,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
                   {/* Icono */}
                   <IconComponent className="
                     h-4 w-4 transition-all duration-300 ease-in-out
-                    text-gray-500 hover:text-[#c2b186] hover:scale-105
+                    text-gray-500 hover:text-[#787dff] hover:scale-105
                   " />
                   
                   {/* Contenido */}
@@ -286,7 +286,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
                     <div className="flex items-center justify-between">
                       <span className="
                         text-sm font-medium truncate transition-colors duration-300 ease-in-out
-                        text-gray-700 hover:text-[#4d4725]
+                        text-gray-700 hover:text-[#1a2744]
                       ">
                         {tab.label}
                       </span>

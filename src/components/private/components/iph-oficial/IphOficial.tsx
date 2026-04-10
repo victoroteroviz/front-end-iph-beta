@@ -89,7 +89,7 @@ const IphOficial: React.FC<IphOficialProps> = ({
   // Estado sin permisos
   if (error && error.includes('permisos')) {
     return (
-      <div className={`p-6 bg-[#f8f0e7] min-h-screen ${className}`}>
+      <div className={`p-6 bg-[#eef1ff] min-h-screen ${className}`}>
         <div className="max-w-2xl mx-auto text-center py-16">
           <Shield size={64} className="mx-auto text-red-400 mb-6" />
           <h2 className="text-2xl font-bold text-red-600 mb-4">
@@ -104,8 +104,8 @@ const IphOficial: React.FC<IphOficialProps> = ({
             <button
               onClick={goBack}
               className="
-                px-6 py-2 bg-[#4d4725] text-white rounded-lg
-                hover:bg-[#3a3519] transition-colors
+                px-6 py-2 bg-[#1a2744] text-white rounded-lg
+                hover:bg-[#151f36] transition-colors
                 flex items-center gap-2
               "
             >
@@ -121,7 +121,7 @@ const IphOficial: React.FC<IphOficialProps> = ({
   // Estado de error general
   if (error && !error.includes('permisos')) {
     return (
-      <div className={`p-6 bg-[#f8f0e7] min-h-screen ${className}`}>
+      <div className={`p-6 bg-[#eef1ff] min-h-screen ${className}`}>
         <div className="max-w-2xl mx-auto">
           {/* Header con botón de regreso */}
           <div className="flex items-center gap-4 mb-6">
@@ -136,7 +136,7 @@ const IphOficial: React.FC<IphOficialProps> = ({
               <ArrowLeft size={16} />
               Regresar
             </button>
-            <h1 className="text-2xl font-bold text-[#4d4725]">
+            <h1 className="text-2xl font-bold text-[#1a2744]">
               IPH Oficial - Error
             </h1>
           </div>
@@ -183,7 +183,7 @@ const IphOficial: React.FC<IphOficialProps> = ({
   }
 
   return (
-    <div className={`bg-[#f8f0e7] min-h-screen p-6 text-[#4d4725] font-poppins ${className}`}>
+    <div className={`bg-[#eef1ff] min-h-screen p-6 text-[#1a2744] font-poppins ${className}`}>
       {/* Header del documento */}
       <div className="max-w-5xl mx-auto">
         {/* Barra de navegación */}
@@ -194,10 +194,10 @@ const IphOficial: React.FC<IphOficialProps> = ({
               disabled={loading}
               className="
                 flex items-center gap-2 px-4 py-2
-                bg-[#4d4725] text-white rounded-lg
-                hover:bg-[#3a3519] transition-colors duration-200
+                bg-[#1a2744] text-white rounded-lg
+                hover:bg-[#151f36] transition-colors duration-200
                 disabled:opacity-50 disabled:cursor-not-allowed
-                focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-2
+                focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:ring-offset-2
               "
               aria-label="Regresar al historial"
             >
@@ -206,9 +206,9 @@ const IphOficial: React.FC<IphOficialProps> = ({
             </button>
             
             <div className="flex items-center gap-2">
-              <FileText size={24} className="text-[#4d4725]" />
+              <FileText size={24} className="text-[#1a2744]" />
               <div>
-                <h1 className="text-lg font-bold text-[#4d4725]">
+                <h1 className="text-lg font-bold text-[#1a2744]">
                   {loading ? 'Cargando IPH...' : `IPH - ${documentInfo?.referencia || id}`}
                 </h1>
                 {documentInfo && (
@@ -363,8 +363,8 @@ const IphOficial: React.FC<IphOficialProps> = ({
               <button
                 onClick={goBack}
                 className="
-                  px-6 py-2 bg-[#4d4725] text-white rounded-lg
-                  hover:bg-[#3a3519] transition-colors
+                  px-6 py-2 bg-[#1a2744] text-white rounded-lg
+                  hover:bg-[#151f36] transition-colors
                 "
               >
                 Regresar al historial

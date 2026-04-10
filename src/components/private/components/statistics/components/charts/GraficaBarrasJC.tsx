@@ -19,6 +19,36 @@ import { Bar } from 'react-chartjs-2';
 import type { RespuestaJC } from '../../../../../../interfaces/estadisticas-jc';
 import type { TipoPeriodo } from '../../hooks/useEstadisticasJC';
 
+const resolveCssColor = (value: string, fallback: string): string => {
+  if (!value.startsWith('var(')) return value;
+  if (typeof window === 'undefined') return fallback;
+
+  const variableName = value.slice(4, -1).trim();
+  const resolved = getComputedStyle(document.documentElement)
+    .getPropertyValue(variableName)
+    .trim();
+
+  return resolved || fallback;
+};
+
+const withAlpha = (color: string, alpha: number): string => {
+  const hex = color.replace('#', '');
+  const normalized =
+    hex.length === 3
+      ? hex
+          .split('')
+          .map((ch) => ch + ch)
+          .join('')
+      : hex;
+
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return color;
+
+  const r = Number.parseInt(normalized.slice(0, 2), 16);
+  const g = Number.parseInt(normalized.slice(2, 4), 16);
+  const b = Number.parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 // Registrar componentes de Chart.js
 ChartJS.register(
   CategoryScale,
@@ -47,9 +77,11 @@ interface GraficaBarrasJCProps {
 export const GraficaBarrasJC: React.FC<GraficaBarrasJCProps> = ({
   tipo,
   datos,
-  color = '#4d4725',
+  color = 'var(--color-iph-primary)',
   height = 300
 }) => {
+  const resolvedColor = resolveCssColor(color, '#1a2744');
+
   if (!datos) {
     return (
       <div style={{
@@ -83,12 +115,12 @@ export const GraficaBarrasJC: React.FC<GraficaBarrasJCProps> = ({
           datos.data.totalSinDetenido
         ],
         backgroundColor: [
-          `${color}dd`, // Con detenido (color primario)
-          `${color}66`  // Sin detenido (color más claro)
+          withAlpha(resolvedColor, 0.86),
+          withAlpha(resolvedColor, 0.42)
         ],
         borderColor: [
-          color,
-          color
+          resolvedColor,
+          resolvedColor
         ],
         borderWidth: 2,
         borderRadius: 10,

@@ -33,18 +33,18 @@ const Accordion: React.FC<AccordionProps> = ({
         className="
           w-full px-6 py-4 flex items-center justify-between
           hover:bg-gray-50 transition-colors duration-150
-          focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-opacity-50
+          focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:ring-opacity-50
           cursor-pointer
         "
       >
         <div className="flex items-center gap-3">
           {icon && (
-            <div className="p-2 bg-[#4d4725] rounded-lg">
+            <div className="p-2 bg-[#1a2744] rounded-lg">
               {icon}
             </div>
           )}
           <div className="text-left">
-            <h3 className="text-lg font-semibold text-[#4d4725] font-poppins">
+            <h3 className="text-lg font-semibold text-[#1a2744] font-poppins">
               {title}
             </h3>
             {subtitle && (
@@ -58,7 +58,7 @@ const Accordion: React.FC<AccordionProps> = ({
         {/* Icono de expansión/colapso con rotación */}
         <div className="flex-shrink-0 ml-4">
           <ChevronUp
-            className={`h-5 w-5 text-[#4d4725] transition-transform duration-300 ${
+            className={`h-5 w-5 text-[#1a2744] transition-transform duration-300 ${
               isOpen ? '' : 'rotate-180'
             }`}
           />

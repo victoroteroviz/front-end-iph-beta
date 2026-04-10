@@ -2,7 +2,7 @@
  * Componente NarrativaHechos
  * Muestra la narrativa detallada de los hechos del IPH
  * Incluye funcionalidad de expandir/colapsar para textos largos
- * Mantiene diseño original con colores #c2b186, #fdf7f1
+ * Mantiene diseño original con colores #787dff, #eef1ff
  */
 
 import React, { useState } from 'react';
@@ -81,16 +81,16 @@ const NarrativaHechos: React.FC<NarrativaHechosProps> = ({
       <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
         <h2 
           className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-          style={{ backgroundColor: '#c2b186' }}
+          style={{ backgroundColor: '#787dff' }}
         >
           Narrativa de los Hechos
         </h2>
         
         <div 
           className="border border-gray-300 rounded-md shadow-sm p-4"
-          style={{ backgroundColor: '#fdf7f1' }}
+          style={{ backgroundColor: '#eef1ff' }}
         >
-          <div className="text-center text-[#4d4725] py-4">
+          <div className="text-center text-[#1a2744] py-4">
             <FileText className="h-12 w-12 mx-auto mb-2 text-gray-400" />
             <p className="font-poppins">No se encontró narrativa de los hechos</p>
           </div>
@@ -108,16 +108,16 @@ const NarrativaHechos: React.FC<NarrativaHechosProps> = ({
       <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
         <h2 
           className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-          style={{ backgroundColor: '#c2b186' }}
+          style={{ backgroundColor: '#787dff' }}
         >
           Narrativa de los Hechos
         </h2>
         
         <div 
           className="border border-gray-300 rounded-md shadow-sm p-4"
-          style={{ backgroundColor: '#fdf7f1' }}
+          style={{ backgroundColor: '#eef1ff' }}
         >
-          <div className="text-center text-[#4d4725] py-4">
+          <div className="text-center text-[#1a2744] py-4">
             <FileText className="h-12 w-12 mx-auto mb-2 text-gray-400" />
             <p className="font-poppins">El contenido de la narrativa no está disponible</p>
           </div>
@@ -141,20 +141,20 @@ const NarrativaHechos: React.FC<NarrativaHechosProps> = ({
     <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
       <h2 
         className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-        style={{ backgroundColor: '#c2b186' }}
+        style={{ backgroundColor: '#787dff' }}
       >
         Narrativa de los Hechos
       </h2>
       
       <div 
         className="border border-gray-300 rounded-md shadow-sm p-6"
-        style={{ backgroundColor: '#fdf7f1' }}
+        style={{ backgroundColor: '#eef1ff' }}
       >
         
         {/* Header con estadísticas */}
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <AlignLeft className="h-5 w-5 text-white" />
             </div>
             Narrativa Detallada
@@ -162,34 +162,34 @@ const NarrativaHechos: React.FC<NarrativaHechosProps> = ({
           
           {/* Estadísticas del texto */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-              <Hash className="h-4 w-4 text-[#c2b186]" />
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+              <Hash className="h-4 w-4 text-[#787dff]" />
               <div>
                 <p className="text-xs text-gray-600">Párrafos</p>
-                <p className="font-semibold text-[#4d4725]">{estadisticas.parrafos}</p>
+                <p className="font-semibold text-[#1a2744]">{estadisticas.parrafos}</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-              <FileText className="h-4 w-4 text-[#c2b186]" />
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+              <FileText className="h-4 w-4 text-[#787dff]" />
               <div>
                 <p className="text-xs text-gray-600">Palabras</p>
-                <p className="font-semibold text-[#4d4725]">{estadisticas.palabras.toLocaleString()}</p>
+                <p className="font-semibold text-[#1a2744]">{estadisticas.palabras.toLocaleString()}</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-              <AlignLeft className="h-4 w-4 text-[#c2b186]" />
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+              <AlignLeft className="h-4 w-4 text-[#787dff]" />
               <div>
                 <p className="text-xs text-gray-600">Caracteres</p>
-                <p className="font-semibold text-[#4d4725]">{estadisticas.caracteres.toLocaleString()}</p>
+                <p className="font-semibold text-[#1a2744]">{estadisticas.caracteres.toLocaleString()}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Contenido de la narrativa */}
-        <div className="bg-white p-6 rounded-lg border border-[#c2b186]/20">
+        <div className="bg-white p-6 rounded-lg border border-[#787dff]/20">
           <div className="prose prose-sm max-w-none">
             {expandido ? (
               // Mostrar todos los párrafos
@@ -233,7 +233,7 @@ const NarrativaHechos: React.FC<NarrativaHechosProps> = ({
             <div className="mt-6 pt-4 border-t border-gray-200 text-center">
               <button
                 onClick={() => setExpandido(!expandido)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#c2b186] text-white rounded-lg hover:bg-[#a89770] transition-colors duration-200 font-medium"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#787dff] text-white rounded-lg hover:bg-[#6167d9] transition-colors duration-200 font-medium"
               >
                 {expandido ? (
                   <>

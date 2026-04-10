@@ -2,7 +2,7 @@
  * Componente LugarIntervencion
  * Muestra la información del lugar de intervención del IPH
  * Incluye dirección, ubicación, mapa, croquis y información adicional
- * Mantiene diseño original con colores #c2b186, #fdf7f1
+ * Mantiene diseño original con colores #787dff, #eef1ff
  */
 
 import React, { useState, useEffect } from 'react';
@@ -100,7 +100,7 @@ const CroquisModal: React.FC<CroquisModalProps> = ({ isOpen, imageUrl, onClose }
         style={{ zIndex: 10000 }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 bg-gradient-to-r from-[#c2b186] to-[#a89770] text-white">
+        <div className="flex items-center justify-between p-6 bg-gradient-to-r from-[#787dff] to-[#6167d9] text-white">
           <div className="flex items-center gap-4">
             <div className="p-2 bg-white/20 rounded-lg">
               <ImageIcon className="h-6 w-6" />
@@ -135,8 +135,8 @@ const CroquisModal: React.FC<CroquisModalProps> = ({ isOpen, imageUrl, onClose }
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-[#fdf7f1] border-t border-[#c2b186]/20">
-          <div className="flex items-center justify-center gap-6 text-sm text-[#4d4725]">
+        <div className="px-6 py-4 bg-[#eef1ff] border-t border-[#787dff]/20">
+          <div className="flex items-center justify-center gap-6 text-sm text-[#1a2744]">
             <div className="flex items-center gap-2">
               <kbd className="px-2 py-1 bg-gray-200 rounded text-xs font-mono">Esc</kbd>
               <span>Cerrar</span>
@@ -165,16 +165,16 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
       <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
         <h2 
           className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-          style={{ backgroundColor: '#c2b186' }}
+          style={{ backgroundColor: '#787dff' }}
         >
           Lugar de la Intervención
         </h2>
         
         <div 
           className="border border-gray-300 rounded-md shadow-sm p-4"
-          style={{ backgroundColor: '#fdf7f1' }}
+          style={{ backgroundColor: '#eef1ff' }}
         >
-          <div className="text-center text-[#4d4725] py-4">
+          <div className="text-center text-[#1a2744] py-4">
             <MapPin className="h-12 w-12 mx-auto mb-2 text-gray-400" />
             <p className="font-poppins">No se encontraron datos del lugar de intervención</p>
           </div>
@@ -204,30 +204,30 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
     <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
       <h2 
         className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-        style={{ backgroundColor: '#c2b186' }}
+        style={{ backgroundColor: '#787dff' }}
       >
         Lugar de la Intervención
       </h2>
       
       <div 
         className="border border-gray-300 rounded-md shadow-sm p-6"
-        style={{ backgroundColor: '#fdf7f1' }}
+        style={{ backgroundColor: '#eef1ff' }}
       >
         
         {/* Sección 1: Dirección */}
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <Home className="h-5 w-5 text-white" />
             </div>
             Dirección
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-[#4d4725] font-poppins">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-[#1a2744] font-poppins">
             
             {/* Calle/Tramo */}
             <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-[#c2b186]" />
+              <MapPin className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Calle/Tramo</p>
                 <p className="font-semibold">{lugar.calleTramo || 'No disponible'}</p>
@@ -236,7 +236,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
 
             {/* Número exterior */}
             <div className="flex items-center gap-3">
-              <Home className="h-5 w-5 text-[#c2b186]" />
+              <Home className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Número exterior</p>
                 <p className="font-semibold">{lugar.nExterior || 'No disponible'}</p>
@@ -245,7 +245,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
 
             {/* Número interior */}
             <div className="flex items-center gap-3">
-              <Home className="h-5 w-5 text-[#c2b186]" />
+              <Home className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Número interior</p>
                 <p className="font-semibold">{lugar.nInterior || 'No disponible'}</p>
@@ -254,7 +254,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
 
             {/* Referencia principal */}
             <div className="flex items-center gap-3 md:col-span-2 lg:col-span-3">
-              <Navigation className="h-5 w-5 text-[#c2b186]" />
+              <Navigation className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Referencia</p>
                 <p className="font-semibold">{lugar.referencia || 'No disponible'}</p>
@@ -266,7 +266,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
               <>
                 {lugar.referencia1 && (
                   <div className="flex items-center gap-3">
-                    <Navigation className="h-5 w-5 text-[#c2b186]" />
+                    <Navigation className="h-5 w-5 text-[#787dff]" />
                     <div>
                       <p className="text-sm text-gray-600">Referencia 1</p>
                       <p className="font-semibold">{lugar.referencia1}</p>
@@ -275,7 +275,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
                 )}
                 {lugar.referencia2 && (
                   <div className="flex items-center gap-3">
-                    <Navigation className="h-5 w-5 text-[#c2b186]" />
+                    <Navigation className="h-5 w-5 text-[#787dff]" />
                     <div>
                       <p className="text-sm text-gray-600">Referencia 2</p>
                       <p className="font-semibold">{lugar.referencia2}</p>
@@ -289,19 +289,19 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
 
         {/* Sección 2: Ubicación */}
         <div className="mb-6 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <MapPin className="h-5 w-5 text-white" />
             </div>
             Ubicación
           </h3>
           
           {lugar.localizacion && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-[#4d4725] font-poppins mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-[#1a2744] font-poppins mb-6">
               
               {/* Colonia */}
               <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-[#c2b186]" />
+                <MapPin className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Colonia</p>
                   <p className="font-semibold">{lugar.localizacion.colonia || 'No disponible'}</p>
@@ -310,7 +310,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
 
               {/* Código postal */}
               <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-[#c2b186]" />
+                <MapPin className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Código postal</p>
                   <p className="font-semibold">{lugar.localizacion.codigoPostal || 'No disponible'}</p>
@@ -319,7 +319,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
 
               {/* Municipio */}
               <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-[#c2b186]" />
+                <MapPin className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Municipio</p>
                   <p className="font-semibold">{lugar.localizacion.municipio || 'No disponible'}</p>
@@ -328,7 +328,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
 
               {/* Estado */}
               <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-[#c2b186]" />
+                <MapPin className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Estado</p>
                   <p className="font-semibold">{lugar.localizacion.estado || 'No disponible'}</p>
@@ -340,7 +340,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
           {/* Mapa si hay coordenadas */}
           {lugar.coordenadas?.latitud && lugar.coordenadas?.longitud && (
             <div className="mt-6">
-              <h4 className="text-sm font-semibold text-[#4d4725] mb-4 flex items-center gap-2">
+              <h4 className="text-sm font-semibold text-[#1a2744] mb-4 flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
                 Ubicación en el Mapa
               </h4>
@@ -361,12 +361,12 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
           {/* Croquis debajo del mapa */}
           {croquisUrl && (
             <div className="mt-6">
-              <h4 className="text-sm font-semibold text-[#4d4725] mb-4 flex items-center gap-2">
+              <h4 className="text-sm font-semibold text-[#1a2744] mb-4 flex items-center gap-2">
                 <ImageIcon className="h-4 w-4" />
                 Croquis del Lugar
               </h4>
               <div 
-                className="relative bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 hover:border-[#c2b186] transition-colors cursor-pointer overflow-hidden"
+                className="relative bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 hover:border-[#787dff] transition-colors cursor-pointer overflow-hidden"
                 onClick={handleCroquisClick}
               >
                 <img
@@ -380,7 +380,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
                 />
                 <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
                   <div className="opacity-0 hover:opacity-100 transition-opacity duration-200 bg-white rounded-full p-3">
-                    <Eye className="h-6 w-6 text-[#4d4725]" />
+                    <Eye className="h-6 w-6 text-[#1a2744]" />
                   </div>
                 </div>
               </div>
@@ -393,8 +393,8 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
 
         {/* Sección 3: Información adicional */}
         <div className="pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <Shield className="h-5 w-5 text-white" />
             </div>
             Información Adicional
@@ -411,7 +411,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
                 <XCircle className="h-5 w-5 text-red-500" />
               )}
               <div>
-                <p className="text-sm font-medium text-[#4d4725]">Realizó inspección</p>
+                <p className="text-sm font-medium text-[#1a2744]">Realizó inspección</p>
                 <p className="text-xs text-gray-600">{lugar.rInspeccion ? 'Sí' : 'No'}</p>
               </div>
             </div>
@@ -424,7 +424,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
                 <XCircle className="h-5 w-5 text-red-500" />
               )}
               <div>
-                <p className="text-sm font-medium text-[#4d4725]">Encontró objeto</p>
+                <p className="text-sm font-medium text-[#1a2744]">Encontró objeto</p>
                 <p className="text-xs text-gray-600">{lugar.eObjeto ? 'Sí' : 'No'}</p>
               </div>
             </div>
@@ -437,7 +437,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
                 <XCircle className="h-5 w-5 text-red-500" />
               )}
               <div>
-                <p className="text-sm font-medium text-[#4d4725]">Preservó</p>
+                <p className="text-sm font-medium text-[#1a2744]">Preservó</p>
                 <p className="text-xs text-gray-600">{lugar.preservo ? 'Sí' : 'No'}</p>
               </div>
             </div>
@@ -450,7 +450,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
                 <XCircle className="h-5 w-5 text-red-500" />
               )}
               <div>
-                <p className="text-sm font-medium text-[#4d4725]">Priorizó</p>
+                <p className="text-sm font-medium text-[#1a2744]">Priorizó</p>
                 <p className="text-xs text-gray-600">{lugar.priorizo ? 'Sí' : 'No'}</p>
               </div>
             </div>
@@ -463,7 +463,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
                 <CheckCircle className="h-5 w-5 text-green-600" />
               )}
               <div>
-                <p className="text-sm font-medium text-[#4d4725]">Riesgo natural</p>
+                <p className="text-sm font-medium text-[#1a2744]">Riesgo natural</p>
                 <p className="text-xs text-gray-600">{lugar.riesgoNatural ? 'Presente' : 'No presente'}</p>
               </div>
             </div>
@@ -476,7 +476,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
                 <CheckCircle className="h-5 w-5 text-green-600" />
               )}
               <div>
-                <p className="text-sm font-medium text-[#4d4725]">Riesgo social</p>
+                <p className="text-sm font-medium text-[#1a2744]">Riesgo social</p>
                 <p className="text-xs text-gray-600">{lugar.riesgoSocial ? 'Presente' : 'No presente'}</p>
               </div>
             </div>
@@ -485,7 +485,7 @@ const LugarIntervencion: React.FC<LugarIntervencionProps> = ({
           {/* Especificación de riesgo si existe */}
           {lugar.especificacionRiesgo && (
             <div className="mt-6">
-              <h4 className="text-sm font-semibold text-[#4d4725] mb-3 flex items-center gap-2">
+              <h4 className="text-sm font-semibold text-[#1a2744] mb-3 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" />
                 Especificación de Riesgo
               </h4>

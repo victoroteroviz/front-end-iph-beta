@@ -2,7 +2,7 @@
  * Componente AnexoInspeccionVehiculo (Anexo C. Inspección de vehículo)
  * Muestra la información detallada de la inspección vehicular realizada
  * Incluye datos del vehículo, objetos encontrados y personal participante
- * Mantiene diseño original con colores #c2b186, #fdf7f1
+ * Mantiene diseño original con colores #787dff, #eef1ff
  */
 
 import React, { useState } from 'react';
@@ -63,14 +63,14 @@ const CampoBooleano: React.FC<{
   valor, 
   className = ''
 }) => (
-  <div className={`flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20 ${className}`}>
+  <div className={`flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20 ${className}`}>
     {valor ? (
       <CheckCircle className="h-5 w-5 text-green-600" />
     ) : (
       <XCircle className="h-5 w-5 text-gray-500" />
     )}
     <div>
-      <p className="text-sm font-medium text-[#4d4725]">{label}</p>
+      <p className="text-sm font-medium text-[#1a2744]">{label}</p>
       <p className={`text-xs ${valor ? 'text-green-600' : 'text-gray-500'}`}>
         {valor ? 'Sí encontrado' : 'No encontrado'}
       </p>
@@ -97,8 +97,8 @@ const TextoExpandible: React.FC<{
   const contenidoAMostrar = expandido ? contenido : contenido.substring(0, limite);
 
   return (
-    <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
-      <h4 className="text-sm font-semibold text-[#4d4725] mb-3 flex items-center gap-2">
+    <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
+      <h4 className="text-sm font-semibold text-[#1a2744] mb-3 flex items-center gap-2">
         <IconComponent className="h-4 w-4" />
         {titulo}
         <span className="text-xs text-gray-500 ml-auto">
@@ -119,7 +119,7 @@ const TextoExpandible: React.FC<{
         <div className="mt-4 pt-3 border-t border-gray-200 text-center">
           <button
             onClick={() => setExpandido(!expandido)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#c2b186] text-white rounded-lg hover:bg-[#a89770] transition-colors duration-200 font-medium text-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#787dff] text-white rounded-lg hover:bg-[#6167d9] transition-colors duration-200 font-medium text-sm"
           >
             {expandido ? (
               <>
@@ -167,16 +167,16 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
       <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
         <h2 
           className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-          style={{ backgroundColor: '#c2b186' }}
+          style={{ backgroundColor: '#787dff' }}
         >
           {title}
         </h2>
         
         <div 
           className="border border-gray-300 rounded-md shadow-sm p-4"
-          style={{ backgroundColor: '#fdf7f1' }}
+          style={{ backgroundColor: '#eef1ff' }}
         >
-          <div className="text-center text-[#4d4725] py-4">
+          <div className="text-center text-[#1a2744] py-4">
             <Car className="h-12 w-12 mx-auto mb-2 text-gray-400" />
             <p className="font-poppins">No se registró inspección de vehículo en este caso</p>
           </div>
@@ -193,7 +193,7 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
     <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
       <h2 
         className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-        style={{ backgroundColor: '#c2b186' }}
+        style={{ backgroundColor: '#787dff' }}
       >
         {title}
         {vehiculos.length > 1 && (
@@ -205,26 +205,26 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
       
       <div 
         className="border border-gray-300 rounded-md shadow-sm p-6"
-        style={{ backgroundColor: '#fdf7f1' }}
+        style={{ backgroundColor: '#eef1ff' }}
       >
         
         {/* Navegación entre vehículos si hay múltiples */}
         {vehiculos.length > 1 && (
-          <div className="mb-6 flex items-center justify-center gap-4 p-4 bg-white rounded-lg border border-[#c2b186]/20">
+          <div className="mb-6 flex items-center justify-center gap-4 p-4 bg-white rounded-lg border border-[#787dff]/20">
             <button
               onClick={() => setVehiculoActivo(Math.max(0, vehiculoActivo - 1))}
               disabled={vehiculoActivo === 0}
               className={`p-2 rounded-lg transition-colors ${
                 vehiculoActivo === 0
                   ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                  : 'text-[#4d4725] hover:bg-[#c2b186] hover:text-white'
+                  : 'text-[#1a2744] hover:bg-[#787dff] hover:text-white'
               }`}
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             
             <div className="text-center">
-              <p className="text-sm font-semibold text-[#4d4725]">
+              <p className="text-sm font-semibold text-[#1a2744]">
                 Vehículo {vehiculoActivo + 1} de {vehiculos.length}
               </p>
               <p className="text-xs text-gray-600">
@@ -238,7 +238,7 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
               className={`p-2 rounded-lg transition-colors ${
                 vehiculoActivo === vehiculos.length - 1
                   ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                  : 'text-[#4d4725] hover:bg-[#c2b186] hover:text-white'
+                  : 'text-[#1a2744] hover:bg-[#787dff] hover:text-white'
               }`}
             >
               <ChevronRight className="h-5 w-5" />
@@ -248,18 +248,18 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
 
         {/* Sección 1: Información del Vehículo */}
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <Car className="h-5 w-5 text-white" />
             </div>
             Información del Vehículo
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-[#4d4725] font-poppins">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-[#1a2744] font-poppins">
             
             {/* Tipo y procedencia */}
             <div className="flex items-center gap-3">
-              <Settings className="h-5 w-5 text-[#c2b186]" />
+              <Settings className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Tipo de vehículo</p>
                 <p className="font-semibold">{vehiculo.tipoVehiculo || 'No especificado'}</p>
@@ -267,7 +267,7 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-[#c2b186]" />
+              <MapPin className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Procedencia</p>
                 <p className="font-semibold">{vehiculo.procedencia || 'No especificada'}</p>
@@ -275,7 +275,7 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Car className="h-5 w-5 text-[#c2b186]" />
+              <Car className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Tipo de uso</p>
                 <p className="font-semibold">{vehiculo.tipoUso || 'No especificado'}</p>
@@ -284,7 +284,7 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
 
             {/* Marca y modelo */}
             <div className="flex items-center gap-3">
-              <Hash className="h-5 w-5 text-[#c2b186]" />
+              <Hash className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Marca</p>
                 <p className="font-semibold">{vehiculo.marca || 'No especificada'}</p>
@@ -292,7 +292,7 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Hash className="h-5 w-5 text-[#c2b186]" />
+              <Hash className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Submarca</p>
                 <p className="font-semibold">{vehiculo.submarca || 'No especificada'}</p>
@@ -300,7 +300,7 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Calendar className="h-5 w-5 text-[#c2b186]" />
+              <Calendar className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Modelo</p>
                 <p className="font-semibold">{vehiculo.modelo || 'No especificado'}</p>
@@ -309,7 +309,7 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
 
             {/* Color y placas */}
             <div className="flex items-center gap-3">
-              <Palette className="h-5 w-5 text-[#c2b186]" />
+              <Palette className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Color</p>
                 <p className="font-semibold">{vehiculo.color || 'No especificado'}</p>
@@ -317,7 +317,7 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Hash className="h-5 w-5 text-[#c2b186]" />
+              <Hash className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Placa</p>
                 <p className="font-semibold font-mono">{vehiculo.placa || 'No disponible'}</p>
@@ -325,7 +325,7 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Hash className="h-5 w-5 text-[#c2b186]" />
+              <Hash className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Número de serie</p>
                 <p className="font-semibold font-mono">{vehiculo.numeroSerie || 'No disponible'}</p>
@@ -335,8 +335,8 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
 
           {/* Resumen del vehículo si hay datos principales */}
           {(vehiculo.marca || vehiculo.modelo || vehiculo.color) && (
-            <div className="mt-6 bg-white p-4 rounded-lg border border-[#c2b186]/20">
-              <h4 className="text-sm font-semibold text-[#4d4725] mb-2 flex items-center gap-2">
+            <div className="mt-6 bg-white p-4 rounded-lg border border-[#787dff]/20">
+              <h4 className="text-sm font-semibold text-[#1a2744] mb-2 flex items-center gap-2">
                 <Car className="h-4 w-4" />
                 Resumen del Vehículo
               </h4>
@@ -353,8 +353,8 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
 
         {/* Sección 2: Resultados de la Inspección */}
         <div className="mb-6 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <Package className="h-5 w-5 text-white" />
             </div>
             Resultados de la Inspección
@@ -370,11 +370,11 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
 
             {/* Destino si hay */}
             {vehiculo.destino && (
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-                <MapPin className="h-5 w-5 text-[#c2b186]" />
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+                <MapPin className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Destino</p>
-                  <p className="font-semibold text-[#4d4725]">{vehiculo.destino}</p>
+                  <p className="font-semibold text-[#1a2744]">{vehiculo.destino}</p>
                 </div>
               </div>
             )}
@@ -384,8 +384,8 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
         {/* Sección 3: Observaciones */}
         {vehiculo.observaciones && (
           <div className="mb-6 pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <FileText className="h-5 w-5 text-white" />
               </div>
               Observaciones de la Inspección
@@ -403,8 +403,8 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
         {/* Sección 4: Personal Participante */}
         {vehiculo.disposiciones && vehiculo.disposiciones.length > 0 && (
           <div className="pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <Users className="h-5 w-5 text-white" />
               </div>
               Personal Participante
@@ -417,14 +417,14 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
               {vehiculo.disposiciones.map((oficial, index) => (
                 <div 
                   key={index} 
-                  className="bg-white p-4 rounded-lg border border-[#c2b186]/30"
+                  className="bg-white p-4 rounded-lg border border-[#787dff]/30"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-[#c2b186] rounded-full">
+                    <div className="p-2 bg-[#787dff] rounded-full">
                       <User className="h-4 w-4 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[#4d4725] text-sm mb-1">
+                      <h4 className="font-semibold text-[#1a2744] text-sm mb-1">
                         {[oficial.nombre, oficial.primerApellido, oficial.segundoApellido]
                           .filter(Boolean)
                           .join(' ') || `Oficial ${index + 1}`
@@ -434,9 +434,9 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
                       <div className="space-y-1 text-xs text-gray-700">
                         {oficial.cargoGrado && (
                           <div className="flex items-center gap-2">
-                            <Shield className="h-3 w-3 text-[#c2b186]" />
+                            <Shield className="h-3 w-3 text-[#787dff]" />
                             <span className="font-medium">Cargo/Grado:</span>
-                            <span className="px-2 py-0.5 bg-[#c2b186] text-white rounded-full text-xs">
+                            <span className="px-2 py-0.5 bg-[#787dff] text-white rounded-full text-xs">
                               {oficial.cargoGrado}
                             </span>
                           </div>
@@ -444,7 +444,7 @@ const AnexoInspeccionVehiculo: React.FC<AnexoInspeccionVehiculoProps> = ({
                         
                         {oficial.adscripcion && (
                           <div className="flex items-center gap-2">
-                            <Users className="h-3 w-3 text-[#c2b186]" />
+                            <Users className="h-3 w-3 text-[#787dff]" />
                             <span className="font-medium">Adscripción:</span>
                             <span>{oficial.adscripcion}</span>
                           </div>

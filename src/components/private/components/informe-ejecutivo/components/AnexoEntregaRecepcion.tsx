@@ -2,7 +2,7 @@
  * Componente AnexoEntregaRecepcion (Anexo F. Entrega - recepción del lugar de la intervención)
  * Muestra la información detallada del proceso de entrega-recepción del lugar de intervención
  * Incluye información de entrega, apoyo solicitado, ingreso al lugar y personal involucrado
- * Mantiene diseño original con colores #c2b186, #fdf7f1
+ * Mantiene diseño original con colores #787dff, #eef1ff
  */
 
 import React, { useState } from 'react';
@@ -98,14 +98,14 @@ const CampoBooleano: React.FC<{
   valor, 
   className = ''
 }) => (
-  <div className={`flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20 ${className}`}>
+  <div className={`flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20 ${className}`}>
     {valor ? (
       <CheckCircle className="h-5 w-5 text-green-600" />
     ) : (
       <XCircle className="h-5 w-5 text-gray-500" />
     )}
     <div>
-      <p className="text-sm font-medium text-[#4d4725]">{label}</p>
+      <p className="text-sm font-medium text-[#1a2744]">{label}</p>
       <p className={`text-xs ${valor ? 'text-green-600' : 'text-gray-500'}`}>
         {valor ? 'Sí' : 'No'}
       </p>
@@ -134,8 +134,8 @@ const TextoExpandible: React.FC<{
   const contenidoAMostrar = expandido ? contenido : contenido.substring(0, limite);
 
   return (
-    <div className={`bg-white p-4 rounded-lg border border-[#c2b186]/20 ${className}`}>
-      <h4 className="text-sm font-semibold text-[#4d4725] mb-3 flex items-center gap-2">
+    <div className={`bg-white p-4 rounded-lg border border-[#787dff]/20 ${className}`}>
+      <h4 className="text-sm font-semibold text-[#1a2744] mb-3 flex items-center gap-2">
         <IconComponent className="h-4 w-4" />
         {titulo}
         <span className="text-xs text-gray-500 ml-auto">
@@ -156,7 +156,7 @@ const TextoExpandible: React.FC<{
         <div className="mt-4 pt-3 border-t border-gray-200 text-center">
           <button
             onClick={() => setExpandido(!expandido)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#c2b186] text-white rounded-lg hover:bg-[#a89770] transition-colors duration-200 font-medium text-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#787dff] text-white rounded-lg hover:bg-[#6167d9] transition-colors duration-200 font-medium text-sm"
           >
             {expandido ? (
               <>
@@ -201,16 +201,16 @@ const AnexoEntregaRecepcion: React.FC<AnexoEntregaRecepcionProps> = ({
       <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
         <h2 
           className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-          style={{ backgroundColor: '#c2b186' }}
+          style={{ backgroundColor: '#787dff' }}
         >
           Anexo F. Entrega - recepción del lugar de la intervención
         </h2>
         
         <div 
           className="border border-gray-300 rounded-md shadow-sm p-4"
-          style={{ backgroundColor: '#fdf7f1' }}
+          style={{ backgroundColor: '#eef1ff' }}
         >
-          <div className="text-center text-[#4d4725] py-4">
+          <div className="text-center text-[#1a2744] py-4">
             <ArrowRightLeft className="h-12 w-12 mx-auto mb-2 text-gray-400" />
             <p className="font-poppins">No se registró proceso de entrega-recepción en este caso</p>
           </div>
@@ -232,20 +232,20 @@ const AnexoEntregaRecepcion: React.FC<AnexoEntregaRecepcionProps> = ({
     <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
       <h2 
         className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-        style={{ backgroundColor: '#c2b186' }}
+        style={{ backgroundColor: '#787dff' }}
       >
         Anexo F. Entrega - recepción del lugar de la intervención
       </h2>
       
       <div 
         className="border border-gray-300 rounded-md shadow-sm p-6"
-        style={{ backgroundColor: '#fdf7f1' }}
+        style={{ backgroundColor: '#eef1ff' }}
       >
 
         {/* Sección 1: Información de la Entrega */}
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <ArrowRightLeft className="h-5 w-5 text-white" />
             </div>
             Información de la Entrega
@@ -254,11 +254,11 @@ const AnexoEntregaRecepcion: React.FC<AnexoEntregaRecepcionProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             
             {/* Fecha de entrega-recepción */}
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-              <Clock className="h-5 w-5 text-[#c2b186]" />
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+              <Clock className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Fecha de entrega-recepción</p>
-                <p className="font-semibold text-[#4d4725]">{formatearFecha(entrega.fechaEntregaRecepcion)}</p>
+                <p className="font-semibold text-[#1a2744]">{formatearFecha(entrega.fechaEntregaRecepcion)}</p>
               </div>
             </div>
           </div>
@@ -276,8 +276,8 @@ const AnexoEntregaRecepcion: React.FC<AnexoEntregaRecepcionProps> = ({
 
         {/* Sección 2: Apoyo Solicitado */}
         <div className="mb-6 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <HandHeart className="h-5 w-5 text-white" />
             </div>
             Apoyo Solicitado
@@ -305,8 +305,8 @@ const AnexoEntregaRecepcion: React.FC<AnexoEntregaRecepcionProps> = ({
 
         {/* Sección 3: Ingreso al Lugar */}
         <div className="mb-6 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <DoorOpen className="h-5 w-5 text-white" />
             </div>
             Ingreso al Lugar
@@ -335,8 +335,8 @@ const AnexoEntregaRecepcion: React.FC<AnexoEntregaRecepcionProps> = ({
         {/* Observaciones adicionales */}
         {entrega.observaciones && (
           <div className="mb-6 pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <FileText className="h-5 w-5 text-white" />
               </div>
               Observaciones Adicionales
@@ -354,8 +354,8 @@ const AnexoEntregaRecepcion: React.FC<AnexoEntregaRecepcionProps> = ({
         {/* Sección 4: Personal Responsable de Recepción */}
         {respondiente.length > 0 && (
           <div className="mb-6 pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <User className="h-5 w-5 text-white" />
               </div>
               Personal Responsable de Recepción
@@ -372,7 +372,7 @@ const AnexoEntregaRecepcion: React.FC<AnexoEntregaRecepcionProps> = ({
                       <User className="h-4 w-4 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[#4d4725] text-sm mb-1">
+                      <h4 className="font-semibold text-[#1a2744] text-sm mb-1">
                         {[oficial.nombre, oficial.primerApellido, oficial.segundoApellido]
                           .filter(Boolean)
                           .join(' ') || 'Responsable de Recepción'
@@ -409,8 +409,8 @@ const AnexoEntregaRecepcion: React.FC<AnexoEntregaRecepcionProps> = ({
         {/* Sección 5: Personal Participante */}
         {disposiciones.length > 0 && (
           <div className="pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <Users className="h-5 w-5 text-white" />
               </div>
               Personal Participante
@@ -423,14 +423,14 @@ const AnexoEntregaRecepcion: React.FC<AnexoEntregaRecepcionProps> = ({
               {disposiciones.map((oficial, index) => (
                 <div 
                   key={index} 
-                  className="bg-white p-4 rounded-lg border border-[#c2b186]/30"
+                  className="bg-white p-4 rounded-lg border border-[#787dff]/30"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-[#c2b186] rounded-full">
+                    <div className="p-2 bg-[#787dff] rounded-full">
                       <User className="h-4 w-4 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[#4d4725] text-sm mb-1">
+                      <h4 className="font-semibold text-[#1a2744] text-sm mb-1">
                         {[oficial.nombre, oficial.primerApellido, oficial.segundoApellido]
                           .filter(Boolean)
                           .join(' ') || `Oficial ${index + 1}`
@@ -440,9 +440,9 @@ const AnexoEntregaRecepcion: React.FC<AnexoEntregaRecepcionProps> = ({
                       <div className="space-y-1 text-xs text-gray-700">
                         {oficial.cargoGrado && (
                           <div className="flex items-center gap-2">
-                            <Shield className="h-3 w-3 text-[#c2b186]" />
+                            <Shield className="h-3 w-3 text-[#787dff]" />
                             <span className="font-medium">Cargo/Grado:</span>
-                            <span className="px-2 py-0.5 bg-[#c2b186] text-white rounded-full text-xs">
+                            <span className="px-2 py-0.5 bg-[#787dff] text-white rounded-full text-xs">
                               {oficial.cargoGrado}
                             </span>
                           </div>
@@ -450,7 +450,7 @@ const AnexoEntregaRecepcion: React.FC<AnexoEntregaRecepcionProps> = ({
                         
                         {oficial.adscripcion && (
                           <div className="flex items-center gap-2">
-                            <Users className="h-3 w-3 text-[#c2b186]" />
+                            <Users className="h-3 w-3 text-[#787dff]" />
                             <span className="font-medium">Adscripción:</span>
                             <span>{oficial.adscripcion}</span>
                           </div>

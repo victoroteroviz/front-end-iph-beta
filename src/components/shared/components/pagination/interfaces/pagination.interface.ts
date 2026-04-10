@@ -161,13 +161,13 @@ export interface PaginationProps {
  * Colores por defecto (tema IPH)
  */
 export const DEFAULT_COLORS: PaginationColors = {
-  primary: '#c2b186',
-  primaryHover: '#4d4725',
-  background: '#fdf7f1',
-  border: '#c2b186',
+  primary: '#787dff',
+  primaryHover: '#1a2744',
+  background: '#eef1ff',
+  border: '#787dff',
   text: 'white',
   textInactive: '#6b7280',
-  gradientSecondary: '#b8ab84'
+  gradientSecondary: '#787dff'
 };
 
 /**

@@ -30,6 +30,7 @@ import { useEstadisticasProbableDelictivo } from './hooks/useEstadisticasProbabl
 import FiltroFechaJC from './components/filters/FiltroFechaJC';
 import GraficaBarrasJC from './components/charts/GraficaBarrasJC';
 import GraficaPromedioJC from './components/charts/GraficaPromedioJC';
+import { PD_COLORS } from './config/constants';
 import ProbableDelictivoHeader from './sections/ProbableDelictivoHeader';
 import AccessDenied from '../../../shared/components/access-denied';
 import { getUserRoles } from '../../../../helper/role/role.helper';
@@ -185,7 +186,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
       {/* Gráficas de Barras */}
       {(estadisticas.diaria || estadisticas.mensual || estadisticas.anual) && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-semibold text-[#4d4725] font-poppins mb-6">📊 Visualización de Datos</h2>
+          <h2 className="text-xl font-semibold text-[#1a2744] font-poppins mb-6">📊 Visualización de Datos</h2>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {estadisticas.diaria && (
@@ -193,7 +194,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
                 <GraficaBarrasJC
                   tipo="diaria"
                   datos={estadisticas.diaria}
-                  color="#8b5a3c"
+                  color={PD_COLORS.diaria}
                   height={250}
                 />
               </div>
@@ -204,7 +205,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
                 <GraficaBarrasJC
                   tipo="mensual"
                   datos={estadisticas.mensual}
-                  color="#d4a574"
+                  color={PD_COLORS.mensual}
                   height={250}
                 />
               </div>
@@ -215,7 +216,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
                 <GraficaBarrasJC
                   tipo="anual"
                   datos={estadisticas.anual}
-                  color="#c2926a"
+                  color={PD_COLORS.anual}
                   height={250}
                 />
               </div>
@@ -227,7 +228,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
       {/* Gráfica de Promedio Diario Mensual */}
       {estadisticas.mensual && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-semibold text-[#4d4725] font-poppins mb-6">📈 Promedio Diario del Mes</h2>
+          <h2 className="text-xl font-semibold text-[#1a2744] font-poppins mb-6">📈 Promedio Diario del Mes</h2>
           <GraficaPromedioJC
             datosMensuales={estadisticas.mensual}
             anio={fechaSeleccionada.anio}
@@ -240,12 +241,12 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
       {/* Resumen General */}
       {estadisticas.diaria && estadisticas.mensual && estadisticas.anual && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-semibold text-[#4d4725] font-poppins mb-6">📋 Resumen Comparativo</h2>
+          <h2 className="text-xl font-semibold text-[#1a2744] font-poppins mb-6">📋 Resumen Comparativo</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
               <span className="text-sm font-semibold text-gray-600 font-poppins block mb-2">Total Diario</span>
-              <span className="text-2xl font-bold text-[#4d4725] font-poppins">
+              <span className="text-2xl font-bold text-[#1a2744] font-poppins">
                 {(estadisticas.diaria.data.totalConDetenido +
                   estadisticas.diaria.data.totalSinDetenido).toLocaleString()}
               </span>
@@ -253,7 +254,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
 
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
               <span className="text-sm font-semibold text-gray-600 font-poppins block mb-2">Total Mensual</span>
-              <span className="text-2xl font-bold text-[#4d4725] font-poppins">
+              <span className="text-2xl font-bold text-[#1a2744] font-poppins">
                 {(estadisticas.mensual.data.totalConDetenido +
                   estadisticas.mensual.data.totalSinDetenido).toLocaleString()}
               </span>
@@ -261,7 +262,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
 
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
               <span className="text-sm font-semibold text-gray-600 font-poppins block mb-2">Total Anual</span>
-              <span className="text-2xl font-bold text-[#4d4725] font-poppins">
+              <span className="text-2xl font-bold text-[#1a2744] font-poppins">
                 {(estadisticas.anual.data.totalConDetenido +
                   estadisticas.anual.data.totalSinDetenido).toLocaleString()}
               </span>
@@ -269,7 +270,7 @@ export const EstadisticasProbableDelictivo: React.FC<EstadisticasProbableDelicti
 
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
               <span className="text-sm font-semibold text-gray-600 font-poppins block mb-2">Promedio Diario (Año)</span>
-              <span className="text-2xl font-bold text-[#4d4725] font-poppins">
+              <span className="text-2xl font-bold text-[#1a2744] font-poppins">
                 {Math.round(
                   (estadisticas.anual.data.totalConDetenido +
                     estadisticas.anual.data.totalSinDetenido) / 365

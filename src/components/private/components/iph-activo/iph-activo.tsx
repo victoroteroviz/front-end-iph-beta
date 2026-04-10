@@ -226,19 +226,19 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
         </div>
 
         {/* Header principal - MEJORADO VISUALMENTE */}
-        <div className="relative bg-gradient-to-br from-white via-[#fdf7f1] to-white rounded-2xl border border-[#c2b186]/30 p-6 mb-6 shadow-lg shadow-[#4d4725]/5 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-white via-[#eef1ff] to-white rounded-2xl border border-[#787dff]/30 p-6 mb-6 shadow-lg shadow-[#1a2744]/5 overflow-hidden">
           {/* Patrón de fondo decorativo */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#948b54]/5 rounded-full blur-3xl -z-10" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#c2b186]/5 rounded-full blur-3xl -z-10" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#4246b2]/5 rounded-full blur-3xl -z-10" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#787dff]/5 rounded-full blur-3xl -z-10" />
 
           <div className="relative z-10">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-xl shadow-lg shadow-[#4d4725]/20 transition-transform duration-300 hover:scale-105 hover:rotate-3">
+                <div className="p-3 bg-gradient-to-br from-[#4246b2] to-[#1a2744] rounded-xl shadow-lg shadow-[#1a2744]/20 transition-transform duration-300 hover:scale-105 hover:rotate-3">
                   <FileText className="h-7 w-7 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-[#4d4725] font-poppins tracking-tight">
+                  <h1 className="text-3xl font-bold text-[#1a2744] font-poppins tracking-tight">
                     Listado de Referencias
                   </h1>
                   <p className="text-gray-600 font-poppins mt-1">
@@ -247,7 +247,7 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
                       : "Vista de mis informes policiales hechos por semana"}
                   </p>
                   <p className="text-sm text-gray-500 font-poppins mt-1 flex items-center gap-2">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#4d4725]/10 text-[#4d4725] font-medium">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#1a2744]/10 text-[#1a2744] font-medium">
                       IPH's de la semana
                     </span>
                     {(() => {
@@ -274,13 +274,13 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
 
               {/* Estadísticas rápidas mejoradas */}
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-lg px-4 py-3 border border-[#c2b186]/20 shadow-sm">
+                <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-lg px-4 py-3 border border-[#787dff]/20 shadow-sm">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-[#948b54]/10 rounded-md">
-                      <FileText className="h-4 w-4 text-[#4d4725]" />
+                    <div className="p-1.5 bg-[#4246b2]/10 rounded-md">
+                      <FileText className="h-4 w-4 text-[#1a2744]" />
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-[#4d4725] font-poppins leading-none">
+                      <div className="text-lg font-bold text-[#1a2744] font-poppins leading-none">
                         {state.pagination.totalItems}
                       </div>
                       <div className="text-xs text-gray-600 font-poppins">
@@ -288,13 +288,13 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="w-px h-8 bg-[#c2b186]/30" />
+                  <div className="w-px h-8 bg-[#787dff]/30" />
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-[#948b54]/10 rounded-md">
-                      <Users className="h-4 w-4 text-[#4d4725]" />
+                    <div className="p-1.5 bg-[#4246b2]/10 rounded-md">
+                      <Users className="h-4 w-4 text-[#1a2744]" />
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-[#4d4725] font-poppins leading-none">
+                      <div className="text-lg font-bold text-[#1a2744] font-poppins leading-none">
                         {state.filters.page}
                       </div>
                       <div className="text-xs text-gray-600 font-poppins">
@@ -309,14 +309,14 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
         </div>
 
         {/* Filtros y Búsqueda - MEJORADOS */}
-        <div className="bg-white rounded-xl border border-[#c2b186]/30 mb-6 shadow-md overflow-hidden">
-          <div className="p-6 bg-gradient-to-r from-[#fdf7f1] to-white border-b border-[#c2b186]/20">
+        <div className="bg-white rounded-xl border border-[#787dff]/30 mb-6 shadow-md overflow-hidden">
+          <div className="p-6 bg-gradient-to-r from-[#eef1ff] to-white border-b border-[#787dff]/20">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-lg shadow-sm">
+              <div className="p-2 bg-gradient-to-br from-[#4246b2] to-[#1a2744] rounded-lg shadow-sm">
                 <Filter className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[#4d4725] font-poppins">
+                <h2 className="text-xl font-bold text-[#1a2744] font-poppins">
                   Filtros de Búsqueda
                 </h2>
                 <p className="text-sm text-gray-600 font-poppins">
@@ -346,7 +346,7 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
         </div>
 
         {/* Lista de Informes - MEJORADA */}
-        <div className="bg-white rounded-xl border border-[#c2b186]/30 mb-6 shadow-md overflow-hidden">
+        <div className="bg-white rounded-xl border border-[#787dff]/30 mb-6 shadow-md overflow-hidden">
           <div className="p-6">
             {/* Indicador de actualización */}
             {state.isRefreshing && (
@@ -413,7 +413,7 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
         />
         {/* Indicador de auto-refresh - MEJORADO */}
         {showAutoRefreshIndicator && (
-          <div className="bg-white rounded-xl border border-[#c2b186]/30 p-5 mb-6 shadow-md">
+          <div className="bg-white rounded-xl border border-[#787dff]/30 p-5 mb-6 shadow-md">
             <AutoRefreshIndicator
               isActive={state.autoRefreshEnabled}
               nextRefreshIn={timeUntilNextRefresh}
@@ -422,14 +422,14 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
           </div>
         )}
         {/* Estadísticas - MEJORADAS */}
-        {/* <div className="bg-white rounded-xl border border-[#c2b186]/30 mb-6 shadow-md overflow-hidden">
-          <div className="p-6 bg-gradient-to-r from-[#fdf7f1] to-white border-b border-[#c2b186]/20">
+        {/* <div className="bg-white rounded-xl border border-[#787dff]/30 mb-6 shadow-md overflow-hidden">
+          <div className="p-6 bg-gradient-to-r from-[#eef1ff] to-white border-b border-[#787dff]/20">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-lg shadow-sm">
+              <div className="p-2 bg-gradient-to-br from-[#4246b2] to-[#1a2744] rounded-lg shadow-sm">
                 <SquareChartGantt className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[#4d4725] font-poppins">
+                <h2 className="text-xl font-bold text-[#1a2744] font-poppins">
                   Datos de Registro
                 </h2>
                 <p className="text-sm text-gray-600 font-poppins">
@@ -444,15 +444,15 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
         </div> */}
 
         {/* Información de la sesión - MEJORADA */}
-        <div className="bg-gradient-to-r from-white to-[#fdf7f1] rounded-xl border border-[#c2b186]/30 p-5 shadow-sm">
+        <div className="bg-gradient-to-r from-white to-[#eef1ff] rounded-xl border border-[#787dff]/30 p-5 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm font-poppins">
               {state.lastUpdated && (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 rounded-lg border border-[#c2b186]/20">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 rounded-lg border border-[#787dff]/20">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                   <span className="text-gray-700">
                     Última actualización:{" "}
-                    <span className="font-semibold text-[#4d4725]">
+                    <span className="font-semibold text-[#1a2744]">
                       {state.lastUpdated.toLocaleTimeString("es-MX")}
                     </span>
                   </span>
@@ -463,18 +463,18 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
                   )}
                 </div>
               )}
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 rounded-lg border border-[#c2b186]/20">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 rounded-lg border border-[#787dff]/20">
                 <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                 <span className="text-gray-700">
                   Modo:{" "}
-                  <span className="font-semibold text-[#4d4725]">
+                  <span className="font-semibold text-[#1a2744]">
                     {state.userCanViewAll ? "Vista global" : "Vista personal"}
                   </span>
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 rounded-lg border border-[#c2b186]/20">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 rounded-lg border border-[#787dff]/20">
               <div
                 className={`w-2 h-2 rounded-full ${
                   state.autoRefreshEnabled
@@ -484,7 +484,7 @@ const InformePolicial: React.FC<IInformePolicialProps> = ({
               />
               <span className="text-sm font-poppins text-gray-700">
                 Auto-refresh{" "}
-                <span className="font-semibold text-[#4d4725]">
+                <span className="font-semibold text-[#1a2744]">
                   {state.autoRefreshEnabled ? "activo" : "pausado"}
                 </span>
               </span>

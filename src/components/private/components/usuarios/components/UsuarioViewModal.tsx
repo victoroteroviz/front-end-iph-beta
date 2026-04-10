@@ -87,7 +87,7 @@ const UsuarioViewModal: React.FC<IUsuarioViewModalProps> = ({
           {/* Roles válidos */}
           {validRoles.map((userRole, index) => (
             <div key={userRole.id || `valid-role-${userRole.privilegioId}-${index}`} className="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#948b54] text-white">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#4246b2] text-white">
                 {userRole.privilegio?.nombre}
               </span>
               <span className="text-xs text-gray-500 font-poppins">
@@ -146,7 +146,7 @@ const UsuarioViewModal: React.FC<IUsuarioViewModalProps> = ({
           {/* Header del Modal */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
             <div>
-              <h2 className="text-xl font-bold text-[#4d4725] font-poppins">
+              <h2 className="text-xl font-bold text-[#1a2744] font-poppins">
                 Información del Usuario
               </h2>
               <p className="text-sm text-gray-600 font-poppins mt-1">
@@ -171,7 +171,7 @@ const UsuarioViewModal: React.FC<IUsuarioViewModalProps> = ({
           <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-6">
             {loading && (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-[#948b54]" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#4246b2]" />
                 <span className="ml-3 text-gray-600 font-poppins">Cargando información...</span>
               </div>
             )}
@@ -187,8 +187,8 @@ const UsuarioViewModal: React.FC<IUsuarioViewModalProps> = ({
                 {/* Información Personal */}
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-4">
-                    <User className="h-5 w-5 text-[#948b54]" />
-                    <h3 className="text-lg font-semibold text-[#4d4725] font-poppins">Información Personal</h3>
+                    <User className="h-5 w-5 text-[#4246b2]" />
+                    <h3 className="text-lg font-semibold text-[#1a2744] font-poppins">Información Personal</h3>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -213,8 +213,8 @@ const UsuarioViewModal: React.FC<IUsuarioViewModalProps> = ({
                 {/* Información de Contacto */}
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-4">
-                    <Mail className="h-5 w-5 text-[#948b54]" />
-                    <h3 className="text-lg font-semibold text-[#4d4725] font-poppins">Contacto</h3>
+                    <Mail className="h-5 w-5 text-[#4246b2]" />
+                    <h3 className="text-lg font-semibold text-[#1a2744] font-poppins">Contacto</h3>
                   </div>
                   <div className="grid grid-cols-1 gap-4">
                     <div>
@@ -231,8 +231,8 @@ const UsuarioViewModal: React.FC<IUsuarioViewModalProps> = ({
                 {/* Identificación */}
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-4">
-                    <IdCard className="h-5 w-5 text-[#948b54]" />
-                    <h3 className="text-lg font-semibold text-[#4d4725] font-poppins">Identificación</h3>
+                    <IdCard className="h-5 w-5 text-[#4246b2]" />
+                    <h3 className="text-lg font-semibold text-[#1a2744] font-poppins">Identificación</h3>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -249,8 +249,8 @@ const UsuarioViewModal: React.FC<IUsuarioViewModalProps> = ({
                 {/* Información Laboral */}
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-4">
-                    <Briefcase className="h-5 w-5 text-[#948b54]" />
-                    <h3 className="text-lg font-semibold text-[#4d4725] font-poppins">Información Laboral</h3>
+                    <Briefcase className="h-5 w-5 text-[#4246b2]" />
+                    <h3 className="text-lg font-semibold text-[#1a2744] font-poppins">Información Laboral</h3>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -275,8 +275,8 @@ const UsuarioViewModal: React.FC<IUsuarioViewModalProps> = ({
                 {/* Roles */}
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-4">
-                    <Users className="h-5 w-5 text-[#948b54]" />
-                    <h3 className="text-lg font-semibold text-[#4d4725] font-poppins">Roles</h3>
+                    <Users className="h-5 w-5 text-[#4246b2]" />
+                    <h3 className="text-lg font-semibold text-[#1a2744] font-poppins">Roles</h3>
                   </div>
                   {renderUserRoles()}
                 </div>

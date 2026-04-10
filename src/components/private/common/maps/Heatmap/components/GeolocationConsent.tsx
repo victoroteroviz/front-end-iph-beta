@@ -58,7 +58,7 @@ export const GeolocationConsent: React.FC<GeolocationConsentProps> = ({
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <svg 
-            className="w-8 h-8 text-[#4d4725]" 
+            className="w-8 h-8 text-[#1a2744]" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -77,7 +77,7 @@ export const GeolocationConsent: React.FC<GeolocationConsentProps> = ({
               d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" 
             />
           </svg>
-          <h3 className="text-xl font-bold text-[#4d4725]">
+          <h3 className="text-xl font-bold text-[#1a2744]">
             Permiso de Ubicación
           </h3>
         </div>
@@ -90,15 +90,15 @@ export const GeolocationConsent: React.FC<GeolocationConsentProps> = ({
 
           <ul className="text-sm text-[#6b7280] space-y-2 ml-4">
             <li className="flex items-start gap-2">
-              <span className="text-[#4d4725] font-bold" aria-hidden="true">•</span>
+              <span className="text-[#1a2744] font-bold" aria-hidden="true">•</span>
               <span>Centrar el mapa en tu área actual</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-[#4d4725] font-bold" aria-hidden="true">•</span>
+              <span className="text-[#1a2744] font-bold" aria-hidden="true">•</span>
               <span>Mostrarte IPH cercanos a tu ubicación</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-[#4d4725] font-bold" aria-hidden="true">•</span>
+              <span className="text-[#1a2744] font-bold" aria-hidden="true">•</span>
               <span>Mejorar tu experiencia de navegación</span>
             </li>
           </ul>
@@ -143,7 +143,7 @@ export const GeolocationConsent: React.FC<GeolocationConsentProps> = ({
               href="/privacidad"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#4d4725] underline hover:text-[#5e5531]"
+              className="text-[#1a2744] underline hover:text-[#151f36]"
             >
               Política de Privacidad
             </a>{' '}
@@ -152,7 +152,7 @@ export const GeolocationConsent: React.FC<GeolocationConsentProps> = ({
               href="/terminos"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#4d4725] underline hover:text-[#5e5531]"
+              className="text-[#1a2744] underline hover:text-[#151f36]"
             >
               Términos de Uso
             </a>
@@ -164,14 +164,14 @@ export const GeolocationConsent: React.FC<GeolocationConsentProps> = ({
         <div className="flex gap-3">
           <button
             onClick={onReject}
-            className="flex-1 px-4 py-2 bg-[#e5e7eb] text-[#4b5563] rounded-lg font-medium hover:bg-[#d1d5db] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-2"
+            className="flex-1 px-4 py-2 bg-[#e5e7eb] text-[#4b5563] rounded-lg font-medium hover:bg-[#d1d5db] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:ring-offset-2"
             aria-label="No permitir acceso a ubicación"
           >
             No Permitir
           </button>
           <button
             onClick={onAccept}
-            className="flex-1 px-4 py-2 bg-[#4d4725] text-white rounded-lg font-medium hover:bg-[#5e5531] transition-colors duration-200 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-2"
+            className="flex-1 px-4 py-2 bg-[#1a2744] text-white rounded-lg font-medium hover:bg-[#151f36] transition-colors duration-200 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:ring-offset-2"
             aria-label="Permitir acceso a ubicación"
           >
             <svg 

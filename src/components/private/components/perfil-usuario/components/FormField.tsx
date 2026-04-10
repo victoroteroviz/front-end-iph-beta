@@ -38,7 +38,7 @@ const FormField: React.FC<FormFieldProps> = ({
   const baseInputClasses = `
     w-full p-2 rounded transition-all duration-200
     bg-gray-100 border border-gray-300
-    focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] focus:outline-none
+    focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] focus:outline-none
     disabled:opacity-50 disabled:cursor-not-allowed
     font-poppins
   `;
@@ -93,7 +93,7 @@ const FormField: React.FC<FormFieldProps> = ({
 
   return (
     <div className={`${className}`}>
-      <label className="block mb-1 text-sm font-medium text-[#4d4725]">
+      <label className="block mb-1 text-sm font-medium text-[#1a2744]">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>

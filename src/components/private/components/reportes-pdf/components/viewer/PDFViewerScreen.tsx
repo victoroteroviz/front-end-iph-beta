@@ -97,7 +97,7 @@ const PDFViewerScreen: React.FC<PDFViewerScreenProps> = ({
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-2 text-sm text-[#4d4725] hover:text-[#948b54] transition-colors cursor-pointer font-poppins font-semibold"
+            className="inline-flex items-center gap-2 text-sm text-[#1a2744] hover:text-[#4246b2] transition-colors cursor-pointer font-poppins font-semibold"
           >
             <ArrowLeft className="w-4 h-4" />
             Volver al formulario
@@ -105,11 +105,11 @@ const PDFViewerScreen: React.FC<PDFViewerScreenProps> = ({
         </div>
 
         {/* Header con acciones */}
-        <div className="bg-white border border-[#c2b186]/30 rounded-xl shadow-md overflow-hidden mb-6">
-          <div className="px-6 py-5 border-b border-[#c2b186]/20 bg-gradient-to-r from-[#fdf7f1] to-white">
+        <div className="bg-white border border-[#787dff]/30 rounded-xl shadow-md overflow-hidden mb-6">
+          <div className="px-6 py-5 border-b border-[#787dff]/20 bg-gradient-to-r from-[#eef1ff] to-white">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-[#4d4725] font-poppins tracking-tight">
+                <h1 className="text-2xl font-bold text-[#1a2744] font-poppins tracking-tight">
                   Vista Previa del Reporte
                 </h1>
                 <p className="text-sm text-gray-600 font-poppins mt-1">{pdfResult.fileName}</p>
@@ -119,7 +119,7 @@ const PDFViewerScreen: React.FC<PDFViewerScreenProps> = ({
                 <button
                   type="button"
                   onClick={printPdf}
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-[#c2b186] text-[#c2b186] rounded-lg text-sm font-semibold font-poppins hover:bg-[#c2b186] hover:text-white hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-[#787dff] text-[#787dff] rounded-lg text-sm font-semibold font-poppins hover:bg-[#787dff] hover:text-white hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer"
                 >
                   <Printer className="w-4 h-4" />
                   Imprimir
@@ -128,7 +128,7 @@ const PDFViewerScreen: React.FC<PDFViewerScreenProps> = ({
                 <button
                   type="button"
                   onClick={openPdfInNewTab}
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-[#948b54] text-[#948b54] rounded-lg text-sm font-semibold font-poppins hover:bg-[#948b54] hover:text-white hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-[#4246b2] text-[#4246b2] rounded-lg text-sm font-semibold font-poppins hover:bg-[#4246b2] hover:text-white hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer"
                 >
                   <FileDown className="w-4 h-4" />
                   Abrir en nueva pestaña
@@ -137,7 +137,7 @@ const PDFViewerScreen: React.FC<PDFViewerScreenProps> = ({
                 <button
                   type="button"
                   onClick={downloadPdf}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-[#948b54] to-[#4d4725] text-white rounded-lg text-sm font-semibold font-poppins hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-[#4246b2] to-[#1a2744] text-white rounded-lg text-sm font-semibold font-poppins hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
                 >
                   <FileDown className="w-4 h-4" />
                   Descargar PDF
@@ -148,7 +148,7 @@ const PDFViewerScreen: React.FC<PDFViewerScreenProps> = ({
         </div>
 
         {/* Visor de PDF */}
-        <div className="bg-white border border-[#c2b186]/30 rounded-xl shadow-md overflow-hidden">
+        <div className="bg-white border border-[#787dff]/30 rounded-xl shadow-md overflow-hidden">
           <div className="h-[calc(100vh-280px)] min-h-[600px] bg-gray-100">
             <PDFViewer
               url={pdfResult.objectUrl ?? ''}

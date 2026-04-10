@@ -156,8 +156,8 @@ const SidebarItem = React.memo<SidebarItemProps>(({ item, isActive, isCollapsed,
   // Pre-calcular clases con estado collapsed optimizado - Transición más suave
   const baseClasses = 'group flex items-center rounded-lg min-h-[48px] relative overflow-hidden';
   const transitionClasses = 'transition-all duration-300 ease-out';
-  const activeClasses = 'bg-[#6b6339] text-white shadow-md border-l-4 border-[#4d4725]';
-  const inactiveClasses = 'hover:bg-[#7a7246]/70 hover:text-white hover:shadow-sm cursor-pointer text-white/90';
+  const activeClasses = 'bg-[var(--color-iph-secondary)] text-white shadow-md border-l-4 border-[var(--color-iph-tertiary)]';
+  const inactiveClasses = 'hover:bg-[var(--color-iph-primary-alpha-25)] hover:text-white hover:shadow-sm cursor-pointer text-white/90';
   const disabledClasses = 'opacity-50 cursor-not-allowed';
 
   // Clases dinámicas para collapsed/expanded - Padding mejorado
@@ -251,7 +251,7 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
 
   // Optimizar className del aside
   const asideClassName = useMemo(() => {
-    const baseClasses = 'bg-[#948b54] text-white flex flex-col justify-between shadow-lg';
+    const baseClasses = 'bg-[var(--color-iph-primary)] text-white flex flex-col justify-between shadow-lg';
     const mobileClasses = isMobile
       ? `fixed left-0 top-0 h-full z-50 transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
@@ -293,7 +293,7 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
   // Effects optimizados
   useEffect(() => {
     // Throttle resize events para mejor rendimiento
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
     const throttledResize = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(handleResize, 100);
@@ -324,7 +324,7 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
   if (!isAuthenticated && !userRole) return null;
   if (isLoading) {
     return (
-      <aside className={`w-60 bg-[#948b54] text-white flex items-center justify-center ${className}`}>
+      <aside className={`w-60 bg-[var(--color-iph-primary)] text-white flex items-center justify-center ${className}`}>
         <div className="text-white/70">Cargando...</div>
       </aside>
     );
@@ -481,8 +481,8 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
             className={`
               group relative w-full flex items-center gap-3
               px-3 py-3.5 rounded-lg
-              bg-[#7a7246]/80 hover:bg-[#6b6339]
-              border-l-4 border-[#4d4725]
+              bg-[var(--color-iph-primary-alpha-25)] hover:bg-[var(--color-iph-secondary)]
+              border-l-4 border-[var(--color-iph-tertiary)]
               shadow-md hover:shadow-lg
               transition-all duration-300 ease-out
               hover:scale-[1.02] active:scale-[0.98]
@@ -520,11 +520,11 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
             w-8 h-16
             bg-white hover:bg-white/95
             shadow-lg hover:shadow-xl
-            border-2 border-[#4d4725] border-l-0
+            border-2 border-[var(--color-iph-primary)] border-l-0
             flex items-center justify-center
             transition-all duration-300 ease-in-out
             hover:w-9
-            focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-2 focus:ring-offset-white
+            focus:outline-none focus:ring-2 focus:ring-[var(--color-iph-primary)] focus:ring-offset-2 focus:ring-offset-white
             cursor-pointer
           "
           style={{
@@ -538,9 +538,9 @@ const Sidebar: React.FC<Partial<SidebarProps>> = ({
           title={shouldCollapse ? "Expandir sidebar" : "Colapsar sidebar"}
         >
           {shouldCollapse ? (
-            <ChevronRight size={20} className="text-[#4d4725] transition-colors duration-300" />
+            <ChevronRight size={20} className="text-[var(--color-iph-primary)] transition-colors duration-300" />
           ) : (
-            <ChevronLeft size={20} className="text-[#4d4725] transition-colors duration-300" />
+            <ChevronLeft size={20} className="text-[var(--color-iph-primary)] transition-colors duration-300" />
           )}
         </button>
       )}

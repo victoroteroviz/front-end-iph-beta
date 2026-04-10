@@ -38,7 +38,7 @@
 .filtro-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #4d4725;
+  color: #1a2744;
   margin: 0;
   font-family: 'Poppins', sans-serif;
 }
@@ -59,7 +59,7 @@
 .filtro-campo label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #4d4725;
+  color: #1a2744;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -77,7 +77,7 @@
 
 .filtro-select:focus {
   outline: none;
-  border-color: #948b54;
+  border-color: #4246b2;
   box-shadow: 0 0 0 3px rgba(148, 139, 84, 0.1);
 }
 
@@ -108,7 +108,7 @@
 .fecha-valor {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #4d4725;
+  color: #1a2744;
   font-family: 'Poppins', sans-serif;
 }
 

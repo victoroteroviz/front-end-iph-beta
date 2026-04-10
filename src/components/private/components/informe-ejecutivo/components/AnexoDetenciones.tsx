@@ -2,7 +2,7 @@
  * Componente AnexoDetenciones (Anexo A. Detenciones)
  * Muestra la información detallada de las detenciones del IPH
  * Incluye datos del detenido, ubicación, pertenencias y disposiciones
- * Mantiene diseño original con colores #c2b186, #fdf7f1
+ * Mantiene diseño original con colores #787dff, #eef1ff
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -153,7 +153,7 @@ const CampoBooleano: React.FC<{
         <XCircle className="h-5 w-5 text-red-500" />
       )}
       <div>
-        <p className="text-sm font-medium text-[#4d4725]">{label}</p>
+        <p className="text-sm font-medium text-[#1a2744]">{label}</p>
         <p className="text-xs text-gray-600">{esVerdadero ? 'Sí' : 'No'}</p>
       </div>
     </div>
@@ -247,16 +247,16 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
       <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
         <h2 
           className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-          style={{ backgroundColor: '#c2b186' }}
+          style={{ backgroundColor: '#787dff' }}
         >
           Anexo A. Detenciones
         </h2>
         
         <div 
           className="border border-gray-300 rounded-md shadow-sm p-4"
-          style={{ backgroundColor: '#fdf7f1' }}
+          style={{ backgroundColor: '#eef1ff' }}
         >
-          <div className="text-center text-[#4d4725] py-4">
+          <div className="text-center text-[#1a2744] py-4">
             <Users className="h-12 w-12 mx-auto mb-2 text-gray-400" />
             <p className="font-poppins">No se registraron detenciones en este caso</p>
           </div>
@@ -284,7 +284,7 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
     <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
       <h2 
         className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-        style={{ backgroundColor: '#c2b186' }}
+        style={{ backgroundColor: '#787dff' }}
       >
         Anexo A. Detenciones
         {detenciones.length > 1 && (
@@ -297,19 +297,19 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
       <div 
         ref={containerRef}
         className="border border-gray-300 rounded-md shadow-sm p-6 max-h-[80vh] overflow-y-auto"
-        style={{ backgroundColor: '#fdf7f1' }}
+        style={{ backgroundColor: '#eef1ff' }}
       >
         
         {/* Navegación entre detenciones si hay múltiples */}
         {detenciones.length > 1 && (
-          <div className="mb-6 flex items-center justify-center gap-4 p-4 bg-white rounded-lg border border-[#c2b186]/20">
+          <div className="mb-6 flex items-center justify-center gap-4 p-4 bg-white rounded-lg border border-[#787dff]/20">
             <button
               onClick={() => cambiarDetencion(detencionActiva - 1)}
               disabled={detencionActiva === 0}
               className={`p-2 rounded-lg transition-colors ${
                 detencionActiva === 0
                   ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                  : 'text-[#4d4725] hover:bg-[#c2b186] hover:text-white'
+                  : 'text-[#1a2744] hover:bg-[#787dff] hover:text-white'
               }`}
               title="Detención anterior"
               aria-label="Ir a detención anterior"
@@ -318,7 +318,7 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
             </button>
             
             <div className="text-center">
-              <p className="text-sm font-semibold text-[#4d4725]">
+              <p className="text-sm font-semibold text-[#1a2744]">
                 Detención {detencionActiva + 1} de {detenciones.length}
               </p>
               <p className="text-xs text-gray-600">
@@ -332,7 +332,7 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
               className={`p-2 rounded-lg transition-colors ${
                 detencionActiva === detenciones.length - 1
                   ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                  : 'text-[#4d4725] hover:bg-[#c2b186] hover:text-white'
+                  : 'text-[#1a2744] hover:bg-[#787dff] hover:text-white'
               }`}
               title="Detención siguiente"
               aria-label="Ir a detención siguiente"
@@ -344,15 +344,15 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
 
         {/* Sección 1: Información del detenido */}
         <div className="mb-6" id={`detenido-info-${detencionActiva}`}>
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <User className="h-5 w-5 text-white" />
             </div>
             Información del Detenido
             {detenciones.length > 1 && (
               <button
                 onClick={() => scrollToSection(`detenido-info-${detencionActiva}`)}
-                className="ml-auto text-xs text-[#c2b186] hover:text-[#4d4725] transition-colors"
+                className="ml-auto text-xs text-[#787dff] hover:text-[#1a2744] transition-colors"
                 title="Ir al inicio de esta sección"
               >
                 ↑ Inicio
@@ -360,15 +360,15 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
             )}
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-[#4d4725] font-poppins">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-[#1a2744] font-poppins">
             
             {/* Información básica */}
             <div className="md:col-span-2 lg:col-span-3">
-              <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20 mb-4">
-                <h4 className="text-sm font-semibold text-[#4d4725] mb-3">Identificación Personal</h4>
+              <div className="bg-white p-4 rounded-lg border border-[#787dff]/20 mb-4">
+                <h4 className="text-sm font-semibold text-[#1a2744] mb-3">Identificación Personal</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm font-bold text-[#4d4725]">
+                    <p className="text-sm font-bold text-[#1a2744]">
                       {[detencionMostrada.nombreDetenido, detencionMostrada.primerApellidoDetenido, detencionMostrada.segundoApellidoDetenido]
                         .filter(Boolean).join(' ') || 'No disponible'
                       }
@@ -391,7 +391,7 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
 
             {/* Datos demográficos */}
             <div className="flex items-center gap-3">
-              <User className="h-5 w-5 text-[#c2b186]" />
+              <User className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Sexo</p>
                 <p className="font-semibold">{detencionMostrada.sexo || 'No disponible'}</p>
@@ -399,7 +399,7 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Calendar className="h-5 w-5 text-[#c2b186]" />
+              <Calendar className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Fecha de nacimiento</p>
                 <p className="font-semibold">{formatearSoloFecha(detencionMostrada.fechaNacimiento)}</p>
@@ -407,7 +407,7 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Hash className="h-5 w-5 text-[#c2b186]" />
+              <Hash className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Edad</p>
                 <p className="font-semibold">
@@ -420,7 +420,7 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
             </div>
 
             <div className="flex items-center gap-3 md:col-span-2">
-              <MapPin className="h-5 w-5 text-[#c2b186]" />
+              <MapPin className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Nacionalidad</p>
                 <p className="font-semibold">
@@ -437,8 +437,8 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
             {/* Descripción física si existe */}
             {detencionMostrada.descripcionDetenido && (
               <div className="md:col-span-2 lg:col-span-3">
-                <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
-                  <h4 className="text-sm font-semibold text-[#4d4725] mb-2">Descripción Física</h4>
+                <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
+                  <h4 className="text-sm font-semibold text-[#1a2744] mb-2">Descripción Física</h4>
                   <p className="text-sm text-gray-700">{detencionMostrada.descripcionDetenido}</p>
                 </div>
               </div>
@@ -448,8 +448,8 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
 
         {/* Sección 2: Datos de la detención */}
         <div className="mb-6 pt-6 border-t border-gray-200" id={`detencion-datos-${detencionActiva}`}>
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <Clock className="h-5 w-5 text-white" />
             </div>
             Datos de la Detención
@@ -458,23 +458,23 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* Fecha y hora */}
-            <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
+            <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
               <div className="flex items-center gap-3 mb-2">
-                <Clock className="h-5 w-5 text-[#c2b186]" />
+                <Clock className="h-5 w-5 text-[#787dff]" />
                 <p className="text-sm font-medium text-gray-600">Fecha y hora de detención</p>
               </div>
-              <p className="font-semibold text-[#4d4725]">
+              <p className="font-semibold text-[#1a2744]">
                 {formatearFecha(detencionMostrada.fechaHora)}
               </p>
             </div>
 
             {/* Lugar de traslado */}
-            <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
+            <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
               <div className="flex items-center gap-3 mb-2">
-                <MapPin className="h-5 w-5 text-[#c2b186]" />
+                <MapPin className="h-5 w-5 text-[#787dff]" />
                 <p className="text-sm font-medium text-gray-600">Lugar de traslado</p>
               </div>
-              <p className="font-semibold text-[#4d4725]">
+              <p className="font-semibold text-[#1a2744]">
                 {detencionMostrada.lugarTraslado || 'No especificado'}
               </p>
             </div>
@@ -515,8 +515,8 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
 
         {/* Sección 3: Ubicación y direcciones */}
         <div className="mb-6 pt-6 border-t border-gray-200" id={`ubicacion-${detencionActiva}`}>
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <Home className="h-5 w-5 text-white" />
             </div>
             Ubicación y Direcciones
@@ -526,8 +526,8 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
             
             {/* Domicilio del detenido */}
             {(detencionMostrada.domicilioDetenido || detencionMostrada.localizacionDetenido) && (
-              <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
-                <h4 className="text-sm font-semibold text-[#4d4725] mb-3 flex items-center gap-2">
+              <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
+                <h4 className="text-sm font-semibold text-[#1a2744] mb-3 flex items-center gap-2">
                   <Home className="h-4 w-4" />
                   Domicilio del Detenido
                 </h4>
@@ -565,8 +565,8 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
 
             {/* Lugar de detención */}
             {normalizarBooleano(detencionMostrada.lugarDetencion) && (
-              <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20 relative">
-                <h4 className="text-sm font-semibold text-[#4d4725] mb-3 flex items-center gap-2">
+              <div className="bg-white p-4 rounded-lg border border-[#787dff]/20 relative">
+                <h4 className="text-sm font-semibold text-[#1a2744] mb-3 flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
                   Lugar de Detención
                 </h4>
@@ -617,8 +617,8 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
 
           {/* Persona conocida */}
           {(detencionMostrada.nombreConocido || detencionMostrada.telefonoConocido) && (
-            <div className="mt-6 bg-white p-4 rounded-lg border border-[#c2b186]/20">
-              <h4 className="text-sm font-semibold text-[#4d4725] mb-3 flex items-center gap-2">
+            <div className="mt-6 bg-white p-4 rounded-lg border border-[#787dff]/20">
+              <h4 className="text-sm font-semibold text-[#1a2744] mb-3 flex items-center gap-2">
                 <Phone className="h-4 w-4" />
                 Persona de Contacto
               </h4>
@@ -641,8 +641,8 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
         {/* Sección 4: Disposiciones/Oficiales que pusieron a disposición */}
         {detencionMostrada.disposiciones && detencionMostrada.disposiciones.length > 0 && (
           <div className="mb-6 pt-6 border-t border-gray-200" id={`disposiciones-${detencionActiva}`}>
-            <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <Users className="h-5 w-5 text-white" />
               </div>
               Oficiales que Pusieron a Disposición ({detencionMostrada.disposiciones.length})
@@ -650,11 +650,11 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {detencionMostrada.disposiciones.map((oficial, index) => (
-                <div key={index} className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
+                <div key={index} className="bg-white p-4 rounded-lg border border-[#787dff]/20">
                   <div className="flex items-start gap-3">
-                    <Users className="h-5 w-5 text-[#c2b186] mt-0.5" />
+                    <Users className="h-5 w-5 text-[#787dff] mt-0.5" />
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[#4d4725] text-sm mb-1">
+                      <h4 className="font-semibold text-[#1a2744] text-sm mb-1">
                         {[oficial.nombre, oficial.primerApellido, oficial.segundoApellido]
                           .filter(Boolean).join(' ') || `Oficial ${index + 1}`
                         }
@@ -678,8 +678,8 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
         {/* Sección 5: Pertenencias */}
         {detencionMostrada.pertenencias && detencionMostrada.pertenencias.length > 0 && (
           <div className="mb-6 pt-6 border-t border-gray-200" id={`pertenencias-${detencionActiva}`}>
-            <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <Package className="h-5 w-5 text-white" />
               </div>
               Pertenencias ({detencionMostrada.pertenencias.length})
@@ -687,11 +687,11 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {detencionMostrada.pertenencias.map((pertenencia, index) => (
-                <div key={index} className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
+                <div key={index} className="bg-white p-4 rounded-lg border border-[#787dff]/20">
                   <div className="flex items-start gap-3">
-                    <Package className="h-5 w-5 text-[#c2b186] mt-0.5" />
+                    <Package className="h-5 w-5 text-[#787dff] mt-0.5" />
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[#4d4725] text-sm mb-1">
+                      <h4 className="font-semibold text-[#1a2744] text-sm mb-1">
                         {pertenencia.tipo || `Objeto ${index + 1}`}
                       </h4>
                       {pertenencia.descripcion && (
@@ -720,14 +720,14 @@ const AnexoDetenciones: React.FC<AnexoDetencionesProps> = ({
         {/* Observaciones */}
         {detencionMostrada.observaciones && (
           <div className="pt-6 border-t border-gray-200" id={`observaciones-${detencionActiva}`}>
-            <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <FileText className="h-5 w-5 text-white" />
               </div>
               Observaciones
             </h3>
             
-            <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
+            <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
               <p className="text-sm text-gray-700 leading-relaxed">
                 {detencionMostrada.observaciones}
               </p>

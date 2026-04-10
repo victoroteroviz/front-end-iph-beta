@@ -62,7 +62,7 @@ const PuestaDisposicionSection: React.FC<PuestaDisposicionProps> = ({
           {hasEntregaData && (
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-3">
-                <FileSignature size={16} className="text-[#4d4725]" />
+                <FileSignature size={16} className="text-[#1a2744]" />
                 <h4 className="font-bold text-gray-800">
                   Entrega-Recepción:
                 </h4>
@@ -105,7 +105,7 @@ const PuestaDisposicionSection: React.FC<PuestaDisposicionProps> = ({
           {hasDisposicionData && (
             <>
               <div className="flex items-center gap-2 mb-4">
-                <Users size={16} className="text-[#4d4725]" />
+                <Users size={16} className="text-[#1a2744]" />
                 <h4 className="font-bold text-gray-800">
                   Disposiciones Oficiales:
                 </h4>

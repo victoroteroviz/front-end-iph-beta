@@ -254,11 +254,11 @@ const GestionGrupos: React.FC = () => {
             <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-[#948b54] rounded-lg">
+                  <div className="p-3 bg-[#4246b2] rounded-lg">
                     <Shield className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-[#4d4725] font-poppins">
+                    <h1 className="text-2xl font-bold text-[#1a2744] font-poppins">
                       {MESSAGES.titles.main}
                     </h1>
                     <p className="text-gray-600 font-poppins">
@@ -275,8 +275,8 @@ const GestionGrupos: React.FC = () => {
                       disabled={isCreating}
                       className="
                         flex items-center gap-2 px-4 py-2 text-sm font-medium
-                        text-white bg-[#4d4725] rounded-lg
-                        hover:bg-[#3a3519] disabled:opacity-50 disabled:cursor-not-allowed
+                        text-white bg-[#1a2744] rounded-lg
+                        hover:bg-[#151f36] disabled:opacity-50 disabled:cursor-not-allowed
                         transition-colors duration-200 font-poppins
                       "
                     >
@@ -297,7 +297,7 @@ const GestionGrupos: React.FC = () => {
               {/* Header de búsqueda */}
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-[#4d4725] font-poppins">
+                  <h2 className="text-xl font-semibold text-[#1a2744] font-poppins">
                     Lista de Grupos ({gruposFiltrados.length})
                   </h2>
                 </div>
@@ -315,7 +315,7 @@ const GestionGrupos: React.FC = () => {
                   <div className="flex items-center justify-center py-12">
                     <div className="text-center">
                       <Loader2
-                        className="animate-spin mx-auto mb-4 text-[#4d4725]"
+                        className="animate-spin mx-auto mb-4 text-[#1a2744]"
                         size={48}
                       />
                       <p className="text-gray-600 font-poppins">{MESSAGES.loading.grupos}</p>

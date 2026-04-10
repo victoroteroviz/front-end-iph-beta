@@ -40,11 +40,11 @@ const getTipoColors = (nombre: string) => {
 
   // Fallback para otros tipos (si los hubiera)
   return {
-    border: '#c2b186',
+    border: '#787dff',
     bgLight: '#F5F1E8',
-    bgNormal: '#c2b186',
-    bgDark: '#4d4725',
-    textLight: '#4d4725',
+    bgNormal: '#787dff',
+    bgDark: '#1a2744',
+    textLight: '#1a2744',
     textNormal: '#FFFFFF',
     textDark: '#FFFFFF'
   };
@@ -77,15 +77,15 @@ const IPHTipoFilter: React.FC<IIPHTipoFilterProps> = ({
   const hasSelectedTipo = selectedTipoId && selectedTipoId.trim() !== '';
 
   return (
-    <div className={`bg-gradient-to-br from-white via-[#fdf7f1] to-white rounded-xl shadow-lg border border-gray-100 p-6 backdrop-blur-sm ${className}`}>
+    <div className={`bg-gradient-to-br from-white via-[#eef1ff] to-white rounded-xl shadow-lg border border-gray-100 p-6 backdrop-blur-sm ${className}`}>
       {/* Header mejorado */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-[#c2b186] to-[#4d4725] rounded-lg shadow-md">
+          <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-[#787dff] to-[#1a2744] rounded-lg shadow-md">
             <Filter className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-[#4d4725] font-poppins">
+            <h3 className="text-lg font-bold text-[#1a2744] font-poppins">
               Tipo de IPH
             </h3>
           </div>
@@ -201,7 +201,7 @@ const IPHTipoFilter: React.FC<IIPHTipoFilterProps> = ({
         {/* Estado de carga */}
         {loading && (!tipos || tipos.length === 0) && (
           <div className="flex items-center gap-2 text-gray-500 text-sm font-poppins">
-            <div className="w-4 h-4 border-2 border-[#c2b186] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-4 h-4 border-2 border-[#787dff] border-t-transparent rounded-full animate-spin"></div>
             <span>Cargando tipos...</span>
           </div>
         )}
@@ -226,10 +226,10 @@ const IPHTipoFilter: React.FC<IIPHTipoFilterProps> = ({
             const colors = tipoSeleccionado ? getTipoColors(tipoSeleccionado.nombre) : null;
             
             return (
-              <div className="flex items-center gap-1" style={{ color: colors?.border || '#c2b186' }}>
+              <div className="flex items-center gap-1" style={{ color: colors?.border || '#787dff' }}>
                 <div 
                   className="w-2 h-2 rounded-full animate-pulse"
-                  style={{ backgroundColor: colors?.border || '#c2b186' }}
+                  style={{ backgroundColor: colors?.border || '#787dff' }}
                 />
                 <span>
                   Mostrando: {tipoSeleccionado?.nombre || 'Desconocido'}

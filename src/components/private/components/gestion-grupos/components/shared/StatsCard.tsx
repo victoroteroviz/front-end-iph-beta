@@ -17,7 +17,7 @@ interface StatsCardProps {
 }
 
 const COLOR_CLASSES = {
-  primary: 'text-[#4d4725]',
+  primary: 'text-[#1a2744]',
   success: 'text-green-600',
   error: 'text-red-600',
   warning: 'text-orange-600',

@@ -30,7 +30,7 @@ export const RouteTransitionOverlay = memo(({
 
   return (
     <div
-      className="fixed inset-0 bg-[#f8f0e7]/80 backdrop-blur-sm z-[9999] flex items-center justify-center animate-fadeIn"
+      className="fixed inset-0 bg-[#eef1ff]/80 backdrop-blur-sm z-[9999] flex items-center justify-center animate-fadeIn"
       role="status"
       aria-live="polite"
       aria-label={message}
@@ -39,11 +39,11 @@ export const RouteTransitionOverlay = memo(({
         {/* Spinner con anillo exterior */}
         <div className="relative">
           {/* Anillo exterior */}
-          <div className="absolute inset-0 rounded-full border-4 border-[#4d4725]/20 w-[72px] h-[72px] -top-2 -left-2" />
+          <div className="absolute inset-0 rounded-full border-4 border-[#1a2744]/20 w-[72px] h-[72px] -top-2 -left-2" />
 
           {/* Spinner animado */}
           <Loader2
-            className="animate-spin text-[#4d4725]"
+            className="animate-spin text-[#1a2744]"
             size={56}
             strokeWidth={3}
           />
@@ -51,22 +51,22 @@ export const RouteTransitionOverlay = memo(({
 
         {/* Mensaje */}
         <div className="flex flex-col items-center gap-2">
-          <p className="text-[#4d4725] font-semibold text-lg">
+          <p className="text-[#1a2744] font-semibold text-lg">
             {message}
           </p>
 
           {/* Puntos animados */}
           <div className="flex gap-1">
             <span
-              className="w-2 h-2 bg-[#4d4725] rounded-full animate-bounce"
+              className="w-2 h-2 bg-[#1a2744] rounded-full animate-bounce"
               style={{ animationDelay: '0ms' }}
             />
             <span
-              className="w-2 h-2 bg-[#4d4725] rounded-full animate-bounce"
+              className="w-2 h-2 bg-[#1a2744] rounded-full animate-bounce"
               style={{ animationDelay: '150ms' }}
             />
             <span
-              className="w-2 h-2 bg-[#4d4725] rounded-full animate-bounce"
+              className="w-2 h-2 bg-[#1a2744] rounded-full animate-bounce"
               style={{ animationDelay: '300ms' }}
             />
           </div>

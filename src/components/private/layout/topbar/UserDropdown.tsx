@@ -88,8 +88,8 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
         onClick={toggleDropdown}
         className="
           flex items-center gap-2 cursor-pointer 
-          hover:text-[#948b54] transition-colors duration-200
-          focus:outline-none focus:ring-2 focus:ring-[#4d4725] rounded
+          hover:text-[#4246b2] transition-colors duration-200
+          focus:outline-none focus:ring-2 focus:ring-[#1a2744] rounded
           p-1
         "
         aria-expanded={isOpen}
@@ -116,7 +116,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
           aria-label="Menú de opciones de usuario"
         >
           {/* Header con información del usuario */}
-          <div className="flex items-center gap-4 px-4 py-3 bg-[#f8f0e7]">
+          <div className="flex items-center gap-4 px-4 py-3 bg-[#eef1ff]">
             <img
               src={userData.foto || '/default-avatar.png'}
               alt={`Foto de ${nombreCompleto}`}
@@ -129,19 +129,19 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
               }}
             />
             {/* Fallback avatar */}
-            <div className="w-12 h-12 rounded-full bg-[#948b54] flex items-center justify-center hidden">
+            <div className="w-12 h-12 rounded-full bg-[#4246b2] flex items-center justify-center hidden">
               <User size={24} className="text-white" />
             </div>
             
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-[#4d4725] leading-tight truncate">
+              <p className="font-semibold text-[#1a2744] leading-tight truncate">
                 {nombreCompleto || 'Usuario'}
               </p>
               <p className="text-xs text-gray-500 break-all">
                 ID: {userData.id}
               </p>
               {userData.rol && (
-                <p className="text-xs text-[#948b54] font-medium">
+                <p className="text-xs text-[#4246b2] font-medium">
                   {userData.rol}
                 </p>
               )}
@@ -155,7 +155,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
               className="
                 w-full text-left px-4 py-3 
                 hover:bg-gray-100 transition-colors duration-200
-                flex items-center gap-2 text-[#4d4725]
+                flex items-center gap-2 text-[#1a2744]
                 focus:outline-none focus:bg-gray-100
               "
               role="menuitem"
@@ -169,7 +169,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
               className="
                 w-full text-left px-4 py-3 
                 hover:bg-gray-100 transition-colors duration-200
-                flex items-center gap-2 text-[#4d4725]
+                flex items-center gap-2 text-[#1a2744]
                 focus:outline-none focus:bg-gray-100
               "
               role="menuitem"

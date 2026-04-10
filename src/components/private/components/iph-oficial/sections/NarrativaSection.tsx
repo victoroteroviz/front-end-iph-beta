@@ -80,7 +80,7 @@ const NarrativaSection: React.FC<NarrativaSectionProps> = ({
           {/* Narrativa principal */}
           <div className="mt-4">
             <div className="flex items-center gap-2 mb-3">
-              <FileText size={16} className="text-[#4d4725]" />
+              <FileText size={16} className="text-[#1a2744]" />
               <h4 className="font-bold text-gray-800">
                 Descripción de los Hechos:
               </h4>

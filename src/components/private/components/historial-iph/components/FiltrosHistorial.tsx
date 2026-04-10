@@ -212,12 +212,12 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
       {/* Header de filtros */}
       <div className="flex items-center justify-between p-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <Filter size={20} className="text-[#4d4725]" aria-hidden="true" />
-          <h3 className="font-semibold text-[#4d4725]">
+          <Filter size={20} className="text-[#1a2744]" aria-hidden="true" />
+          <h3 className="font-semibold text-[#1a2744]">
             Filtros de Búsqueda
           </h3>
           {hasActiveFilters && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#4d4725] text-white">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#1a2744] text-white">
               Activos
             </span>
           )}
@@ -246,8 +246,8 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
             onClick={() => setIsExpanded(!isExpanded)}
             className="
               flex items-center gap-2 px-3 py-1.5 text-sm
-              text-[#4d4725] hover:text-[#3a3519]
-              bg-[#f8f0e7] hover:bg-[#f0e6d7]
+              text-[#1a2744] hover:text-[#151f36]
+              bg-[#eef1ff] hover:bg-[#f0e6d7]
               rounded-md transition-colors cursor-pointer
             "
           >
@@ -275,7 +275,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
                 w-full px-3 py-2
                 border border-gray-300 rounded-md
                 bg-white text-gray-900
-                focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
+                focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:border-transparent
                 disabled:opacity-50 disabled:cursor-not-allowed
                 cursor-pointer transition-colors duration-200
               "
@@ -307,14 +307,14 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
                       w-full pl-10 pr-4 py-2
                       border border-gray-300 rounded-md
                       bg-white text-gray-900
-                      focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
+                      focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:border-transparent
                       disabled:opacity-50 disabled:cursor-not-allowed
                       transition-colors duration-200
                     "
                   />
                   {loading && (
                     <div className="absolute right-3 top-3">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#4d4725]"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#1a2744]"></div>
                     </div>
                   )}
                 </div>
@@ -325,12 +325,12 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
                   disabled={loading || !localBusqueda.trim()}
                   className="
                     flex items-center justify-center px-4 py-2
-                    bg-[#4d4725] hover:bg-[#3a3519]
+                    bg-[#1a2744] hover:bg-[#151f36]
                     text-white rounded-md
                     transition-colors duration-200
                     disabled:opacity-50 disabled:cursor-not-allowed
-                    disabled:hover:bg-[#4d4725]
-                    focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-2
+                    disabled:hover:bg-[#1a2744]
+                    focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:ring-offset-2
                   "
                   title="Buscar ahora (Enter)"
                   aria-label="Buscar ahora"
@@ -366,9 +366,9 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
                   disabled={loading}
                   className="
                     px-3 py-1 text-sm
-                    text-[#4d4725] hover:text-white
-                    bg-white hover:bg-[#4d4725]
-                    border border-[#4d4725] rounded-md
+                    text-[#1a2744] hover:text-white
+                    bg-white hover:bg-[#1a2744]
+                    border border-[#1a2744] rounded-md
                     transition-colors duration-200 cursor-pointer
                     disabled:opacity-50 disabled:cursor-not-allowed
                   "
@@ -394,7 +394,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
                     w-full px-3 py-2
                     border border-gray-300 rounded-md
                     bg-white text-gray-900
-                    focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
+                    focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:border-transparent
                     disabled:opacity-50 disabled:cursor-not-allowed
                     transition-colors duration-200
                   "
@@ -415,7 +415,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
                     w-full px-3 py-2
                     border border-gray-300 rounded-md
                     bg-white text-gray-900
-                    focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
+                    focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:border-transparent
                     disabled:opacity-50 disabled:cursor-not-allowed
                     transition-colors duration-200
                   "
@@ -432,7 +432,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
           <div className="flex items-center gap-2">
             {loading ? (
               <>
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#4d4725]"></div>
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#1a2744]"></div>
                 <span>Aplicando filtros...</span>
               </>
             ) : (
@@ -444,7 +444,7 @@ const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
           </div>
           
           {hasActiveFilters && (
-            <span className="text-[#4d4725] font-medium">
+            <span className="text-[#1a2744] font-medium">
               Filtros activos aplicados
             </span>
           )}

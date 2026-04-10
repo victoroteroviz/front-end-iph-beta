@@ -40,7 +40,7 @@ const getBorderColor = (tipoNombre?: string): string => {
   }
 
   // Fallback para otros tipos
-  return '#c2b186'; // Color original del proyecto
+  return '#787dff'; // Color original del proyecto
 };
 
 /**
@@ -115,7 +115,7 @@ const IPHCard: React.FC<IIPHCardProps> = ({
       className={`
         bg-white rounded-lg shadow-md p-4 relative cursor-pointer
         transition-all duration-200 hover:shadow-lg hover:scale-[1.02]
-        border-l-4 border-r border-t border-b border-gray-100 hover:border-[#b8ab84]
+        border-l-4 border-r border-t border-b border-gray-100 hover:border-[#787dff]
         ${className}
       `}
       style={{
@@ -134,7 +134,7 @@ const IPHCard: React.FC<IIPHCardProps> = ({
     >
       {/* Header con referencia e indicador */}
       <div className="flex justify-between items-start mb-3">
-        <h2 className="font-bold text-lg text-[#4d4725] font-poppins truncate flex-1 mr-2">
+        <h2 className="font-bold text-lg text-[#1a2744] font-poppins truncate flex-1 mr-2">
           {registro.n_referencia}
         </h2>
 
@@ -153,7 +153,7 @@ const IPHCard: React.FC<IIPHCardProps> = ({
       <div className="space-y-2 mb-3">
         {/* Tipo con icono */}
         <div className="flex items-center gap-2 text-sm font-poppins text-gray-600">
-          <Shield className="h-4 w-4 flex-shrink-0 text-[#4d4725]" />
+          <Shield className="h-4 w-4 flex-shrink-0 text-[#1a2744]" />
           <span className="truncate">
             <span className="font-medium">Tipo:</span> {registro.tipo?.nombre || 'No especificado'}
           </span>
@@ -161,7 +161,7 @@ const IPHCard: React.FC<IIPHCardProps> = ({
 
         {/* Folio con icono */}
         <div className="flex items-center gap-2 text-sm font-poppins text-gray-600">
-          <FileText className="h-4 w-4 flex-shrink-0 text-[#4d4725]" />
+          <FileText className="h-4 w-4 flex-shrink-0 text-[#1a2744]" />
           <span className="truncate">
             <span className="font-medium">Folio:</span> {registro.n_folio_sist}
           </span>
@@ -205,15 +205,15 @@ const IPHCard: React.FC<IIPHCardProps> = ({
 
         {/* Icono dinámico según tipo */}
         <div
-          className="flex-shrink-0 ml-2 p-2 rounded-lg bg-gradient-to-br from-[#f8f0e7] to-white border border-gray-200"
+          className="flex-shrink-0 ml-2 p-2 rounded-lg bg-gradient-to-br from-[#eef1ff] to-white border border-gray-200"
           style={{ borderColor: borderColor }}
         >
-          <CardIcon size={24} className="text-[#4d4725]" />
+          <CardIcon size={24} className="text-[#1a2744]" />
         </div>
       </div>
 
       {/* Efecto hover overlay */}
-      <div className="absolute inset-0 bg-[#b8ab84] opacity-0 hover:opacity-5 transition-opacity duration-200 rounded-lg pointer-events-none" />
+      <div className="absolute inset-0 bg-[#787dff] opacity-0 hover:opacity-5 transition-opacity duration-200 rounded-lg pointer-events-none" />
     </div>
   );
 };

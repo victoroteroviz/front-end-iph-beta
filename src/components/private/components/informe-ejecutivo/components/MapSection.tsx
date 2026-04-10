@@ -170,7 +170,7 @@ const MapSection: React.FC<MapSectionProps> = ({
       }
       
       .leaflet-control-zoom a {
-        background-color: #c2b186 !important;
+        background-color: #787dff !important;
         border: none !important;
         color: white !important;
         font-weight: bold !important;
@@ -185,7 +185,7 @@ const MapSection: React.FC<MapSectionProps> = ({
       }
       
       .leaflet-control-zoom a:hover {
-        background-color: #a89770 !important;
+        background-color: #6167d9 !important;
         transform: scale(1.05) !important;
       }
       
@@ -232,7 +232,7 @@ const MapSection: React.FC<MapSectionProps> = ({
     return (
       <div className={`bg-white rounded-lg border border-gray-300 shadow-sm ${className}`}>
         <div 
-          className="flex flex-col items-center justify-center text-[#4d4725] font-poppins p-6"
+          className="flex flex-col items-center justify-center text-[#1a2744] font-poppins p-6"
           style={{ height }}
         >
           <MapPin className="h-12 w-12 text-gray-400 mb-3" />
@@ -254,17 +254,17 @@ const MapSection: React.FC<MapSectionProps> = ({
     <div className={`bg-white rounded-lg border border-gray-300 shadow-sm ${className}`}>
       
       {/* Header del mapa */}
-      <div className="px-4 py-3 border-b border-gray-200 bg-[#fdf7f1]">
+      <div className="px-4 py-3 border-b border-gray-200 bg-[#eef1ff]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Navigation className="h-4 w-4 text-[#c2b186]" />
-            <h4 className="text-sm font-semibold text-[#4d4725] font-poppins">
+            <Navigation className="h-4 w-4 text-[#787dff]" />
+            <h4 className="text-sm font-semibold text-[#1a2744] font-poppins">
               Ubicación del Incidente
             </h4>
           </div>
           <div className="text-xs text-gray-600 font-poppins flex items-center gap-2">
             <span>Zoom: {currentZoom}x</span>
-            <span className="text-[#c2b186]">•</span>
+            <span className="text-[#787dff]">•</span>
             <span>{getZoomDescription(currentZoom)}</span>
           </div>
         </div>
@@ -327,7 +327,7 @@ const MapSection: React.FC<MapSectionProps> = ({
               <div className="text-sm font-poppins">
                 <div className="flex items-center gap-2 mb-2">
                   <AlertCircle className="h-4 w-4 text-red-600" />
-                  <strong className="text-[#4d4725]">Ubicación del Incidente</strong>
+                  <strong className="text-[#1a2744]">Ubicación del Incidente</strong>
                 </div>
                 
                 <div className="text-xs text-gray-600 space-y-1">

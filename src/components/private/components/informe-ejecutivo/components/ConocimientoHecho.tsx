@@ -2,7 +2,7 @@
  * Componente ConocimientoHecho
  * Muestra la información del conocimiento del hecho del IPH
  * Incluye número de conocimiento, documentación, fechas y tipo
- * Mantiene diseño original con colores #c2b186, #fdf7f1
+ * Mantiene diseño original con colores #787dff, #eef1ff
  */
 
 import React from 'react';
@@ -90,16 +90,16 @@ const ConocimientoHecho: React.FC<ConocimientoHechoProps> = ({
       <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
         <h2 
           className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-          style={{ backgroundColor: '#c2b186' }}
+          style={{ backgroundColor: '#787dff' }}
         >
           Conocimiento del Hecho
         </h2>
         
         <div 
           className="border border-gray-300 rounded-md shadow-sm p-4"
-          style={{ backgroundColor: '#fdf7f1' }}
+          style={{ backgroundColor: '#eef1ff' }}
         >
-          <div className="text-center text-[#4d4725] py-4">
+          <div className="text-center text-[#1a2744] py-4">
             <AlertCircle className="h-12 w-12 mx-auto mb-2 text-gray-400" />
             <p className="font-poppins">No se encontraron datos del conocimiento del hecho</p>
           </div>
@@ -115,30 +115,30 @@ const ConocimientoHecho: React.FC<ConocimientoHechoProps> = ({
     <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
       <h2 
         className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-        style={{ backgroundColor: '#c2b186' }}
+        style={{ backgroundColor: '#787dff' }}
       >
         Conocimiento del Hecho
       </h2>
       
       <div 
         className="border border-gray-300 rounded-md shadow-sm p-6"
-        style={{ backgroundColor: '#fdf7f1' }}
+        style={{ backgroundColor: '#eef1ff' }}
       >
         
         {/* Sección 1: Información de identificación */}
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <FileText className="h-5 w-5 text-white" />
             </div>
             Información de Identificación
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-[#4d4725] font-poppins">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-[#1a2744] font-poppins">
             
             {/* Número de conocimiento */}
             <div className="flex items-center gap-3">
-              <Hash className="h-5 w-5 text-[#c2b186]" />
+              <Hash className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Número de conocimiento</p>
                 <p className="font-semibold font-mono text-lg">
@@ -149,7 +149,7 @@ const ConocimientoHecho: React.FC<ConocimientoHechoProps> = ({
 
             {/* Documento de conocimiento */}
             <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-[#c2b186]" />
+              <FileText className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Documento de conocimiento</p>
                 <p className="font-semibold">
@@ -160,11 +160,11 @@ const ConocimientoHecho: React.FC<ConocimientoHechoProps> = ({
 
             {/* Tipo de conocimiento */}
             <div className="flex items-center gap-3 md:col-span-2">
-              <Tag className="h-5 w-5 text-[#c2b186]" />
+              <Tag className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Tipo de conocimiento</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="px-3 py-1 bg-[#c2b186] text-white text-sm font-medium rounded-full">
+                  <span className="px-3 py-1 bg-[#787dff] text-white text-sm font-medium rounded-full">
                     {conocimiento.tipoConocimiento || 'No especificado'}
                   </span>
                 </div>
@@ -175,33 +175,33 @@ const ConocimientoHecho: React.FC<ConocimientoHechoProps> = ({
 
         {/* Sección 2: Información temporal */}
         <div className="mb-6 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <Calendar className="h-5 w-5 text-white" />
             </div>
             Información Temporal
           </h3>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-[#4d4725] font-poppins">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-[#1a2744] font-poppins">
             
             {/* Fecha de conocimiento */}
-            <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
+            <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
               <div className="flex items-center gap-3 mb-2">
-                <Calendar className="h-5 w-5 text-[#c2b186]" />
+                <Calendar className="h-5 w-5 text-[#787dff]" />
                 <p className="text-sm font-medium text-gray-600">Fecha de conocimiento</p>
               </div>
-              <p className="font-semibold text-[#4d4725]">
+              <p className="font-semibold text-[#1a2744]">
                 {formatearFecha(conocimiento.fConocimiento)}
               </p>
             </div>
 
             {/* Fecha de arribo */}
-            <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
+            <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
               <div className="flex items-center gap-3 mb-2">
-                <Clock className="h-5 w-5 text-[#c2b186]" />
+                <Clock className="h-5 w-5 text-[#787dff]" />
                 <p className="text-sm font-medium text-gray-600">Fecha de arribo</p>
               </div>
-              <p className="font-semibold text-[#4d4725]">
+              <p className="font-semibold text-[#1a2744]">
                 {formatearFecha(conocimiento.fArribo)}
               </p>
             </div>
@@ -229,8 +229,8 @@ const ConocimientoHecho: React.FC<ConocimientoHechoProps> = ({
         {/* Resumen de la información si todos los datos están presentes */}
         {(conocimiento.nConocimiento && conocimiento.docConocimiento && conocimiento.tipoConocimiento) && (
           <div className="pt-6 border-t border-gray-200">
-            <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
-              <h4 className="text-sm font-semibold text-[#4d4725] mb-3 flex items-center gap-2">
+            <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
+              <h4 className="text-sm font-semibold text-[#1a2744] mb-3 flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Resumen del Conocimiento del Hecho
               </h4>

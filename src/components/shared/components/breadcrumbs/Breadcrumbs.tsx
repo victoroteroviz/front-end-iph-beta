@@ -82,7 +82,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
     return (
       <ChevronRight
         size={14}
-        className="text-gray-400 mx-2 flex-shrink-0"
+        className="text-[var(--color-neutral-400)] mx-2 flex-shrink-0"
         aria-hidden="true"
       />
     );
@@ -142,8 +142,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
       return (
         <span
           key={index}
-          className="text-sm font-medium truncate"
-          style={{ color: '#4d4725' }}
+          className="text-sm font-medium truncate text-[var(--color-iph-primary)]"
           aria-current={isActive ? 'page' : undefined}
         >
           {breadcrumbContent}
@@ -160,7 +159,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
             e.preventDefault();
             item.onClick!(e);
           }}
-          className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200 truncate bg-transparent border-none cursor-pointer p-0"
+          className="text-sm text-[var(--color-neutral-600)] hover:text-[var(--color-iph-primary)] transition-colors duration-200 truncate bg-transparent border-none cursor-pointer p-0"
           title={item.label}
         >
           {breadcrumbContent}
@@ -174,7 +173,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
         <Link
           key={index}
           to={item.path}
-          className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200 truncate"
+          className="text-sm text-[var(--color-neutral-600)] hover:text-[var(--color-iph-primary)] transition-colors duration-200 truncate"
           title={item.label}
         >
           {breadcrumbContent}
@@ -186,7 +185,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
     return (
       <span
         key={index}
-        className="text-sm text-gray-600 truncate"
+        className="text-sm text-[var(--color-neutral-600)] truncate"
       >
         {breadcrumbContent}
       </span>
@@ -204,7 +203,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
         <>
           <Link
             to="/inicio"
-            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200"
+            className="flex items-center text-[var(--color-neutral-600)] hover:text-[var(--color-iph-primary)] transition-colors duration-200"
             title="Ir al inicio"
             aria-label="Ir al inicio"
           >

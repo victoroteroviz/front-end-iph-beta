@@ -45,7 +45,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         className={`
           flex items-center justify-center px-6 py-2 text-white font-medium rounded transition-all duration-200 font-poppins
           ${canSubmit && !isSubmitting
-            ? 'bg-[#948b54] hover:bg-[#7d7548] shadow-md hover:shadow-lg transform hover:-translate-y-0.5 cursor-pointer'
+            ? 'bg-[#4246b2] hover:bg-[#7d7548] shadow-md hover:shadow-lg transform hover:-translate-y-0.5 cursor-pointer'
             : 'bg-gray-400 cursor-not-allowed'
           }
         `}

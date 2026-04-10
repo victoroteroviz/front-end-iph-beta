@@ -80,7 +80,7 @@ const Pagination: React.FC<PaginationProps> = ({
           text-gray-700 hover:text-gray-900
           disabled:opacity-50 disabled:cursor-not-allowed
           transition-all duration-200
-          focus:outline-none focus:ring-2 focus:ring-[#4d4725]
+          focus:outline-none focus:ring-2 focus:ring-[#1a2744]
         "
         aria-label="Página anterior"
       >
@@ -109,9 +109,9 @@ const Pagination: React.FC<PaginationProps> = ({
               className={`
                 px-3 py-2 rounded-md text-sm font-medium
                 transition-all duration-200
-                focus:outline-none focus:ring-2 focus:ring-[#4d4725]
+                focus:outline-none focus:ring-2 focus:ring-[#1a2744]
                 ${isCurrentPage
-                  ? 'bg-[#4d4725] text-white shadow-sm'
+                  ? 'bg-[#1a2744] text-white shadow-sm'
                   : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:text-gray-900'
                 }
                 disabled:opacity-50 disabled:cursor-not-allowed
@@ -136,7 +136,7 @@ const Pagination: React.FC<PaginationProps> = ({
           text-gray-700 hover:text-gray-900
           disabled:opacity-50 disabled:cursor-not-allowed
           transition-all duration-200
-          focus:outline-none focus:ring-2 focus:ring-[#4d4725]
+          focus:outline-none focus:ring-2 focus:ring-[#1a2744]
         "
         aria-label="Página siguiente"
       >
@@ -154,7 +154,7 @@ const Pagination: React.FC<PaginationProps> = ({
       {/* Loading indicator */}
       {loading && (
         <div className="flex items-center gap-2 ml-4">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#4d4725]"></div>
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#1a2744]"></div>
           <span className="text-sm text-gray-600">Cargando...</span>
         </div>
       )}

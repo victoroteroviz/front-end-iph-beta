@@ -73,7 +73,7 @@ const UsuariosFilters: React.FC<IUsuariosFiltersProps> = ({
               onKeyPress={handleKeyPress}
               className="
                 w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg
-                focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54]
+                focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2]
                 disabled:opacity-50 disabled:cursor-not-allowed
                 font-poppins text-sm
               "
@@ -99,7 +99,7 @@ const UsuariosFilters: React.FC<IUsuariosFiltersProps> = ({
               onChange={(e) => handleSearchByChange(e.target.value as 'nombre' | 'cuip' | 'cup' | 'grado' | 'cargo')}
               className="
                 pl-10 pr-8 py-2 border border-gray-300 rounded-lg
-                focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54]
+                focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2]
                 disabled:opacity-50 disabled:cursor-not-allowed
                 cursor-pointer font-poppins text-sm min-w-32
               "
@@ -158,7 +158,7 @@ const UsuariosFilters: React.FC<IUsuariosFiltersProps> = ({
               disabled={loading}
               className="
                 flex items-center gap-2 px-4 py-2 text-sm font-medium
-                text-white bg-[#948b54] border border-[#948b54] rounded-lg
+                text-white bg-[#4246b2] border border-[#4246b2] rounded-lg
                 hover:bg-[#7d7548] hover:border-[#7d7548]
                 disabled:opacity-50 disabled:cursor-not-allowed
                 cursor-pointer transition-colors duration-200 font-poppins

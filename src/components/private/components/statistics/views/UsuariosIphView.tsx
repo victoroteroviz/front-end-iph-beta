@@ -65,11 +65,11 @@ const UsuariosIphView: React.FC = () => {
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-[#948b54] rounded-lg">
+              <div className="p-3 bg-[var(--color-iph-secondary)] rounded-lg">
                 <Users className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-[#4d4725] font-poppins">
+                <h1 className="text-2xl font-bold text-[var(--color-iph-primary)] font-poppins">
                   Estadísticas de Usuarios IPH
                 </h1>
                 <p className="text-gray-600 font-poppins">
@@ -84,8 +84,8 @@ const UsuariosIphView: React.FC = () => {
                 disabled={isRefreshing}
                 className="
                   flex items-center gap-2 px-4 py-2 text-sm font-medium
-                  text-white bg-[#4d4725] rounded-lg
-                  hover:bg-[#3a3519] disabled:opacity-50 disabled:cursor-not-allowed
+                  text-white bg-[var(--color-iph-primary)] rounded-lg
+                  hover:bg-[var(--color-iph-secondary)] disabled:opacity-50 disabled:cursor-not-allowed
                   transition-colors duration-200 font-poppins
                 "
               >

@@ -94,7 +94,7 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
             disabled={loading}
             min={2000}
             placeholder="Año"
-            className="w-24 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725] hover:border-[#4d4725]/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-24 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#1a2744]/30 focus:border-[#1a2744] hover:border-[#1a2744]/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             aria-label="Ingresar año"
           />
         </div>
@@ -113,7 +113,7 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
             min={1}
             max={12}
             placeholder="Mes"
-            className="w-20 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725] hover:border-[#4d4725]/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-20 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#1a2744]/30 focus:border-[#1a2744] hover:border-[#1a2744]/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             aria-label="Ingresar mes (1-12)"
           />
         </div>
@@ -133,7 +133,7 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
               min={1}
               max={new Date(anio, mes, 0).getDate()}
               placeholder="Día"
-              className="w-20 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725] hover:border-[#4d4725]/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="w-20 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#1a2744]/30 focus:border-[#1a2744] hover:border-[#1a2744]/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               aria-label="Ingresar día"
             />
           </div>
@@ -141,8 +141,8 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
 
         {/* Indicador de carga inline */}
         {loading && (
-          <div className="flex items-center gap-2 text-sm text-[#4d4725]">
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#4d4725]/30 border-t-[#4d4725]"></div>
+          <div className="flex items-center gap-2 text-sm text-[#1a2744]">
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#1a2744]/30 border-t-[#1a2744]"></div>
             <span>Actualizando...</span>
           </div>
         )}
@@ -159,8 +159,8 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
     `}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-4 sm:mb-6">
-        <Filter size={20} className="text-[#4d4725] flex-shrink-0" aria-hidden="true" />
-        <h3 className="font-semibold text-[#4d4725] text-base sm:text-lg">
+        <Filter size={20} className="text-[#1a2744] flex-shrink-0" aria-hidden="true" />
+        <h3 className="font-semibold text-[#1a2744] text-base sm:text-lg">
           Filtros de Búsqueda
         </h3>
       </div>
@@ -175,7 +175,7 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
               htmlFor="mes-input" 
               className="block text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2"
             >
-              <Calendar size={16} className="text-[#4d4725]" />
+              <Calendar size={16} className="text-[#1a2744]" />
               Mes (1-12)
             </label>
             <input
@@ -192,8 +192,8 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
                 border-2 border-gray-200 rounded-xl
                 bg-gradient-to-r from-white to-gray-50
                 text-gray-900 font-medium text-center
-                focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725]
-                hover:border-[#4d4725]/40 hover:shadow-lg
+                focus:outline-none focus:ring-2 focus:ring-[#1a2744]/30 focus:border-[#1a2744]
+                hover:border-[#1a2744]/40 hover:shadow-lg
                 disabled:opacity-50 disabled:cursor-not-allowed
                 transition-all duration-300 ease-out
                 group-hover:shadow-md
@@ -208,7 +208,7 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
               htmlFor="anio-input" 
               className="block text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2"
             >
-              <Calendar size={16} className="text-[#4d4725]" />
+              <Calendar size={16} className="text-[#1a2744]" />
               Año
             </label>
             <input
@@ -224,8 +224,8 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
                 border-2 border-gray-200 rounded-xl
                 bg-gradient-to-r from-white to-gray-50
                 text-gray-900 font-medium text-center
-                focus:outline-none focus:ring-2 focus:ring-[#4d4725]/30 focus:border-[#4d4725]
-                hover:border-[#4d4725]/40 hover:shadow-lg
+                focus:outline-none focus:ring-2 focus:ring-[#1a2744]/30 focus:border-[#1a2744]
+                hover:border-[#1a2744]/40 hover:shadow-lg
                 disabled:opacity-50 disabled:cursor-not-allowed
                 transition-all duration-300 ease-out
                 group-hover:shadow-md
@@ -238,8 +238,8 @@ const EstadisticasFilters: React.FC<EstadisticasFiltersProps> = ({
         {/* Indicador de estado mejorado */}
         {loading && (
           <div className="flex items-center justify-center">
-            <div className="flex items-center gap-3 bg-[#4d4725]/5 border border-[#4d4725]/20 px-6 py-3 rounded-full text-sm text-[#4d4725] font-medium">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#4d4725]/30 border-t-[#4d4725]"></div>
+            <div className="flex items-center gap-3 bg-[#1a2744]/5 border border-[#1a2744]/20 px-6 py-3 rounded-full text-sm text-[#1a2744] font-medium">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#1a2744]/30 border-t-[#1a2744]"></div>
               <span>Actualizando estadísticas...</span>
             </div>
           </div>

@@ -13,13 +13,13 @@
  */
 export const REPORTES_COLORS = {
   /** Color primario del tema IPH */
-  IPH_PRIMARY: '#c2b186',
+  IPH_PRIMARY: '#787dff',
 
   /** Color secundario del tema IPH */
-  IPH_SECONDARY: '#948b54',
+  IPH_SECONDARY: '#4246b2',
 
   /** Color oscuro del tema IPH */
-  IPH_DARK: '#4d4725',
+  IPH_DARK: '#1a2744',
 
   /** Color de éxito */
   SUCCESS: '#10b981',

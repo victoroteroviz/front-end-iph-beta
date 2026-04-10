@@ -20,6 +20,15 @@ interface UsuariosIphStatsProps {
 }
 
 const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTrigger }) => {
+  const chartPalette = {
+    primary: 'rgba(66, 70, 178, 0.85)',
+    primaryBorder: 'rgba(66, 70, 178, 1)',
+    tertiary: 'rgba(120, 125, 255, 0.85)',
+    tertiaryBorder: 'rgba(120, 125, 255, 1)',
+    danger: 'rgba(220, 38, 38, 0.85)',
+    dangerBorder: 'rgba(220, 38, 38, 1)'
+  } as const;
+
   // Estados principales
   const [activeTab, setActiveTab] = useState<'mayores' | 'menores' | 'totales'>('mayores');
   const [mayoresData, setMayoresData] = useState<RankingResponse | null>(null);
@@ -70,8 +79,8 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
   // Configuración de gráfico de barras para rankings
   const getBarChartData = (data: UsuarioEstadistica[], tipo: 'mayores' | 'menores') => {
     const colors = tipo === 'mayores'
-      ? { bg: 'rgba(148, 139, 84, 0.8)', border: 'rgba(148, 139, 84, 1)' }
-      : { bg: 'rgba(220, 38, 38, 0.8)', border: 'rgba(220, 38, 38, 1)' };
+      ? { bg: chartPalette.primary, border: chartPalette.primaryBorder }
+      : { bg: chartPalette.danger, border: chartPalette.dangerBorder };
 
     return {
       labels: data.map(u => u.nombre_completo.split(' ').slice(0, 2).join(' ')),
@@ -164,8 +173,8 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
       datasets: [{
         label: 'IPH Creados',
         data: [mayorUsuario.cantidad_iph, menorUsuario.cantidad_iph],
-        backgroundColor: ['rgba(148, 139, 84, 0.8)', 'rgba(220, 38, 38, 0.8)'],
-        borderColor: ['rgba(148, 139, 84, 1)', 'rgba(220, 38, 38, 1)'],
+        backgroundColor: [chartPalette.tertiary, chartPalette.danger],
+        borderColor: [chartPalette.tertiaryBorder, chartPalette.dangerBorder],
         borderWidth: 2
       }]
     };
@@ -303,8 +312,8 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4d4725] mb-4"></div>
-        <p className="text-[#4d4725] font-medium">Cargando estadísticas...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-iph-primary)] mb-4"></div>
+        <p className="text-[var(--color-iph-primary)] font-medium">Cargando estadísticas...</p>
       </div>
     );
   }
@@ -313,11 +322,11 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
     <div className="space-y-6">
       {/* Filtros */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-[#4d4725] font-poppins mb-4">Filtros de Período</h3>
+        <h3 className="text-lg font-semibold text-[var(--color-iph-primary)] font-poppins mb-4">Filtros de Período</h3>
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           {/* Período */}
           <div>
-            <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Período</label>
+            <label className="block text-sm font-medium text-[var(--color-iph-primary)] font-poppins mb-1">Período</label>
             <select
               value={filtros.periodo}
               onChange={(e) => handlePeriodoChange(e.target.value as PeriodoEnum)}
@@ -332,7 +341,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
 
           {/* Año */}
           <div>
-            <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Año</label>
+            <label className="block text-sm font-medium text-[var(--color-iph-primary)] font-poppins mb-1">Año</label>
             <select
               value={filtros.anio}
               onChange={(e) => handleAnioChange(parseInt(e.target.value))}
@@ -347,7 +356,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
           {/* Mes - Solo para mensual y diario */}
           {(filtros.periodo === 'mensual' || filtros.periodo === 'diario') && (
             <div>
-              <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Mes</label>
+              <label className="block text-sm font-medium text-[var(--color-iph-primary)] font-poppins mb-1">Mes</label>
               <select
                 value={filtros.mes || ''}
                 onChange={(e) => handleMesChange(parseInt(e.target.value))}
@@ -372,7 +381,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
           {/* Semana - Solo para semanal */}
           {filtros.periodo === 'semanal' && (
             <div>
-              <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Semana</label>
+              <label className="block text-sm font-medium text-[var(--color-iph-primary)] font-poppins mb-1">Semana</label>
               <select
                 value={filtros.semana || ''}
                 onChange={(e) => handleSemanaChange(parseInt(e.target.value))}
@@ -388,7 +397,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
           {/* Día - Solo para diario */}
           {filtros.periodo === 'diario' && (
             <div>
-              <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Día</label>
+              <label className="block text-sm font-medium text-[var(--color-iph-primary)] font-poppins mb-1">Día</label>
               <select
                 value={filtros.dia || ''}
                 onChange={(e) => handleDiaChange(parseInt(e.target.value))}
@@ -403,7 +412,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
 
           {/* Límite */}
           <div>
-            <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Mostrar</label>
+            <label className="block text-sm font-medium text-[var(--color-iph-primary)] font-poppins mb-1">Mostrar</label>
             <select
               value={filtros.limite}
               onChange={(e) => handleLimiteChange(parseInt(e.target.value))}
@@ -421,7 +430,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
             <button
               onClick={loadData}
               disabled={loading}
-              className="w-full px-4 py-2 bg-[#4d4725] text-white rounded-lg hover:bg-[#3a3519] transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed font-poppins font-medium"
+              className="w-full px-4 py-2 bg-[var(--color-iph-primary)] text-white rounded-lg hover:bg-[var(--color-iph-secondary)] transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed font-poppins font-medium"
             >
               Actualizar
             </button>
@@ -438,8 +447,8 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
               onClick={() => setActiveTab(tab as any)}
               className={`py-3 px-6 font-semibold text-sm transition-all duration-200 relative cursor-pointer font-poppins ${
                 activeTab === tab
-                  ? 'bg-white text-[#4d4725] border-t-4 border-l border-r border-[#948b54] rounded-t-lg shadow-md -mb-0.5'
-                  : 'text-gray-600 hover:text-[#4d4725] hover:bg-gray-50 rounded-t-lg'
+                  ? 'bg-white text-[var(--color-iph-primary)] border-t-4 border-l border-r border-[var(--color-iph-secondary)] rounded-t-lg shadow-md -mb-0.5'
+                  : 'text-gray-600 hover:text-[var(--color-iph-primary)] hover:bg-gray-50 rounded-t-lg'
               }`}
             >
               {tab === 'mayores' && '🏆 Top Usuarios'}
@@ -454,8 +463,8 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
       <div className="min-h-[400px] bg-white border-l border-r border-b border-gray-200 rounded-b-xl shadow-sm">
         {activeTab === 'mayores' && mayoresData && (
           <div className="p-6 space-y-6">
-            <div className="bg-amber-50 p-4 rounded-lg border-l-4 border-[#948b54]">
-              <h3 className="text-lg font-semibold text-[#4d4725] font-poppins mb-2">🏆 Usuarios con Mayor Productividad</h3>
+            <div className="bg-[var(--color-iph-surface)] p-4 rounded-lg border-l-4 border-[var(--color-iph-secondary)]">
+              <h3 className="text-lg font-semibold text-[var(--color-iph-primary)] font-poppins mb-2">🏆 Usuarios con Mayor Productividad</h3>
               <p className="text-sm text-gray-600 font-poppins">Ranking de usuarios que han creado más informes IPH</p>
             </div>
             <div className="h-96 bg-white p-4 rounded-lg border border-gray-200">
@@ -470,7 +479,7 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
         {activeTab === 'menores' && menoresData && (
           <div className="p-6 space-y-6">
             <div className="bg-red-50 p-4 rounded-lg border-l-4 border-red-600">
-              <h3 className="text-lg font-semibold text-[#4d4725] font-poppins mb-2">📊 Usuarios con Menor Actividad</h3>
+              <h3 className="text-lg font-semibold text-[var(--color-iph-primary)] font-poppins mb-2">📊 Usuarios con Menor Actividad</h3>
               <p className="text-sm text-gray-600 font-poppins">Ranking de usuarios que han creado menos informes IPH</p>
             </div>
             <div className="h-96 bg-white p-4 rounded-lg border border-gray-200">
@@ -485,33 +494,33 @@ const UsuariosIphStats: React.FC<UsuariosIphStatsProps> = ({ onError, refreshTri
         {activeTab === 'totales' && totalesData && (
           <div className="p-6 space-y-6">
             <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-cyan-600">
-              <h3 className="text-lg font-semibold text-[#4d4725] font-poppins mb-2">📈 Resumen General del Sistema</h3>
+              <h3 className="text-lg font-semibold text-[var(--color-iph-primary)] font-poppins mb-2">📈 Resumen General del Sistema</h3>
               <p className="text-sm text-gray-600 font-poppins">Métricas generales y comparativa de productividad</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Métricas */}
               <div className="space-y-4">
-                <h4 className="text-md font-semibold text-[#4d4725] font-poppins mb-3">📊 Métricas Clave</h4>
+                <h4 className="text-md font-semibold text-[var(--color-iph-primary)] font-poppins mb-3">📊 Métricas Clave</h4>
                 <div className="grid grid-cols-1 gap-4">
                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
                     <div className="text-4xl font-bold text-red-600 font-poppins">{totalesData.total_iphs}</div>
-                    <div className="text-sm text-[#4d4725] font-medium font-poppins">Total IPH Creados</div>
+                    <div className="text-sm text-[var(--color-iph-primary)] font-medium font-poppins">Total IPH Creados</div>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
                     <div className="text-4xl font-bold text-cyan-600 font-poppins">{totalesData.total_usuarios_creadores}</div>
-                    <div className="text-sm text-[#4d4725] font-medium font-poppins">Usuarios Creadores de IPH</div>
+                    <div className="text-sm text-[var(--color-iph-primary)] font-medium font-poppins">Usuarios Creadores de IPH</div>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
                     <div className="text-4xl font-bold text-amber-600 font-poppins">{totalesData.promedio_iphs_por_usuario}</div>
-                    <div className="text-sm text-[#4d4725] font-medium font-poppins">Promedio IPH por Usuario</div>
+                    <div className="text-sm text-[var(--color-iph-primary)] font-medium font-poppins">Promedio IPH por Usuario</div>
                   </div>
                 </div>
               </div>
 
               {/* Gráfico comparativo */}
               <div className="space-y-4">
-                <h4 className="text-md font-semibold text-[#4d4725] font-poppins mb-3">⚖️ Comparativa de Productividad</h4>
+                <h4 className="text-md font-semibold text-[var(--color-iph-primary)] font-poppins mb-3">⚖️ Comparativa de Productividad</h4>
                 {comparativaData ? (
                   <div className="h-80 bg-white p-4 rounded-lg border border-gray-200">
                     <Bar data={comparativaData} options={comparativaOptions} />

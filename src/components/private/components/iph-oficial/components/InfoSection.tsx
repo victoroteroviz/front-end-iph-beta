@@ -23,7 +23,7 @@ const InfoSection: React.FC<InfoSectionProps> = ({
   return (
     <section className={`mb-6 ${className}`}>
       {/* Header de la sección */}
-      <div className="bg-[#b8ab84] text-black font-bold px-4 py-2 rounded-t-md">
+      <div className="bg-[#787dff] text-black font-bold px-4 py-2 rounded-t-md">
         <h2 className="text-sm uppercase tracking-wide">
           {title}
         </h2>

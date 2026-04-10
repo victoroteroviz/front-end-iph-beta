@@ -365,11 +365,11 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
       <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-[#f8f0e7]">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-[#eef1ff]">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Shield size={24} className="text-[#4d4725]" />
-              <h2 className="text-xl font-bold text-[#4d4725]">
+              <Shield size={24} className="text-[#1a2744]" />
+              <h2 className="text-xl font-bold text-[#1a2744]">
                 Detalle IPH - {displayData.numero}
               </h2>
             </div>
@@ -426,7 +426,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                 className={`
                   flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer
                   ${selectedTab === id
-                    ? 'border-[#4d4725] text-[#4d4725]'
+                    ? 'border-[#1a2744] text-[#1a2744]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }
                 `}
@@ -445,7 +445,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
               {/* Información básica */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <FileText size={20} className="text-[#4d4725]" />
+                  <FileText size={20} className="text-[#1a2744]" />
                   Información del Caso
                 </h3>
 
@@ -496,7 +496,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
               {/* Observaciones */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <MessageSquare size={20} className="text-[#4d4725]" />
+                  <MessageSquare size={20} className="text-[#1a2744]" />
                   Observaciones
                 </h3>
 
@@ -512,7 +512,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
           {selectedTab === 'evidencias' && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Camera size={20} className="text-[#4d4725]" />
+                <Camera size={20} className="text-[#1a2744]" />
                 Evidencias Fotográficas
               </h3>
 
@@ -590,7 +590,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                           >
                             <ZoomIn
                               size={32}
-                              className="text-[#4d4725]"
+                              className="text-[#1a2744]"
                               strokeWidth={2.5}
                             />
                           </div>
@@ -601,7 +601,7 @@ const DetalleIPH: React.FC<DetalleIPHProps> = ({
                           position: 'absolute',
                           top: '8px',
                           left: '8px',
-                          backgroundColor: '#4d4725',
+                          backgroundColor: '#1a2744',
                           color: 'white',
                           fontSize: '12px',
                           fontWeight: '600',

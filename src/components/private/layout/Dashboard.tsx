@@ -85,10 +85,10 @@ const DashboardContent: React.FC<DashboardProps> = ({
   // Estados de carga
   if (isLoading) {
     return (
-      <div className={`min-h-screen bg-[#f8f0e7] flex items-center justify-center ${className}`}>
+      <div className={`min-h-screen bg-[#eef1ff] flex items-center justify-center ${className}`}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4d4725] mx-auto mb-4"></div>
-          <p className="text-[#4d4725] font-poppins">Cargando dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a2744] mx-auto mb-4"></div>
+          <p className="text-[#1a2744] font-poppins">Cargando dashboard...</p>
         </div>
       </div>
     );
@@ -101,7 +101,7 @@ const DashboardContent: React.FC<DashboardProps> = ({
 
   return (
     <div 
-      className={`flex h-screen bg-[#f8f0e7] font-poppins overflow-hidden ${className}`}
+      className={`flex h-screen bg-[#eef1ff] font-poppins overflow-hidden ${className}`}
       role="main"
       aria-label="Dashboard principal"
     >

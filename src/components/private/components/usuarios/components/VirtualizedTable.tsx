@@ -45,8 +45,8 @@ const VirtualizedTable: React.FC<IUsuariosTableProps> = ({
       return <ChevronUp className="h-4 w-4 text-gray-300" />;
     }
     return filters.order === 'ASC' 
-      ? <ChevronUp className="h-4 w-4 text-[#948b54]" />
-      : <ChevronDown className="h-4 w-4 text-[#948b54]" />;
+      ? <ChevronUp className="h-4 w-4 text-[#4246b2]" />
+      : <ChevronDown className="h-4 w-4 text-[#4246b2]" />;
   };
 
   const handleSort = (columnKey: SortableColumn) => {
@@ -85,7 +85,7 @@ const VirtualizedTable: React.FC<IUsuariosTableProps> = ({
               />
             ) : null}
             <div 
-              className={`h-10 w-10 rounded-full bg-[#948b54] flex items-center justify-center ${usuario.photo ? 'hidden' : ''}`}
+              className={`h-10 w-10 rounded-full bg-[#4246b2] flex items-center justify-center ${usuario.photo ? 'hidden' : ''}`}
             >
               <User className="h-5 w-5 text-white" />
             </div>
@@ -169,14 +169,14 @@ const VirtualizedTable: React.FC<IUsuariosTableProps> = ({
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-[#4d4725] font-poppins">
+            <h2 className="text-xl font-bold text-[#1a2744] font-poppins">
               Lista de Usuarios
             </h2>
             <p className="text-sm text-gray-600 font-poppins">
               {usuarios.length} usuario{usuarios.length !== 1 ? 's' : ''} encontrado{usuarios.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <Users className="h-6 w-6 text-[#948b54]" />
+          <Users className="h-6 w-6 text-[#4246b2]" />
         </div>
       </div>
 

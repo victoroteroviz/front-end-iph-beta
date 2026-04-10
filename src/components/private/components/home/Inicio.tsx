@@ -34,7 +34,7 @@ const QUICK_ACCESS_CARDS = [
     description: "Consultar y gestionar informes policiales",
     icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
     route: "/proximamente",
-    color: "#c2b186",
+    color: "var(--color-iph-tertiary)",
   },
   {
     id: "iph-oficial",
@@ -42,7 +42,7 @@ const QUICK_ACCESS_CARDS = [
     description: "Información oficial de IPH",
     icon: "M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1M8 7l-2 9a2 2 0 002 2h8a2 2 0 002-2l-2-9M8 7h8",
     route: "/proximamente",
-    color: "#c2b186",
+    color: "var(--color-iph-tertiary)",
   },
   {
     id: "historial-iph",
@@ -50,7 +50,7 @@ const QUICK_ACCESS_CARDS = [
     description: "Revisar historial de registros",
     icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
     route: "/proximamente",
-    color: "#c2b186",
+    color: "var(--color-iph-tertiary)",
   },
   {
     id: "usuarios",
@@ -58,7 +58,7 @@ const QUICK_ACCESS_CARDS = [
     description: "Administrar usuarios del sistema",
     icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z",
     route: "/proximamente",
-    color: "#948b54",
+    color: "var(--color-iph-secondary)",
   },
   {
     id: "estadisticas",
@@ -66,7 +66,7 @@ const QUICK_ACCESS_CARDS = [
     description: "Ver estadísticas detalladas del sistema",
     icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
     route: "/proximamente",
-    color: "#7a7246",
+    color: "var(--color-iph-primary)",
   },
   {
     id: "perfil",
@@ -74,7 +74,7 @@ const QUICK_ACCESS_CARDS = [
     description: "Ver y editar perfil personal",
     icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
     route: "/proximamente",
-    color: "#c2b186",
+    color: "var(--color-iph-tertiary)",
   },
 ];
 
@@ -116,8 +116,8 @@ const Inicio: React.FC<InicioProps> = ({ className = "" }) => {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex items-center gap-3 bg-white rounded-lg px-6 py-4 shadow-lg">
-          <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#4d4725] border-t-transparent"></div>
-          <span className="text-[#4d4725] font-medium">
+          <div className="animate-spin rounded-full h-5 w-5 border-2 border-[var(--color-iph-primary)] border-t-transparent"></div>
+          <span className="text-[var(--color-iph-primary)] font-medium">
             {autorizado === null
               ? "Verificando permisos..."
               : "Cargando dashboard..."}
@@ -153,13 +153,13 @@ const Inicio: React.FC<InicioProps> = ({ className = "" }) => {
         </div>
 
         {/* Welcome Header - Diseño mejorado */}
-        <div className="bg-[rgb(148,139,84)] rounded-xl shadow-lg p-6 mb-8">
+        <div className="bg-[var(--color-iph-primary)] rounded-xl shadow-lg p-6 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex-1">
               <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2 drop-shadow-md">
                 ¡Bienvenido, {fullName}!
               </h1>
-              <p className="text-[#ede8d4] text-sm">
+              <p className="text-[var(--color-neutral-white)] text-sm">
                 Panel de control y estadísticas en tiempo real
               </p>
             </div>
@@ -198,7 +198,7 @@ const Inicio: React.FC<InicioProps> = ({ className = "" }) => {
                   recargarDatos();
                 }}
                 disabled={loading}
-                className="px-5 py-2.5 bg-white text-[#4d4725] rounded-lg hover:bg-[#ede8d4] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2 font-medium shadow-md hover:shadow-lg"
+                className="px-5 py-2.5 bg-white text-[var(--color-iph-primary)] rounded-lg hover:bg-[var(--color-iph-surface)] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2 font-medium shadow-md hover:shadow-lg"
               >
                 <svg
                   className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
@@ -224,7 +224,7 @@ const Inicio: React.FC<InicioProps> = ({ className = "" }) => {
           <div className="animate-slideInLeft">
             {datosPorMes && (
               <GraficaCard
-                titulo="Reportes de IPH Mensual"
+                titulo="Reportes mensuales"
                 data={datosPorMes}
                 anioSeleccionado={anioSeleccionado}
                 setAnioSeleccionado={setAnioSeleccionado}
@@ -235,7 +235,7 @@ const Inicio: React.FC<InicioProps> = ({ className = "" }) => {
           <div className="animate-slideInRight">
             {datosPorSemana && (
               <GraficaSemanaCard
-                titulo="Reportes de IPH Día"
+                titulo="Reportes semanales"
                 data={datosPorSemana}
                 semanaOffset={semanaOffset}
                 setSemanaOffset={setSemanaOffset}
@@ -292,21 +292,21 @@ const Inicio: React.FC<InicioProps> = ({ className = "" }) => {
                   />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-[#4d4725]">
-                Justicia Civil
+              <h2 className="text-xl font-bold text-[var(--color-iph-primary)]">
+                Justicia Civica
               </h2>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               {/* Con Detenidos */}
-              <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md transition-all duration-300  border border-[#e5dcc3]">
+              <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[var(--color-iph-background)] to-[var(--color-iph-surface)] rounded-xl p-5 shadow-md transition-all duration-300 border border-[var(--color-neutral-200)]">
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="text-5xl mb-2">🪪</div>
-                <p className="text-sm font-semibold text-[#4d4725] mb-1">
+                <p className="text-sm font-semibold text-[var(--color-iph-primary)] mb-1">
                   Con Detenidos
                 </p>
 
-                <p className="text-4xl font-bold text-[#4d4725] mb-2">
+                <p className="text-4xl font-bold text-[var(--color-iph-primary)] mb-2">
                   {resumen.justicia.conDetenido}
                 </p>
                 <div className="flex items-center gap-1 px-3 py-1 bg-green-100 rounded-full">
@@ -327,19 +327,19 @@ const Inicio: React.FC<InicioProps> = ({ className = "" }) => {
                     +{Math.abs(variaciones.justicia.con)}%
                   </span>
                 </div>
-                <p className="text-xs text-[#6b6b47] mb-3 px-2">
+                <p className="text-xs text-[var(--color-neutral-500)] mb-3 px-2">
                   Aumento anual de personas detenidas bajo proceso judicial
                 </p>
               </div>
 
               {/* Sin Detenidos */}
-              <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md transition-all duration-300  border border-[#e5dcc3]">
+              <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[var(--color-iph-background)] to-[var(--color-iph-surface)] rounded-xl p-5 shadow-md transition-all duration-300 border border-[var(--color-neutral-200)]">
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="text-5xl mb-2">🧍‍♂️</div>
-                <p className="text-sm font-semibold text-[#4d4725] mb-1">
+                <p className="text-sm font-semibold text-[var(--color-iph-primary)] mb-1">
                   Sin Detenidos
                 </p>
-                <p className="text-4xl font-bold text-[#4d4725] mb-2">
+                <p className="text-4xl font-bold text-[var(--color-iph-primary)] mb-2">
                   {resumen.justicia.sinDetenido}
                 </p>
                 <div className="flex items-center gap-1 px-3 py-1 bg-red-100 rounded-full">
@@ -360,7 +360,7 @@ const Inicio: React.FC<InicioProps> = ({ className = "" }) => {
                     +{Math.abs(variaciones.justicia.sin)}%
                   </span>
                 </div>
-                <p className="text-xs text-[#6b6b47] mb-3 px-2">
+                <p className="text-xs text-[var(--color-neutral-500)] mb-3 px-2">
                   Aumento anual de casos de justicia civica sin detenidos
                 </p>
               </div>
@@ -388,20 +388,20 @@ const Inicio: React.FC<InicioProps> = ({ className = "" }) => {
                   />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-[#4d4725]">
+              <h2 className="text-xl font-bold text-[var(--color-iph-primary)]">
                 Probable Delictivo
               </h2>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               {/* Con Detenidos */}
-              <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md transition-all duration-300  border border-[#e5dcc3]">
+              <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[var(--color-iph-background)] to-[var(--color-iph-surface)] rounded-xl p-5 shadow-md transition-all duration-300 border border-[var(--color-neutral-200)]">
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="text-5xl mb-2">👮</div>
-                <p className="text-sm font-semibold text-[#4d4725] mb-1">
+                <p className="text-sm font-semibold text-[var(--color-iph-primary)] mb-1">
                   Con Detenidos
                 </p>
-                <p className="text-4xl font-bold text-[#4d4725] mb-2">
+                <p className="text-4xl font-bold text-[var(--color-iph-primary)] mb-2">
                   {resumen.delito.conDetenido}
                 </p>
                 <div className="flex items-center gap-1 px-3 py-1 bg-green-100 rounded-full">
@@ -422,19 +422,19 @@ const Inicio: React.FC<InicioProps> = ({ className = "" }) => {
                     +{Math.abs(variaciones.delito.con)}%
                   </span>
                 </div>
-                <p className="text-xs text-[#6b6b47] mb-3 px-2">
+                <p className="text-xs text-[var(--color-neutral-500)] mb-3 px-2">
                   Aumento anual de casos de iph probable delictivo con detenidos
                 </p>
               </div>
 
               {/* Sin Detenidos */}
-              <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#f8f0e7] to-[#ede8d4] rounded-xl p-5 shadow-md transition-all duration-300  border border-[#e5dcc3]">
+              <div className="group relative flex flex-col items-center justify-center text-center bg-gradient-to-br from-[var(--color-iph-background)] to-[var(--color-iph-surface)] rounded-xl p-5 shadow-md transition-all duration-300 border border-[var(--color-neutral-200)]">
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="text-5xl mb-2">⛓️</div>
-                <p className="text-sm font-semibold text-[#4d4725] mb-1">
+                <p className="text-sm font-semibold text-[var(--color-iph-primary)] mb-1">
                   Sin Detenidos
                 </p>
-                <p className="text-4xl font-bold text-[#4d4725] mb-2">
+                <p className="text-4xl font-bold text-[var(--color-iph-primary)] mb-2">
                   {resumen.delito.sinDetenido}
                 </p>
                 <div className="flex items-center gap-1 px-3 py-1 bg-green-100 rounded-full">
@@ -455,7 +455,7 @@ const Inicio: React.FC<InicioProps> = ({ className = "" }) => {
                     +{Math.abs(variaciones.delito.sin)}%
                   </span>
                 </div>
-                <p className="text-xs text-[#6b6b47] mb-3 px-2">
+                <p className="text-xs text-[var(--color-neutral-500)] mb-3 px-2">
                   Aumento anua l de casos de iph probable delictivo sin
                   detenidos
                 </p>
@@ -467,97 +467,6 @@ const Inicio: React.FC<InicioProps> = ({ className = "" }) => {
         {/* Acceso al mapa de calor */}
         <Heatmap className="pg-2 mb-5"></Heatmap>
         {/* Quick Access Cards Grid */}
-
-        {/* Quick Access Section - Mantenida con estilo mejorado */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Header colapsable */}
-          <button
-            onClick={() => setQuickAccessCollapsed(!quickAccessCollapsed)}
-            className="w-full px-4 lg:px-6 py-4 bg-[#f8f0e7] hover:bg-[#ede8d4] transition-colors flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl lg:text-2xl font-bold text-[#4d4725]">
-                Acceso Rápido
-              </h2>
-              <div className="px-3 py-1 bg-[#fef3c7] text-[#92400e] text-xs font-medium rounded-full">
-                Próxima Actualización
-              </div>
-            </div>
-            {quickAccessCollapsed ? (
-              <ChevronDown className="text-[#4d4725]" size={24} />
-            ) : (
-              <ChevronUp className="text-[#4d4725]" size={24} />
-            )}
-          </button>
-
-          {!quickAccessCollapsed && (
-            <div className="p-4 lg:p-6">
-              {/* Nota informativa */}
-              <div className="bg-[#eff6ff] border border-[#bfdbfe] rounded-lg p-4 mb-6">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-5 h-5 bg-[#3b82f6] rounded-full flex items-center justify-center mt-0.5">
-                    <svg
-                      className="w-3 h-3 text-white"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-[#1e40af] mb-1">
-                      Funcionalidad en Desarrollo
-                    </h4>
-                    <p className="text-sm text-[#1e40af]">
-                      Las rutas de acceso rápido serán habilitadas en la próxima
-                      actualización del sistema. Actualmente puedes acceder a
-                      estas funciones desde el menú lateral.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-                {QUICK_ACCESS_CARDS.map((card) => (
-                  <div key={card.id} className="cursor-not-allowed">
-                    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6 h-40 flex flex-col opacity-60">
-                      <div className="flex items-center mb-4">
-                        <div
-                          className="p-3 rounded-full mr-4 flex-shrink-0"
-                          style={{ backgroundColor: card.color || "#c2b186" }}
-                        >
-                          <svg
-                            className="w-6 h-6 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d={card.icon}
-                            />
-                          </svg>
-                        </div>
-                        <h3 className="text-lg lg:text-xl font-bold text-[#4d4725] leading-tight">
-                          {card.title}
-                        </h3>
-                      </div>
-                      <p className="text-[#6b6b47] text-sm lg:text-base flex-1 leading-relaxed">
-                        {card.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

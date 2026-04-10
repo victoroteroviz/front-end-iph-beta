@@ -113,7 +113,7 @@ export const UserProfileBreadcrumb: React.FC<UserProfileBreadcrumbProps> = ({
       onClick={handleClick}
       className={`
         flex items-center gap-2
-        text-sm text-gray-600 hover:text-gray-800
+        text-sm text-[var(--color-neutral-600)] hover:text-[var(--color-iph-primary)]
         transition-colors duration-200
         bg-transparent border-none cursor-pointer p-0
         ${className}
@@ -138,7 +138,7 @@ export const UserProfileBreadcrumb: React.FC<UserProfileBreadcrumbProps> = ({
             />
           ) : (
             <div
-              className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center font-semibold"
+              className="w-full h-full bg-gradient-to-br from-[var(--color-iph-tertiary)] to-[var(--color-iph-secondary)] text-white flex items-center justify-center font-semibold"
               style={{ fontSize: `${avatarSize * 0.4}px` }}
             >
               {initials || <User size={avatarSize * 0.6} />}

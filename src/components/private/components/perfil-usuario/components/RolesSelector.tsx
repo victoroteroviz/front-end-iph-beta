@@ -78,17 +78,17 @@ const RolesSelector: React.FC<RolesSelectorProps> = ({
       backgroundColor: '#f3f4f6',
       border: error ? '1px solid #ef4444' : '1px solid #d1d5db',
       borderRadius: '0.375rem',
-      boxShadow: state.isFocused ? '0 0 0 2px #948b54' : 'none',
+      boxShadow: state.isFocused ? '0 0 0 2px #4246b2' : 'none',
       cursor: 'pointer',
       '&:hover': {
-        borderColor: error ? '#ef4444' : '#948b54'
+        borderColor: error ? '#ef4444' : '#4246b2'
       },
       minHeight: '2.5rem',
       fontFamily: 'Poppins, sans-serif'
     }),
     multiValue: (provided) => ({
       ...provided,
-      backgroundColor: '#948b54',
+      backgroundColor: '#4246b2',
       borderRadius: '0.25rem'
     }),
     multiValueLabel: (provided) => ({
@@ -105,7 +105,7 @@ const RolesSelector: React.FC<RolesSelectorProps> = ({
     option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isSelected
-        ? '#948b54'
+        ? '#4246b2'
         : state.isFocused
           ? '#f3f4f6'
           : '#ffffff',
@@ -136,7 +136,7 @@ const RolesSelector: React.FC<RolesSelectorProps> = ({
     // Vista de solo lectura
     return (
       <div>
-        <label className="block mb-2 text-sm font-medium text-[#4d4725]">
+        <label className="block mb-2 text-sm font-medium text-[#1a2744]">
           <Users className="w-4 h-4 inline mr-2" />
           Roles Asignados
         </label>
@@ -145,7 +145,7 @@ const RolesSelector: React.FC<RolesSelectorProps> = ({
             {rolesSeleccionados.map(rol => (
               <span
                 key={rol.value}
-                className="inline-flex items-center px-3 py-1 text-sm font-medium text-white bg-[#948b54] rounded-full"
+                className="inline-flex items-center px-3 py-1 text-sm font-medium text-white bg-[#4246b2] rounded-full"
               >
                 {rol.label}
               </span>
@@ -158,7 +158,7 @@ const RolesSelector: React.FC<RolesSelectorProps> = ({
 
   return (
     <div>
-      <label className="block mb-2 text-sm font-medium text-[#4d4725]">
+      <label className="block mb-2 text-sm font-medium text-[#1a2744]">
         <Users className="w-4 h-4 inline mr-2" />
         Roles del Usuario
         <span className="text-red-500 ml-1">*</span>

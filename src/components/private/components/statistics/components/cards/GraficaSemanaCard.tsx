@@ -23,8 +23,8 @@ const calendarStyles = `
   }
 
   .custom-calendar .react-datepicker__header {
-    background-color: #948b54 !important;
-    border-bottom: 1px solid #7a7145 !important;
+    background-color: var(--color-iph-secondary) !important;
+    border-bottom: 1px solid var(--color-iph-primary) !important;
     border-radius: 6px 6px 0 0 !important;
     padding: 8px 0 !important;
   }
@@ -42,7 +42,7 @@ const calendarStyles = `
   }
 
   .custom-calendar .react-datepicker__day {
-    color: #4d4725 !important;
+    color: var(--color-iph-primary) !important;
     font-size: 12px !important;
     margin: 1px !important;
     width: 28px !important;
@@ -52,28 +52,28 @@ const calendarStyles = `
   }
 
   .custom-calendar .react-datepicker__day:hover {
-    background-color: #f3f0e7 !important;
-    color: #4d4725 !important;
+    background-color: var(--color-iph-surface) !important;
+    color: var(--color-iph-primary) !important;
   }
 
   .custom-calendar .react-datepicker__day--selected {
-    background-color: #948b54 !important;
+    background-color: var(--color-iph-secondary) !important;
     color: white !important;
   }
 
   .custom-calendar .react-datepicker__day--in-selecting-range {
-    background-color: rgba(148, 139, 84, 0.3) !important;
-    color: #4d4725 !important;
+    background-color: var(--color-iph-primary-alpha-25) !important;
+    color: var(--color-iph-primary) !important;
   }
 
   .custom-calendar .react-datepicker__day--in-range {
-    background-color: rgba(148, 139, 84, 0.2) !important;
-    color: #4d4725 !important;
+    background-color: var(--color-iph-primary-alpha-12) !important;
+    color: var(--color-iph-primary) !important;
   }
 
   .custom-calendar .react-datepicker__day--range-start,
   .custom-calendar .react-datepicker__day--range-end {
-    background-color: #948b54 !important;
+    background-color: var(--color-iph-secondary) !important;
     color: white !important;
   }
 
@@ -100,82 +100,82 @@ const calendarStyles = `
 
   .custom-calendar .react-datepicker__day--today {
     font-weight: 600 !important;
-    background-color: #fdf7f1 !important;
-    border: 1px solid #948b54 !important;
+    background-color: var(--color-iph-surface) !important;
+    border: 1px solid var(--color-iph-secondary) !important;
   }
 
   .custom-calendar .react-datepicker__day--highlighted-custom {
-    background-color: rgba(148, 139, 84, 0.2) !important;
-    color: #4d4725 !important;
+    background-color: var(--color-iph-primary-alpha-12) !important;
+    color: var(--color-iph-primary) !important;
   }
 
   /* Estilos para hover de semana completa con colores IPH */
   .week-selector .react-datepicker__week:hover .react-datepicker__day:not(.react-datepicker__day--outside-month):not(.react-datepicker__day--disabled) {
-    background: linear-gradient(135deg, rgba(196, 177, 134, 0.3) 0%, rgba(148, 139, 84, 0.2) 100%) !important;
-    color: #4d4725 !important;
-    border: 1px solid rgba(148, 139, 84, 0.4) !important;
+    background: linear-gradient(135deg, var(--color-iph-primary-alpha-12) 0%, var(--color-iph-primary-alpha-08) 100%) !important;
+    color: var(--color-iph-primary) !important;
+    border: 1px solid var(--color-iph-border-soft) !important;
     font-weight: 500 !important;
     transform: scale(1.02) !important;
     transition: all 0.2s ease !important;
-    box-shadow: 0 2px 4px rgba(77, 71, 37, 0.1) !important;
+    box-shadow: 0 2px 4px var(--color-iph-primary-alpha-08) !important;
   }
 
   /* Primer día de la semana en hover */
   .week-selector .react-datepicker__week:hover .react-datepicker__day:not(.react-datepicker__day--outside-month):not(.react-datepicker__day--disabled):first-child {
     border-top-left-radius: 8px !important;
     border-bottom-left-radius: 8px !important;
-    background: linear-gradient(135deg, rgba(196, 177, 134, 0.4) 0%, rgba(148, 139, 84, 0.3) 100%) !important;
-    border-left: 2px solid #c4b186 !important;
+    background: linear-gradient(135deg, var(--color-iph-primary-alpha-25) 0%, var(--color-iph-primary-alpha-12) 100%) !important;
+    border-left: 2px solid var(--color-iph-tertiary) !important;
   }
 
   /* Último día de la semana en hover */
   .week-selector .react-datepicker__week:hover .react-datepicker__day:not(.react-datepicker__day--outside-month):not(.react-datepicker__day--disabled):last-child {
     border-top-right-radius: 8px !important;
     border-bottom-right-radius: 8px !important;
-    background: linear-gradient(135deg, rgba(196, 177, 134, 0.4) 0%, rgba(148, 139, 84, 0.3) 100%) !important;
-    border-right: 2px solid #c4b186 !important;
+    background: linear-gradient(135deg, var(--color-iph-primary-alpha-25) 0%, var(--color-iph-primary-alpha-12) 100%) !important;
+    border-right: 2px solid var(--color-iph-tertiary) !important;
   }
 
   /* Hover sobre día ya seleccionado */
   .week-selector .react-datepicker__week:hover .react-datepicker__day--selected {
-    background: linear-gradient(135deg, #c4b186 0%, #948b54 100%) !important;
+    background: linear-gradient(135deg, var(--color-iph-tertiary) 0%, var(--color-iph-secondary) 100%) !important;
     color: white !important;
-    border: 1px solid #7a7145 !important;
-    box-shadow: 0 3px 6px rgba(77, 71, 37, 0.2) !important;
+    border: 1px solid var(--color-iph-primary) !important;
+    box-shadow: 0 3px 6px var(--color-iph-primary-alpha-12) !important;
   }
 
   /* Resaltar toda la semana cuando hay una selección activa */
   .week-selector .react-datepicker__week:has(.react-datepicker__day--selected) .react-datepicker__day:not(.react-datepicker__day--outside-month) {
-    background: linear-gradient(135deg, rgba(253, 247, 241, 0.8) 0%, rgba(196, 177, 134, 0.1) 100%) !important;
-    border: 1px solid rgba(148, 139, 84, 0.2) !important;
+    background: linear-gradient(135deg, var(--color-iph-surface) 0%, var(--color-iph-primary-alpha-08) 100%) !important;
+    border: 1px solid var(--color-iph-primary-alpha-12) !important;
   }
 
   .week-selector .react-datepicker__week:has(.react-datepicker__day--selected) .react-datepicker__day--selected {
-    background: linear-gradient(135deg, #c4b186 0%, #948b54 100%) !important;
+    background: linear-gradient(135deg, var(--color-iph-tertiary) 0%, var(--color-iph-secondary) 100%) !important;
     color: white !important;
-    border: 1px solid #7a7145 !important;
-    box-shadow: 0 2px 4px rgba(77, 71, 37, 0.15) !important;
+    border: 1px solid var(--color-iph-primary) !important;
+    box-shadow: 0 2px 4px var(--color-iph-primary-alpha-12) !important;
   }
 
   /* Indicador visual para el primer y último día de la semana seleccionada */
   .week-selector .react-datepicker__week:has(.react-datepicker__day--selected) .react-datepicker__day:not(.react-datepicker__day--outside-month):first-child {
     border-top-left-radius: 6px !important;
     border-bottom-left-radius: 6px !important;
-    border-left: 2px solid rgba(196, 177, 134, 0.5) !important;
+    border-left: 2px solid var(--color-iph-tertiary) !important;
   }
 
   .week-selector .react-datepicker__week:has(.react-datepicker__day--selected) .react-datepicker__day:not(.react-datepicker__day--outside-month):last-child {
     border-top-right-radius: 6px !important;
     border-bottom-right-radius: 6px !important;
-    border-right: 2px solid rgba(196, 177, 134, 0.5) !important;
+    border-right: 2px solid var(--color-iph-tertiary) !important;
   }
 
   /* Efecto especial para días de hoy en hover */
   .week-selector .react-datepicker__week:hover .react-datepicker__day--today {
-    background: linear-gradient(135deg, #fdf7f1 0%, rgba(196, 177, 134, 0.3) 100%) !important;
-    border: 2px solid #c4b186 !important;
+    background: linear-gradient(135deg, var(--color-iph-surface) 0%, var(--color-iph-primary-alpha-12) 100%) !important;
+    border: 2px solid var(--color-iph-tertiary) !important;
     font-weight: 700 !important;
-    color: #4d4725 !important;
+    color: var(--color-iph-primary) !important;
   }
 
   /* Animación suave para transiciones */
@@ -577,8 +577,8 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-[#948b54]" />
-          <h3 className="text-lg font-semibold text-[#4d4725] font-poppins">{titulo}</h3>
+          <BarChart3 className="h-5 w-5 text-[var(--color-iph-secondary)]" />
+          <h3 className="text-lg font-semibold text-[var(--color-iph-primary)] font-poppins">{titulo}</h3>
         </div>
 
         {/* Controles de navegación y calendario */}
@@ -598,7 +598,7 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
               disabled={loading || semanaOffset <= -7}
               className="
                 text-xs px-3 py-1.5 bg-white border border-gray-300 rounded-l-md
-                hover:bg-gray-50 focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] focus:outline-none
+                hover:bg-gray-50 focus:ring-2 focus:ring-[var(--color-iph-secondary)] focus:border-[var(--color-iph-secondary)] focus:outline-none
                 disabled:opacity-50 disabled:cursor-not-allowed font-poppins
                 transition-all duration-200
               "
@@ -618,7 +618,7 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
               disabled={loading || semanaOffset >= 0}
               className="
                 text-xs px-3 py-1.5 bg-white border border-l-0 border-gray-300 rounded-r-md
-                hover:bg-gray-50 focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] focus:outline-none
+                hover:bg-gray-50 focus:ring-2 focus:ring-[var(--color-iph-secondary)] focus:border-[var(--color-iph-secondary)] focus:outline-none
                 disabled:opacity-50 disabled:cursor-not-allowed font-poppins
                 transition-all duration-200
               "
@@ -636,11 +636,11 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
               disabled={loading}
               className={`
                 flex items-center gap-2 text-xs px-3 py-1.5 border rounded-md
-                focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] focus:outline-none
+                focus:ring-2 focus:ring-[var(--color-iph-secondary)] focus:border-[var(--color-iph-secondary)] focus:outline-none
                 disabled:opacity-50 disabled:cursor-not-allowed font-poppins
                 transition-all duration-200 min-w-44 max-w-52
                 ${hasSelectedDates
-                  ? 'bg-[#948b54] text-white border-[#948b54] hover:bg-[#7a7145]'
+                  ? 'bg-[var(--color-iph-secondary)] text-white border-[var(--color-iph-secondary)] hover:bg-[var(--color-iph-primary)]'
                   : 'bg-white border-gray-300 hover:bg-gray-50 text-gray-700'
                 }
               `}
@@ -711,7 +711,7 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
                       <div className="text-xs text-gray-600 font-poppins">
                         <span className="font-medium">Rango API seleccionado:</span>
                         <br />
-                        <span className="text-[#948b54]">{formatDateRange()}</span>
+                        <span className="text-[var(--color-iph-secondary)]">{formatDateRange()}</span>
                         <br />
                         <span className="text-gray-500 text-[10px]">
                           (Compatible con API)
@@ -719,9 +719,9 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
                       </div>
                     ) : previewRange ? (
                       <div className="text-xs text-gray-600 font-poppins">
-                        <span className="font-medium text-[#c4b186]">Preview rango API:</span>
+                        <span className="font-medium text-[var(--color-iph-tertiary)]">Preview rango API:</span>
                         <br />
-                        <span className="text-[#948b54]">{previewRange.label}</span>
+                        <span className="text-[var(--color-iph-secondary)]">{previewRange.label}</span>
                         <br />
                         <span className="text-gray-500 text-[10px]">
                           Click para seleccionar este rango
@@ -748,7 +748,7 @@ const GraficaSemanaCard: React.FC<GraficaSemanaCardProps> = ({
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="flex items-center gap-3">
-              <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#948b54] border-t-transparent"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--color-iph-secondary)] border-t-transparent"></div>
               <span className="text-gray-600 font-poppins">Cargando gráfica...</span>
             </div>
           </div>

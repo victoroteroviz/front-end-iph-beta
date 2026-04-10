@@ -2,7 +2,7 @@
  * Componente AnexoInventario (Anexo D. Inventario de armas y objetos)
  * Muestra la información detallada del inventario de armas y objetos encontrados
  * Incluye información del inventario, detalles del objeto/arma, persona asegurada y personal participante
- * Mantiene diseño original con colores #c2b186, #fdf7f1
+ * Mantiene diseño original con colores #787dff, #eef1ff
  */
 
 import React, { useState } from 'react';
@@ -102,14 +102,14 @@ const CampoBooleano: React.FC<{
   const esVerdadero = normalizarBooleano(valor);
   
   return (
-    <div className={`flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20 ${className}`}>
+    <div className={`flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20 ${className}`}>
       {esVerdadero ? (
         <CheckCircle className="h-5 w-5 text-green-600" />
       ) : (
         <XCircle className="h-5 w-5 text-gray-500" />
       )}
       <div>
-        <p className="text-sm font-medium text-[#4d4725]">{label}</p>
+        <p className="text-sm font-medium text-[#1a2744]">{label}</p>
         <p className={`text-xs ${esVerdadero ? 'text-green-600' : 'text-gray-500'}`}>
           {esVerdadero ? 'Sí' : 'No'}
         </p>
@@ -137,8 +137,8 @@ const TextoExpandible: React.FC<{
   const contenidoAMostrar = expandido ? contenido : contenido.substring(0, limite);
 
   return (
-    <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
-      <h4 className="text-sm font-semibold text-[#4d4725] mb-3 flex items-center gap-2">
+    <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
+      <h4 className="text-sm font-semibold text-[#1a2744] mb-3 flex items-center gap-2">
         <IconComponent className="h-4 w-4" />
         {titulo}
         <span className="text-xs text-gray-500 ml-auto">
@@ -159,7 +159,7 @@ const TextoExpandible: React.FC<{
         <div className="mt-4 pt-3 border-t border-gray-200 text-center">
           <button
             onClick={() => setExpandido(!expandido)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#c2b186] text-white rounded-lg hover:bg-[#a89770] transition-colors duration-200 font-medium text-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#787dff] text-white rounded-lg hover:bg-[#6167d9] transition-colors duration-200 font-medium text-sm"
           >
             {expandido ? (
               <>
@@ -198,16 +198,16 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
       <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
         <h2 
           className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-          style={{ backgroundColor: '#c2b186' }}
+          style={{ backgroundColor: '#787dff' }}
         >
           Anexo D. Inventario de armas y objetos
         </h2>
         
         <div 
           className="border border-gray-300 rounded-md shadow-sm p-4"
-          style={{ backgroundColor: '#fdf7f1' }}
+          style={{ backgroundColor: '#eef1ff' }}
         >
-          <div className="text-center text-[#4d4725] py-4">
+          <div className="text-center text-[#1a2744] py-4">
             <Package className="h-12 w-12 mx-auto mb-2 text-gray-400" />
             <p className="font-poppins">No se registraron armas u objetos en este caso</p>
           </div>
@@ -229,7 +229,7 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
     <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
       <h2 
         className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-        style={{ backgroundColor: '#c2b186' }}
+        style={{ backgroundColor: '#787dff' }}
       >
         Anexo D. Inventario de armas y objetos
         {objetos.length > 1 && (
@@ -241,26 +241,26 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
       
       <div 
         className="border border-gray-300 rounded-md shadow-sm p-6"
-        style={{ backgroundColor: '#fdf7f1' }}
+        style={{ backgroundColor: '#eef1ff' }}
       >
         
         {/* Navegación entre objetos si hay múltiples */}
         {objetos.length > 1 && (
-          <div className="mb-6 flex items-center justify-center gap-4 p-4 bg-white rounded-lg border border-[#c2b186]/20">
+          <div className="mb-6 flex items-center justify-center gap-4 p-4 bg-white rounded-lg border border-[#787dff]/20">
             <button
               onClick={() => setObjetoActivo(Math.max(0, objetoActivo - 1))}
               disabled={objetoActivo === 0}
               className={`p-2 rounded-lg transition-colors ${
                 objetoActivo === 0
                   ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                  : 'text-[#4d4725] hover:bg-[#c2b186] hover:text-white'
+                  : 'text-[#1a2744] hover:bg-[#787dff] hover:text-white'
               }`}
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             
             <div className="text-center">
-              <p className="text-sm font-semibold text-[#4d4725]">
+              <p className="text-sm font-semibold text-[#1a2744]">
                 Objeto {objetoActivo + 1} de {objetos.length}
               </p>
               <p className="text-xs text-gray-600">
@@ -274,7 +274,7 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
               className={`p-2 rounded-lg transition-colors ${
                 objetoActivo === objetos.length - 1
                   ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                  : 'text-[#4d4725] hover:bg-[#c2b186] hover:text-white'
+                  : 'text-[#1a2744] hover:bg-[#787dff] hover:text-white'
               }`}
             >
               <ChevronRight className="h-5 w-5" />
@@ -284,18 +284,18 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
 
         {/* Sección 1: Información del Inventario */}
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <Package className="h-5 w-5 text-white" />
             </div>
             Información del Inventario
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-[#4d4725] font-poppins">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-[#1a2744] font-poppins">
             
             {/* Información básica del inventario */}
             <div className="flex items-center gap-3">
-              <Package className="h-5 w-5 text-[#c2b186]" />
+              <Package className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Tipo de inventario</p>
                 <p className="font-semibold">{objeto.tipoInventario || 'No especificado'}</p>
@@ -303,7 +303,7 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Search className="h-5 w-5 text-[#c2b186]" />
+              <Search className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Aportación inspección</p>
                 <p className="font-semibold">{objeto.aportacionInspeccion || 'No especificada'}</p>
@@ -311,7 +311,7 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Target className="h-5 w-5 text-[#c2b186]" />
+              <Target className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Objeto encontrado</p>
                 <p className="font-semibold">{objeto.objetoEncontrado || 'No especificado'}</p>
@@ -321,7 +321,7 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
             {/* Tipo de objeto e inspección */}
             {objeto.tipoObjetoEncontrado ? (
               <div className="flex items-center gap-3">
-                <Hash className="h-5 w-5 text-[#c2b186]" />
+                <Hash className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Tipo de objeto encontrado</p>
                   <p className="font-semibold">{objeto.tipoObjetoEncontrado}</p>
@@ -332,7 +332,7 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
             )}
 
             <div className="flex items-center gap-3">
-              <Search className="h-5 w-5 text-[#c2b186]" />
+              <Search className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Tipo de inspección</p>
                 <p className="font-semibold">{objeto.tipoInspeccion || 'No especificado'}</p>
@@ -342,7 +342,7 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
             {/* Lugar de encuentro y destino */}
             {objeto.lugarEncuentro ? (
               <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-[#c2b186]" />
+                <MapPin className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Lugar de encuentro</p>
                   <p className="font-semibold">{objeto.lugarEncuentro}</p>
@@ -353,7 +353,7 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
             )}
 
             <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-[#c2b186]" />
+              <MapPin className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Destino</p>
                 <p className="font-semibold">{objeto.destinoArmOb || 'No especificado'}</p>
@@ -364,8 +364,8 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
 
         {/* Sección 2: Detalles del Objeto/Arma */}
         <div className="mb-6 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <Zap className="h-5 w-5 text-white" />
             </div>
             Detalles del Objeto/Arma
@@ -386,11 +386,11 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
           {/* Información específica del arma */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {objeto.tipoArma ? (
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-                <Zap className="h-5 w-5 text-[#c2b186]" />
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+                <Zap className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Tipo de arma</p>
-                  <p className="font-semibold text-[#4d4725]">{objeto.tipoArma}</p>
+                  <p className="font-semibold text-[#1a2744]">{objeto.tipoArma}</p>
                 </div>
               </div>
             ) : (
@@ -398,11 +398,11 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
             )}
 
             {objeto.calibreArma ? (
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-                <Target className="h-5 w-5 text-[#c2b186]" />
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+                <Target className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Calibre</p>
-                  <p className="font-semibold text-[#4d4725]">{objeto.calibreArma}</p>
+                  <p className="font-semibold text-[#1a2744]">{objeto.calibreArma}</p>
                 </div>
               </div>
             ) : (
@@ -410,11 +410,11 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
             )}
 
             {objeto.colorArma ? (
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-                <Hash className="h-5 w-5 text-[#c2b186]" />
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+                <Hash className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Color del arma</p>
-                  <p className="font-semibold text-[#4d4725]">{objeto.colorArma}</p>
+                  <p className="font-semibold text-[#1a2744]">{objeto.colorArma}</p>
                 </div>
               </div>
             ) : (
@@ -422,11 +422,11 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
             )}
 
             {objeto.matriculaArma ? (
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-                <Hash className="h-5 w-5 text-[#c2b186]" />
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+                <Hash className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Matrícula</p>
-                  <p className="font-semibold text-[#4d4725] font-mono">{objeto.matriculaArma}</p>
+                  <p className="font-semibold text-[#1a2744] font-mono">{objeto.matriculaArma}</p>
                 </div>
               </div>
             ) : (
@@ -434,11 +434,11 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
             )}
 
             {objeto.numeroSerieArma ? (
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-                <Hash className="h-5 w-5 text-[#c2b186]" />
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+                <Hash className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Número de serie</p>
-                  <p className="font-semibold text-[#4d4725] font-mono">{objeto.numeroSerieArma}</p>
+                  <p className="font-semibold text-[#1a2744] font-mono">{objeto.numeroSerieArma}</p>
                 </div>
               </div>
             ) : (
@@ -449,8 +449,8 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
 
         {/* Sección 3: Persona Asegurada */}
         <div className="mb-6 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <User className="h-5 w-5 text-white" />
             </div>
             Persona Asegurada
@@ -458,10 +458,10 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Información de la persona asegurada */}
-            <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
-              <h4 className="text-sm font-semibold text-[#4d4725] mb-3">Datos Personales</h4>
+            <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
+              <h4 className="text-sm font-semibold text-[#1a2744] mb-3">Datos Personales</h4>
               {(objeto.nombreAsegurado || objeto.primerApellidoAsegurado || objeto.segundoApellidoAsegurado) ? (
-                <p className="text-sm font-medium text-[#4d4725]">
+                <p className="text-sm font-medium text-[#1a2744]">
                   {concatenarNombre(objeto.nombreAsegurado, objeto.primerApellidoAsegurado, objeto.segundoApellidoAsegurado)}
                 </p>
               ) : (
@@ -483,8 +483,8 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
         {/* Sección 4: Personal Participante */}
         {disposiciones.length > 0 && (
           <div className="mb-6 pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <Users className="h-5 w-5 text-white" />
               </div>
               Personal Participante
@@ -497,14 +497,14 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
               {disposiciones.map((oficial, index) => (
                 <div 
                   key={index} 
-                  className="bg-white p-4 rounded-lg border border-[#c2b186]/30"
+                  className="bg-white p-4 rounded-lg border border-[#787dff]/30"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-[#c2b186] rounded-full">
+                    <div className="p-2 bg-[#787dff] rounded-full">
                       <User className="h-4 w-4 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[#4d4725] text-sm mb-1">
+                      <h4 className="font-semibold text-[#1a2744] text-sm mb-1">
                         {concatenarNombre(oficial.nombre, oficial.primerApellido, oficial.segundoApellido) !== 'No disponible' 
                           ? concatenarNombre(oficial.nombre, oficial.primerApellido, oficial.segundoApellido)
                           : `Oficial ${index + 1}`
@@ -514,9 +514,9 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
                       <div className="space-y-1 text-xs text-gray-700">
                         {oficial.cargoGrado && (
                           <div className="flex items-center gap-2">
-                            <Shield className="h-3 w-3 text-[#c2b186]" />
+                            <Shield className="h-3 w-3 text-[#787dff]" />
                             <span className="font-medium">Cargo/Grado:</span>
-                            <span className="px-2 py-0.5 bg-[#c2b186] text-white rounded-full text-xs">
+                            <span className="px-2 py-0.5 bg-[#787dff] text-white rounded-full text-xs">
                               {oficial.cargoGrado}
                             </span>
                           </div>
@@ -524,7 +524,7 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
                         
                         {oficial.adscripcion && (
                           <div className="flex items-center gap-2">
-                            <Users className="h-3 w-3 text-[#c2b186]" />
+                            <Users className="h-3 w-3 text-[#787dff]" />
                             <span className="font-medium">Adscripción:</span>
                             <span>{oficial.adscripcion}</span>
                           </div>
@@ -541,8 +541,8 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
         {/* Sección 5: Testigos */}
         {testigos.length > 0 && (
           <div className="pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <UserCheck className="h-5 w-5 text-white" />
               </div>
               Testigos
@@ -555,14 +555,14 @@ const AnexoInventario: React.FC<AnexoInventarioProps> = ({
               {testigos.map((testigo, index) => (
                 <div 
                   key={index} 
-                  className="bg-white p-4 rounded-lg border border-[#c2b186]/30"
+                  className="bg-white p-4 rounded-lg border border-[#787dff]/30"
                 >
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-blue-500 rounded-full">
                       <UserCheck className="h-4 w-4 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[#4d4725] text-sm">
+                      <h4 className="font-semibold text-[#1a2744] text-sm">
                         {concatenarNombre(testigo.nombre, testigo.primerApellido, testigo.segundoApellido) !== 'No disponible' 
                           ? concatenarNombre(testigo.nombre, testigo.primerApellido, testigo.segundoApellido)
                           : `Testigo ${index + 1}`

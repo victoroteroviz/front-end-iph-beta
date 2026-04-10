@@ -166,8 +166,8 @@ const GraficaCard: React.FC<GraficaCardProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-[#948b54]" />
-          <h3 className="text-lg font-semibold text-[#4d4725] font-poppins">{titulo}</h3>
+          <BarChart3 className="h-5 w-5 text-[var(--color-iph-secondary)]" />
+          <h3 className="text-lg font-semibold text-[var(--color-iph-primary)] font-poppins">{titulo}</h3>
         </div>
 
         {/* Selector híbrido input/dropdown */}
@@ -189,7 +189,7 @@ const GraficaCard: React.FC<GraficaCardProps> = ({
                   placeholder="Año"
                   className="
                     text-sm border border-gray-300 rounded-l-lg px-3 py-2 bg-white shadow-sm
-                    focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] focus:outline-none
+                    focus:ring-2 focus:ring-[var(--color-iph-secondary)] focus:border-[var(--color-iph-secondary)] focus:outline-none
                     transition-all duration-200 font-poppins w-20 text-center
                     disabled:opacity-50 disabled:cursor-not-allowed
                   "
@@ -203,7 +203,7 @@ const GraficaCard: React.FC<GraficaCardProps> = ({
                   disabled={loading}
                   className="
                     border border-l-0 border-gray-300 rounded-r-lg px-2 py-2 bg-white shadow-sm
-                    hover:bg-gray-50 focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] focus:outline-none
+                    hover:bg-gray-50 focus:ring-2 focus:ring-[var(--color-iph-secondary)] focus:border-[var(--color-iph-secondary)] focus:outline-none
                     transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
                   "
                   aria-label="Abrir lista de años"
@@ -231,7 +231,7 @@ const GraficaCard: React.FC<GraficaCardProps> = ({
                         w-full px-3 py-2 text-left text-sm font-poppins transition-colors duration-150
                         hover:bg-gray-100 focus:bg-gray-100 focus:outline-none
                         ${year === anioSeleccionado
-                          ? 'bg-[#f8f0e7] text-[#4d4725] font-medium'
+                          ? 'bg-[var(--color-iph-surface)] text-[var(--color-iph-primary)] font-medium'
                           : 'text-gray-700'
                         }
                       `}
@@ -251,7 +251,7 @@ const GraficaCard: React.FC<GraficaCardProps> = ({
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="flex items-center gap-3">
-              <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#948b54] border-t-transparent"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--color-iph-secondary)] border-t-transparent"></div>
               <span className="text-gray-600 font-poppins">Cargando gráfica...</span>
             </div>
           </div>

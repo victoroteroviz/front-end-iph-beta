@@ -9,10 +9,10 @@
  */
 export const COLORS = {
   primary: 'var(--color-iph-primary)',
-  primaryLight: 'var(--color-iph-primary-light-08)',
-  primaryLight20: 'var(--color-iph-primary-light-12)',
-  primaryLight40: 'var(--color-iph-primary-light-25)',
-  primaryBorder: 'var(--color-iph-border-soft-25)',
+  primaryLight: 'var(--color-iph-primary-alpha-08)',
+  primaryLight20: 'var(--color-iph-primary-alpha-12)',
+  primaryLight40: 'var(--color-iph-primary-alpha-25)',
+  primaryBorder: 'var(--color-iph-border-soft)',
   background: 'var(--color-iph-background)',
   
   // Estados

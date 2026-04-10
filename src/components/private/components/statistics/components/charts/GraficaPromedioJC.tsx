@@ -20,6 +20,36 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Bar } from 'react-chartjs-2';
 import type { RespuestaJC } from '../../../../../../interfaces/estadisticas-jc';
 
+const resolveCssColor = (value: string, fallback: string): string => {
+  if (!value.startsWith('var(')) return value;
+  if (typeof window === 'undefined') return fallback;
+
+  const variableName = value.slice(4, -1).trim();
+  const resolved = getComputedStyle(document.documentElement)
+    .getPropertyValue(variableName)
+    .trim();
+
+  return resolved || fallback;
+};
+
+const withAlpha = (color: string, alpha: number): string => {
+  const hex = color.replace('#', '');
+  const normalized =
+    hex.length === 3
+      ? hex
+          .split('')
+          .map((ch) => ch + ch)
+          .join('')
+      : hex;
+
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return color;
+
+  const r = Number.parseInt(normalized.slice(0, 2), 16);
+  const g = Number.parseInt(normalized.slice(2, 4), 16);
+  const b = Number.parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 // Registrar componentes adicionales
 ChartJS.register(
   CategoryScale,
@@ -71,6 +101,10 @@ export const GraficaPromedioJC: React.FC<GraficaPromedioJCProps> = ({
   mes,
   height = 350
 }) => {
+  const primaryColor = resolveCssColor('var(--color-iph-primary)', '#1a2744');
+  const secondaryColor = resolveCssColor('var(--color-iph-secondary)', '#4246b2');
+  const tertiaryColor = resolveCssColor('var(--color-iph-tertiary)', '#787dff');
+
   if (!datosMensuales) {
     return (
       <div style={{
@@ -78,7 +112,7 @@ export const GraficaPromedioJC: React.FC<GraficaPromedioJCProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#94a3b8',
+        color: '#6b7280',
         fontSize: '0.875rem'
       }}>
         No hay datos disponibles para calcular el promedio
@@ -106,14 +140,14 @@ export const GraficaPromedioJC: React.FC<GraficaPromedioJCProps> = ({
           promedioTotal
         ],
         backgroundColor: [
-          '#4d4725dd', // Marrón oscuro para con detenido
-          '#b8ab84dd', // Beige/dorado para sin detenido
-          '#c2b186dd'  // Dorado claro para total
+          withAlpha(primaryColor, 0.86),
+          withAlpha(secondaryColor, 0.86),
+          withAlpha(tertiaryColor, 0.86)
         ],
         borderColor: [
-          '#4d4725',
-          '#b8ab84',
-          '#c2b186'
+          primaryColor,
+          secondaryColor,
+          tertiaryColor
         ],
         borderWidth: 2,
         borderRadius: 10,
@@ -241,49 +275,49 @@ export const GraficaPromedioJC: React.FC<GraficaPromedioJCProps> = ({
 
       {/* Tarjetas de resumen */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-        <div className="bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[#4d4725]">
+        <div className="bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[var(--color-iph-primary)]">
           <span className="text-xs font-semibold text-gray-600 font-poppins block mb-2 uppercase tracking-wider">
             Promedio Con Detenido
           </span>
-          <span className="text-2xl font-bold text-[#4d4725] font-poppins">
+          <span className="text-2xl font-bold text-[var(--color-iph-primary)] font-poppins">
             {promedioConDetenido.toFixed(2)} <small className="text-xs font-semibold opacity-70">IPH/día</small>
           </span>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[#b8ab84]">
+        <div className="bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[var(--color-iph-secondary)]">
           <span className="text-xs font-semibold text-gray-600 font-poppins block mb-2 uppercase tracking-wider">
             Promedio Sin Detenido
           </span>
-          <span className="text-2xl font-bold text-[#8a7f5f] font-poppins">
+          <span className="text-2xl font-bold text-[var(--color-iph-secondary)] font-poppins">
             {promedioSinDetenido.toFixed(2)} <small className="text-xs font-semibold opacity-70">IPH/día</small>
           </span>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[#c2b186]">
+        <div className="bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[var(--color-iph-tertiary)]">
           <span className="text-xs font-semibold text-gray-600 font-poppins block mb-2 uppercase tracking-wider">
             Promedio Total
           </span>
-          <span className="text-2xl font-bold text-[#9d8c68] font-poppins">
+          <span className="text-2xl font-bold text-[var(--color-iph-tertiary)] font-poppins">
             {promedioTotal.toFixed(2)} <small className="text-xs font-semibold opacity-70">IPH/día</small>
           </span>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[#6b5d42]">
+        <div className="bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[var(--color-iph-primary)]">
           <span className="text-xs font-semibold text-gray-600 font-poppins block mb-2 uppercase tracking-wider">
             Total Mensual
           </span>
-          <span className="text-2xl font-bold text-[#6b5d42] font-poppins">
+          <span className="text-2xl font-bold text-[var(--color-iph-primary)] font-poppins">
             {totalMensual.toLocaleString()} <small className="text-xs font-semibold opacity-70">IPH</small>
           </span>
         </div>
       </div>
 
       {/* Información adicional */}
-      <div className="mt-6 p-4 bg-amber-50 border-l-4 border-amber-400 rounded-lg">
-        <p className="text-sm text-amber-900 font-poppins font-semibold mb-2">
+      <div className="mt-6 p-4 bg-[var(--color-iph-surface)] border-l-4 border-[var(--color-iph-secondary)] rounded-lg">
+        <p className="text-sm text-[var(--color-iph-primary)] font-poppins font-semibold mb-2">
           📊 Este cálculo divide el total mensual entre los {diasDelMes} días de {nombreMes}
         </p>
-        <p className="text-xs text-amber-800 font-poppins">
+        <p className="text-xs text-[var(--color-neutral-700)] font-poppins">
           Total mensual: <strong>{totalMensual.toLocaleString()} IPH</strong> ÷
           Días del mes: <strong>{diasDelMes}</strong> =
           Promedio: <strong>{promedioTotal.toFixed(2)} IPH/día</strong>

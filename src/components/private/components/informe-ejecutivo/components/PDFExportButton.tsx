@@ -34,7 +34,7 @@ const PDFExportButton: React.FC<IPDFExportButtonProps> = ({
           transition-all duration-200 font-poppins
           ${isButtonDisabled
             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-[#c2b186] text-white hover:bg-[#a89770] hover:shadow-md active:scale-95'
+            : 'bg-[#787dff] text-white hover:bg-[#6167d9] hover:shadow-md active:scale-95'
           }
         `}
         title={

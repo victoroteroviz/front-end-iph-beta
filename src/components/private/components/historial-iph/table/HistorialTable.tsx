@@ -194,7 +194,7 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
                 href={mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#4d4725] hover:text-[#3a3519] text-xs underline-offset-2 hover:underline opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                className="text-[#1a2744] hover:text-[#151f36] text-xs underline-offset-2 hover:underline opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                 onClick={(e) => e.stopPropagation()}
               >
                 Ver en mapa ↗
@@ -332,7 +332,7 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
         width: 'w-32',
         render: (registro: RegistroHistorialIPH) => (
           <div className="flex items-center gap-1">
-            <span className="inline-flex items-center px-2 py-1 rounded-md bg-[#fdf7f1] border border-[#c2b186]/30 font-mono text-sm text-[#4d4725] font-semibold">
+            <span className="inline-flex items-center px-2 py-1 rounded-md bg-[#eef1ff] border border-[#787dff]/30 font-mono text-sm text-[#1a2744] font-semibold">
               #{registro.numeroReferencia}
             </span>
           </div>
@@ -419,12 +419,12 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
               onClick={() => handleVerDetalle(registro)}
               disabled={loading}
               className="
-                p-1.5 text-[#4d4725] hover:text-white
-                hover:bg-[#4d4725] rounded-md
+                p-1.5 text-[#1a2744] hover:text-white
+                hover:bg-[#1a2744] rounded-md
                 transition-colors duration-200
                 cursor-pointer
                 disabled:opacity-50 disabled:cursor-not-allowed
-                focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-1
+                focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:ring-offset-1
               "
               title={`Ver detalle del registro ${registro.numeroReferencia}`}
               aria-label={`Ver detalle del registro ${registro.numeroReferencia}`}
@@ -538,9 +538,9 @@ const HistorialTable: React.FC<HistorialTableProps> = React.memo(({
       {/* Loading overlay mejorado con backdrop blur */}
       {loading && registros.length > 0 && (
         <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-10">
-          <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-lg shadow-lg border border-[#c2b186]/30">
-            <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#4d4725]/20 border-t-[#4d4725]"></div>
-            <span className="text-[#4d4725] font-medium">Actualizando tabla...</span>
+          <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-lg shadow-lg border border-[#787dff]/30">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#1a2744]/20 border-t-[#1a2744]"></div>
+            <span className="text-[#1a2744] font-medium">Actualizando tabla...</span>
           </div>
         </div>
       )}

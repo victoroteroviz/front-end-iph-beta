@@ -56,24 +56,24 @@ export const NotFound: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f0e7] flex items-center justify-center px-4 font-poppins">
+    <div className="min-h-screen bg-[#eef1ff] flex items-center justify-center px-4 font-poppins">
       <div className="max-w-2xl w-full text-center">
         {/* Icono de alerta */}
         <div className="mb-8 flex justify-center">
           <div className="relative">
             <AlertCircle
               size={120}
-              className="text-[#4d4725] opacity-20"
+              className="text-[#1a2744] opacity-20"
               strokeWidth={1.5}
             />
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-7xl font-bold text-[#4d4725]">404</span>
+              <span className="text-7xl font-bold text-[#1a2744]">404</span>
             </div>
           </div>
         </div>
 
         {/* Título */}
-        <h1 className="text-4xl md:text-5xl font-bold text-[#4d4725] mb-4">
+        <h1 className="text-4xl md:text-5xl font-bold text-[#1a2744] mb-4">
           Página no encontrada
         </h1>
 
@@ -83,11 +83,11 @@ export const NotFound: React.FC = () => {
         </p>
 
         {/* Información adicional */}
-        <div className="bg-white/50 backdrop-blur-sm rounded-lg p-6 mb-8 max-w-md mx-auto border border-[#b8ab84]/30">
+        <div className="bg-white/50 backdrop-blur-sm rounded-lg p-6 mb-8 max-w-md mx-auto border border-[#787dff]/30">
           <p className="text-sm text-[#6b6234]">
             <strong>Ruta solicitada:</strong>
           </p>
-          <p className="text-sm text-[#4d4725] font-mono bg-[#f8f0e7] px-3 py-2 rounded mt-2 break-all">
+          <p className="text-sm text-[#1a2744] font-mono bg-[#eef1ff] px-3 py-2 rounded mt-2 break-all">
             {window.location.pathname}
           </p>
         </div>
@@ -99,11 +99,11 @@ export const NotFound: React.FC = () => {
             onClick={handleGoBack}
             className="
               flex items-center gap-2 px-6 py-3 rounded-lg
-              bg-white text-[#4d4725] border-2 border-[#4d4725]
-              hover:bg-[#4d4725] hover:text-white
+              bg-white text-[#1a2744] border-2 border-[#1a2744]
+              hover:bg-[#1a2744] hover:text-white
               transition-all duration-300
               font-medium text-sm
-              focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-2
+              focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:ring-offset-2
               min-w-[160px] justify-center
             "
             aria-label="Volver a la página anterior"
@@ -117,11 +117,11 @@ export const NotFound: React.FC = () => {
             onClick={handleGoHome}
             className="
               flex items-center gap-2 px-6 py-3 rounded-lg
-              bg-[#4d4725] text-white
-              hover:bg-[#3a3519]
+              bg-[#1a2744] text-white
+              hover:bg-[#151f36]
               transition-all duration-300
               font-medium text-sm
-              focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:ring-offset-2
+              focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:ring-offset-2
               min-w-[160px] justify-center
             "
             aria-label="Ir a la página de inicio"
@@ -133,28 +133,28 @@ export const NotFound: React.FC = () => {
 
         {/* Enlaces adicionales (si está autenticado) */}
         {isAuthenticated && (
-          <div className="mt-12 pt-8 border-t border-[#b8ab84]/30">
+          <div className="mt-12 pt-8 border-t border-[#787dff]/30">
             <p className="text-sm text-[#6b6234] mb-4">
               O navega a una de estas secciones:
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
               <Link
                 to="/inicio"
-                className="text-sm text-[#4d4725] hover:underline focus:outline-none focus:underline"
+                className="text-sm text-[#1a2744] hover:underline focus:outline-none focus:underline"
               >
                 Inicio
               </Link>
-              <span className="text-[#b8ab84]">•</span>
+              <span className="text-[#787dff]">•</span>
               <Link
                 to="/informepolicial"
-                className="text-sm text-[#4d4725] hover:underline focus:outline-none focus:underline"
+                className="text-sm text-[#1a2744] hover:underline focus:outline-none focus:underline"
               >
                 IPH's Activos
               </Link>
-              <span className="text-[#b8ab84]">•</span>
+              <span className="text-[#787dff]">•</span>
               <Link
                 to="/perfil"
-                className="text-sm text-[#4d4725] hover:underline focus:outline-none focus:underline"
+                className="text-sm text-[#1a2744] hover:underline focus:outline-none focus:underline"
               >
                 Mi Perfil
               </Link>

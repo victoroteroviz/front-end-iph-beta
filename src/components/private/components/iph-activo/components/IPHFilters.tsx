@@ -108,14 +108,14 @@ const IPHFilters: React.FC<IIPHFiltersProps> = memo(({
     const baseClasses = `
       w-full pl-12 pr-12 py-3 border-2 rounded-xl
       bg-white/70 backdrop-blur-sm
-      focus:ring-4 focus:ring-[#b8ab84]/20 focus:border-[#b8ab84]
+      focus:ring-4 focus:ring-[#787dff]/20 focus:border-[#787dff]
       disabled:opacity-50 disabled:cursor-not-allowed
       font-poppins text-sm placeholder-gray-400
       transition-all duration-200 group-hover:shadow-md
     `;
 
     const statusClasses = localSearch
-      ? 'border-[#b8ab84] shadow-md bg-[#fdf7f1]/50'
+      ? 'border-[#787dff] shadow-md bg-[#eef1ff]/50'
       : 'border-gray-200 hover:border-gray-300 hover:shadow-md';
 
     return `${baseClasses} ${statusClasses}`;
@@ -129,13 +129,13 @@ const IPHFilters: React.FC<IIPHFiltersProps> = memo(({
     const baseClasses = `
       w-full px-4 py-3 border-2 rounded-xl cursor-pointer
       bg-white/70 backdrop-blur-sm
-      focus:ring-4 focus:ring-[#b8ab84]/20 focus:border-[#b8ab84]
+      focus:ring-4 focus:ring-[#787dff]/20 focus:border-[#787dff]
       disabled:opacity-50 disabled:cursor-not-allowed
       font-poppins text-sm transition-all duration-200
     `;
 
     const statusClasses = hasActiveFilters
-      ? 'border-[#b8ab84] shadow-md bg-[#fdf7f1]/50'
+      ? 'border-[#787dff] shadow-md bg-[#eef1ff]/50'
       : 'border-gray-200 hover:border-gray-300 hover:shadow-md';
 
     return `${baseClasses} ${statusClasses}`;
@@ -149,7 +149,7 @@ const IPHFilters: React.FC<IIPHFiltersProps> = memo(({
     const baseClasses = 'flex items-stretch rounded-xl overflow-hidden shadow-sm border-2 transition-colors duration-200';
     
     const statusClasses = hasActiveFilters
-      ? 'border-[#b8ab84] shadow-md'
+      ? 'border-[#787dff] shadow-md'
       : 'border-gray-200 hover:border-gray-300';
 
     return `${baseClasses} ${statusClasses}`;
@@ -162,13 +162,13 @@ const IPHFilters: React.FC<IIPHFiltersProps> = memo(({
   const orderSelectClasses = useMemo(() => {
     const baseClasses = `
       flex-1 px-4 py-3 border-0 cursor-pointer backdrop-blur-sm
-      focus:ring-4 focus:ring-[#b8ab84]/20 focus:border-[#b8ab84]
+      focus:ring-4 focus:ring-[#787dff]/20 focus:border-[#787dff]
       disabled:opacity-50 disabled:cursor-not-allowed
       font-poppins text-sm transition-all duration-200
     `;
 
     const bgClasses = hasActiveFilters
-      ? 'bg-[#fdf7f1]/50'
+      ? 'bg-[#eef1ff]/50'
       : 'bg-white/70';
 
     return `${baseClasses} ${bgClasses}`;
@@ -184,12 +184,12 @@ const IPHFilters: React.FC<IIPHFiltersProps> = memo(({
       disabled:opacity-50 disabled:cursor-not-allowed
       cursor-pointer transition-all duration-200 min-w-[${FILTER_CONFIG.SORT_BUTTON_MIN_WIDTH}]
       flex items-center justify-center border-l border-gray-200
-      focus:ring-4 focus:ring-[#b8ab84]/20
+      focus:ring-4 focus:ring-[#787dff]/20
     `;
 
     const bgClasses = hasActiveFilters
-      ? 'bg-gradient-to-r from-[#b8ab84]/10 to-[#b8ab84]/20'
-      : 'bg-gradient-to-r from-gray-50 to-gray-100 hover:from-[#b8ab84]/10 hover:to-[#b8ab84]/20';
+      ? 'bg-gradient-to-r from-[#787dff]/10 to-[#787dff]/20'
+      : 'bg-gradient-to-r from-gray-50 to-gray-100 hover:from-[#787dff]/10 hover:to-[#787dff]/20';
 
     return `${baseClasses} ${bgClasses}`;
   }, [hasActiveFilters]);
@@ -204,13 +204,13 @@ const IPHFilters: React.FC<IIPHFiltersProps> = memo(({
       text-white border rounded-lg shadow-sm
       hover:shadow-md hover:scale-105
       disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-      focus:ring-2 focus:ring-[#c2b186]/30
+      focus:ring-2 focus:ring-[#787dff]/30
       cursor-pointer transition-all duration-200 font-poppins
     `;
 
     const statusClasses = hasActiveFilters
-      ? 'bg-[#4d4725] border-[#4d4725] hover:bg-[#2d2713] hover:border-[#2d2713]'
-      : 'bg-[#c2b186] border-[#c2b186] hover:bg-[#4d4725] hover:border-[#4d4725]';
+      ? 'bg-[#1a2744] border-[#1a2744] hover:bg-[#2d2713] hover:border-[#2d2713]'
+      : 'bg-[#787dff] border-[#787dff] hover:bg-[#1a2744] hover:border-[#1a2744]';
 
     return `${baseClasses} ${statusClasses}`;
   }, [hasActiveFilters]);
@@ -225,13 +225,13 @@ const IPHFilters: React.FC<IIPHFiltersProps> = memo(({
       text-white border rounded-lg shadow-sm
       hover:shadow-md hover:scale-105
       disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-      focus:ring-2 focus:ring-[#c2b186]/30
+      focus:ring-2 focus:ring-[#787dff]/30
       cursor-pointer transition-all duration-200 font-poppins
     `;
 
     const statusClasses = hasActiveFilters
-      ? 'bg-[#4d4725] border-[#4d4725] hover:bg-[#2d2713] hover:border-[#2d2713]'
-      : 'bg-[#c2b186] border-[#c2b186] hover:bg-[#4d4725] hover:border-[#4d4725]';
+      ? 'bg-[#1a2744] border-[#1a2744] hover:bg-[#2d2713] hover:border-[#2d2713]'
+      : 'bg-[#787dff] border-[#787dff] hover:bg-[#1a2744] hover:border-[#1a2744]';
 
     return `${baseClasses} ${statusClasses}`;
   }, [hasActiveFilters]);
@@ -241,7 +241,7 @@ const IPHFilters: React.FC<IIPHFiltersProps> = memo(({
    * @memoized Evita comparación en cada render
    */
   const searchIconColor = useMemo(() => {
-    return localSearch ? 'text-[#b8ab84]' : 'text-gray-400';
+    return localSearch ? 'text-[#787dff]' : 'text-gray-400';
   }, [localSearch]);
 
   // =====================================================

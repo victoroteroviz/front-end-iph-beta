@@ -37,7 +37,7 @@ import {
  * Props del componente
  */
 export type TopLoadingBarProps = {
-  /** Color de la barra (default: #4d4725) */
+  /** Color de la barra (default: #1a2744) */
   color?: string;
   /** Altura de la barra en px (default: 3) */
   height?: number;
@@ -98,7 +98,7 @@ export type TopLoadingBarRef = {
 export const TopLoadingBar = forwardRef<TopLoadingBarRef, TopLoadingBarProps>(
   (
     {
-      color = '#4d4725',
+      color = '#1a2744',
       height = 3,
       speed = 200,
       showShadow = true,

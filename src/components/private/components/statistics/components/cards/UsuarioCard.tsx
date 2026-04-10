@@ -73,7 +73,7 @@ const UsuarioCard: React.FC<UsuarioCardProps> = ({
         ) : (
           <div className="
             w-16 h-16 rounded-full 
-            bg-[#948b54] text-white
+            bg-[#4246b2] text-white
             flex items-center justify-center
             border-2 border-gray-200
           ">
@@ -84,13 +84,13 @@ const UsuarioCard: React.FC<UsuarioCardProps> = ({
 
       {/* Información del usuario */}
       <div className="flex-1 min-w-0">
-        <h3 className="font-bold text-[#4d4725] text-lg truncate mb-1">
+        <h3 className="font-bold text-[#1a2744] text-lg truncate mb-1">
           {usuario.nombre_completo}
         </h3>
         
         <div className="flex items-center gap-2">
           <span className="text-gray-600 text-sm">Total IPHs:</span>
-          <span className="font-semibold text-[#948b54] text-lg">
+          <span className="font-semibold text-[#4246b2] text-lg">
             {usuario.total_iphs}
           </span>
         </div>
@@ -100,7 +100,7 @@ const UsuarioCard: React.FC<UsuarioCardProps> = ({
           <div className="flex items-center gap-1">
             <div className="flex-1 bg-gray-200 rounded-full h-1.5">
               <div 
-                className="bg-[#948b54] h-1.5 rounded-full transition-all duration-300"
+                className="bg-[#4246b2] h-1.5 rounded-full transition-all duration-300"
                 style={{
                   width: `${Math.min((usuario.total_iphs / 20) * 100, 100)}%`
                 }}
@@ -118,7 +118,7 @@ const UsuarioCard: React.FC<UsuarioCardProps> = ({
       {usuario.total_iphs > 50 && (
         <div className="
           flex-shrink-0 
-          bg-[#4d4725] text-white text-xs font-bold
+          bg-[#1a2744] text-white text-xs font-bold
           px-2 py-1 rounded-full
         ">
           Top

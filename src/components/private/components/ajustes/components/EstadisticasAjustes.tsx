@@ -75,8 +75,8 @@ export const EstadisticasAjustes: React.FC<EstadisticasAjustesProps> = ({
     <div className={`bg-white rounded-xl border border-gray-200 p-6 ${className}`}>
       {/* Título de la sección */}
       <div className="flex items-center space-x-2 mb-6">
-        <TrendingUp size={20} style={{ color: '#4d4725' }} />
-        <h2 className="text-lg font-semibold" style={{ color: '#4d4725' }}>
+        <TrendingUp size={20} style={{ color: '#1a2744' }} />
+        <h2 className="text-lg font-semibold" style={{ color: '#1a2744' }}>
           Estadísticas del Sistema
         </h2>
       </div>
@@ -88,13 +88,13 @@ export const EstadisticasAjustes: React.FC<EstadisticasAjustesProps> = ({
           <div
             className="flex items-center justify-center w-12 h-12 rounded-lg mx-auto mb-3"
             style={{
-              backgroundColor: '#b8ab8430',
-              color: '#4d4725'
+              backgroundColor: '#787dff30',
+              color: '#1a2744'
             }}
           >
             <Settings size={24} />
           </div>
-          <p className="text-2xl font-bold mb-1" style={{ color: '#4d4725' }}>
+          <p className="text-2xl font-bold mb-1" style={{ color: '#1a2744' }}>
             {estadisticas.totalSecciones}
           </p>
           <p className="text-sm" style={{ color: '#8b7355' }}>Secciones Disponibles</p>
@@ -105,13 +105,13 @@ export const EstadisticasAjustes: React.FC<EstadisticasAjustesProps> = ({
           <div
             className="flex items-center justify-center w-12 h-12 rounded-lg mx-auto mb-3"
             style={{
-              backgroundColor: '#b8ab8430',
-              color: '#4d4725'
+              backgroundColor: '#787dff30',
+              color: '#1a2744'
             }}
           >
             <Database size={24} />
           </div>
-          <p className="text-2xl font-bold mb-1" style={{ color: '#4d4725' }}>
+          <p className="text-2xl font-bold mb-1" style={{ color: '#1a2744' }}>
             {estadisticas.totalOpciones}
           </p>
           <p className="text-sm" style={{ color: '#8b7355' }}>Opciones Configurables</p>
@@ -122,13 +122,13 @@ export const EstadisticasAjustes: React.FC<EstadisticasAjustesProps> = ({
           <div
             className="flex items-center justify-center w-12 h-12 rounded-lg mx-auto mb-3"
             style={{
-              backgroundColor: '#b8ab8430',
-              color: '#4d4725'
+              backgroundColor: '#787dff30',
+              color: '#1a2744'
             }}
           >
             <Clock size={24} />
           </div>
-          <p className="text-sm font-medium mb-1" style={{ color: '#4d4725' }}>
+          <p className="text-sm font-medium mb-1" style={{ color: '#1a2744' }}>
             Última Actividad
           </p>
           <p className="text-xs" style={{ color: '#8b7355' }}>
@@ -140,7 +140,7 @@ export const EstadisticasAjustes: React.FC<EstadisticasAjustesProps> = ({
       {/* Secciones más utilizadas */}
       {estadisticas.seccionesMasUsadas && estadisticas.seccionesMasUsadas.length > 0 && (
         <div>
-          <h3 className="text-md font-medium mb-4" style={{ color: '#4d4725' }}>
+          <h3 className="text-md font-medium mb-4" style={{ color: '#1a2744' }}>
             Secciones Más Utilizadas
           </h3>
           <div className="space-y-3">
@@ -148,29 +148,29 @@ export const EstadisticasAjustes: React.FC<EstadisticasAjustesProps> = ({
               <div
                 key={index}
                 className="flex items-center justify-between p-3 rounded-lg"
-                style={{ backgroundColor: '#f8f0e7' }}
+                style={{ backgroundColor: '#eef1ff' }}
               >
                 <div className="flex items-center space-x-3">
                   <div
                     className="flex items-center justify-center w-6 h-6 rounded text-xs font-bold"
                     style={{
-                      backgroundColor: '#b8ab8430',
-                      color: '#4d4725'
+                      backgroundColor: '#787dff30',
+                      color: '#1a2744'
                     }}
                   >
                     {index + 1}
                   </div>
-                  <span className="text-sm font-medium" style={{ color: '#4d4725' }}>
+                  <span className="text-sm font-medium" style={{ color: '#1a2744' }}>
                     {seccion.nombre}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-sm" style={{ color: '#8b7355' }}>{seccion.usos} usos</span>
-                  <div className="w-16 h-2 rounded-full overflow-hidden" style={{ backgroundColor: '#b8ab8440' }}>
+                  <div className="w-16 h-2 rounded-full overflow-hidden" style={{ backgroundColor: '#787dff40' }}>
                     <div
                       className="h-full rounded-full transition-all duration-300"
                       style={{
-                        backgroundColor: '#b8ab84',
+                        backgroundColor: '#787dff',
                         width: `${(seccion.usos / Math.max(...estadisticas.seccionesMasUsadas.map(s => s.usos))) * 100}%`
                       }}
                     />

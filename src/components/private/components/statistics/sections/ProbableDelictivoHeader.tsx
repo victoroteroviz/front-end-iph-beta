@@ -36,11 +36,11 @@ export const ProbableDelictivoHeader: React.FC<ProbableDelictivoHeaderProps> = (
     <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="p-3 bg-[#948b54] rounded-lg">
+          <div className="p-3 bg-[#4246b2] rounded-lg">
             <Search className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#4d4725] font-poppins">
+            <h1 className="text-2xl font-bold text-[#1a2744] font-poppins">
               Estadísticas de Probable Delictivo
             </h1>
             <p className="text-gray-600 font-poppins">
@@ -54,8 +54,8 @@ export const ProbableDelictivoHeader: React.FC<ProbableDelictivoHeaderProps> = (
             disabled={isLoading}
             className="
               flex items-center gap-2 px-4 py-2 text-sm font-medium
-              text-white bg-[#4d4725] rounded-lg
-              hover:bg-[#3a3519] disabled:opacity-50 disabled:cursor-not-allowed
+              text-white bg-[#1a2744] rounded-lg
+              hover:bg-[#151f36] disabled:opacity-50 disabled:cursor-not-allowed
               transition-colors duration-200 font-poppins
             "
           >

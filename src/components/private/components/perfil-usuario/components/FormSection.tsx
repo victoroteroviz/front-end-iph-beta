@@ -40,8 +40,8 @@ const FormSection: React.FC<FormSectionProps> = ({
         `}
         onClick={handleToggle}
       >
-        <Icon className="w-5 h-5 text-[#948b54] mr-3" />
-        <h3 className="text-lg font-semibold text-[#4d4725] font-poppins flex-1">
+        <Icon className="w-5 h-5 text-[#4246b2] mr-3" />
+        <h3 className="text-lg font-semibold text-[#1a2744] font-poppins flex-1">
           {title}
         </h3>
         {collapsible && (

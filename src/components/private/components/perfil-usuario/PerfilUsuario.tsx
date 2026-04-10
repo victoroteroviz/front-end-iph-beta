@@ -309,7 +309,7 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
             onClick={handleGoBack}
             className="
               flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all duration-200 font-semibold shadow-sm
-              text-[#4d4725] bg-white border-gray-300
+              text-[#1a2744] bg-white border-gray-300
               hover:bg-gray-50 hover:border-gray-400 hover:shadow-md hover:scale-105
               active:scale-95
               cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 font-poppins
@@ -324,11 +324,11 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
         {/* Header principal */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-3 bg-[#948b54] rounded-lg">
+            <div className="p-3 bg-[#4246b2] rounded-lg">
               <User className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#4d4725] font-poppins">
+              <h1 className="text-2xl font-bold text-[#1a2744] font-poppins">
                 {isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}
               </h1>
               <p className="text-gray-600 font-poppins">
@@ -535,12 +535,12 @@ const PerfilUsuario: React.FC<IPerfilUsuarioProps> = ({
             />
 
               {/* Requisitos de contraseña - Lista dinámica siempre visible */}
-              <div className="mt-3 text-sm bg-[#fdf7f1] p-3 rounded-lg border border-[#c2b186]">
+              <div className="mt-3 text-sm bg-[#eef1ff] p-3 rounded-lg border border-[#787dff]">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="flex items-center justify-center w-5 h-5 bg-[#948b54] rounded-full text-white text-xs font-bold">
+                  <span className="flex items-center justify-center w-5 h-5 bg-[#4246b2] rounded-full text-white text-xs font-bold">
                     !
                   </span>
-                  <strong className="text-[#4d4725] font-medium">Requisitos de contraseña:</strong>
+                  <strong className="text-[#1a2744] font-medium">Requisitos de contraseña:</strong>
                 </div>
                 <ul className="list-none space-y-1.5">
                   {passwordRequirements.map((requirement) => (

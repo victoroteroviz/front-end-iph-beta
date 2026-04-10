@@ -19,7 +19,7 @@ const IPHSkeletonCard: React.FC<IIPHSkeletonCardProps> = ({
         ${className}
       `}
       style={{
-        borderLeftColor: '#c2b186' // Color neutro para skeleton
+        borderLeftColor: '#787dff' // Color neutro para skeleton
       }}
     >
       {/* Header con referencia e indicador - ESTRUCTURA IDÉNTICA */}

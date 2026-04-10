@@ -168,7 +168,7 @@ export const UserCard: React.FC<UserCardProps> = ({
       >
         {/* Avatar */}
         <div
-          className="flex-shrink-0 rounded-full overflow-hidden ring-2 ring-[#948b54]"
+          className="flex-shrink-0 rounded-full overflow-hidden ring-2 ring-[#4246b2]"
           style={{
             width: `${size.avatar}px`,
             height: `${size.avatar}px`
@@ -182,7 +182,7 @@ export const UserCard: React.FC<UserCardProps> = ({
             />
           ) : (
             <div
-              className="w-full h-full bg-gradient-to-br from-[#948b54] to-[#4d4725] text-white flex items-center justify-center font-semibold"
+              className="w-full h-full bg-gradient-to-br from-[#4246b2] to-[#1a2744] text-white flex items-center justify-center font-semibold"
               style={{ fontSize: `${size.avatar * 0.4}px` }}
             >
               {initials || <User size={size.avatar * 0.6} />}
@@ -193,7 +193,7 @@ export const UserCard: React.FC<UserCardProps> = ({
         {/* Info del usuario */}
         <div className="flex-1 min-w-0">
           {/* Nombre */}
-          <p className={`${size.fontSize} font-semibold text-[#4d4725] truncate`}>
+          <p className={`${size.fontSize} font-semibold text-[#1a2744] truncate`}>
             {fullName || 'Usuario'}
           </p>
 
@@ -225,7 +225,7 @@ export const UserCard: React.FC<UserCardProps> = ({
         <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
           {/* Info expandida */}
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-            <p className="text-sm font-semibold text-[#4d4725] truncate">
+            <p className="text-sm font-semibold text-[#1a2744] truncate">
               {fullName}
             </p>
             <p className="text-xs text-gray-500 truncate">

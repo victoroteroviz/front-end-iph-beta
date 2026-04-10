@@ -74,7 +74,7 @@ export const LoadingFallback = ({
   }
 
   const containerClass = fullScreen
-    ? 'fixed inset-0 flex items-center justify-center bg-[#f8f0e7]/95 backdrop-blur-md z-[9998] animate-fadeIn'
+    ? 'fixed inset-0 flex items-center justify-center bg-[#eef1ff]/95 backdrop-blur-md z-[9998] animate-fadeIn'
     : 'flex items-center justify-center p-8 min-h-[400px] w-full animate-fadeIn';
 
   return (
@@ -84,7 +84,7 @@ export const LoadingFallback = ({
         <div className="relative">
           {/* Anillo exterior estático */}
           <div
-            className="absolute inset-0 rounded-full border-4 border-[#4d4725]/20"
+            className="absolute inset-0 rounded-full border-4 border-[#1a2744]/20"
             style={{
               width: sizeMap[size] + 16,
               height: sizeMap[size] + 16,
@@ -95,7 +95,7 @@ export const LoadingFallback = ({
 
           {/* Spinner animado */}
           <Loader2
-            className="animate-spin text-[#4d4725]"
+            className="animate-spin text-[#1a2744]"
             size={sizeMap[size]}
             strokeWidth={3}
           />
@@ -103,15 +103,15 @@ export const LoadingFallback = ({
 
         {/* Mensaje de carga */}
         <div className="flex flex-col items-center gap-2">
-          <p className="text-[#4d4725] font-semibold text-base">
+          <p className="text-[#1a2744] font-semibold text-base">
             {message}
           </p>
 
           {/* Puntos animados */}
           <div className="flex gap-1">
-            <span className="w-2 h-2 bg-[#4d4725] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-            <span className="w-2 h-2 bg-[#4d4725] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-            <span className="w-2 h-2 bg-[#4d4725] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+            <span className="w-2 h-2 bg-[#1a2744] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+            <span className="w-2 h-2 bg-[#1a2744] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+            <span className="w-2 h-2 bg-[#1a2744] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
           </div>
         </div>
       </div>

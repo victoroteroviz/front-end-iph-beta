@@ -176,19 +176,19 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
         </div>
 
         {/* Header principal - MEJORADO VISUALMENTE */}
-        <div className="relative bg-gradient-to-br from-white via-[#fdf7f1] to-white rounded-2xl border border-[#c2b186]/30 p-6 mb-6 shadow-lg shadow-[#4d4725]/5 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-white via-[#eef1ff] to-white rounded-2xl border border-[#787dff]/30 p-6 mb-6 shadow-lg shadow-[#1a2744]/5 overflow-hidden">
           {/* Patrón de fondo decorativo */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#948b54]/5 rounded-full blur-3xl -z-0" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#c2b186]/5 rounded-full blur-3xl -z-0" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#4246b2]/5 rounded-full blur-3xl -z-0" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#787dff]/5 rounded-full blur-3xl -z-0" />
 
           <div className="relative z-10">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-xl shadow-lg shadow-[#4d4725]/20 transition-transform duration-300 hover:scale-110 hover:rotate-3">
+                <div className="p-3 bg-gradient-to-br from-[#4246b2] to-[#1a2744] rounded-xl shadow-lg shadow-[#1a2744]/20 transition-transform duration-300 hover:scale-110 hover:rotate-3">
                   <FileText className="h-7 w-7 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-[#4d4725] font-poppins tracking-tight">
+                  <h1 className="text-3xl font-bold text-[#1a2744] font-poppins tracking-tight">
                     Historial de IPH
                   </h1>
                   <p className="text-gray-600 font-poppins mt-1">
@@ -203,8 +203,8 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
                 disabled={loading}
                 className="
                   flex items-center gap-2 px-5 py-2.5 text-sm font-semibold
-                  text-white bg-gradient-to-r from-[#4d4725] to-[#3a3519] rounded-lg
-                  hover:from-[#3a3519] hover:to-[#2d2812] hover:scale-[1.02] active:scale-[0.98]
+                  text-white bg-gradient-to-r from-[#1a2744] to-[#151f36] rounded-lg
+                  hover:from-[#151f36] hover:to-[#2d2812] hover:scale-[1.02] active:scale-[0.98]
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
                   transition-all duration-200 font-poppins shadow-md hover:shadow-lg
                   cursor-pointer
@@ -225,15 +225,15 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
         </div>
 
         {/* Búsqueda y Lista - MEJORADA */}
-        <div className="bg-white rounded-xl border border-[#c2b186]/30 shadow-md overflow-hidden">
+        <div className="bg-white rounded-xl border border-[#787dff]/30 shadow-md overflow-hidden">
           {/* Header de filtros mejorado */}
-          <div className="p-6 bg-gradient-to-r from-[#fdf7f1] to-white border-b border-[#c2b186]/20">
+          <div className="p-6 bg-gradient-to-r from-[#eef1ff] to-white border-b border-[#787dff]/20">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-gradient-to-br from-[#948b54] to-[#4d4725] rounded-lg shadow-sm">
+              <div className="p-2 bg-gradient-to-br from-[#4246b2] to-[#1a2744] rounded-lg shadow-sm">
                 <FileText className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[#4d4725] font-poppins">
+                <h2 className="text-xl font-bold text-[#1a2744] font-poppins">
                   Filtros de Búsqueda
                 </h2>
                 <p className="text-sm text-gray-600 font-poppins">
@@ -265,7 +265,7 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
                 <div className="flex items-center justify-center gap-3">
                   <button
                     onClick={handleRefresh}
-                    className="px-6 py-2 bg-[#4d4725] text-white rounded-lg hover:bg-[#3a3519] transition-colors flex items-center gap-2 cursor-pointer font-poppins"
+                    className="px-6 py-2 bg-[#1a2744] text-white rounded-lg hover:bg-[#151f36] transition-colors flex items-center gap-2 cursor-pointer font-poppins"
                   >
                     <RefreshCw size={16} />
                     Intentar nuevamente
@@ -316,7 +316,7 @@ const HistorialIPH: React.FC<HistorialIPHProps> = ({
                       <strong>{paginacion.total}</strong> registros
                     </span>
                     {hasFiltersApplied && (
-                      <span className="text-[#4d4725]">
+                      <span className="text-[#1a2744]">
                         (con filtros aplicados)
                       </span>
                     )}

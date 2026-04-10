@@ -44,9 +44,9 @@ export const JC_COLORS = {
  * Colores para gráficas de Probable Delictivo
  */
 export const PD_COLORS = {
-  diaria: 'var(--color-pd-diaria)',
-  mensual: 'var(--color-pd-mensual)',
-  anual: 'var(--color-pd-anual)'
+  diaria: 'var(--color-iph-secondary)',
+  mensual: 'var(--color-iph-tertiary)',
+  anual: 'var(--color-iph-primary)'
 } as const;
 
 /**

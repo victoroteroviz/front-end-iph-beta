@@ -23,9 +23,9 @@ export const MOCK_AJUSTES_CONFIG: IAjustesConfig = {
   subtitulo: 'Administra y personaliza la configuración de tu aplicación IPH',
   mostrarEstadisticas: false,
   temas: {
-    primario: '#4d4725',
-    secundario: '#b8ab84',
-    fondo: '#f8f0e7'
+    primario: '#1a2744',
+    secundario: '#787dff',
+    fondo: '#eef1ff'
   }
 };
 
@@ -54,7 +54,7 @@ export const MOCK_AJUSTES_SECCIONES: IAjusteSeccion[] = [
     nombre: 'Administración de Catálogos',
     descripcion: 'Gestiona catálogos del sistema como cargos, grados, adscripciones y municipios',
     icono: Database,
-    color: '#4d4725',
+    color: '#1a2744',
     habilitado: true,
     nivelAcceso: ['SuperAdmin', 'Administrador'],
     ruta: '/ajustes/catalogos',
@@ -66,7 +66,7 @@ export const MOCK_AJUSTES_SECCIONES: IAjusteSeccion[] = [
     nombre: 'Gestión de Usuarios',
     descripcion: 'Administra usuarios del sistema, roles y permisos',
     icono: Users,
-    color: '#b8ab84',
+    color: '#787dff',
     habilitado: true,
     nivelAcceso: ['SuperAdmin', 'Administrador'],
     ruta: '/ajustes/usuarios',

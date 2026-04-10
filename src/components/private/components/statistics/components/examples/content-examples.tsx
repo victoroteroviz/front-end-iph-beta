@@ -20,14 +20,14 @@ export const VentasContent: React.FC = () => {
 
   return (
     <div style={{ padding: '1rem' }}>
-      <h3 style={{ marginBottom: '1rem', color: '#4d4725' }}>Ventas por Mes</h3>
+      <h3 style={{ marginBottom: '1rem', color: '#1a2744' }}>Ventas por Mes</h3>
       <div style={{ display: 'grid', gap: '0.75rem' }}>
         {ventas.map(venta => (
           <div 
             key={venta.mes}
             style={{
               padding: '1rem',
-              background: '#fdf7f1',
+              background: '#eef1ff',
               borderRadius: '0.5rem',
               display: 'flex',
               justifyContent: 'space-between',
@@ -85,7 +85,7 @@ export const UsuariosContent: React.FC = () => {
             <p style={{ 
               fontSize: '2rem', 
               fontWeight: 700,
-              color: '#4d4725',
+              color: '#1a2744',
               margin: '0 0 0.25rem 0'
             }}>
               {metrica.valor}
@@ -127,7 +127,7 @@ export const InventarioContent: React.FC = () => {
 
   return (
     <div style={{ padding: '1rem' }}>
-      <h3 style={{ marginBottom: '1rem', color: '#4d4725' }}>Estado de Inventario</h3>
+      <h3 style={{ marginBottom: '1rem', color: '#1a2744' }}>Estado de Inventario</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {productos.map(producto => (
           <div 
@@ -233,7 +233,7 @@ export const DynamicContent: React.FC<ContentProps> = ({ data, loading }) => {
           width: '40px',
           height: '40px',
           border: '4px solid #f3f4f6',
-          borderTop: '4px solid #948b54',
+          borderTop: '4px solid #4246b2',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
@@ -284,7 +284,7 @@ export const DynamicContent: React.FC<ContentProps> = ({ data, loading }) => {
  *         <XAxis dataKey="name" />
  *         <YAxis />
  *         <Tooltip />
- *         <Line type="monotone" dataKey="ventas" stroke="#948b54" />
+ *         <Line type="monotone" dataKey="ventas" stroke="#4246b2" />
  *       </LineChart>
  *     </div>
  *   );

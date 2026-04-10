@@ -33,7 +33,7 @@ export const EstadisticaJCCard: React.FC<EstadisticaJCCardProps> = ({
   loading,
   error,
   onClick,
-  color = '#4d4725',
+  color = '#1a2744',
   icon
 }) => {
   // Calcular total general

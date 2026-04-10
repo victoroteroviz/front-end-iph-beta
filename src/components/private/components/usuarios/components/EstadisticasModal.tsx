@@ -140,13 +140,13 @@ const EstadisticasModal: React.FC<EstadisticasModalProps> = ({
                   />
                 ) : null}
                 <div 
-                  className={`h-12 w-12 rounded-full bg-[#948b54] flex items-center justify-center ${usuario.photo ? 'hidden' : ''}`}
+                  className={`h-12 w-12 rounded-full bg-[#4246b2] flex items-center justify-center ${usuario.photo ? 'hidden' : ''}`}
                 >
                   <BarChart3 className="h-6 w-6 text-white" />
                 </div>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[#4d4725] font-poppins">
+                <h2 className="text-xl font-bold text-[#1a2744] font-poppins">
                   Estadísticas de {formatUserName(usuario)}
                 </h2>
                 <p className="text-sm text-gray-600 font-poppins">
@@ -168,7 +168,7 @@ const EstadisticasModal: React.FC<EstadisticasModalProps> = ({
             {/* Estado de carga */}
             {loading && (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-[#948b54]" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#4246b2]" />
                 <span className="ml-3 text-gray-600 font-poppins">Cargando estadísticas...</span>
               </div>
             )}

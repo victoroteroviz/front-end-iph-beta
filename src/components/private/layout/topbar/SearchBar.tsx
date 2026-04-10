@@ -66,7 +66,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           w-full pl-10 pr-10 py-2 rounded 
           bg-white text-black 
           border border-gray-300
-          focus:outline-none focus:ring-2 focus:ring-[#4d4725] focus:border-transparent
+          focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:border-transparent
           transition-all duration-200
         " 
         aria-label={placeholder}
@@ -74,7 +74,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       
       {/* Icono de búsqueda */}
       <Search 
-        className="absolute left-3 top-2.5 text-[#4d4725] pointer-events-none" 
+        className="absolute left-3 top-2.5 text-[#1a2744] pointer-events-none" 
         size={20} 
         aria-hidden="true"
       />

@@ -2,7 +2,7 @@
  * Componente AnexoEntrevistas (Anexo E. Entrevistas)
  * Muestra la información detallada de las entrevistas realizadas durante la intervención
  * Incluye datos del entrevistado, contenido de la entrevista, canalización y personal responsable
- * Mantiene diseño original con colores #c2b186, #fdf7f1
+ * Mantiene diseño original con colores #787dff, #eef1ff
  */
 
 import React, { useState } from 'react';
@@ -104,14 +104,14 @@ const CampoBooleano: React.FC<{
   valor, 
   className = ''
 }) => (
-  <div className={`flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20 ${className}`}>
+  <div className={`flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20 ${className}`}>
     {valor ? (
       <CheckCircle className="h-5 w-5 text-green-600" />
     ) : (
       <XCircle className="h-5 w-5 text-gray-500" />
     )}
     <div>
-      <p className="text-sm font-medium text-[#4d4725]">{label}</p>
+      <p className="text-sm font-medium text-[#1a2744]">{label}</p>
       <p className={`text-xs ${valor ? 'text-green-600' : 'text-gray-500'}`}>
         {valor ? 'Sí' : 'No'}
       </p>
@@ -145,8 +145,8 @@ const TextoExpandible: React.FC<{
   const contenidoAMostrar = expandido ? contenido : contenido.substring(0, limite);
 
   return (
-    <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
-      <h4 className="text-sm font-semibold text-[#4d4725] mb-3 flex items-center gap-2">
+    <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
+      <h4 className="text-sm font-semibold text-[#1a2744] mb-3 flex items-center gap-2">
         <IconComponent className="h-4 w-4" />
         {titulo}
         <span className="text-xs text-gray-500 ml-auto">
@@ -167,7 +167,7 @@ const TextoExpandible: React.FC<{
         <div className="mt-4 pt-3 border-t border-gray-200 text-center">
           <button
             onClick={() => setExpandido(!expandido)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#c2b186] text-white rounded-lg hover:bg-[#a89770] transition-colors duration-200 font-medium text-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#787dff] text-white rounded-lg hover:bg-[#6167d9] transition-colors duration-200 font-medium text-sm"
           >
             {expandido ? (
               <>
@@ -214,16 +214,16 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
       <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
         <h2 
           className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-          style={{ backgroundColor: '#c2b186' }}
+          style={{ backgroundColor: '#787dff' }}
         >
           Anexo E. Entrevistas
         </h2>
         
         <div 
           className="border border-gray-300 rounded-md shadow-sm p-4"
-          style={{ backgroundColor: '#fdf7f1' }}
+          style={{ backgroundColor: '#eef1ff' }}
         >
-          <div className="text-center text-[#4d4725] py-4">
+          <div className="text-center text-[#1a2744] py-4">
             <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-400" />
             <p className="font-poppins">No se registraron entrevistas en este caso</p>
           </div>
@@ -247,7 +247,7 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
     <div className={`bg-white rounded-lg shadow p-4 mb-6 ${className}`}>
       <h2 
         className="text-white text-sm font-semibold px-4 py-2 rounded-t-md"
-        style={{ backgroundColor: '#c2b186' }}
+        style={{ backgroundColor: '#787dff' }}
       >
         Anexo E. Entrevistas
         {entrevistas.length > 1 && (
@@ -259,26 +259,26 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
       
       <div 
         className="border border-gray-300 rounded-md shadow-sm p-6"
-        style={{ backgroundColor: '#fdf7f1' }}
+        style={{ backgroundColor: '#eef1ff' }}
       >
         
         {/* Navegación entre entrevistas si hay múltiples */}
         {entrevistas.length > 1 && (
-          <div className="mb-6 flex items-center justify-center gap-4 p-4 bg-white rounded-lg border border-[#c2b186]/20">
+          <div className="mb-6 flex items-center justify-center gap-4 p-4 bg-white rounded-lg border border-[#787dff]/20">
             <button
               onClick={() => setEntrevistaActiva(Math.max(0, entrevistaActiva - 1))}
               disabled={entrevistaActiva === 0}
               className={`p-2 rounded-lg transition-colors ${
                 entrevistaActiva === 0
                   ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                  : 'text-[#4d4725] hover:bg-[#c2b186] hover:text-white'
+                  : 'text-[#1a2744] hover:bg-[#787dff] hover:text-white'
               }`}
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             
             <div className="text-center">
-              <p className="text-sm font-semibold text-[#4d4725]">
+              <p className="text-sm font-semibold text-[#1a2744]">
                 Entrevista {entrevistaActiva + 1} de {entrevistas.length}
               </p>
               <p className="text-xs text-gray-600">
@@ -293,7 +293,7 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
               className={`p-2 rounded-lg transition-colors ${
                 entrevistaActiva === entrevistas.length - 1
                   ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                  : 'text-[#4d4725] hover:bg-[#c2b186] hover:text-white'
+                  : 'text-[#1a2744] hover:bg-[#787dff] hover:text-white'
               }`}
             >
               <ChevronRight className="h-5 w-5" />
@@ -303,8 +303,8 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
 
         {/* Sección 1: Información de la Entrevista */}
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <MessageCircle className="h-5 w-5 text-white" />
             </div>
             Información de la Entrevista
@@ -314,21 +314,21 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
             
             {/* Fecha y hora de la entrevista */}
             <div className="md:col-span-2 lg:col-span-1">
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-                <Clock className="h-5 w-5 text-[#c2b186]" />
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+                <Clock className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Fecha y hora</p>
-                  <p className="font-semibold text-[#4d4725]">{formatearFecha(entrevistaMostrada.fechaHora)}</p>
+                  <p className="font-semibold text-[#1a2744]">{formatearFecha(entrevistaMostrada.fechaHora)}</p>
                 </div>
               </div>
             </div>
 
             {/* Número interior */}
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-              <Hash className="h-5 w-5 text-[#c2b186]" />
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+              <Hash className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Número interior</p>
-                <p className="font-semibold text-[#4d4725] font-mono">{entrevistaMostrada.numeroInterior || 'No disponible'}</p>
+                <p className="font-semibold text-[#1a2744] font-mono">{entrevistaMostrada.numeroInterior || 'No disponible'}</p>
               </div>
             </div>
 
@@ -348,19 +348,19 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
 
         {/* Sección 2: Datos del Entrevistado */}
         <div className="mb-6 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <User className="h-5 w-5 text-white" />
             </div>
             Datos del Entrevistado
           </h3>
           
           {/* Información personal */}
-          <div className="mb-4 bg-white p-4 rounded-lg border border-[#c2b186]/20">
-            <h4 className="text-sm font-semibold text-[#4d4725] mb-3">Información Personal</h4>
+          <div className="mb-4 bg-white p-4 rounded-lg border border-[#787dff]/20">
+            <h4 className="text-sm font-semibold text-[#1a2744] mb-3">Información Personal</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm font-bold text-[#4d4725]">
+                <p className="text-sm font-bold text-[#1a2744]">
                   {[entrevistaMostrada.nombreEntrevistado, entrevistaMostrada.apellidoPaternoEntrevistado, entrevistaMostrada.apellidoMaternoEntrevistado]
                     .filter(Boolean).join(' ') || 'No disponible'
                   }
@@ -378,11 +378,11 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-[#4d4725] font-poppins">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-[#1a2744] font-poppins">
             
             {/* Datos demográficos */}
             <div className="flex items-center gap-3">
-              <Calendar className="h-5 w-5 text-[#c2b186]" />
+              <Calendar className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Fecha de nacimiento</p>
                 <p className="font-semibold">{formatearSoloFecha(entrevistaMostrada.fechaNacimiento)}</p>
@@ -390,7 +390,7 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Hash className="h-5 w-5 text-[#c2b186]" />
+              <Hash className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Edad</p>
                 <p className="font-semibold">{entrevistaMostrada.edad || 'No disponible'} años</p>
@@ -398,7 +398,7 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Hash className="h-5 w-5 text-[#c2b186]" />
+              <Hash className="h-5 w-5 text-[#787dff]" />
               <div>
                 <p className="text-sm text-gray-600">Identificación</p>
                 <p className="font-semibold">{entrevistaMostrada.identificacion || 'No disponible'}</p>
@@ -408,7 +408,7 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
             {/* Tipo y número de identificación */}
             {entrevistaMostrada.tipoIdentificacion && (
               <div className="flex items-center gap-3">
-                <Hash className="h-5 w-5 text-[#c2b186]" />
+                <Hash className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Tipo identificación</p>
                   <p className="font-semibold">{entrevistaMostrada.tipoIdentificacion}</p>
@@ -418,7 +418,7 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
 
             {entrevistaMostrada.numeroIdentificacion && (
               <div className="flex items-center gap-3">
-                <Hash className="h-5 w-5 text-[#c2b186]" />
+                <Hash className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Número identificación</p>
                   <p className="font-semibold font-mono">{entrevistaMostrada.numeroIdentificacion}</p>
@@ -430,8 +430,8 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
 
         {/* Sección 3: Contacto y Ubicación */}
         <div className="mb-6 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <MapPin className="h-5 w-5 text-white" />
             </div>
             Contacto y Ubicación
@@ -440,18 +440,18 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* Información de contacto */}
-            <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
-              <h4 className="text-sm font-semibold text-[#4d4725] mb-3">Información de Contacto</h4>
+            <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
+              <h4 className="text-sm font-semibold text-[#1a2744] mb-3">Información de Contacto</h4>
               <div className="space-y-2">
                 {entrevistaMostrada.telefonoEntrevistado && (
                   <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-[#c2b186]" />
+                    <Phone className="h-4 w-4 text-[#787dff]" />
                     <p className="text-sm font-mono">{entrevistaMostrada.telefonoEntrevistado}</p>
                   </div>
                 )}
                 {entrevistaMostrada.correo && (
                   <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-[#c2b186]" />
+                    <Mail className="h-4 w-4 text-[#787dff]" />
                     <p className="text-sm font-mono">{entrevistaMostrada.correo}</p>
                   </div>
                 )}
@@ -459,8 +459,8 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
             </div>
 
             {/* Dirección */}
-            <div className="bg-white p-4 rounded-lg border border-[#c2b186]/20">
-              <h4 className="text-sm font-semibold text-[#4d4725] mb-3">Dirección</h4>
+            <div className="bg-white p-4 rounded-lg border border-[#787dff]/20">
+              <h4 className="text-sm font-semibold text-[#1a2744] mb-3">Dirección</h4>
               <div className="space-y-2 text-sm">
                 {entrevistaMostrada.calle && (
                   <p><span className="font-medium">Calle:</span> {entrevistaMostrada.calle}</p>
@@ -493,8 +493,8 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
         {/* Sección 4: Contenido de la Entrevista */}
         {entrevistaMostrada.entrevista && (
           <div className="mb-6 pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <FileText className="h-5 w-5 text-white" />
               </div>
               Contenido de la Entrevista
@@ -511,8 +511,8 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
 
         {/* Sección 5: Canalización */}
         <div className="mb-6 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-            <div className="p-2 bg-[#c2b186] rounded-lg">
+          <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+            <div className="p-2 bg-[#787dff] rounded-lg">
               <Heart className="h-5 w-5 text-white" />
             </div>
             Canalización
@@ -526,11 +526,11 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
             />
 
             {entrevistaMostrada.lugarCanalizacion && (
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#c2b186]/20">
-                <Heart className="h-5 w-5 text-[#c2b186]" />
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#787dff]/20">
+                <Heart className="h-5 w-5 text-[#787dff]" />
                 <div>
                   <p className="text-sm text-gray-600">Lugar de canalización</p>
-                  <p className="font-semibold text-[#4d4725]">{entrevistaMostrada.lugarCanalizacion}</p>
+                  <p className="font-semibold text-[#1a2744]">{entrevistaMostrada.lugarCanalizacion}</p>
                 </div>
               </div>
             )}
@@ -540,8 +540,8 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
         {/* Sección 6: Personal Responsable */}
         {responsable.length > 0 && (
           <div className="mb-6 pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <Shield className="h-5 w-5 text-white" />
               </div>
               Personal Responsable
@@ -558,7 +558,7 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
                       <Shield className="h-4 w-4 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[#4d4725] text-sm mb-1">
+                      <h4 className="font-semibold text-[#1a2744] text-sm mb-1">
                         {[oficial.nombre, oficial.primerApellido, oficial.segundoApellido]
                           .filter(Boolean)
                           .join(' ') || 'Responsable'
@@ -595,8 +595,8 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
         {/* Sección 7: Personal Participante */}
         {disposiciones.length > 0 && (
           <div className="pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-bold text-[#4d4725] mb-4 flex items-center gap-3">
-              <div className="p-2 bg-[#c2b186] rounded-lg">
+            <h3 className="text-lg font-bold text-[#1a2744] mb-4 flex items-center gap-3">
+              <div className="p-2 bg-[#787dff] rounded-lg">
                 <Users className="h-5 w-5 text-white" />
               </div>
               Personal Participante
@@ -609,14 +609,14 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
               {disposiciones.map((oficial, index) => (
                 <div 
                   key={index} 
-                  className="bg-white p-4 rounded-lg border border-[#c2b186]/30"
+                  className="bg-white p-4 rounded-lg border border-[#787dff]/30"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-[#c2b186] rounded-full">
+                    <div className="p-2 bg-[#787dff] rounded-full">
                       <User className="h-4 w-4 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[#4d4725] text-sm mb-1">
+                      <h4 className="font-semibold text-[#1a2744] text-sm mb-1">
                         {[oficial.nombre, oficial.primerApellido, oficial.segundoApellido]
                           .filter(Boolean)
                           .join(' ') || `Oficial ${index + 1}`
@@ -626,9 +626,9 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
                       <div className="space-y-1 text-xs text-gray-700">
                         {oficial.cargoGrado && (
                           <div className="flex items-center gap-2">
-                            <Shield className="h-3 w-3 text-[#c2b186]" />
+                            <Shield className="h-3 w-3 text-[#787dff]" />
                             <span className="font-medium">Cargo/Grado:</span>
-                            <span className="px-2 py-0.5 bg-[#c2b186] text-white rounded-full text-xs">
+                            <span className="px-2 py-0.5 bg-[#787dff] text-white rounded-full text-xs">
                               {oficial.cargoGrado}
                             </span>
                           </div>
@@ -636,7 +636,7 @@ const AnexoEntrevistas: React.FC<AnexoEntrevistasProps> = ({
                         
                         {oficial.adscripcion && (
                           <div className="flex items-center gap-2">
-                            <Users className="h-3 w-3 text-[#c2b186]" />
+                            <Users className="h-3 w-3 text-[#787dff]" />
                             <span className="font-medium">Adscripción:</span>
                             <span>{oficial.adscripcion}</span>
                           </div>

@@ -429,12 +429,12 @@ const PDFToolbar: React.FC<PDFToolbarProps> = ({
   }, [currentPage]);
 
   return (
-    <div className="flex items-center justify-between p-3 bg-[#fdf7f1] border-b border-[#c2b186]/20">
+    <div className="flex items-center justify-between p-3 bg-[#eef1ff] border-b border-[#787dff]/20">
       {/* Información del archivo */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-[#4d4725]" />
-          <span className="text-sm font-medium text-[#4d4725] font-poppins">
+          <FileText className="h-5 w-5 text-[#1a2744]" />
+          <span className="text-sm font-medium text-[#1a2744] font-poppins">
             {fileName || 'Documento PDF'}
           </span>
         </div>
@@ -451,7 +451,7 @@ const PDFToolbar: React.FC<PDFToolbarProps> = ({
               className={`p-2 rounded-lg transition-colors ${
                 currentPage <= 1
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-[#4d4725] hover:bg-[#c2b186] hover:text-white'
+                  : 'bg-white text-[#1a2744] hover:bg-[#787dff] hover:text-white'
               }`}
               title="Página anterior"
             >
@@ -480,7 +480,7 @@ const PDFToolbar: React.FC<PDFToolbarProps> = ({
               className={`p-2 rounded-lg transition-colors ${
                 currentPage >= numPages
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-[#4d4725] hover:bg-[#c2b186] hover:text-white'
+                  : 'bg-white text-[#1a2744] hover:bg-[#787dff] hover:text-white'
               }`}
               title="Página siguiente"
             >
@@ -499,7 +499,7 @@ const PDFToolbar: React.FC<PDFToolbarProps> = ({
           <>
             <button
               onClick={onZoomOut}
-              className="p-2 rounded-lg bg-white text-[#4d4725] hover:bg-[#c2b186] hover:text-white transition-colors"
+              className="p-2 rounded-lg bg-white text-[#1a2744] hover:bg-[#787dff] hover:text-white transition-colors"
               title="Alejar"
             >
               <ZoomOut className="h-4 w-4" />
@@ -507,7 +507,7 @@ const PDFToolbar: React.FC<PDFToolbarProps> = ({
 
             <button
               onClick={onZoomReset}
-              className="px-3 py-2 rounded-lg bg-white text-[#4d4725] hover:bg-[#c2b186] hover:text-white transition-colors text-xs font-medium"
+              className="px-3 py-2 rounded-lg bg-white text-[#1a2744] hover:bg-[#787dff] hover:text-white transition-colors text-xs font-medium"
               title="Zoom normal"
             >
               {Math.round(zoom * 100)}%
@@ -515,7 +515,7 @@ const PDFToolbar: React.FC<PDFToolbarProps> = ({
 
             <button
               onClick={onZoomIn}
-              className="p-2 rounded-lg bg-white text-[#4d4725] hover:bg-[#c2b186] hover:text-white transition-colors"
+              className="p-2 rounded-lg bg-white text-[#1a2744] hover:bg-[#787dff] hover:text-white transition-colors"
               title="Acercar"
             >
               <ZoomIn className="h-4 w-4" />
@@ -529,7 +529,7 @@ const PDFToolbar: React.FC<PDFToolbarProps> = ({
         {showDownloadButton && (
           <button
             onClick={onDownload}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white text-[#4d4725] hover:bg-[#c2b186] hover:text-white transition-colors text-sm font-medium"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white text-[#1a2744] hover:bg-[#787dff] hover:text-white transition-colors text-sm font-medium"
             title="Descargar PDF"
           >
             <Download className="h-4 w-4" />
@@ -544,7 +544,7 @@ const PDFToolbar: React.FC<PDFToolbarProps> = ({
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
               isPrinting 
                 ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
-                : 'bg-[#c2b186] text-white hover:bg-[#a89770]'
+                : 'bg-[#787dff] text-white hover:bg-[#6167d9]'
             }`}
             title={isPrinting ? "Imprimiendo..." : "Imprimir PDF"}
           >
@@ -716,7 +716,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   const loadingComponent = React.useMemo(() => (
     <div className="flex items-center justify-center w-full h-96 bg-gray-50">
       <div className="flex flex-col items-center gap-2">
-        <RefreshCw className="h-6 w-6 animate-spin text-[#c2b186]" />
+        <RefreshCw className="h-6 w-6 animate-spin text-[#787dff]" />
         <span className="text-xs text-gray-500">Renderizando página...</span>
       </div>
     </div>
@@ -1418,7 +1418,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                   // Forzar recarga
                   window.location.reload();
                 }}
-                className="px-4 py-2 bg-[#c2b186] text-white rounded-lg hover:bg-[#a89770] transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-[#787dff] text-white rounded-lg hover:bg-[#6167d9] transition-colors text-sm font-medium"
               >
                 Intentar nuevamente
               </button>
@@ -1442,7 +1442,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                   // ✅ NUEVO: Loading con barra de progreso para archivos grandes
                   <div className="flex items-center justify-center p-12">
                     <div className="flex flex-col items-center gap-4 max-w-md w-full">
-                      <RefreshCw className="h-8 w-8 animate-spin text-[#c2b186]" />
+                      <RefreshCw className="h-8 w-8 animate-spin text-[#787dff]" />
                       <p className="text-sm text-gray-600 font-poppins font-medium">
                         Cargando PDF...
                       </p>
@@ -1453,7 +1453,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                       {/* Barra de progreso */}
                       <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                         <div
-                          className="bg-[#c2b186] h-full transition-all duration-300 ease-out"
+                          className="bg-[#787dff] h-full transition-all duration-300 ease-out"
                           style={{ width: `${loadProgress.percentage}%` }}
                         />
                       </div>
@@ -1481,7 +1481,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                   // Spinner simple para carga inicial (antes de tener info de progreso)
                   <div className="flex items-center justify-center p-12">
                     <div className="flex flex-col items-center gap-3">
-                      <RefreshCw className="h-8 w-8 animate-spin text-[#c2b186]" />
+                      <RefreshCw className="h-8 w-8 animate-spin text-[#787dff]" />
                       <p className="text-sm text-gray-600 font-poppins">Cargando PDF...</p>
                       <p className="text-xs text-gray-500 font-poppins">{fileName}</p>
                     </div>

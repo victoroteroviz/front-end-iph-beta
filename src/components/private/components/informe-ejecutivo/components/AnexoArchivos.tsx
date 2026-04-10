@@ -2,7 +2,7 @@
  * Componente AnexoArchivos
  * Muestra archivos del IPH con preview y modal de visualización
  * Soporte para vista lista/grid, filtros y preview por tipo
- * Mantiene diseño original con colores #c2b186, #fdf7f1
+ * Mantiene diseño original con colores #787dff, #eef1ff
  */
 
 import React, {
@@ -780,7 +780,7 @@ const FileModal: React.FC<FileModalProps> = ({ archivo, isOpen, onClose }) => {
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               {/* Título */}
-              <h3 className="text-xl font-bold text-[#4d4725] mb-2 truncate">
+              <h3 className="text-xl font-bold text-[#1a2744] mb-2 truncate">
                 {archivo.titulo || "Archivo"}
               </h3>
 
@@ -889,7 +889,7 @@ const AnexoArchivos: React.FC<AnexoArchivosProps> = memo(
         <div className="flex items-center justify-between mb-4">
           <h2
             className="text-white text-sm font-semibold px-4 py-2 rounded-md"
-            style={{ backgroundColor: "#c2b186" }}
+            style={{ backgroundColor: "#787dff" }}
           >
             Archivos del IPH ({filteredArchivos.length})
           </h2>
@@ -902,7 +902,7 @@ const AnexoArchivos: React.FC<AnexoArchivosProps> = memo(
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value as FileType)}
-                  className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#c2b186] cursor-pointer"
+                  className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#787dff] cursor-pointer"
                 >
                   <option value="all">Todos ({typeCounts.all})</option>
                   {typeCounts.video > 0 && (
@@ -928,7 +928,7 @@ const AnexoArchivos: React.FC<AnexoArchivosProps> = memo(
                   onClick={() => setViewMode("list")}
                   className={`p-1 transition-colors ${
                     viewMode === "list"
-                      ? "bg-[#c2b186] text-white"
+                      ? "bg-[#787dff] text-white"
                       : "bg-white text-gray-600 hover:bg-gray-50"
                   }`}
                   title="Vista lista"
@@ -939,7 +939,7 @@ const AnexoArchivos: React.FC<AnexoArchivosProps> = memo(
                   onClick={() => setViewMode("grid")}
                   className={`p-1 transition-colors ${
                     viewMode === "grid"
-                      ? "bg-[#c2b186] text-white"
+                      ? "bg-[#787dff] text-white"
                       : "bg-white text-gray-600 hover:bg-gray-50"
                   }`}
                   title="Vista cuadrícula"
@@ -954,7 +954,7 @@ const AnexoArchivos: React.FC<AnexoArchivosProps> = memo(
         {/* Contenido */}
         <div
           className="border border-gray-300 rounded-md shadow-sm p-6"
-          style={{ backgroundColor: "#fdf7f1" }}
+          style={{ backgroundColor: "#eef1ff" }}
         >
           {/* Sin archivos */}
           {!hasArchivos && (
@@ -975,8 +975,8 @@ const AnexoArchivos: React.FC<AnexoArchivosProps> = memo(
               {/* Información general */}
               <div className="bg-white rounded-lg p-4 mb-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <Info className="h-5 w-5 text-[#4d4725]" />
-                  <span className="font-semibold text-[#4d4725] font-poppins">
+                  <Info className="h-5 w-5 text-[#1a2744]" />
+                  <span className="font-semibold text-[#1a2744] font-poppins">
                     {filteredArchivos.length} de {archivosArray.length} archivos
                     mostrados
                   </span>
@@ -1012,12 +1012,12 @@ const AnexoArchivos: React.FC<AnexoArchivosProps> = memo(
                         <div className="flex-1 p-4 min-w-0">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className="text-[#4d4725]">
+                              <div className="text-[#1a2744]">
                                 {getFileIcon(archivo.tipo)}
                               </div>
 
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-[#4d4725] font-poppins truncate text-base">
+                                <h4 className="font-semibold text-[#1a2744] font-poppins truncate text-base">
                                   {archivo.titulo || `Archivo ${index + 1}`}
                                 </h4>
 
@@ -1072,10 +1072,10 @@ const AnexoArchivos: React.FC<AnexoArchivosProps> = memo(
                       {/* Información */}
                       <div className="p-3">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="text-[#4d4725]">
+                          <div className="text-[#1a2744]">
                             {getFileIcon(archivo.tipo)}
                           </div>
-                          <h4 className="font-medium text-[#4d4725] font-poppins text-sm truncate flex-1">
+                          <h4 className="font-medium text-[#1a2744] font-poppins text-sm truncate flex-1">
                             {archivo.titulo || `Archivo ${index + 1}`}
                           </h4>
                         </div>

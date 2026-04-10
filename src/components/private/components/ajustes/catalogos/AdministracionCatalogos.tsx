@@ -33,7 +33,7 @@ const AdministracionCatalogos: React.FC = () => {
       nombre: 'Cargos',
       descripcion: 'Cargos disponibles en el sistema',
       icono: Users,
-      color: '#4d4725',
+      color: '#1a2744',
       total: 15,
       activos: 12
     },
@@ -42,7 +42,7 @@ const AdministracionCatalogos: React.FC = () => {
       nombre: 'Grados',
       descripcion: 'Grados policiales del sistema',
       icono: Shield,
-      color: '#b8ab84',
+      color: '#787dff',
       total: 8,
       activos: 8
     },
@@ -95,12 +95,12 @@ const AdministracionCatalogos: React.FC = () => {
             <div className="flex items-center space-x-3">
               <div
                 className="flex items-center justify-center w-12 h-12 rounded-lg"
-                style={{ backgroundColor: '#4d472515', color: '#4d4725' }}
+                style={{ backgroundColor: '#1a274415', color: '#1a2744' }}
               >
                 <Database size={24} />
               </div>
               <div>
-                <h1 className="text-2xl font-bold" style={{ color: '#4d4725' }}>
+                <h1 className="text-2xl font-bold" style={{ color: '#1a2744' }}>
                   Administración de Catálogos
                 </h1>
                 <p className="text-gray-600">
@@ -111,7 +111,7 @@ const AdministracionCatalogos: React.FC = () => {
             <button
               onClick={() => setVistaActual('formulario')}
               className="inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors duration-200"
-              style={{ backgroundColor: '#4d4725' }}
+              style={{ backgroundColor: '#1a2744' }}
             >
               <Plus size={16} />
               <span>Nuevo Item</span>
@@ -123,7 +123,7 @@ const AdministracionCatalogos: React.FC = () => {
           {/* Sidebar de Catálogos */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <h3 className="text-lg font-semibold mb-4" style={{ color: '#4d4725' }}>
+              <h3 className="text-lg font-semibold mb-4" style={{ color: '#1a2744' }}>
                 Catálogos
               </h3>
               <div className="space-y-2">
@@ -139,7 +139,7 @@ const AdministracionCatalogos: React.FC = () => {
                         isSelected ? 'shadow-md' : 'hover:shadow-sm'
                       }`}
                       style={{
-                        backgroundColor: isSelected ? '#f8f0e7' : 'transparent',
+                        backgroundColor: isSelected ? '#eef1ff' : 'transparent',
                         borderLeft: isSelected ? `4px solid ${catalogo.color}` : '4px solid transparent'
                       }}
                     >
@@ -154,7 +154,7 @@ const AdministracionCatalogos: React.FC = () => {
                           <Icono size={16} />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium text-sm" style={{ color: '#4d4725' }}>
+                          <p className="font-medium text-sm" style={{ color: '#1a2744' }}>
                             {catalogo.nombre}
                           </p>
                           <p className="text-xs text-gray-500">
@@ -188,7 +188,7 @@ const AdministracionCatalogos: React.FC = () => {
                         <IconoCatalogo size={20} />
                       </div>
                       <div>
-                        <h2 className="text-xl font-semibold" style={{ color: '#4d4725' }}>
+                        <h2 className="text-xl font-semibold" style={{ color: '#1a2744' }}>
                           {catalogoActual?.nombre}
                         </h2>
                         <p className="text-sm text-gray-600">
@@ -245,7 +245,7 @@ const AdministracionCatalogos: React.FC = () => {
                       {itemsEjemplo.map((item) => (
                         <tr key={item.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="font-medium" style={{ color: '#4d4725' }}>
+                            <div className="font-medium" style={{ color: '#1a2744' }}>
                               {item.nombre}
                             </div>
                           </td>
@@ -303,7 +303,7 @@ const AdministracionCatalogos: React.FC = () => {
                       </button>
                       <button
                         className="px-3 py-1 rounded text-sm text-white"
-                        style={{ backgroundColor: '#4d4725' }}
+                        style={{ backgroundColor: '#1a2744' }}
                       >
                         1
                       </button>
@@ -318,7 +318,7 @@ const AdministracionCatalogos: React.FC = () => {
               // Vista de Formulario (Mockup)
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold" style={{ color: '#4d4725' }}>
+                  <h2 className="text-xl font-semibold" style={{ color: '#1a2744' }}>
                     Nuevo {catalogoActual?.nombre.slice(0, -1)} {/* Quita la 's' final */}
                   </h2>
                   <button
@@ -332,7 +332,7 @@ const AdministracionCatalogos: React.FC = () => {
                 <form className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#4d4725' }}>
+                      <label className="block text-sm font-medium mb-2" style={{ color: '#1a2744' }}>
                         Nombre
                       </label>
                       <input
@@ -342,7 +342,7 @@ const AdministracionCatalogos: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#4d4725' }}>
+                      <label className="block text-sm font-medium mb-2" style={{ color: '#1a2744' }}>
                         Estado
                       </label>
                       <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -353,7 +353,7 @@ const AdministracionCatalogos: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: '#4d4725' }}>
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#1a2744' }}>
                       Descripción
                     </label>
                     <textarea
@@ -374,7 +374,7 @@ const AdministracionCatalogos: React.FC = () => {
                     <button
                       type="submit"
                       className="px-4 py-2 text-white rounded-lg transition-colors duration-200"
-                      style={{ backgroundColor: '#4d4725' }}
+                      style={{ backgroundColor: '#1a2744' }}
                     >
                       Guardar
                     </button>

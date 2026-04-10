@@ -95,7 +95,7 @@ const ReporteCard: React.FC<ReporteCardProps> = React.memo(({
       className={`
         reporte-card group relative bg-white rounded-xl shadow-md border-2 border-transparent
         transition-all duration-300
-        ${isClickable ? 'hover:shadow-xl hover:border-[#c2b186] hover:-translate-y-1 cursor-pointer' : ''}
+        ${isClickable ? 'hover:shadow-xl hover:border-[#787dff] hover:-translate-y-1 cursor-pointer' : ''}
         ${isDisabledOrGenerating ? 'opacity-60 cursor-not-allowed' : ''}
         ${generando ? 'animate-pulse' : ''}
       `}
@@ -110,7 +110,7 @@ const ReporteCard: React.FC<ReporteCardProps> = React.memo(({
       {/* Indicador de generando */}
       {generando && (
         <div className="absolute top-3 right-3 z-10">
-          <div className="w-6 h-6 border-3 border-[#c2b186] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-6 h-6 border-3 border-[#787dff] border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
 
@@ -128,7 +128,7 @@ const ReporteCard: React.FC<ReporteCardProps> = React.memo(({
         {/* Icono */}
         <div
           className="reporte-card-icon inline-flex p-4 rounded-xl mb-4 transition-transform duration-300 group-hover:scale-110"
-          style={{ backgroundColor: reporte.color || '#c2b186' }}
+          style={{ backgroundColor: reporte.color || '#787dff' }}
         >
           <div className="w-8 h-8 text-white">
             {reporte.icono}
@@ -136,7 +136,7 @@ const ReporteCard: React.FC<ReporteCardProps> = React.memo(({
         </div>
 
         {/* Título */}
-        <h3 className="text-lg font-bold text-[#4d4725] mb-2 leading-tight">
+        <h3 className="text-lg font-bold text-[#1a2744] mb-2 leading-tight">
           {reporte.titulo}
         </h3>
 
@@ -167,8 +167,8 @@ const ReporteCard: React.FC<ReporteCardProps> = React.memo(({
         {/* Mensaje de estado generando */}
         {generando && (
           <div className="mt-4 pt-4 border-t border-gray-100">
-            <div className="flex items-center gap-2 text-[#948b54]">
-              <div className="w-2 h-2 bg-[#948b54] rounded-full animate-pulse"></div>
+            <div className="flex items-center gap-2 text-[#4246b2]">
+              <div className="w-2 h-2 bg-[#4246b2] rounded-full animate-pulse"></div>
               <span className="text-sm font-medium">Generando reporte...</span>
             </div>
           </div>
@@ -177,7 +177,7 @@ const ReporteCard: React.FC<ReporteCardProps> = React.memo(({
 
       {/* Decoración hover */}
       {isClickable && (
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#948b54] to-[#c2b186] opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-b-xl"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#4246b2] to-[#787dff] opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-b-xl"></div>
       )}
     </div>
   );

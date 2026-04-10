@@ -455,16 +455,16 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
               resetPdfPreview();
               onClose();
             }}
-            className="inline-flex items-center gap-2 text-sm text-[#4d4725] hover:text-[#c2b186] transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 text-sm text-[#1a2744] hover:text-[#787dff] transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             Volver a reportes
           </button>
         </div>
 
-        <div className="bg-white rounded-xl border border-[#c2b186]/30 shadow-md overflow-hidden">
-          <div className="px-6 py-5 border-b border-[#c2b186]/20 bg-gradient-to-r from-[#fdf7f1] to-white">
-            <h1 className="text-2xl font-bold text-[#4d4725] font-poppins tracking-tight">{reporte.titulo}</h1>
+        <div className="bg-white rounded-xl border border-[#787dff]/30 shadow-md overflow-hidden">
+          <div className="px-6 py-5 border-b border-[#787dff]/20 bg-gradient-to-r from-[#eef1ff] to-white">
+            <h1 className="text-2xl font-bold text-[#1a2744] font-poppins tracking-tight">{reporte.titulo}</h1>
             <p className="text-sm text-gray-600 font-poppins mt-1">Captura la información requerida para generar el informe diario en PDF.</p>
             <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-300 rounded-lg text-sm text-yellow-800">
               <AlertTriangle className="w-4 h-4" />
@@ -474,15 +474,15 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
 
           <form onSubmit={handleSubmit} className="px-6 py-6 space-y-10">
             <section className="space-y-4">
-              <h2 className="text-xl font-bold text-[#4d4725] font-poppins">Datos generales</h2>
+              <h2 className="text-xl font-bold text-[#1a2744] font-poppins">Datos generales</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Fecha del reporte</label>
+                  <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Fecha del reporte</label>
                   <input
                     type="date"
                     value={reportDate}
                     onChange={event => setReportDate(event.target.value)}
-                    className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                    className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                     required
                   />
                 </div>
@@ -492,9 +492,9 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
                     type="checkbox"
                     checked={includePageBreak}
                     onChange={event => setIncludePageBreak(event.target.checked)}
-                    className="h-4 w-4 text-[#948b54] focus:ring-[#948b54] border-[#c2b186]/30 rounded"
+                    className="h-4 w-4 text-[#4246b2] focus:ring-[#4246b2] border-[#787dff]/30 rounded"
                   />
-                  <label htmlFor="activities-pagebreak" className="text-sm text-[#4d4725] font-poppins">
+                  <label htmlFor="activities-pagebreak" className="text-sm text-[#1a2744] font-poppins">
                     Insertar salto de página antes de la sección de actividades.
                   </label>
                 </div>
@@ -503,28 +503,28 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
 
             <section className="space-y-4">
               <header>
-                <h2 className="text-xl font-bold text-[#4d4725] font-poppins">Uso de aplicación en tablets</h2>
+                <h2 className="text-xl font-bold text-[#1a2744] font-poppins">Uso de aplicación en tablets</h2>
                 <p className="text-sm text-gray-600 font-poppins">El título se envía como "Tablets en uso". El backend calcula los demás indicadores.</p>
               </header>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Tablets en uso</label>
+                  <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Tablets en uso</label>
                   <input
                     type="number"
                     min={0}
                     value={usoTablets.tabletsEnUso}
                     onChange={event => updateUsoTablets('tabletsEnUso', event.target.value)}
-                    className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                    className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Total de tablets</label>
+                  <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Total de tablets</label>
                   <input
                     type="number"
                     min={0}
                     value={usoTablets.totalTablets}
                     onChange={event => updateUsoTablets('totalTablets', event.target.value)}
-                    className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                    className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                   />
                 </div>
               </div>
@@ -532,162 +532,162 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
 
             <section className="space-y-4">
               <header>
-                <h2 className="text-xl font-bold text-[#4d4725] font-poppins">Uso de aplicación en laptops</h2>
+                <h2 className="text-xl font-bold text-[#1a2744] font-poppins">Uso de aplicación en laptops</h2>
                 <p className="text-sm text-gray-600 font-poppins">Captura cada métrica con los datos más recientes disponibles.</p>
               </header>
               <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="sm:col-span-3">
-                    <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Título de la sección</label>
+                    <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Título de la sección</label>
                     <input
                       type="text"
                       maxLength={50}
                       value={usoLaptops.devicesTitle}
                       onChange={event => updateUsoLaptops('devicesTitle', event.target.value)}
                       placeholder="Laptops activas"
-                      className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                      className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Laptops en uso</label>
+                    <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Laptops en uso</label>
                     <input
                       type="number"
                       min={0}
                       value={usoLaptops.laptopsEnUso}
                       onChange={event => updateUsoLaptops('laptopsEnUso', event.target.value)}
-                      className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                      className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Total de laptops</label>
+                    <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Total de laptops</label>
                     <input
                       type="number"
                       min={0}
                       value={usoLaptops.totalLaptops}
                       onChange={event => updateUsoLaptops('totalLaptops', event.target.value)}
-                      className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                      className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Registros elaborados</label>
+                    <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Registros elaborados</label>
                     <input
                       type="number"
                       min={0}
                       value={usoLaptops.registrosElaborados}
                       onChange={event => updateUsoLaptops('registrosElaborados', event.target.value)}
-                      className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                      className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Registros Justicia Cívica</label>
+                    <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Registros Justicia Cívica</label>
                     <input
                       type="number"
                       min={0}
                       value={usoLaptops.registrosJusticiaCivica}
                       onChange={event => updateUsoLaptops('registrosJusticiaCivica', event.target.value)}
-                      className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                      className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Registros Probable Delictivo</label>
+                    <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Registros Probable Delictivo</label>
                     <input
                       type="number"
                       min={0}
                       value={usoLaptops.registrosProbableDelictivo}
                       onChange={event => updateUsoLaptops('registrosProbableDelictivo', event.target.value)}
-                      className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                      className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                     />
                   </div>
                 </div>
 
-                <div className="border border-[#c2b186]/20 rounded-xl overflow-hidden">
+                <div className="border border-[#787dff]/20 rounded-xl overflow-hidden">
                   <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
                     <div className="p-4 space-y-4">
-                      <h3 className="text-sm font-bold text-[#4d4725] font-poppins">Registro IPH justicia cívica</h3>
+                      <h3 className="text-sm font-bold text-[#1a2744] font-poppins">Registro IPH justicia cívica</h3>
                       <div>
-                        <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Total IPH justicia cívica</label>
+                        <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Total IPH justicia cívica</label>
                         <input
                           type="number"
                           min={0}
                           value={usoLaptops.iphJusticiaCivica}
                           onChange={event => updateUsoLaptops('iphJusticiaCivica', event.target.value)}
-                          className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                          className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Con detenidos</label>
+                        <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Con detenidos</label>
                         <input
                           type="number"
                           min={0}
                           value={usoLaptops.iphJusticiaConDetenidos}
                           onChange={event => updateUsoLaptops('iphJusticiaConDetenidos', event.target.value)}
-                          className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                          className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Sin detenidos</label>
+                        <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Sin detenidos</label>
                         <input
                           type="number"
                           min={0}
                           value={usoLaptops.iphJusticiaSinDetenidos}
                           onChange={event => updateUsoLaptops('iphJusticiaSinDetenidos', event.target.value)}
-                          className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                          className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                         />
                       </div>
                     </div>
                     <div className="p-4 space-y-4">
-                      <h3 className="text-sm font-bold text-[#4d4725] font-poppins">Registro probable delictivo</h3>
+                      <h3 className="text-sm font-bold text-[#1a2744] font-poppins">Registro probable delictivo</h3>
                       <div>
-                        <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Total IPH probable delictivo</label>
+                        <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Total IPH probable delictivo</label>
                         <input
                           type="number"
                           min={0}
                           value={usoLaptops.iphProbableDelictivo}
                           onChange={event => updateUsoLaptops('iphProbableDelictivo', event.target.value)}
-                          className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                          className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Delictivo con detenidos</label>
+                        <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Delictivo con detenidos</label>
                         <input
                           type="number"
                           min={0}
                           value={usoLaptops.iphDelictivoConDetenidos}
                           onChange={event => updateUsoLaptops('iphDelictivoConDetenidos', event.target.value)}
-                          className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                          className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Delictivo sin detenidos</label>
+                        <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Delictivo sin detenidos</label>
                         <input
                           type="number"
                           min={0}
                           value={usoLaptops.iphDelictivoSinDetenidos}
                           onChange={event => updateUsoLaptops('iphDelictivoSinDetenidos', event.target.value)}
-                          className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                          className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                         />
                       </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 border-t border-[#c2b186]/20">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 border-t border-[#787dff]/20">
                     <div>
-                      <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Registros nuevos (semana)</label>
+                      <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Registros nuevos (semana)</label>
                       <input
                         type="number"
                         min={0}
                         value={usoLaptops.registrosNuevosSemana}
                         onChange={event => updateUsoLaptops('registrosNuevosSemana', event.target.value)}
-                        className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                        className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Registros nuevos (día)</label>
+                      <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Registros nuevos (día)</label>
                       <input
                         type="number"
                         min={0}
                         value={usoLaptops.registrosNuevosDia}
                         onChange={event => updateUsoLaptops('registrosNuevosDia', event.target.value)}
-                        className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                        className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                       />
                     </div>
                   </div>
@@ -698,13 +698,13 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
             <section className="space-y-4">
               <header className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-[#4d4725] font-poppins">Actividades</h2>
+                  <h2 className="text-xl font-bold text-[#1a2744] font-poppins">Actividades</h2>
                   <p className="text-sm text-gray-600 font-poppins">Describe actividades relevantes y adjunta imágenes opcionales (máximo {maxUploadFiles} imágenes en total).</p>
                 </div>
                 <button
                   type="button"
                   onClick={addActivity}
-                  className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-br from-[#948b54] to-[#4d4725] text-white text-sm font-semibold font-poppins rounded-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-br from-[#4246b2] to-[#1a2744] text-white text-sm font-semibold font-poppins rounded-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   Agregar actividad
@@ -713,9 +713,9 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
 
               <div className="space-y-6">
                 {activities.map((activity, index) => (
-                  <div key={`activity-${index}`} className="border border-[#c2b186]/20 rounded-xl p-4 bg-[#fdf7f1]/30">
+                  <div key={`activity-${index}`} className="border border-[#787dff]/20 rounded-xl p-4 bg-[#eef1ff]/30">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-bold text-[#4d4725] font-poppins">Actividad #{index + 1}</h3>
+                      <h3 className="text-sm font-bold text-[#1a2744] font-poppins">Actividad #{index + 1}</h3>
                       <button
                         type="button"
                         onClick={() => removeActivity(index)}
@@ -728,29 +728,29 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
 
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Título</label>
+                        <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Título</label>
                         <input
                           type="text"
                           maxLength={50}
                           value={activity.title}
                           onChange={event => handleActivityChange(index, 'title', event.target.value)}
-                          className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                          className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                           placeholder="Operativo vespertino"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Descripción</label>
+                        <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Descripción</label>
                         <textarea
                           value={activity.description}
                           onChange={event => handleActivityChange(index, 'description', event.target.value)}
                           rows={3}
-                          className="w-full border border-[#c2b186]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#948b54] focus:border-[#948b54] transition-colors"
+                          className="w-full border border-[#787dff]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4246b2] focus:border-[#4246b2] transition-colors"
                           placeholder="Cobertura y recorrido en sector norte"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-[#4d4725] font-poppins mb-1">Imágenes (opcional)</label>
-                        <label className="flex items-center justify-center gap-2 w-full border-2 border-dashed border-[#c2b186]/30 rounded-xl px-4 py-6 text-sm text-gray-500 hover:border-[#948b54] hover:text-[#948b54] transition-colors cursor-pointer">
+                        <label className="block text-sm font-medium text-[#1a2744] font-poppins mb-1">Imágenes (opcional)</label>
+                        <label className="flex items-center justify-center gap-2 w-full border-2 border-dashed border-[#787dff]/30 rounded-xl px-4 py-6 text-sm text-gray-500 hover:border-[#4246b2] hover:text-[#4246b2] transition-colors cursor-pointer">
                           <Upload className="w-4 h-4" />
                           Seleccionar archivos
                           <input
@@ -762,7 +762,7 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
                           />
                         </label>
                         {activity.files.length > 0 && (
-                          <ul className="mt-2 text-xs text-[#4d4725] list-disc list-inside space-y-1">
+                          <ul className="mt-2 text-xs text-[#1a2744] list-disc list-inside space-y-1">
                             {activity.files.map(file => (
                               <li key={`${file.name}-${file.lastModified}`}>{file.name}</li>
                             ))}
@@ -775,14 +775,14 @@ const ReporteDiarioForm: React.FC<ReporteDiarioFormProps> = ({ reporte, onClose 
               </div>
             </section>
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-[#c2b186]/20">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-[#787dff]/20">
               <p className="text-xs text-gray-600 font-poppins">
                 Al menos una sección con datos o actividades debe estar completa para generar el reporte.
               </p>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-br from-[#948b54] to-[#4d4725] text-white text-sm font-semibold font-poppins rounded-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-br from-[#4246b2] to-[#1a2744] text-white text-sm font-semibold font-poppins rounded-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
               >
                 {isSubmitting ? 'Generando reporte…' : 'Generar reporte PDF'}
               </button>
