@@ -12,7 +12,6 @@
 export interface LoginFormData {
   email: string;
   password: string;
-  agreeTerms: boolean;
 }
 
 // Estados del componente Login
@@ -29,7 +28,6 @@ export interface LoginState {
 export interface FieldValidationErrors {
   email?: string;
   password?: string;
-  agreeTerms?: string;
 }
 
 // Tipos de error específicos del Login
@@ -39,7 +37,6 @@ export type LoginErrorType =
   | 'SERVER_ERROR'
   | 'EMAIL_VALIDATION_ERROR'
   | 'PASSWORD_VALIDATION_ERROR'
-  | 'TERMS_NOT_ACCEPTED'
   | 'ACCOUNT_LOCKED'
   | 'RATE_LIMITED'
   | 'CSRF_ERROR'

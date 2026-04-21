@@ -15,6 +15,7 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
@@ -67,11 +68,7 @@ const loginValidationSchema = z.object({
     .regex(/[A-Z]/, 'La contraseña debe contener al menos una letra mayúscula')
     .regex(/[a-z]/, 'La contraseña debe contener al menos una letra minúscula')
     .regex(/[0-9]/, 'La contraseña debe contener al menos un número')
-    .regex(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/, 'La contraseña debe contener al menos un carácter especial'),
-
-  agreeTerms: z
-    .boolean()
-    .refine(val => val === true, 'Debes aceptar los Términos y Condiciones')
+    .regex(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>\/?]/, 'La contraseña debe contener al menos un carácter especial')
 });
 
 /**
@@ -83,7 +80,6 @@ const ERROR_MESSAGES: Record<LoginErrorType, string> = {
   SERVER_ERROR: 'Error del servidor. Por favor, intenta más tarde.',
   EMAIL_VALIDATION_ERROR: 'El formato del correo electrónico no es válido.',
   PASSWORD_VALIDATION_ERROR: 'La contraseña no cumple con los requisitos de seguridad.',
-  TERMS_NOT_ACCEPTED: 'Debes aceptar los Términos y Condiciones para continuar.',
   ACCOUNT_LOCKED: 'Cuenta bloqueada temporalmente por múltiples intentos fallidos.',
   RATE_LIMITED: 'Demasiados intentos de inicio de sesión. Espera unos minutos.',
   CSRF_ERROR: 'Error de seguridad detectado. Por favor, recarga la página.',
@@ -121,14 +117,6 @@ const getInputClasses = (hasError: boolean): string => {
   return `${baseClasses} ${hasError ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-[var(--color-iph-primary)]'}`;
 };
 
-/**
- * Genera clases CSS para checkbox con estado de error
- */
-const getCheckboxClasses = (hasError: boolean): string => {
-  const baseClasses = 'mt-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200';
-  return `${baseClasses} ${hasError ? 'ring-2 ring-red-500 ring-offset-1' : ''}`;
-};
-
 // =====================================================
 // HOOK PRINCIPAL DE LÓGICA
 // =====================================================
@@ -139,11 +127,12 @@ const getCheckboxClasses = (hasError: boolean): string => {
 const useLoginLogic = () => {
   const navigate = useNavigate();
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const [state, setState] = useState<LoginState>({
     formData: {
       email: '',
-      password: '',
-      agreeTerms: false
+      password: ''
     },
     isLoading: false,
     isRedirecting: false,
@@ -151,8 +140,6 @@ const useLoginLogic = () => {
     fieldErrors: {},
     csrfToken: generateCSRFToken()
   });
-
-  const [isShaking, setIsShaking] = useState(false);
 
   /**
    * Actualiza datos del formulario y limpia errores
@@ -181,11 +168,7 @@ const useLoginLogic = () => {
         error: null
       };
     });
-
-    if (isShaking) {
-      setIsShaking(false);
-    }
-  }, [isShaking]);
+  }, []);
 
   /**
    * Valida el formulario con Zod
@@ -209,22 +192,11 @@ const useLoginLogic = () => {
       } else if (field === 'password') {
         fieldErrors.password = issue.message;
         if (!globalError) globalError = 'PASSWORD_VALIDATION_ERROR';
-      } else if (field === 'agreeTerms') {
-        fieldErrors.agreeTerms = issue.message;
-        if (!globalError) globalError = 'TERMS_NOT_ACCEPTED';
       }
     });
 
     return { isValid: false, errors: fieldErrors, globalError };
   }, [state.formData]);
-
-  /**
-   * Activa animación shake para el checkbox
-   */
-  const triggerShakeAnimation = useCallback(() => {
-    setIsShaking(true);
-    setTimeout(() => setIsShaking(false), TIMING.shakeAnimation);
-  }, []);
 
   /**
    * Maneja el envío del formulario
@@ -257,10 +229,6 @@ const useLoginLogic = () => {
         ...prev,
         fieldErrors: validation.errors
       }));
-
-      if (validation.errors.agreeTerms) {
-        triggerShakeAnimation();
-      }
 
       if (validation.globalError) {
         showError(ERROR_MESSAGES[validation.globalError], 'Error de Validación');
@@ -322,7 +290,7 @@ const useLoginLogic = () => {
         error: errorMessage
       });
     }
-  }, [state.formData, state.csrfToken, navigate, validateForm, triggerShakeAnimation]);
+  }, [state.formData, state.csrfToken, navigate, validateForm]);
 
   /**
    * Verifica autenticación al cargar
@@ -339,7 +307,8 @@ const useLoginLogic = () => {
 
   return {
     state,
-    isShaking,
+    showPassword,
+    setShowPassword,
     updateFormData,
     handleSubmit,
     checkAuthentication
@@ -354,7 +323,7 @@ const useLoginLogic = () => {
  * Componente principal de Login
  */
 const Login: React.FC = () => {
-  const { state, isShaking, updateFormData, handleSubmit, checkAuthentication } = useLoginLogic();
+  const { state, showPassword, setShowPassword, updateFormData, handleSubmit, checkAuthentication } = useLoginLogic();
 
   // Verificar autenticación al montar
   useEffect(() => {
@@ -414,39 +383,28 @@ const Login: React.FC = () => {
             <label className="block mb-1 text-sm font-bold text-[var(--color-iph-secondary)]">
               Introduce tu contraseña
             </label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={(e) => updateFormData({ password: e.target.value })}
-              className={getInputClasses(!!fieldErrors.password)}
-              disabled={isLoading || isRedirecting}
-              autoComplete="current-password"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={(e) => updateFormData({ password: e.target.value })}
+                className={getInputClasses(!!fieldErrors.password)}
+                disabled={isLoading || isRedirecting}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(prev => !prev)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-[var(--color-iph-primary)] transition-colors duration-200 disabled:opacity-50 hover:cursor-pointer"
+                disabled={isLoading || isRedirecting}
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             {fieldErrors.password && (
               <p className="mt-1 text-sm text-red-600 font-medium">{fieldErrors.password}</p>
             )}
-          </div>
-
-          {/* Términos y Condiciones */}
-          <div className={`flex items-start gap-2 text-sm transition-transform duration-200 ${isShaking ? 'shake-animation' : ''
-            }`}>
-            <input
-              type="checkbox"
-              checked={formData.agreeTerms}
-              onChange={(e) => updateFormData({ agreeTerms: e.target.checked })}
-              className={`${getCheckboxClasses(!!fieldErrors.agreeTerms)} accent-[var(--color-iph-primary)]`}
-              disabled={isLoading || isRedirecting}
-            />
-            <div>
-              <label
-                className={`font-bold transition-colors duration-200 cursor-pointer ${fieldErrors.agreeTerms ? 'text-red-600' : 'text-[var(--color-iph-primary)]'}`}
-              >
-                Estoy de acuerdo con los Términos y Condiciones y la Política de Privacidad
-              </label>
-              {fieldErrors.agreeTerms && (
-                <p className="mt-1 text-sm text-red-600 font-medium">{fieldErrors.agreeTerms}</p>
-              )}
-            </div>
           </div>
 
           {/* Botón Submit */}
