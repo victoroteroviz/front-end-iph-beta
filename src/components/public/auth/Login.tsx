@@ -16,6 +16,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import fidesLogo from '../../../assets/images/fides.png';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
@@ -339,8 +340,8 @@ const Login: React.FC = () => {
         {/* Logo */}
         <div className="mb-7">
           <img
-            src='src/assets/images/fides.png'
-            alt="Logo IPH"
+            src={fidesLogo}
+            alt="Logo FIDES"
             className="mx-auto mb-4"
           />
         </div>
