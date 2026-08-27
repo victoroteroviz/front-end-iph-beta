@@ -140,8 +140,23 @@ interface RuntimeConfig {
   appName: string;              // Nombre de la app
   appVersion: string;           // Versión de la app
   debugMode: boolean;           // Activar logs extra
+  superadminRole: unknown;      // [{"id":1,"nombre":"SuperAdmin"}]
+  adminRole: unknown;           // [{"id":2,"nombre":"Administrador"}]
+  superiorRole: unknown;        // [{"id":3,"nombre":"Superior"}]
+  elementoRole: unknown;        // [{"id":4,"nombre":"Elemento"}]
 }
 ```
+
+> ⚠️ **Nota (2026-08-24):** los 4 roles se agregaron a runtime config en
+> esta fecha — antes solo se leían de `import.meta.env.VITE_*_ROLE`
+> (build-time), así que cambiarlos en Docker/Kubernetes no tenía ningún
+> efecto sin reconstruir la imagen. Ver
+> `kubernetes/iph-frontend/DESPLIEGUE_TROUBLESHOOTING.md` sección 10.2 para
+> el detalle del bug y el fix. A diferencia de los demás campos (strings u
+> booleans), estos llegan como **array** desde `window.__RUNTIME_CONFIG__`
+> y como **string JSON** desde `import.meta.env` — el parseo/validación
+> vive en `src/config/env.config.ts` (`parseAndValidateRole`), no en
+> `getConfigValue()`.
 
 ### Uso en Docker
 

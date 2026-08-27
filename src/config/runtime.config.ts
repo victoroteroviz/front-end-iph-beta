@@ -24,6 +24,10 @@ interface RuntimeConfig {
   appName: string;
   appVersion: string;
   debugMode: boolean;
+  superadminRole: unknown;
+  adminRole: unknown;
+  superiorRole: unknown;
+  elementoRole: unknown;
 }
 
 // Extender Window interface para incluir nuestro config
@@ -66,6 +70,26 @@ function getConfigValue<T>(
 
   // 3. Usar valor por defecto
   return defaultValue;
+}
+
+/**
+ * Igual que getConfigValue, pero para los roles: docker-entrypoint.sh
+ * inyecta window.__RUNTIME_CONFIG__.*Role ya como array (literal JS embebido
+ * en config.js), mientras que import.meta.env.VITE_*_ROLE (dev local) es un
+ * string JSON — env.config.ts (parseAndValidateRole) normaliza ambos casos.
+ */
+function getRoleConfigValue(
+  runtimeKey: keyof RuntimeConfig,
+  viteEnvKey: string
+): unknown {
+  if (typeof window !== 'undefined' && window.__RUNTIME_CONFIG__) {
+    const runtimeValue = window.__RUNTIME_CONFIG__[runtimeKey];
+    if (runtimeValue !== undefined && runtimeValue !== null) {
+      return runtimeValue;
+    }
+  }
+
+  return import.meta.env[viteEnvKey];
 }
 
 /**
@@ -154,6 +178,36 @@ export const runtimeConfig = {
   },
 
   /**
+   * Rol de SuperAdministrador
+   * Docker: inyectado por docker-entrypoint.sh (VITE_SUPERADMIN_ROLE)
+   * Local: VITE_SUPERADMIN_ROLE en .env
+   */
+  get superadminRole(): unknown {
+    return getRoleConfigValue('superadminRole', 'VITE_SUPERADMIN_ROLE');
+  },
+
+  /**
+   * Rol de Administrador
+   */
+  get adminRole(): unknown {
+    return getRoleConfigValue('adminRole', 'VITE_ADMIN_ROLE');
+  },
+
+  /**
+   * Rol de Superior
+   */
+  get superiorRole(): unknown {
+    return getRoleConfigValue('superiorRole', 'VITE_SUPERIOR_ROLE');
+  },
+
+  /**
+   * Rol de Elemento
+   */
+  get elementoRole(): unknown {
+    return getRoleConfigValue('elementoRole', 'VITE_ELEMENTO_ROLE');
+  },
+
+  /**
    * Verifica si hay configuración de runtime disponible
    */
   get hasRuntimeConfig(): boolean {
@@ -169,7 +223,11 @@ export const runtimeConfig = {
       appEnvironment: this.appEnvironment,
       appName: this.appName,
       appVersion: this.appVersion,
-      debugMode: this.debugMode
+      debugMode: this.debugMode,
+      superadminRole: this.superadminRole,
+      adminRole: this.adminRole,
+      superiorRole: this.superiorRole,
+      elementoRole: this.elementoRole
     };
   }
 };

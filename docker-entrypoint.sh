@@ -21,10 +21,29 @@ APP_VERSION="${VITE_APP_VERSION:-1.0.0}"
 DEBUG_MODE="${VITE_DEBUG_MODE:-false}"
 
 # Roles (JSON strings)
-SUPERADMIN_ROLE="${VITE_SUPERADMIN_ROLE:-[{\"id\":1,\"nombre\":\"SuperAdmin\"}]}"
-ADMIN_ROLE="${VITE_ADMIN_ROLE:-[{\"id\":2,\"nombre\":\"Administrador\"}]}"
-SUPERIOR_ROLE="${VITE_SUPERIOR_ROLE:-[{\"id\":3,\"nombre\":\"Superior\"}]}"
-ELEMENTO_ROLE="${VITE_ELEMENTO_ROLE:-[{\"id\":4,\"nombre\":\"Elemento\"}]}"
+# NOTA: no usar "${VAR:-[{...}]}" — el shell (probado en bash/dash/busybox
+# sh) cierra la expansión en el primer '}' sin escapar dentro del default,
+# rompiendo config.js con JS inválido. Ver
+# kubernetes/iph-frontend/DESPLIEGUE_TROUBLESHOOTING.md sección 3.
+SUPERADMIN_ROLE="${VITE_SUPERADMIN_ROLE}"
+if [ -z "$SUPERADMIN_ROLE" ]; then
+  SUPERADMIN_ROLE='[{"id":1,"nombre":"SuperAdmin"}]'
+fi
+
+ADMIN_ROLE="${VITE_ADMIN_ROLE}"
+if [ -z "$ADMIN_ROLE" ]; then
+  ADMIN_ROLE='[{"id":2,"nombre":"Administrador"}]'
+fi
+
+SUPERIOR_ROLE="${VITE_SUPERIOR_ROLE}"
+if [ -z "$SUPERIOR_ROLE" ]; then
+  SUPERIOR_ROLE='[{"id":3,"nombre":"Superior"}]'
+fi
+
+ELEMENTO_ROLE="${VITE_ELEMENTO_ROLE}"
+if [ -z "$ELEMENTO_ROLE" ]; then
+  ELEMENTO_ROLE='[{"id":4,"nombre":"Elemento"}]'
+fi
 
 # Logger Config
 LOG_LEVEL="${VITE_LOG_LEVEL:-WARN}"

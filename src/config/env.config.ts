@@ -41,25 +41,36 @@ const RolesArraySchema = z.array(RoleSchema)
  * @param roleName - Nombre del rol para logging
  * @returns Array de roles validados o array vacío si hay error
  */
-const parseAndValidateRole = (envVar: string | undefined, roleName: string): any[] => {
-  if (!envVar) {
-    logWarning('env.config', `Variable ${roleName} no definida en .env`);
+// NOTA: esta función se invoca a nivel de módulo (ver export const
+// SUPERADMIN_ROLE = parseAndValidateRole(...) más abajo), antes de que el
+// import circular env.config.ts <-> logger.helper.ts termine de resolver
+// logInfo/logWarning/logError (const definidas al final de logger.helper.ts).
+// Usar logWarning/logError aquí dispara un TDZ ReferenceError determinista
+// en cada carga. Se usa console.warn/console.error directo a propósito —
+// mismo criterio que ya se aplicó a APP_ENVIRONMENT (ver
+// logEnvironmentStatus más abajo), pero deferir estos requeriría
+// restructurar el flujo de parseo; console.* rompe el ciclo sin tocar el
+// resto del archivo.
+const parseAndValidateRole = (envVar: unknown, roleName: string): any[] => {
+  if (envVar === undefined || envVar === null || envVar === '') {
+    console.warn(`[env.config] Variable ${roleName} no definida en .env`);
     return [];
   }
 
   try {
-    const parsed = JSON.parse(envVar);
+    // window.__RUNTIME_CONFIG__ (Docker) ya entrega un array; import.meta.env
+    // (build time / .env local) entrega el mismo valor como string JSON.
+    const parsed = typeof envVar === 'string' ? JSON.parse(envVar) : envVar;
 
     // Validar que sea array
     if (!Array.isArray(parsed)) {
-      logError(
-        'env.config',
-        { 
-          variable: roleName, 
+      console.error(
+        `[env.config] ${roleName} no es un array`,
+        {
+          variable: roleName,
           receivedType: typeof parsed,
           expectedFormat: '[{"id":1,"nombre":"..."}]'
-        },
-        `${roleName} no es un array`
+        }
       );
       return [];
     }
@@ -68,10 +79,9 @@ const parseAndValidateRole = (envVar: string | undefined, roleName: string): any
     const validation = RolesArraySchema.safeParse(parsed);
 
     if (!validation.success) {
-      logError(
-        'env.config',
-        { variable: roleName, issues: validation.error.issues },
-        `${roleName} tiene estructura inválida`
+      console.error(
+        `[env.config] ${roleName} tiene estructura inválida`,
+        { variable: roleName, issues: validation.error.issues }
       );
       return [];
     }
@@ -79,11 +89,7 @@ const parseAndValidateRole = (envVar: string | undefined, roleName: string): any
     return validation.data;
 
   } catch (error) {
-    logError(
-      'env.config',
-      error,
-      `No se pudo parsear ${roleName}`
-    );
+    console.error(`[env.config] No se pudo parsear ${roleName}`, error);
     return [];
   }
 };
@@ -96,22 +102,22 @@ const parseAndValidateRole = (envVar: string | undefined, roleName: string): any
  * [{"id":1,"nombre":"NombreRol"}]
  */
 export const SUPERADMIN_ROLE = parseAndValidateRole(
-  import.meta.env.VITE_SUPERADMIN_ROLE,
+  runtimeConfig.superadminRole,
   'VITE_SUPERADMIN_ROLE'
 );
 
 export const ADMIN_ROLE = parseAndValidateRole(
-  import.meta.env.VITE_ADMIN_ROLE,
+  runtimeConfig.adminRole,
   'VITE_ADMIN_ROLE'
 );
 
 export const SUPERIOR_ROLE = parseAndValidateRole(
-  import.meta.env.VITE_SUPERIOR_ROLE,
+  runtimeConfig.superiorRole,
   'VITE_SUPERIOR_ROLE'
 );
 
 export const ELEMENTO_ROLE = parseAndValidateRole(
-  import.meta.env.VITE_ELEMENTO_ROLE,
+  runtimeConfig.elementoRole,
   'VITE_ELEMENTO_ROLE'
 );
 
@@ -133,24 +139,22 @@ const buildAllowedRoles = (): any[] => {
   ];
 
   // Validación final: verificar que no haya elementos inválidos
+  // NOTA: mismo motivo que en parseAndValidateRole — se ejecuta a nivel de
+  // módulo (export const ALLOWED_ROLES = buildAllowedRoles() más abajo),
+  // usar logWarning/logError aquí dispara el mismo TDZ ReferenceError.
   const validRoles = roles.filter((role) => {
     // Verificar que sea objeto
     if (typeof role !== 'object' || role === null) {
-      logError(
-        'env.config',
-        { roleType: typeof role },
-        'Elemento inválido en ALLOWED_ROLES'
+      console.error(
+        '[env.config] Elemento inválido en ALLOWED_ROLES',
+        { roleType: typeof role }
       );
       return false;
     }
 
     // Verificar que tenga las propiedades requeridas
     if (typeof role.id !== 'number' || typeof role.nombre !== 'string') {
-      logError(
-        'env.config',
-        role,
-        'Rol con estructura inválida'
-      );
+      console.error('[env.config] Rol con estructura inválida', role);
       return false;
     }
 
@@ -158,18 +162,16 @@ const buildAllowedRoles = (): any[] => {
   });
 
   if (validRoles.length === 0) {
-    logError(
-      'env.config',
+    console.error(
+      '[env.config] ALLOWED_ROLES está vacío',
       {
         message: 'El sistema no tiene roles válidos configurados',
         expectedFormat: '[{"id":1,"nombre":"NombreRol"}]'
-      },
-      'ALLOWED_ROLES está vacío'
+      }
     );
   } else if (validRoles.length !== roles.length) {
-    logWarning(
-      'env.config',
-      `${roles.length - validRoles.length} rol(es) inválido(s) filtrado(s) de ALLOWED_ROLES`
+    console.warn(
+      `[env.config] ${roles.length - validRoles.length} rol(es) inválido(s) filtrado(s) de ALLOWED_ROLES`
     );
   }
 
